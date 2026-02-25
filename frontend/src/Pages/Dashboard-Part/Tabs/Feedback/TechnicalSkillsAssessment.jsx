@@ -1,18 +1,14 @@
 import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 
-const commonSkills = [
-  'JavaScript', 'React', 'Node.js', 'Python', 'Java', 'SQL', 'Git', 'TypeScript',
-  'AWS', 'Docker', 'MongoDB', 'REST APIs', 'GraphQL', 'CI/CD', 'Testing'
-];
-
 const levels = [
-  { id: 'strong', label: 'Strong', color: 'rgb(34, 197, 94)' },
-  { id: 'good', label: 'Good', color: 'rgb(59, 130, 246)' },
-  { id: 'needsWork', label: 'Needs Work', color: 'rgb(251, 146, 60)' }
+  { id: 'strong', label: 'Strong', color: '#16A34A' },
+  { id: 'good', label: 'Good', color: '#2563EB' },
+  { id: 'basic', label: 'Basic', color: '#F59E0B' },
+  { id: 'noExperience', label: 'No Experience', color: '#6B7280' }
 ];
 
-export default function TechnicalSkillsAssessment({ formData, setFormData }) {
+export default function TechnicalSkillsAssessment({ formData, setFormData, onSkillChange }) {
   const [customSkillInput, setCustomSkillInput] = useState('');
   const [customSkillLevel, setCustomSkillLevel] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
@@ -20,9 +16,10 @@ export default function TechnicalSkillsAssessment({ formData, setFormData }) {
   const handleSkillLevelChange = (skillName, level) => {
     const currentSkills = formData.technicalSkills || {};
     const updatedSkills = { ...currentSkills };
+    const skillOrder = [...(formData.skillOrder || [])];
 
     Object.keys(updatedSkills).forEach(key => {
-      if (updatedSkills[key]) {
+      if (Array.isArray(updatedSkills[key])) {
         updatedSkills[key] = updatedSkills[key].filter(s => s !== skillName);
       }
     });
@@ -32,16 +29,26 @@ export default function TechnicalSkillsAssessment({ formData, setFormData }) {
     }
     updatedSkills[level].push(skillName);
 
+    if (!skillOrder.includes(skillName)) {
+      skillOrder.push(skillName);
+    }
+
     setFormData(prev => ({
       ...prev,
-      technicalSkills: updatedSkills
+      technicalSkills: updatedSkills,
+      skillOrder: skillOrder
     }));
+
+    // Trigger auto-save if callback provided
+    if (onSkillChange) {
+      onSkillChange();
+    }
   };
 
   const getSkillLevel = (skillName) => {
     const skills = formData.technicalSkills || {};
     for (const [level, skillsList] of Object.entries(skills)) {
-      if (skillsList && skillsList.includes(skillName)) {
+      if (Array.isArray(skillsList) && skillsList.includes(skillName)) {
         return level;
       }
     }
@@ -50,14 +57,17 @@ export default function TechnicalSkillsAssessment({ formData, setFormData }) {
 
   const removeSkill = (skillName) => {
     const updatedSkills = { ...formData.technicalSkills };
+    const skillOrder = (formData.skillOrder || []).filter(s => s !== skillName);
+
     Object.keys(updatedSkills).forEach(key => {
-      if (updatedSkills[key]) {
+      if (Array.isArray(updatedSkills[key])) {
         updatedSkills[key] = updatedSkills[key].filter(s => s !== skillName);
       }
     });
     setFormData(prev => ({
       ...prev,
-      technicalSkills: updatedSkills
+      technicalSkills: updatedSkills,
+      skillOrder: skillOrder
     }));
   };
 
@@ -70,20 +80,6 @@ export default function TechnicalSkillsAssessment({ formData, setFormData }) {
     }
   };
 
-  const getAllSkills = () => {
-    const skills = formData.technicalSkills || {};
-    const allSkills = new Set();
-    Object.values(skills).forEach(skillsList => {
-      if (skillsList) {
-        skillsList.forEach(skill => allSkills.add(skill));
-      }
-    });
-    return Array.from(allSkills);
-  };
-
-  const getCustomSkills = () => {
-    return getAllSkills().filter(skill => !commonSkills.includes(skill));
-  };
 
   return (
     <div className="space-y-4">
@@ -92,47 +88,17 @@ export default function TechnicalSkillsAssessment({ formData, setFormData }) {
         <p className="text-sm text-gray-600">Select proficiency level for each skill</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-2">
-        {commonSkills.map((skill) => {
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1 2xl:grid-cols-1 gap-2">
+        {(formData.skillOrder || []).map((skill) => {
           const currentLevel = getSkillLevel(skill);
           return (
-            <div key={skill} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-              <span className="block text-sm font-medium text-gray-900 truncate max-w-[90px]">{skill}</span>
-              <div className="flex gap-1 ml-auto">
-                {levels.map((level) => (
-                  <button
-                    key={level.id}
-                    type="button"
-                    onClick={() => handleSkillLevelChange(skill, level.id)}
-                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                      currentLevel === level.id
-                        ? 'text-white shadow-sm'
-                        : 'text-gray-600 bg-white border border-gray-300 hover:border-gray-400'
-                    }`}
-                    style={
-                      currentLevel === level.id
-                        ? { backgroundColor: level.color }
-                        : {}
-                    }
-                  >
-                    {level.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-
-        {getCustomSkills().map((skill) => {
-          const currentLevel = getSkillLevel(skill);
-          return (
-            <div key={skill} className="flex items-center gap-2 p-2 bg-blue-50 rounded border border-blue-200">
-              <div className="flex items-center gap-1 min-w-[90px]">
-                <span className="block text-sm font-medium text-gray-900 truncate max-w-[120px]">{skill}</span>
+            <div key={skill} className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-100">
+              <div className="flex items-center gap-1 min-w-[90px] overflow-hidden">
+                <span className="block text-sm font-medium text-gray-900 truncate" title={skill}>{skill}</span>
                 <button
                   type="button"
                   onClick={() => removeSkill(skill)}
-                  className="text-red-500 hover:text-red-700"
+                  className="text-gray-400 hover:text-red-500 transition-colors"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -143,11 +109,10 @@ export default function TechnicalSkillsAssessment({ formData, setFormData }) {
                     key={level.id}
                     type="button"
                     onClick={() => handleSkillLevelChange(skill, level.id)}
-                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                      currentLevel === level.id
-                        ? 'text-white shadow-sm'
-                        : 'text-gray-600 bg-white border border-gray-300 hover:border-gray-400'
-                    }`}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-all ${currentLevel === level.id
+                      ? 'text-white shadow-sm'
+                      : 'text-gray-600 bg-white border border-gray-300 hover:border-gray-400'
+                      }`}
                     style={
                       currentLevel === level.id
                         ? { backgroundColor: level.color }
@@ -185,11 +150,10 @@ export default function TechnicalSkillsAssessment({ formData, setFormData }) {
               key={level.id}
               type="button"
               onClick={() => setCustomSkillLevel(level.id)}
-              className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                customSkillLevel === level.id
-                  ? 'text-white shadow-sm'
-                  : 'text-gray-600 bg-white border border-gray-300 hover:border-gray-400'
-              }`}
+              className={`px-2 py-1 rounded text-xs font-medium transition-all ${customSkillLevel === level.id
+                ? 'text-white shadow-sm'
+                : 'text-gray-600 bg-white border border-gray-300 hover:border-gray-400'
+                }`}
               style={
                 customSkillLevel === level.id
                   ? { backgroundColor: level.color }

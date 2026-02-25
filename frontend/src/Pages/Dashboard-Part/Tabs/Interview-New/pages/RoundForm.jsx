@@ -3494,8 +3494,8 @@ const RoundFormInterviews = () => {
                                                                           <div
                                                                             key={option._id || optIdx}
                                                                             className={`text-sm p-2 rounded border ${option.isCorrect
-                                                                                ? "bg-green-50 border-green-200 text-green-800"
-                                                                                : "bg-gray-50 border-gray-200 text-gray-700"
+                                                                              ? "bg-green-50 border-green-200 text-green-800"
+                                                                              : "bg-gray-50 border-gray-200 text-gray-700"
                                                                               }`}
                                                                           >
                                                                             {option?.optionText}
@@ -4641,6 +4641,7 @@ const RoundFormInterviews = () => {
           currentRole={candidate?.CurrentRole}
           onProceed={handleExternalInterviewerSelect}
           previousSelectedInterviewers={externalInterviewers}
+          interviewType={interviewType}
           source="outsource-interview"
           onDateTimeChange={(newCombinedDateTime) => {
             // Sync date/time from outsource modal back to RoundForm

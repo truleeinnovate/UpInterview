@@ -56,7 +56,7 @@ const dislikeOptions = [
 const toBackendAnswerType = (ui) => {
   if (ui === "Fully Answered") return "correct";
   if (ui === "Partially Answered") return "partial";
-  if (ui === "Not Answered") return "incorrect";
+  if (ui === "Not Answered") return "not answered";
   return "not answered";
 };
 // Helper: normalize questionFeedback from backend object {preselected, interviewerAdded}
@@ -135,6 +135,39 @@ const FeedbackForm = ({
   });
 
   // console.log("feedbackDatas", feedbackDatas)
+  // <---------------------------- NEW UI FIELDS -------------------------------------------
+  const [formData, setFormData] = useState({
+    candidateName: '',
+    position: '',
+    roundTitle: '',
+    interviewerName: '',
+    interviewDate: new Date().toISOString().split('T')[0],
+    isMockInterview: false,
+    overallRating: 0,
+    communicationRating: 0,
+    recommendation: 'Maybe',
+    skillRatings: [
+      { skillName: 'Problem Solving', rating: 0, notes: '' },
+      { skillName: 'Technical Knowledge', rating: 0, notes: '' },
+      { skillName: 'Communication', rating: 0, notes: '' }
+    ],
+    technicalSkills: {
+      strong: [],
+      good: [],
+      basic: [],
+      noExperience: []
+    },
+    skillOrder: [],
+    questionsAsked: [
+      { question: '', answered: true, notes: '' }
+    ],
+    strengths: [''],
+    areasForImprovement: [''],
+    additionalComments: '',
+    cultureFit: 0,
+    willingnessToLearn: 0,
+    mockInterviewNotes: ''
+  });
 
   const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType || locationFeedback?.isMockInterview;
 
@@ -179,29 +212,65 @@ const FeedbackForm = ({
 
   const positionData = isMockInterview ? {} : interviewData?.positionId || {};
 
-  // console.log("positionData", positionData)
+  console.log("candidateData", candidateData)
 
-  // console.log("positioncandidateDataData", candidateData)
+  console.log("positionData", positionData)
+
+  console.log("interviewRoundData", interviewRoundData)
+
+  const currentRound = useMemo(() => {
+    if (interviewRoundData?.rounds && Array.isArray(interviewRoundData.rounds)) {
+      if (urlData?.interviewRoundId || roundId) {
+        const rId = urlData?.interviewRoundId || roundId;
+        return (
+          interviewRoundData.rounds.find((r) => String(r._id) === String(rId)) ||
+          interviewRoundData.rounds[0]
+        );
+      }
+      return interviewRoundData.rounds[0];
+    }
+    return interviewRoundData;
+  }, [interviewRoundData, urlData?.interviewRoundId, roundId]);
+
+  console.log("currentRound", currentRound);
 
   const feedbackData = useMemo(() => {
     const raw = locationFeedback || feedbackDatas || {};
-    // If the API response has a feedbacks array, merge the first feedback's
-    // fields into the top level so code can read feedbackData.questionFeedback,
-    // feedbackData.skills, feedbackData.overallImpression, etc. directly.
+    // If the API response has a feedbacks array, find the feedback that
+    // matches the current interviewer ID from the URL.
     if (Array.isArray(raw?.feedbacks) && raw.feedbacks.length > 0) {
-      const fb = raw.feedbacks[0];
+      // Find the feedback that matches the current interviewer ID from URL
+      let fb = raw.feedbacks[0]; // Default to first one
+      if (urlData?.interviewerId) {
+        const found = raw.feedbacks.find((f) => {
+          const fbInterviewerId = f.interviewerId?._id || f.interviewerId;
+          const fbOwnerId = f.ownerId?._id || f.ownerId;
+          return (
+            String(fbInterviewerId) === String(urlData.interviewerId) ||
+            String(fbOwnerId) === String(urlData.interviewerId)
+          );
+        });
+        if (found) fb = found;
+      }
+
       return {
         ...raw,
         _id: fb._id,
         questionFeedback: flattenQuestionFeedback(fb.questionFeedback),
-        skills: fb.skills,
+        skills: fb.skills || fb.technicalSkills,
         overallImpression: fb.overallImpression,
-        generalComments: fb.generalComments,
+        generalComments: fb.generalComments || fb.additionalComments,
+        additionalComments: fb.additionalComments || fb.generalComments,
+        strengths: fb.strengths,
+        areasForImprovement: fb.areasForImprovement,
+        technicalCompetency: fb.technicalCompetency,
+        technicalSkills: fb.technicalSkills || fb.skills,
         status: fb.status,
       };
     }
     return raw;
-  }, [locationFeedback, feedbackDatas]);
+  }, [locationFeedback, feedbackDatas, urlData?.interviewerId]);
+  console.log("feedbackData", feedbackData);
 
   // Derived state for submission status
   const isSubmitted = feedbackData?.status === "submitted" || feedbackData?.status === "Submitted";
@@ -465,132 +534,31 @@ const FeedbackForm = ({
   // const [communicationRating, setCommunicationRating] = useState(((isEditMode || isViewMode) && overallImpressionTabData.communicationRating) || 0);
   // const [skillRatings, setSkillRatings] = useState(((isEditMode || isViewMode) && skillsData.map(skill => ({ skill: skill.skillName, rating: skill.rating, comments: skill.note }))) || [{ skill: '', rating: 0, comments: '' }]);
 
-  // Fixed: Proper initialization for overall rating with proper fallbacks
-  const [overallRating, setOverallRating] = useState(
-    isEditMode || isViewMode || isAddMode
-      ? overallImpressionTabData?.overallRating
-      : 0,
-  );
-
-  // Fixed: Proper initialization for communication rating with proper fallbacks
-  const [communicationRating, setCommunicationRating] = useState(
-    isEditMode || isViewMode || isAddMode
-      ? overallImpressionTabData?.communicationRating
-      : 0,
-  );
-  // console.log("skillsData", overallImpressionTabData);
-
-  // Fixed: Proper initialization for skill ratings with proper conditional checks
-  const initialSkillRatings = useMemo(() => {
-    // 1. If we have a persisted feedback record with saved skills, use them.
-    // This handles Edit/View modes AND Add mode after auto-save when skills have been saved.
-    if (feedbackData?._id && skillsData && skillsData.length > 0) {
-      return skillsData.map((skill) => ({
-        skill: skill.skillName,
-        rating: skill.rating,
-        comments: skill.note,
-      }));
-    }
-
-    // 2. Auto-populate from position/candidate data.
-    // This runs for fresh Add Mode (no ID yet) AND when feedback exists but
-    // has no saved skills yet (e.g. after auto-save created the record from adding questions).
-    let autoSkills = [];
-
-    // Mock Interview: Skills often in candidateData.skills (array of strings)
-    if (isMockInterview && candidateData?.skills) {
-      autoSkills = candidateData.skills;
-    }
-    // Regular Interview: Skills in positionData.skills (array of objects)
-    else if (!isMockInterview && positionData?.skills) {
-      // Map from position skill objects to string names
-      autoSkills = positionData.skills.map(s => s.skill);
-    }
-
-    if (autoSkills.length > 0) {
-      return autoSkills.map(skillName => ({
-        skill: skillName,
-        rating: 0,
-        comments: ""
-      }));
-    }
-
-    // Default fallback
-    return [{ skill: "", rating: 0, comments: "" }];
-  }, [feedbackData?._id, skillsData, isMockInterview, candidateData, positionData]);
-
-  // const [skillRatings, setSkillRatings] = useState(initialSkillRatings);
-  // changed to allow only 5 skills populated initially
-  const [skillRatings, setSkillRatings] = useState(() => {
-    return initialSkillRatings.slice(0, 5);
-  });
 
   // Track if user has interacted with skills to prevents overwriting user work with async loaded data
   const hasUserInteractedWithSkills = useRef(false);
   // Track if we have already synced with the persistence layer once
   const hasLoadedSavedSkills = useRef(false);
 
-  // Sync state if initialSkillRatings changes (mainly for async data loading)
-  useEffect(() => {
-    // If we have saved data (via ID) and we haven't synced yet, AND user hasn't touched the form manually
-    if (feedbackData?._id && !hasLoadedSavedSkills.current && !hasUserInteractedWithSkills.current) {
-      // When loading existing feedback, we show what was saved (up to 10)
-      // but if it's a fresh load, we apply the 5 limit
-      const limitedSkills = initialSkillRatings.slice(0, 5);
-      // setSkillRatings(initialSkillRatings);
-      setSkillRatings(limitedSkills);
-      hasLoadedSavedSkills.current = true;
-    }
-    // Fallback: If current state is empty/default, always accept incoming data
-    else if ((!skillRatings || (skillRatings.length === 1 && !skillRatings[0].skill)) && initialSkillRatings.length > 0 && initialSkillRatings[0].skill) {
-      // setSkillRatings(initialSkillRatings);
-      setSkillRatings(initialSkillRatings.slice(0, 5));
-    }
-  }, [initialSkillRatings, feedbackData?._id]);
+  // Define initial skills derived from position or interview data
+  const initialSkillRatings = useMemo(() => {
+    const dSkills = isMockInterview
+      ? interviewRoundData?.skills || []
+      : positionData?.skills || [];
 
-  // Fixed: Proper initialization for recommendation with proper fallbacks
-  const [recommendation, setRecommendation] = useState(
-    isEditMode || isViewMode || isAddMode
-      ? overallImpressionTabData.recommendation || "Maybe"
-      : "Maybe",
-  );
+    return (Array.isArray(dSkills) ? dSkills : []).map((s) => ({
+      skill: s.skill || s.SkillName || (typeof s === "string" ? s : ""),
+      skillName: s.skill || s.SkillName || (typeof s === "string" ? s : ""),
+      rating: 0,
+      notes: "",
+    }));
+  }, [isMockInterview, interviewRoundData, positionData]);
 
-  // General comments uses feedbackData.generalComments directly
-  const [comments, setComments] = useState(
-    isEditMode || isViewMode || isAddMode
-      ? feedbackData?.generalComments || ""
-      : "",
-  );
+
 
   // Re-sync scalar feedback values on initial load only
   const hasScalarInitRef = useRef(false);
 
-  useEffect(() => {
-    if (hasScalarInitRef.current) return; // Already synced
-    if (!feedbackData?._id) return; // Skip until data is loaded
-    hasScalarInitRef.current = true;
-
-    const impression = feedbackData?.overallImpression || {};
-    const skills = feedbackData?.skills || [];
-
-    setOverallRating((prev) => prev || impression.overallRating || 0);
-    setCommunicationRating((prev) => prev || impression.communicationRating || 0);
-    setRecommendation((prev) => (prev && prev !== "Maybe") ? prev : (impression.recommendation || "Maybe"));
-    setComments((prev) => prev || feedbackData?.generalComments || "");
-
-    if (skills.length > 0) {
-      setSkillRatings((prev) => {
-        if (prev.length === 1 && !prev[0].skill && prev[0].rating === 0) {
-          return skills.map((s) => ({
-            skill: s.skillName,
-            rating: s.rating,
-            comments: s.note,
-          }));
-        }
-        return prev;
-      });
-    }
-  }, [feedbackData]);
 
   // Merge answered and newly added
   const mergedQuestions = useMemo(() => {
@@ -728,140 +696,257 @@ const FeedbackForm = ({
   ]);
 
 
-  // <---------------------------- NEW UI FIELDS -------------------------------------------
-    const [formData, setFormData] = useState({
-      candidateName: '',
-      position: '',
-      roundTitle: '',
-      interviewerName: '',
-      interviewDate: new Date().toISOString().split('T')[0],
-      isMockInterview: false,
-      overallRating: 0,
-      recommendation: 'Hire',
-      skillRatings: [
-        { skillName: 'Problem Solving', rating: 0, notes: '' },
-        { skillName: 'Technical Knowledge', rating: 0, notes: '' },
-        { skillName: 'Communication', rating: 0, notes: '' }
-      ],
-      technicalSkills: {
-        strong: [],
-        good: [],
-        needsImprovement: []
-      },
-      questionsAsked: [
-        { question: '', answered: true, notes: '' }
-      ],
-      strengths: [''],
-      areasForImprovement: [''],
-      additionalComments: '',
-      cultureFit: 0,
-      willingnessToLearn: 0,
-      mockInterviewNotes: ''
-    });
 
-    // Questions Asked Handlers
-    const addQuestion = () => {
+
+  // Questions Asked Handlers
+  const addQuestion = () => {
     setFormData({
       ...formData,
       questionsAsked: [...formData.questionsAsked, { question: '', answered: true, notes: '' }]
-      });
-    };
+    });
+  };
 
-    const removeQuestion = (index) => {
-      const updated = formData.questionsAsked.filter((_, i) => i !== index);
-      setFormData({ ...formData, questionsAsked: updated });
-    };
+  const removeQuestion = (index) => {
+    const updated = formData.questionsAsked.filter((_, i) => i !== index);
+    setFormData({ ...formData, questionsAsked: updated });
+  };
 
-    const updateQuestion = (index, field, value) => {
-      const updated = formData.questionsAsked.map((q, i) =>
-        i === index ? { ...q, [field]: value } : q
-      );
-      setFormData({ ...formData, questionsAsked: updated });
-    };
+  const updateQuestion = (index, field, value) => {
+    const updated = formData.questionsAsked.map((q, i) =>
+      i === index ? { ...q, [field]: value } : q
+    );
+    setFormData({ ...formData, questionsAsked: updated });
+  };
 
-    // Skill Ratings Handlers
-    const addSkillRating = () => {
-      setFormData({
-        ...formData,
-        skillRatings: [...formData.skillRatings, { skillName: '', rating: 0, notes: '' }]
-      });
-    };
+  // Skill Ratings Handlers
+  const addSkillRating = () => {
+    setFormData({
+      ...formData,
+      skillRatings: [...formData.skillRatings, { skillName: '', rating: 0, notes: '' }]
+    });
+  };
 
-    const removeSkillRating = (index) => {
-      const updated = formData.skillRatings.filter((_, i) => i !== index);
-      setFormData({ ...formData, skillRatings: updated });
-    };
+  const removeSkillRating = (index) => {
+    const updated = formData.skillRatings.filter((_, i) => i !== index);
+    setFormData({ ...formData, skillRatings: updated });
+  };
 
-    const updateSkillRating = (index, field, value) => {
-      const updated = formData.skillRatings.map((skill, i) =>
-        i === index ? { ...skill, [field]: value } : skill
-      );
-      setFormData({ ...formData, skillRatings: updated });
-    };
+  const updateSkillRating = (index, field, value) => {
+    const updated = formData.skillRatings.map((skill, i) =>
+      i === index ? { ...skill, [field]: value } : skill
+    );
+    setFormData({ ...formData, skillRatings: updated });
+  };
 
-    // Strengths Handlers
-    const addStrength = () => {
-      setFormData({ ...formData, strengths: [...formData.strengths, ''] });
-    };
+  // Strengths Handlers
+  const addStrength = () => {
+    setFormData({ ...formData, strengths: [...formData.strengths, ''] });
+  };
 
-    const removeStrength = (index) => {
-      const updated = formData.strengths.filter((_, i) => i !== index);
-      setFormData({ ...formData, strengths: updated });
-    };
+  const removeStrength = (index) => {
+    const updated = formData.strengths.filter((_, i) => i !== index);
+    setFormData({ ...formData, strengths: updated });
+  };
 
-    const updateStrength = (index, value) => {
-      const updated = formData.strengths.map((s, i) => (i === index ? value : s));
-      setFormData({ ...formData, strengths: updated });
-    };
+  const updateStrength = (index, value) => {
+    const updated = formData.strengths.map((s, i) => (i === index ? value : s));
+    setFormData({ ...formData, strengths: updated });
+  };
 
-    // Areas for Improvement Handlers
-    const addArea = () => {
-      setFormData({
+  // Areas for Improvement Handlers
+  const addArea = () => {
+    setFormData({
       ...formData,
       areasForImprovement: [...formData.areasForImprovement, '']
     });
+  };
+
+  const removeArea = (index) => {
+    const updated = formData.areasForImprovement.filter((_, i) => i !== index);
+    setFormData({ ...formData, areasForImprovement: updated });
+  };
+
+  const updateArea = (index, value) => {
+    const updated = formData.areasForImprovement.map((a, i) => (i === index ? value : a));
+    setFormData({ ...formData, areasForImprovement: updated });
+  };
+
+  // Additional Ratings
+  const StarRating = ({ rating, onChange, size = 'md' }) => {
+    const sizeClasses = {
+      sm: 'w-4 h-4',
+      md: 'w-5 h-5',
+      lg: 'w-6 h-6'
     };
 
-    const removeArea = (index) => {
-      const updated = formData.areasForImprovement.filter((_, i) => i !== index);
-      setFormData({ ...formData, areasForImprovement: updated });
-    };
-
-    const updateArea = (index, value) => {
-      const updated = formData.areasForImprovement.map((a, i) => (i === index ? value : a));
-      setFormData({ ...formData, areasForImprovement: updated });
-    };
-
-    // Additional Ratings
-    const StarRating = ({ rating, onChange, size = 'md' }) => {
-      const sizeClasses = {
-        sm: 'w-4 h-4',
-        md: 'w-5 h-5',
-        lg: 'w-6 h-6'
-      };
-  
-      return (
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              type="button"
-              onClick={() => onChange(star)}
-              className="transition-colors"
-            >
-              <Star
-                className={`${sizeClasses[size]} ${
-                  star <= rating
-                    ? 'fill-yellow-400 text-yellow-400'
-                    : 'text-gray-300'
+    return (
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => onChange(star)}
+            className="transition-colors"
+          >
+            <Star
+              className={`${sizeClasses[size]} ${star <= rating
+                ? 'fill-yellow-400 text-yellow-400'
+                : 'text-gray-300'
                 }`}
-              />
-            </button>
-          ))}
-        </div>
-      );
-    };
+            />
+          </button>
+        ))}
+      </div>
+    );
+  };
 
+
+  // Sync formData with secondary data
+  useEffect(() => {
+    if (Object.keys(interviewRoundData).length > 0) {
+      const candidateName = isMockInterview
+        ? candidateData?.candidateName || ""
+        : `${candidateData?.FirstName || ""} ${candidateData?.LastName || ""}`.trim();
+
+      // Handle "DD-MM-YYYY ..." format or ISO format
+      const rawDate = currentRound?.dateTime || interviewRoundData?.dateTime;
+      let interviewDate = new Date().toISOString().split("T")[0];
+      if (rawDate) {
+        const dateMatch = String(rawDate).match(/^(\d{2})-(\d{2})-(\d{4})/);
+        if (dateMatch) {
+          interviewDate = `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
+        } else {
+          const d = new Date(rawDate);
+          if (!isNaN(d.getTime())) {
+            interviewDate = d.toISOString().split("T")[0];
+          }
+        }
+      }
+
+      const roundInterviewers =
+        currentRound?.interviewers || interviewRoundData?.interviewers;
+      const interviewerName =
+        roundInterviewers?.[0]?.name ||
+        interviewRoundData?.interviewerId?.name ||
+        "";
+
+      setFormData((prev) => {
+        const roundSkills = currentRound?.questions || [];
+        const dataSkills = isMockInterview
+          ? interviewRoundData?.skills || []
+          : positionData?.skills || [];
+
+        const technicalSkills = {
+          strong: [...(prev.technicalSkills?.strong || [])],
+          good: [...(prev.technicalSkills?.good || [])],
+          basic: [...(prev.technicalSkills?.basic || [])],
+          noExperience: [...(prev.technicalSkills?.noExperience || [])],
+        };
+
+        const skillOrder = [...(prev.skillOrder || [])];
+
+        // 1. Restore from existing feedbackData if available (Edit/View mode)
+        // Check new technicalSkills array first
+        const savedTechnicalSkills = feedbackData?.technicalSkills || [];
+        const savedLegacySkills = feedbackData?.skills || [];
+        const skillsToRestore = savedTechnicalSkills.length > 0 ? savedTechnicalSkills : savedLegacySkills;
+
+        if (skillsToRestore.length > 0) {
+          skillsToRestore.forEach(s => {
+            const sName = s.skillName;
+            if (!sName) return;
+
+            // Support both old note-based categorization and new level field
+            let category = s.level;
+            if (!category) {
+              if (s.rating === 5 && s.note?.includes("Strong")) category = "strong";
+              else if (s.rating === 4 && s.note?.includes("Good")) category = "good";
+              else if (s.rating === 3 && s.note?.includes("Basic")) category = "basic";
+              else if (s.rating === 1 && s.note?.includes("No Experience")) category = "noExperience";
+            }
+
+            if (category && ["strong", "good", "basic", "noExperience"].includes(category)) {
+              // Remove from all categories first to avoid duplicates
+              Object.keys(technicalSkills).forEach(cat => {
+                technicalSkills[cat] = technicalSkills[cat].filter(name => name !== sName);
+              });
+              technicalSkills[category].push(sName);
+              if (!skillOrder.includes(sName)) skillOrder.push(sName);
+            }
+          });
+        }
+
+        // 2. Add skills from round/position data if not already present
+        const allPotentialSkills = [...roundSkills];
+        dataSkills.forEach((s) => {
+          const sName = typeof s === "string" ? s : s.skill;
+          if (sName && !allPotentialSkills.some(existing => (typeof existing === 'string' ? existing : existing.skill) === sName)) {
+            allPotentialSkills.push(sName);
+          }
+        });
+
+        if (allPotentialSkills.length > 0) {
+          allPotentialSkills.forEach((skillObj) => {
+            const sName =
+              typeof skillObj === "string" ? skillObj : skillObj.skill;
+            if (
+              sName &&
+              !technicalSkills.strong.includes(sName) &&
+              !technicalSkills.good.includes(sName) &&
+              !technicalSkills.basic.includes(sName) &&
+              !technicalSkills.noExperience.includes(sName)
+            ) {
+              technicalSkills.good.push(sName);
+            }
+
+            if (sName && !skillOrder.includes(sName)) {
+              skillOrder.push(sName);
+            }
+          });
+        }
+
+        // Restore other fields from feedbackData
+        const impression = feedbackData?.overallImpression || {};
+
+        return {
+          ...prev,
+          candidateName: candidateName,
+          position: positionData?.title || positionData?.name || "",
+          roundTitle:
+            currentRound?.roundTitle || interviewRoundData?.roundTitle || "",
+          interviewerName: interviewerName,
+          interviewDate: interviewDate,
+          isMockInterview: isMockInterview,
+          technicalSkills: technicalSkills,
+          skillOrder: skillOrder,
+          // Sync existing feedback fields from database
+          overallRating: impression.overallRating || prev.overallRating,
+          recommendation: impression.recommendation || prev.recommendation,
+          cultureFit: impression.cultureFit || prev.cultureFit,
+          willingnessToLearn: impression.willingnessToLearn || prev.willingnessToLearn,
+          additionalComments: (prev.additionalComments && prev.additionalComments !== "") ? prev.additionalComments : (feedbackData?.additionalComments || feedbackData?.generalComments || ""),
+          strengths: feedbackData?.strengths?.length > 0 ? feedbackData.strengths : prev.strengths,
+          areasForImprovement: feedbackData?.areasForImprovement?.length > 0 ? feedbackData.areasForImprovement : prev.areasForImprovement,
+          communicationRating: prev.communicationRating || impression.communicationRating || 0,
+          // Technical Competency (Star Ratings) - Map from technicalCompetency in schema
+          skillRatings: feedbackData?.technicalCompetency?.length > 0
+            ? feedbackData.technicalCompetency.map(s => ({
+              skillName: s.skillName || s.skill,
+              rating: s.rating || 0,
+              notes: s.notes || s.note || ""
+            }))
+            : prev.skillRatings
+        };
+      });
+    }
+  }, [
+    candidateData,
+    positionData,
+    interviewRoundData,
+    currentRound,
+    isMockInterview,
+    feedbackData, // Depend on full feedbackData for correct population
+  ]);
 
   // ---------------------------- NEW UI FIELDS ------------------------------------------->
 
@@ -1007,13 +1092,7 @@ const FeedbackForm = ({
 
   // Add the auto-save hook after all your useState declarations (around line 350):
 
-  const {
-    saveNow: autoSaveQuestions,
-    // saveNow,
-    // : autoSaveQuestions,
-    // isSaving: autoSaveQuestions,
-    // triggerAutoSave,
-  } = useAutoSaveFeedback({
+  const { isSaving, lastSaved, saveNow: autoSaveQuestions } = useAutoSaveFeedback({
     isAddMode,
     isEditMode,
     interviewRoundId:
@@ -1021,15 +1100,19 @@ const FeedbackForm = ({
       urlData?.interviewRoundId ||
       decodedData?.interviewRoundId,
     tenantId: currentTenantId,
-    interviewerId:
-      interviewerId || decodedData?.interviewerId || urlData?.interviewerId,
+    interviewerId: interviewerId || decodedData?.interviewerId || urlData?.interviewerId,
     interviewerSectionData,
     preselectedQuestionsResponses,
-    skillRatings,
-    overallRating,
-    communicationRating,
-    recommendation,
-    comments,
+    skillRatings: formData.skillRatings,
+    technicalSkills: formData.technicalSkills,
+    strengths: formData.strengths,
+    areasForImprovement: formData.areasForImprovement,
+    overallRating: formData.overallRating,
+    communicationRating: formData.communicationRating,
+    recommendation: formData.recommendation,
+    cultureFit: formData.cultureFit,
+    willingnessToLearn: formData.willingnessToLearn,
+    comments: formData.additionalComments,
     candidateId: candidateData?._id || undefined,
     positionId:
       positionId ||
@@ -1041,12 +1124,23 @@ const FeedbackForm = ({
     feedbackId: autoSaveFeedbackId,
     isMockInterview: urlData?.interviewType === "mockinterview" || false,
     feedbackCode:
-      urlData?.interviewType === "mockinterview" ? interviewRoundData?.mockInterviewCode + "-001" :
+      urlData?.interviewType === "mockinterview" ? (interviewRoundData?.mockInterviewCode || "MOCK") + "-001" :
         (interviewRoundData?.interviewCode
           ? `${interviewRoundData.interviewCode}-00${interviewRoundData?.rounds?.[0]?.sequence || ""}`
           : "") || "",
-    isLoaded: !feedbackLoading && !isMockLoading && !isInterviewLoading, // Ensure we don't save before data is loaded
+    isLoaded: !feedbackLoading && !isMockLoading && !isInterviewLoading,
   });
+
+  // Watch for changes to feedback data and trigger auto-save
+  useEffect(() => {
+    if (!feedbackLoading && !isMockLoading && !isInterviewLoading) {
+      triggerAutoSave();
+    }
+  }, [
+    formData,
+    interviewerSectionData,
+    preselectedQuestionsResponses,
+  ]);
 
   const saveTimeoutRef = React.useRef(null);
 
@@ -1477,26 +1571,31 @@ const FeedbackForm = ({
   };
 
   const handleAddSkill = () => {
-    if (skillRatings.length >= 10) {
+    if (formData.skillRatings.length >= 10) {
       notify.error("Maximum 10 skills allowed");
       return;
     }
     hasUserInteractedWithSkills.current = true;
-    setSkillRatings([
-      ...skillRatings,
-      { skill: "", rating: 0, comments: "" },
-    ]);
+    setFormData((prev) => ({
+      ...prev,
+      skillRatings: [
+        ...prev.skillRatings,
+        { skillName: "", rating: 0, notes: "" },
+      ],
+    }));
     triggerAutoSave();
   };
 
   const handleRemoveSkill = (index) => {
     hasUserInteractedWithSkills.current = true;
-    const updatedSkills = [...skillRatings];
+    const updatedSkills = [...formData.skillRatings];
     updatedSkills.splice(index, 1);
-    setSkillRatings(updatedSkills);
+    setFormData((prev) => ({ ...prev, skillRatings: updatedSkills }));
 
     // Also clear error if valid... (retaining existing logic)
-    const validSkills = updatedSkills.filter(s => s.skill.trim() !== "");
+    const validSkills = updatedSkills.filter(
+      (s) => (s.skillName || s.skill || "").trim() !== "",
+    );
     if (
       validSkills.length > 0 &&
       validSkills.every((skill) => skill.rating > 0)
@@ -1520,27 +1619,28 @@ const FeedbackForm = ({
     };
 
     // Validate overall rating
-    if (overallRating === 0) {
+    if (formData.overallRating === 0) {
       newErrors.overallRating = "Please provide an overall rating";
     }
 
     // Validate communication rating
-    if (communicationRating === 0) {
+    if (formData.communicationRating === 0) {
       newErrors.communicationRating = "Please provide a communication rating";
     }
 
     // Validate skills - filter out empty names first
-    const validSkills = skillRatings.filter(s => s.skill && s.skill.trim() !== "");
+    const validSkills = formData.skillRatings.filter(
+      (s) => (s.skillName || s.skill) && (s.skillName || s.skill).trim() !== "",
+    );
     if (
       validSkills.length === 0 ||
       validSkills.some((skill) => skill.rating === 0)
     ) {
-      newErrors.skills =
-        "Please provide ratings for all listed skills";
+      newErrors.skills = "Please provide ratings for all listed skills";
     }
 
     // Validate comments
-    if (!comments.trim()) {
+    if (!formData.additionalComments.trim()) {
       newErrors.comments = "Please provide overall comments";
     }
 
@@ -1563,7 +1663,7 @@ const FeedbackForm = ({
 
   // Handle overall rating change
   const handleOverallRatingChange = (rating) => {
-    setOverallRating(rating);
+    setFormData((prev) => ({ ...prev, overallRating: rating }));
     if (rating > 0) {
       clearError("overallRating");
     }
@@ -1576,7 +1676,7 @@ const FeedbackForm = ({
 
   // Handle communication rating change
   const handleCommunicationRatingChange = (rating) => {
-    setCommunicationRating(rating);
+    setFormData((prev) => ({ ...prev, communicationRating: rating }));
     if (rating > 0) {
       clearError("communicationRating");
     }
@@ -1589,8 +1689,9 @@ const FeedbackForm = ({
 
   // Handle comments change
   const handleCommentsChange = (e) => {
-    setComments(e.target.value);
-    if (e.target.value.trim()) {
+    const value = e.target.value;
+    setFormData((prev) => ({ ...prev, additionalComments: value }));
+    if (value.trim()) {
       clearError("comments");
     }
 
@@ -1598,19 +1699,19 @@ const FeedbackForm = ({
     if (triggerAutoSave && (isAddMode || isEditMode)) {
       triggerAutoSave();
     }
-    // to auto save comments change
-    // triggerAutoSave();
   };
 
   // Handle skill change with validation
   const handleSkillChange = (index, field, value) => {
     hasUserInteractedWithSkills.current = true;
-    const updatedSkills = [...skillRatings];
+    const updatedSkills = [...formData.skillRatings];
     updatedSkills[index][field] = value;
-    setSkillRatings(updatedSkills);
+    setFormData((prev) => ({ ...prev, skillRatings: updatedSkills }));
 
     // Clear skills error if all skills are valid
-    const validSkills = updatedSkills.filter(s => s.skill.trim() !== "");
+    const validSkills = updatedSkills.filter(
+      (s) => (s.skillName || s.skill || "").trim() !== "",
+    );
     if (
       validSkills.length > 0 &&
       validSkills.every((skill) => skill.rating > 0)
@@ -1621,7 +1722,6 @@ const FeedbackForm = ({
     if (triggerAutoSave && (isAddMode || isEditMode)) {
       triggerAutoSave();
     }
-    // triggerAutoSave();
   };
 
   // Initial submit handler - triggers confirmation popup
@@ -1649,175 +1749,84 @@ const FeedbackForm = ({
       //        return;
       //      }
 
-      // Prepare feedback data
-      const feedbackData = {
-        type: "submit",
+      // Prepare feedback payload
+      const payload = {
         tenantId: currentTenantId || "",
         ownerId: currentOwnerId || "",
-        interviewRoundId:
-          interviewRoundId ||
-          urlData?.interviewRoundId ||
-          decodedData?.interviewRoundId ||
-          "",
+        interviewRoundId: interviewRoundId || urlData?.interviewRoundId || decodedData?.interviewRoundId || "",
         candidateId: candidateData?._id || "",
-        feedbackCode:
-          feedbackDatas?.interviewRound?.interviewCode ||
-          "" + "-" + (feedbackDatas?.interviewRound?.sequence || ""),
-        positionId:
-          positionId ||
-          positionData?._id ||
-          decodedData?.positionId ||
-          urlData?.positionId ||
-          "",
-        interviewerId:
-          interviewerId ||
-          decodedData?.interviewerId ||
-          urlData?.interviewerId ||
-          "",
-        skills: skillRatings
-          .filter(skill => skill.skill && skill.skill.trim() !== "") // Filter empty skills
-          .map((skill) => ({
-            skillName: skill.skill,
-            rating: skill.rating,
-            note: skill.comments || "",
-          })),
-        questionFeedback: [
-          // Interviewer section questions
-          ...interviewerSectionData.map((question) => ({
-            // Send full object for interviewer-added to preserve snapshot on server
-            questionId: question,
-            candidateAnswer: {
-              answerType: toBackendAnswerType(question.isAnswered),
-              submittedAnswer: "",
-            },
-            interviewerFeedback: {
-              liked: question.isLiked || "none",
-              note: question.note || "",
-              dislikeReason: question.whyDislike || "",
-            },
-          })),
-          // Preselected questions responses
-          ...preselectedQuestionsResponses.map((response) => ({
-            questionId:
-              typeof response === "string"
-                ? response
-                : response?.questionId || response?.id || response?._id || "",
-            candidateAnswer: {
-              answerType: toBackendAnswerType(response.isAnswered),
-              submittedAnswer: "",
-            },
-            interviewerFeedback: {
-              liked: response.isLiked || "none",
-              note: response.note || "",
-              dislikeReason: response.whyDislike || "",
-            },
-          })),
+        positionId: positionId || positionData?._id || decodedData?.positionId || urlData?.positionId || "",
+        interviewerId: interviewerId || decodedData?.interviewerId || urlData?.interviewerId || "",
+        isMockInterview: isMockInterview || false,
+        feedbackCode: feedbackDatas?.interviewRound?.interviewCode || "" + "-" + (feedbackDatas?.interviewRound?.sequence || ""),
+
+        // Technical Skills (Categorized)
+        technicalSkills: [
+          ...formData.technicalSkills.strong.map(s => ({ skillName: s, level: 'strong', rating: 5, note: 'Strong' })),
+          ...formData.technicalSkills.good.map(s => ({ skillName: s, level: 'good', rating: 4, note: 'Good' })),
+          ...formData.technicalSkills.basic.map(s => ({ skillName: s, level: 'basic', rating: 3, note: 'Basic' })),
+          ...formData.technicalSkills.noExperience.map(s => ({ skillName: s, level: 'noExperience', rating: 1, note: 'No Experience' })),
         ],
 
-        //         questionFeedback: filteredInterviewerQuestions.map(question => ({
-        //           questionId: question, // Send the full question object
-        //           candidateAnswer: {
-        //             answerType: question.isAnswered || "not answered",
-        //             submittedAnswer: ""
-        //           },
-        //           interviewerFeedback: {
-        //             liked: question.isLiked || "none",
-        //             note: question.note || "",
-        //             dislikeReason: question.whyDislike || ""
-        //           }
-        //         })),
+        // Technical Competency (Star Ratings)
+        technicalCompetency: formData.skillRatings
+          .filter(s => s.skillName?.trim())
+          .map(s => ({ skillName: s.skillName, rating: s.rating || 0, notes: s.notes || "" })),
 
-        generalComments: comments,
+        // Questions Asked
+        questionsAsked: finalQuestionFeedback.map(q => ({
+          questionId: q.questionId || q._id || q.id,
+          question: q.question,
+          candidateAnswer: {
+            answerType: toBackendAnswerType(q.isAnswered),
+            submittedAnswer: q.answer || ""
+          },
+          interviewerFeedback: {
+            liked: q.isLiked || "none",
+            dislikeReason: q.whyDislike || "",
+            note: q.note || ""
+          },
+          answered: q.isAnswered !== "Not Answered",
+          notes: q.note || ""
+        })),
+
+
+        // Comments & Assessments
+        strengths: formData.strengths.filter(s => s?.trim()),
+        areasForImprovement: formData.areasForImprovement.filter(s => s?.trim()),
+        additionalComments: formData.additionalComments,
+        generalComments: formData.additionalComments,
+
         overallImpression: {
-          overallRating: overallRating,
-          communicationRating: communicationRating,
-          recommendation: recommendation,
-          note: "",
+          overallRating: formData.overallRating || 0,
+          recommendation: formData.recommendation || "Maybe",
+          note: formData.additionalComments,
+          cultureFit: formData.cultureFit || 0,
+          willingnessToLearn: formData.willingnessToLearn || 0,
+          communicationRating: formData.communicationRating || 0
         },
+        status: "submitted"
       };
-
-      // Validate with backend before submission (optional - can be enabled)
-      // try {
-      //   const validationResponse = await axios.post(
-      //     `${config.REACT_APP_API_URL}/feedback/validate`,
-      //     feedbackData,
-      //     {
-      //       headers: {
-      //         Authorization: `Bearer ${authToken}`,
-      //         "Content-Type": "application/json",
-      //       },
-      //     },
-      //   );
-
-      //   if (!validationResponse.data.success) {
-      //     console.log(
-      //       "❌ Backend validation failed",
-      //       validationResponse.data.errors,
-      //     );
-      //     // Update error state with backend errors
-      //     if (validationResponse.data.errors) {
-      //       setErrors((prevErrors) => ({
-      //         ...prevErrors,
-      //         ...validationResponse.data.errors,
-      //       }));
-      //     }
-      //     alert("Validation failed. Please check the form.");
-      //     return;
-      //   }
-      // } catch (validationError) {
-      //   // If backend validation fails, continue with frontend validation only
-      //   console.warn(
-      //     "Backend validation unavailable, proceeding with frontend validation only",
-      //     validationError,
-      //   );
-      // }
-
-      const updatedFeedbackData = {
-        overallRating,
-        skills: skillRatings
-          .filter(skill => skill.skill && skill.skill.trim() !== "")
-          .map((skill) => ({
-            skillName: skill.skill,
-            rating: skill.rating,
-            note: skill.comments,
-          })),
-        questionFeedback: finalQuestionFeedback,
-        generalComments: comments,
-        overallImpression: {
-          overallRating,
-          communicationRating,
-          recommendation,
-          note: comments,
-        },
-        status: "submitted", // Mark as submitted
-      };
-
-      // console.log('📤 Update payload (submit):', updatedFeedbackData);
-
-      // console.log('📤 Sending feedback data:', feedbackData);
 
       if (isEditMode || autoSaveFeedbackId) {
-        if (feedbackId || autoSaveFeedbackId) {
-          updateFeedback(
-            { feedbackId, feedbackData: updatedFeedbackData },
-            {
-              onSuccess: (data) => {
-                if (data.success) {
-                  notify.success("Feedback submitted successfully!");
-                } else {
-                  notify.error("Failed to update feedback: " + data.message);
-                }
-              },
-              onError: (error) => {
-                notify.error("Failed to update feedback: " + error.message);
-              },
+        const fId = feedbackId || autoSaveFeedbackId;
+        updateFeedback(
+          { feedbackId: fId, feedbackData: payload },
+          {
+            onSuccess: (data) => {
+              if (data.success) {
+                notify.success("Feedback submitted successfully!");
+              } else {
+                notify.error("Failed to update feedback: " + data.message);
+              }
             },
-          );
-        } else {
-          notify.error("No feedback ID found, cannot update.");
-        }
+            onError: (error) => {
+              notify.error("Failed to update feedback: " + error.message);
+            },
+          }
+        );
       } else {
-        createFeedback(feedbackData, {
+        createFeedback(payload, {
           onSuccess: (data) => {
             if (data.success) {
               notify.success("Feedback submitted successfully!");
@@ -1850,185 +1859,95 @@ const FeedbackForm = ({
     try {
       // console.log("💾 Starting draft save...");
 
-      // Prepare feedback data for draft save
-      const feedbackData = {
-        type: "draft",
+      // Prepare feedback payload for draft
+      const payload = {
         tenantId: currentTenantId || "",
         ownerId: currentOwnerId || "",
-        interviewRoundId:
-          interviewRoundId ||
-          urlData?.interviewRoundId ||
-          decodedData?.interviewRoundId ||
-          "",
+        interviewRoundId: interviewRoundId || urlData?.interviewRoundId || decodedData?.interviewRoundId || "",
         candidateId: candidateData?._id || "",
-        positionId:
-          positionId ||
-          positionData?._id ||
-          decodedData?.positionId ||
-          urlData?.positionId ||
-          "",
-        interviewerId:
-          interviewerId ||
-          decodedData?.interviewerId ||
-          "" ||
-          urlData?.interviewerId ||
-          "",
-        skills: skillRatings
-          .filter(skill => skill.skill && skill.skill.trim() !== "")
-          .map((skill) => ({
-            skillName: skill.skill,
-            rating: skill.rating,
-            note: skill.comments || "",
-          })),
-        feedbackCode:
-          feedbackDatas?.interviewRound?.interviewCode ||
-          "" + "-" + feedbackDatas?.interviewRound?.sequence ||
-          "",
-        questionFeedback: [
-          // Interviewer section questions
-          ...interviewerSectionData.map((question) => ({
-            // Send full object for interviewer-added to preserve snapshot on server
-            questionId: question,
-            candidateAnswer: {
-              answerType: question.isAnswered || "not answered",
-              submittedAnswer: "",
-            },
-            interviewerFeedback: {
-              liked: question.isLiked || "none",
-              note: question.note || "",
-              dislikeReason: question.whyDislike || "",
-            },
-          })),
-          // Preselected questions responses
-          ...preselectedQuestionsResponses.map((response) => ({
-            questionId:
-              typeof response === "string"
-                ? response
-                : response?.questionId || response?.id || response?._id || "",
-            candidateAnswer: {
-              answerType: response.isAnswered || "not answered",
-              submittedAnswer: "",
-            },
-            interviewerFeedback: {
-              liked: response.isLiked || "none",
-              note: response.note || "",
-              dislikeReason: response.whyDislike || "",
-            },
-          })),
+        positionId: positionId || positionData?._id || decodedData?.positionId || urlData?.positionId || "",
+        interviewerId: interviewerId || decodedData?.interviewerId || urlData?.interviewerId || "",
+        isMockInterview: isMockInterview || false,
+        feedbackCode: feedbackDatas?.interviewRound?.interviewCode || "" + "-" + (feedbackDatas?.interviewRound?.sequence || ""),
+
+        // Technical Skills (Categorized)
+        technicalSkills: [
+          ...formData.technicalSkills.strong.map(s => ({ skillName: s, level: 'strong', rating: 5, note: 'Strong' })),
+          ...formData.technicalSkills.good.map(s => ({ skillName: s, level: 'good', rating: 4, note: 'Good' })),
+          ...formData.technicalSkills.basic.map(s => ({ skillName: s, level: 'basic', rating: 3, note: 'Basic' })),
+          ...formData.technicalSkills.noExperience.map(s => ({ skillName: s, level: 'noExperience', rating: 1, note: 'No Experience' })),
         ],
 
-        //         questionFeedback: filteredInterviewerQuestions.map(question => ({
-        //           questionId: question, // Send the full question object
-        //           candidateAnswer: {
-        //             answerType: question.isAnswered || "not answered",
-        //             submittedAnswer: ""
-        //           },
-        //           interviewerFeedback: {
-        //             liked: question.isLiked || "none",
-        //             note: question.note || "",
-        //             dislikeReason: question.whyDislike || ""
-        //           }
-        //         })),
+        // Technical Competency (Star Ratings)
+        technicalCompetency: formData.skillRatings
+          .filter(s => s.skillName?.trim())
+          .map(s => ({ skillName: s.skillName, rating: s.rating || 0, notes: s.notes || "" })),
 
-        generalComments: comments,
+        // Questions Asked
+        questionsAsked: finalQuestionFeedback.map(q => ({
+          questionId: q.questionId || q._id || q.id,
+          question: q.question,
+          candidateAnswer: {
+            answerType: toBackendAnswerType(q.isAnswered),
+            submittedAnswer: q.answer || ""
+          },
+          interviewerFeedback: {
+            liked: q.isLiked || "none",
+            dislikeReason: q.whyDislike || "",
+            note: q.note || ""
+          },
+          answered: q.isAnswered !== "Not Answered",
+          notes: q.note || ""
+        })),
+
+
+        // Comments & Assessments
+        strengths: formData.strengths.filter(s => s?.trim()),
+        areasForImprovement: formData.areasForImprovement.filter(s => s?.trim()),
+        additionalComments: formData.additionalComments,
+        generalComments: formData.additionalComments,
+
         overallImpression: {
-          overallRating: overallRating,
-          communicationRating: communicationRating,
-          recommendation: recommendation,
-          note: "",
+          overallRating: formData.overallRating || 0,
+          recommendation: formData.recommendation || "Maybe",
+          note: formData.additionalComments,
+          cultureFit: formData.cultureFit || 0,
+          willingnessToLearn: formData.willingnessToLearn || 0,
+          communicationRating: formData.communicationRating || 0
         },
-        status: "draft", // Mark as draft
-      };
-
-      // Optional: Validate draft with backend (usually not needed for drafts)
-      // Uncomment if you want to validate drafts too
-      /*
-      try {
-        const validationResponse = await axios.post(
-          `${config.REACT_APP_API_URL}/feedback/validate`,
-          feedbackData,
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-
-        if (!validationResponse.data.success) {
-          console.log("⚠️ Draft validation warnings", validationResponse.data.errors);
-          // For drafts, we might just show warnings but not block saving
-        }
-      } catch (validationError) {
-        console.warn("Backend validation unavailable for draft", validationError);
-      }
-      */
-
-      const updatedFeedbackData = {
-        overallRating,
-        skills: skillRatings
-          .filter(skill => skill.skill && skill.skill.trim() !== "")
-          .map((skill) => ({
-            skillName: skill.skill,
-            rating: skill.rating,
-            note: skill.comments,
-          })),
-        questionFeedback: finalQuestionFeedback,
-        generalComments: comments,
-        overallImpression: {
-          overallRating,
-          recommendation,
-          communicationRating,
-          note: comments,
-        },
-        status: "draft", // Mark as draft
+        status: "draft"
       };
 
       if (isEditMode || autoSaveFeedbackId) {
-        if (feedbackId) {
+        const fId = feedbackId || autoSaveFeedbackId;
+        if (fId) {
           updateFeedback(
-            { feedbackId, feedbackData: updatedFeedbackData },
+            { feedbackId: fId, feedbackData: payload },
             {
               onSuccess: (data) => {
                 if (data.success) {
-                  notify.success("Feedback saved  successfully!");
+                  notify.success("Feedback saved successfully!");
+                  if (isEditMode) navigate("/feedback");
                 } else {
-                  notify.error(
-                    "Failed to save feedback as draft: " + data.message,
-                  );
+                  notify.error("Failed to save feedback: " + data.message);
                 }
               },
               onError: (error) => {
-                notify.error(
-                  "Failed to save feedback as draft: " + error.message,
-                );
+                notify.error("Failed to save feedback: " + error.message);
               },
-            },
+            }
           );
-
-          if (isEditMode) {
-            navigate("/feedback");
-          }
-
-          // if (isAddMode) {
-          //   navigate("/feedback");
-          // } else {
-
-
-          // }
         } else {
           notify.error("No feedback ID found, cannot save draft.");
         }
       } else {
-        createFeedback(feedbackData, {
+        createFeedback(payload, {
           onSuccess: (data) => {
             if (data.success) {
-              // Store feedback ID for auto-save
               if (data.data?._id) {
                 setAutoSaveFeedbackId(data.data._id);
               }
               notify.success("Feedback saved as draft!");
-              // navigate("/feedback");
             } else {
               notify.error("Failed to save feedback as draft: " + data.message);
             }
@@ -2147,27 +2066,26 @@ const FeedbackForm = ({
                 <input
                   type="text"
                   disabled={true}
-                  // value={formData.candidateName}
-                  // onChange={(e) => setFormData({ ...formData, candidateName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                  value={formData.candidateName}
+                  className="w-full px-3 py-2 border border-blue-50 bg-blue-50/20 text-gray-700 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent cursor-not-allowed"
                   placeholder="Enter candidate name"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Position <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  disabled={true}
-                  value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
-                  placeholder="e.g., Senior Software Engineer"
-                />
-              </div>
-
+              {urlData?.interviewType !== "mockinterview" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Position <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    disabled={true}
+                    value={formData.position}
+                    className="w-full px-3 py-2 border border-blue-50 bg-blue-50/20 text-gray-700 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent cursor-not-allowed"
+                    placeholder="e.g., Senior Software Engineer"
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Round Title <span className="text-red-500">*</span>
@@ -2176,8 +2094,7 @@ const FeedbackForm = ({
                   type="text"
                   disabled={true}
                   value={formData.roundTitle}
-                  onChange={(e) => setFormData({ ...formData, roundTitle: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-blue-50 bg-blue-50/20 text-gray-700 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent cursor-not-allowed"
                   placeholder="e.g., Technical Screening, System Design"
                 />
               </div>
@@ -2190,8 +2107,7 @@ const FeedbackForm = ({
                   type="text"
                   disabled={true}
                   value={formData.interviewerName}
-                  onChange={(e) => setFormData({ ...formData, interviewerName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-blue-50 bg-blue-50/20 text-gray-700 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent cursor-not-allowed"
                   placeholder="Enter your name"
                 />
               </div>
@@ -2204,25 +2120,25 @@ const FeedbackForm = ({
                   type="date"
                   disabled={true}
                   value={formData.interviewDate}
-                  onChange={(e) => setFormData({ ...formData, interviewDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-blue-50 bg-blue-50/20 text-gray-700 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent cursor-not-allowed"
                 />
               </div>
-
-              <div className="flex items-center pt-6">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    disabled
-                    checked={formData.isMockInterview}
-                    onChange={(e) => setFormData({ ...formData, isMockInterview: e.target.checked })}
-                    className="w-4 h-4 accent-custom-blue text-[rgb(33,121,137)] border-gray-300 rounded focus:ring-[rgb(33,121,137)]"
-                  />
-                  <span className="ml-2 text-sm font-medium text-gray-700">
-                    This is a Mock Interview
-                  </span>
-                </label>
-              </div>
+              {urlData?.interviewType === "mockinterview" && (
+                <div className="flex items-center pt-6">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      disabled
+                      checked={formData.isMockInterview}
+                      onChange={(e) => setFormData({ ...formData, isMockInterview: e.target.checked })}
+                      className="w-4 h-4 accent-custom-blue text-[rgb(33,121,137)] border-gray-300 rounded focus:ring-[rgb(33,121,137)]"
+                    />
+                    <span className="ml-2 text-sm font-medium text-gray-700">
+                      This is a Mock Interview
+                    </span>
+                  </label>
+                </div>
+              )}
             </div>
           </div>
 
@@ -2231,11 +2147,14 @@ const FeedbackForm = ({
             <TechnicalSkillsAssessment
               formData={formData}
               setFormData={setFormData}
+              onSkillChange={triggerAutoSave}
             />
           </div>
 
-          {/* Questions Asked */}
-          <div className="border-t border-gray-200 pt-8">
+
+
+
+          {/* <div className="border-t border-gray-200 pt-8">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Questions Asked</h3>
               <button
@@ -2304,12 +2223,12 @@ const FeedbackForm = ({
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Skill Ratings */}
           <div className="border-t border-gray-200 pt-8">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Skill Ratings</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Technical Competency Ratings</h3>
               <button
                 type="button"
                 onClick={addSkillRating}
@@ -2365,6 +2284,84 @@ const FeedbackForm = ({
               ))}
             </div>
           </div>
+
+
+          {/* Questions Asked */}
+          <div className="flex sm:flex-row sm:items-center justify-between">
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Questions Asked
+              </label>
+              <span className="text-xs text-gray-500 mt-1 block">
+                {questionsWithFeedback.length} question(s) from question bank
+              </span>
+            </div>
+            {!isReadOnly && (
+              <Button
+                className="flex items-center gap-2 bg-custom-blue text-white hover:bg-custom-blue/90 font-medium"
+                onClick={openQuestionBank}
+                title="Add Question from Question Bank"
+              // disabled={decodedData?.schedule}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add</span>
+                <span className="sm:hidden inline">Question</span>
+              </Button>
+            )}
+          </div>
+
+
+          {isReadOnly ? (
+            // VIEW MODE - Read-only display
+            <div className="space-y-4">
+              {questionsWithFeedback?.length > 0 ? (
+                questionsWithFeedback.map((question) => (
+                  <QuestionCard
+                    key={question.questionId || question.id}
+                    question={question}
+                    mode="view"
+                    onLikeToggle={handleLikeToggle}
+                    onDislikeToggle={handleDislikeToggle}
+                    DisLikeSection={DisLikeSection}
+                    dislikeQuestionId={dislikeQuestionId}
+                  />
+                ))
+              ) : (
+                <EmptyState
+                  message="No questions available"
+                  subMessage="Questions with feedback will appear here"
+                />
+              )}
+            </div>
+          ) : (
+            // EDIT/ADD MODE - Interactive display
+            <div className="space-y-4">
+              {questionsToRender?.length > 0 ? (
+                questionsToRender.map((question) => (
+                  <QuestionCard
+                    key={question.questionId || question.id}
+                    question={question}
+                    mode="edit"
+                    onNoteAdd={onClickAddNote}
+                    onNoteChange={onChangeInterviewQuestionNotes}
+                    onLikeToggle={handleLikeToggle}
+                    onDislikeToggle={handleDislikeToggle}
+                    DisLikeSection={DisLikeSection}
+                    dislikeQuestionId={dislikeQuestionId}
+                    RadioGroupInput={RadioGroupInput}
+                    SharePopupSection={SharePopupSection}
+                  />
+                ))
+              ) : (
+                <EmptyState
+                  message="No questions selected from question bank"
+                  subMessage="Go to 'Interview Questions' tab to add questions from the question bank"
+                  icon="FileText"
+                />
+              )}
+            </div>
+          )}
+
 
           {/* Strengths */}
           <div className="border-t border-gray-200 pt-8">
@@ -2477,6 +2474,19 @@ const FeedbackForm = ({
                   </span>
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Communication Rating</label>
+                <div className="flex items-center gap-3">
+                  <StarRating
+                    rating={formData.communicationRating}
+                    onChange={(rating) => setFormData({ ...formData, communicationRating: rating })}
+                  />
+                  <span className="text-sm text-gray-600">
+                    {formData.communicationRating > 0 ? `${formData.communicationRating}/5` : 'Not rated'}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2511,6 +2521,7 @@ const FeedbackForm = ({
                 >
                   <option value="Strong Hire">Strong Hire</option>
                   <option value="Hire">Hire</option>
+                  <option value="Maybe">Maybe</option>
                   <option value="No Hire">No Hire</option>
                   <option value="Strong No Hire">Strong No Hire</option>
                 </select>
@@ -2531,9 +2542,9 @@ const FeedbackForm = ({
             />
           </div>
           {/* -------------------------------NEW UI----------------------------------- */}
-        
 
-          <div className="bg-gray-50 p-4 gap-4 grid grid-cols-2 sm:grid-cols-1 md:grid-cols-1 rounded-lg">
+
+          {/* <div className="bg-gray-50 p-4 gap-4 grid grid-cols-2 sm:grid-cols-1 md:grid-cols-1 rounded-lg">
             <div className="bg-gray-50 p-4 rounded-lg">
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Overall Rating{" "}
@@ -2572,20 +2583,17 @@ const FeedbackForm = ({
                 </p>
               )}
             </div>
-          </div>
+          </div> */}
 
-          <div>
+          {/* <div>
             <div className="flex w-full items-center justify-between mb-4">
-              {/* <p className="flex items-center gap-1 text-sm font-medium text-gray-700">
-                Skill Ratings
-                {!isReadOnly && <span className="text-red-500">*</span>}
-              </p> */}
+         
               <div className="flex flex-col">
                 <p className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
                   Skill Ratings
                   {!isReadOnly && <span className="text-red-500">*</span>}
                 </p>
-                {/* Step 3: Display the counter */}
+                
                 <span className="text-xs text-gray-600">
                   {skillRatings.length} / 10 Skills
                 </span>
@@ -2641,7 +2649,7 @@ const FeedbackForm = ({
                 {skillRatings.map((skill, index) => (
                   <div key={index} className="bg-gray-50 p-4 rounded-lg">
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 items-start">
-                      {/* Skill Name */}
+                 
                       <div>
                         <label className="block text-xs text-gray-500 mb-1 lg:hidden">
                           Skill Name
@@ -2670,7 +2678,7 @@ const FeedbackForm = ({
                           </span>
                         </div>
                       </div>
-                      {/* Comments Input */}
+                      
                       <div className="relative">
                         <span className="block text-xs text-gray-500 mb-1 lg:hidden">
                           Comments (optional)
@@ -2685,16 +2693,7 @@ const FeedbackForm = ({
                           className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-transparent"
                         // className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                        {/* <Button
-                          type="button"
-                          onClick={() => handleRemoveSkill(index)}
-                          variant="ghost"
-                          size="sm"
-                          className="ml-2 text-red-500 hover:text-red-700"
-                          disabled={skillRatings.length <= 1}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button> */}
+                       
                       </div>
                     </div>
                   </div>
@@ -2704,367 +2703,13 @@ const FeedbackForm = ({
             {errors.skills && (
               <p className="mt-1 text-sm text-red-600">{errors.skills}</p>
             )}
-          </div>
+          </div> */}
 
 
-          <div className="flex sm:flex-row sm:items-center justify-between">
-            {/* v1.0.3 <-------------------------------------------------------- */}
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Questions Asked
-              </label>
-              <span className="text-xs text-gray-500 mt-1 block">
-                {questionsWithFeedback.length} question(s) from question bank
-              </span>
-            </div>
-            {/* v1.0.3 --------------------------------------------------------> */}
-            {!isReadOnly && (
-              <Button
-                className="flex items-center gap-2 bg-custom-blue text-white hover:bg-custom-blue/90 font-medium"
-                onClick={openQuestionBank}
-                title="Add Question from Question Bank"
-              // disabled={decodedData?.schedule}
-              >
-                <Plus className="h-4 w-4" />
-                <span>Add</span>
-                <span className="sm:hidden inline">Question</span>
-              </Button>
-            )}
-          </div>
-
-          {/* {isViewMode ? (
-            <>
-              {questionsWithFeedback?.length > 0
-                ? questionsWithFeedback.map((question) => (
-                  <div
-                    key={question.questionId || question.id}
-                    className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-2"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                        {question.snapshot?.technology?.[0] ||
-                          question.snapshot?.snapshot?.technology?.[0] ||
-                          question.snapshot?.category?.[0] ||
-                          question.snapshot?.snapshot?.category?.[0] ||
-                          "N/A"}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {question.snapshot?.difficultyLevel ||
-                          question.snapshot?.snapshot?.difficultyLevel ||
-                          question.difficulty ||
-                          "N/A"}
-                      </span>
-                    </div>
-
-                    <h3 className="font-semibold text-gray-800 mb-2">
-                      {question.snapshot?.questionText ||
-                        question.snapshot?.snapshot?.questionText ||
-                        question.question ||
-                        "N/A"}
-                    </h3>
-
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium text-gray-600 mb-2">
-                        Expected Answer:
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        {question.snapshot?.correctAnswer ||
-                          question.snapshot?.snapshot?.correctAnswer ||
-                          question.expectedAnswer ||
-                          "N/A"}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
-                      <span>
-                        Mandatory:{" "}
-                        {question.mandatory === "true" ||
-                          question.snapshot?.mandatory === "true"
-                          ? "Yes"
-                          : "No"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 mt-2">
-                      <span
-                        className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
-                          }`}
-                        onClick={() =>
-                          handleLikeToggle(
-                            question.questionId ||
-                            question.id ||
-                            question._id,
-                          )
-                        }
-                        disabled={isReadOnly}
-                      >
-                        <ThumbsUp className="h-4 w-4" />
-                      </span>
-                      <span
-                        className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked"
-                          ? "text-red-500"
-                          : ""
-                          }`}
-                        style={{ cursor: "pointer" }}
-                        onClick={() =>
-                          handleDislikeToggle(
-                            question.questionId ||
-                            question.id ||
-                            question._id,
-                          )
-                        }
-                        disabled={isReadOnly}
-                      >
-                        <ThumbsDown className="h-4 w-4" />
-                      </span>
-                    </div>
-                    <div>
-                     
-                      {(dislikeQuestionId ===
-                        (question.questionId ||
-                          question.id ||
-                          question._id) ||
-                        (!!question.whyDislike &&
-                          question.isLiked === "disliked")) && (
-                          <DisLikeSection each={question} />
-                        )}
-                    </div>
-
-                 
-                    {question.notesBool && question.note && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-gray-600 mb-1">
-                          Note:
-                        </p>
-                        <p className="text-sm text-gray-800">
-                          {question.note}
-                        </p>
-                        {!isReadOnly && (
-                          <p className="text-xs text-gray-400 mt-1">
-                            {question.note.length}/250
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))
-                : null}
-            </>
-          ) : (
-            <div className="space-y-4">
-              {questionsToRender.map((question) => {
-                return (
-                  <div
-                    key={question.questionId || question.id}
-                    className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 gap-2"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <span className="px-3 py-1 bg-[#217989] bg-opacity-10 text-[#217989] rounded-full text-sm font-medium">
-                        {
-                          question?.snapshot?.technology?.[0] ||
-                          question?.snapshot?.snapshot?.technology?.[0] ||
-                          question?.snapshot?.category?.[0] ||
-                          question?.snapshot?.snapshot?.category?.[0] ||
-                          "N/A"
-                        }
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {question.snapshot?.difficultyLevel ||
-                          question.snapshot?.snapshot?.difficultyLevel ||
-                          question.difficulty ||
-                          "N/A"}
-                      </span>
-                    </div>
-                    <h3 className="font-semibold text-gray-800 mb-2">
-                      {question.snapshot?.questionText ||
-                        question.snapshot?.snapshot?.questionText ||
-                        question.question ||
-                        "N/A"}
-                    </h3>
-
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium text-gray-600 mb-2">
-                        Expected Answer:
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        {question.snapshot?.correctAnswer ||
-                          question.snapshot?.snapshot?.correctAnswer ||
-                          question.expectedAnswer ||
-                          "N/A"}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between text-gray-500 text-xs mt-2">
-                      <span>
-                        Mandatory:{" "}
-                        {question.mandatory === "true" ||
-                          question.snapshot?.mandatory === "true"
-                          ? "Yes"
-                          : "No"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2 mt-2">
-                      <RadioGroupInput each={question} />
-
-                      <div className="flex items-center gap-4 mt-2">
-                        <button
-                          className={`py-[0.2rem] px-[0.8rem] question-add-note-button cursor-pointer font-bold text-[#227a8a] bg-transparent rounded-[0.3rem] shadow-[0_0.2px_1px_0.1px_#227a8a] border border-[#227a8a]`}
-                          onClick={() =>
-                            onClickAddNote(
-                              question.questionId ||
-                              question.id ||
-                              question._id,
-                            )
-                          }
-                        >
-                          {question.notesBool ? "Delete Note" : "Add a Note"}
-                         
-                        </button>
-                        <SharePopupSection />
-                        <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "liked" ? "text-green-700" : ""
-                            }`}
-                          onClick={() =>
-                            handleLikeToggle(
-                              question.questionId || question._id,
-                            )
-                          }
-                        >
-                          <ThumbsUp className="h-4 w-4" />
-                        </span>
-                        <span
-                          className={`transition-transform hover:scale-110 duration-300 ease-in-out ${question.isLiked === "disliked"
-                            ? "text-red-500"
-                            : ""
-                            }`}
-                          style={{ cursor: "pointer" }}
-                          onClick={() =>
-                            handleDislikeToggle(
-                              question.questionId || question._id,
-                            )
-                          }
-                        >
-                          <ThumbsDown className="h-4 w-4" />
-                        </span>
-                      </div>
-                    </div>
-
-                    {question.notesBool && (
-                      <div>
-                        <div className="flex justify-start mt-4">
-                          <label
-                            htmlFor={`note-input-${question.questionId || question.id
-                              }`}
-                            className="w-[180px] font-bold text-gray-700"
-                          >
-                            Note
-                          </label>
-                          <div className="flex flex-col items-start w-full  h-[80px]">
-                            <div className="w-full relative  rounded-md">
-                              <input
-                                className="w-full outline-none b-none border border-gray-500 p-2 rounded-md"
-                                id={`note-input-${question.questionId || question.id
-                                  }`}
-                                type="text"
-                                value={question.note}
-                                onChange={(e) =>
-                                  onChangeInterviewQuestionNotes(
-                                    question.questionId || question.id,
-                                    e.target.value.slice(0, 250),
-                                  )
-                                }
-                                placeholder="Add your note here"
-                              />
-                             
-                            </div>
-                            <span className="w-full text-sm text-right text-gray-500">
-                              {question.note?.length || 0}/250
-                            </span>
-                            
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {(dislikeQuestionId ===
-                      (question.questionId || question.id || question._id) ||
-                      !!question.whyDislike) &&
-                      question.isLiked === "disliked" && (
-                        <DisLikeSection each={question} />
-                      )}
-                  </div>
-                );
-              })}
-              {questionsToRender.length === 0 && (
-                <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
-                  <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">
-                    No questions selected from question bank
-                  </p>
-                  <p className="text-gray-400 text-xs mt-1">
-                    Go to "Interview Questions" tab to add questions from the
-                    question bank
-                  </p>
-                </div>
-              )}
-            </div>
-          )} */}
-
-          {isReadOnly ? (
-            // VIEW MODE - Read-only display
-            <div className="space-y-4">
-              {questionsWithFeedback?.length > 0 ? (
-                questionsWithFeedback.map((question) => (
-                  <QuestionCard
-                    key={question.questionId || question.id}
-                    question={question}
-                    mode="view"
-                    onLikeToggle={handleLikeToggle}
-                    onDislikeToggle={handleDislikeToggle}
-                    DisLikeSection={DisLikeSection}
-                    dislikeQuestionId={dislikeQuestionId}
-                  />
-                ))
-              ) : (
-                <EmptyState
-                  message="No questions available"
-                  subMessage="Questions with feedback will appear here"
-                />
-              )}
-            </div>
-          ) : (
-            // EDIT/ADD MODE - Interactive display
-            <div className="space-y-4">
-              {questionsToRender?.length > 0 ? (
-                questionsToRender.map((question) => (
-                  <QuestionCard
-                    key={question.questionId || question.id}
-                    question={question}
-                    mode="edit"
-                    onNoteAdd={onClickAddNote}
-                    onNoteChange={onChangeInterviewQuestionNotes}
-                    onLikeToggle={handleLikeToggle}
-                    onDislikeToggle={handleDislikeToggle}
-                    DisLikeSection={DisLikeSection}
-                    dislikeQuestionId={dislikeQuestionId}
-                    RadioGroupInput={RadioGroupInput}
-                    SharePopupSection={SharePopupSection}
-                  />
-                ))
-              ) : (
-                <EmptyState
-                  message="No questions selected from question bank"
-                  subMessage="Go to 'Interview Questions' tab to add questions from the question bank"
-                  icon="FileText"
-                />
-              )}
-            </div>
-          )}
 
 
           {/* Comments Section */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Overall Comments{" "}
               {!isReadOnly && <span className="text-red-500">*</span>}
@@ -3085,11 +2730,11 @@ const FeedbackForm = ({
                 />
               </div>
             )}
-          </div>
+          </div> */}
 
 
           {/* Recommendation Section */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Recommendation{" "}
               {!isReadOnly && <span className="text-red-500">*</span>}
@@ -3125,7 +2770,7 @@ const FeedbackForm = ({
                 placeholder="Select Recommendation"
               />
             )}
-          </div>
+          </div> */}
 
           {/* Action Buttons */}
           {!isReadOnly && !urlData?.isSchedule && (
@@ -3253,21 +2898,3 @@ const FeedbackForm = ({
 // To:
 export default FeedbackForm;
 export { flattenQuestionFeedback };
-// // Add CSS for animation (add to your CSS file or styled components):
-// /* Add CSS for animation (add to your CSS file or styled components): */
-
-// /* Add to your main CSS file */
-// @keyframes fade-in {
-//   from {
-//     opacity: 0;
-//     transform: translateY(10px);
-//   }
-//   to {
-//     opacity: 1;
-//     transform: translateY(0);
-//   }
-// }
-
-// .animate-fade-in {
-//   animation: fade-in 0.3s ease-in-out;
-// }

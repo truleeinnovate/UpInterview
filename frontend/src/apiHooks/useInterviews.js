@@ -17,7 +17,7 @@ export const useInterviews = (
 ) => {
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
-  const hasViewPermission = effectivePermissions?.Interviews?.View;
+  // const hasViewPermission = effectivePermissions?.Interviews?.View;
   // const navigate = useNavigate();
   const initialLoad = useRef(true);
 
@@ -572,8 +572,8 @@ export const useInterviews = (
 
     onError: (error) => {
       console.error("Interview deletion error:", error);
-      const errorMessage =
-        error.response?.data?.message || "Failed to delete interview";
+      // const errorMessage =
+      //   error.response?.data?.message || "Failed to delete interview";
       // toast.error(errorMessage);
     },
   });

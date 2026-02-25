@@ -500,6 +500,7 @@ function OutsourcedInterviewerModal({
   source,
   navigatedfrom,
   previousSelectedInterviewers,
+  interviewType,
   onDateTimeChange,
 
   // positionData,
@@ -533,7 +534,7 @@ function OutsourcedInterviewerModal({
   const [localStartTime, setLocalStartTime] = useState("");
   const [localEndTime, setLocalEndTime] = useState("");
 
-  // console.log("currentRole", currentRole)
+  console.log("interviewType", interviewType)
 
 
 
@@ -2194,6 +2195,25 @@ function OutsourcedInterviewerModal({
 
   // console.log("filteredInterviewers", filteredInterviewers);
 
+
+  // Add this helper function near the top of the component, after other helper functions
+  const formatForDatetimeLocal = (date) => {
+    const pad = (n) => String(n).padStart(2, "0");
+    const y = date.getFullYear();
+    const m = pad(date.getMonth() + 1);
+    const d = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mm = pad(date.getMinutes());
+    return `${y}-${m}-${d}T${hh}:${mm}`;
+  };
+
+  const twoHoursFromNowLocal = () => {
+    const d = new Date();
+    d.setHours(d.getHours() + 2);
+    d.setSeconds(0, 0); // strip seconds/millis for consistency
+    return formatForDatetimeLocal(d);
+  };
+
   return (
     <>
       <Toaster />
@@ -2578,13 +2598,106 @@ function OutsourcedInterviewerModal({
                         /> */}
                       </div>
 
+
                       {/* Date & Time Selection */}
-                      <div className="md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                          Scheduled Date & Time
-                        </label>
-                        <input
+                      {interviewType !== "instant" &&
+
+                        < div className="md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3">
+                          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                            Scheduled Date & Time
+                          </label>
+                          <input
+                            // disabled={interviewType === "instant"}
+                            type="datetime-local"
+                            min={twoHoursFromNowLocal()} // Browser will prevent selection of earlier times
+                            value={(() => {
+                              if (!localDate || !localStartTime) return "";
+                              try {
+                                const [d, m, y] = localDate.split("-");
+                                const [time, period] = localStartTime.split(" ");
+                                let [h, min] = time.split(":").map(Number);
+                                if (period === "PM" && h !== 12) h += 12;
+                                if (period === "AM" && h === 12) h = 0;
+                                return `${y}-${m}-${d}T${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+                              } catch { return ""; }
+                            })()}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val) {
+                                try {
+                                  const selectedDate = new Date(val);
+                                  const minAllowedDate = new Date(twoHoursFromNowLocal());
+
+                                  // If selected date is less than 2 hours from now, reset to minimum allowed
+                                  if (selectedDate < minAllowedDate) {
+                                    // Reset to minimum allowed time using twoHoursFromNowLocal
+                                    const minDate = new Date(twoHoursFromNowLocal());
+                                    const d = String(minDate.getDate()).padStart(2, "0");
+                                    const m = String(minDate.getMonth() + 1).padStart(2, "0");
+                                    const y = minDate.getFullYear();
+                                    setLocalDate(`${d}-${m}-${y}`);
+
+                                    let h = minDate.getHours();
+                                    const minMinutes = minDate.getMinutes();
+                                    const period = h >= 12 ? "PM" : "AM";
+                                    h = h % 12 || 12;
+                                    setLocalStartTime(`${h}:${String(minMinutes).padStart(2, "0")} ${period}`);
+
+                                    // Calculate end time (default 60 minutes)
+                                    const endObj = new Date(minDate.getTime() + 60 * 60000);
+                                    let eh = endObj.getHours();
+                                    const emin = endObj.getMinutes();
+                                    const ePeriod = eh >= 12 ? "PM" : "AM";
+                                    eh = eh % 12 || 12;
+                                    setLocalEndTime(`${eh}:${String(emin).padStart(2, "0")} ${ePeriod}`);
+
+                                    return;
+                                  }
+
+                                  // If validation passes, proceed with normal date update
+                                  const d = String(selectedDate.getDate()).padStart(2, "0");
+                                  const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
+                                  const y = selectedDate.getFullYear();
+                                  setLocalDate(`${d}-${m}-${y}`);
+
+                                  let h = selectedDate.getHours();
+                                  const min = selectedDate.getMinutes();
+                                  const period = h >= 12 ? "PM" : "AM";
+                                  h = h % 12 || 12;
+                                  setLocalStartTime(`${h}:${String(min).padStart(2, "0")} ${period}`);
+
+                                  // Preserve the existing duration (gap between start & end)
+                                  let durationMs = 60 * 60000; // default 60 min
+                                  if (localStartTime && localEndTime) {
+                                    try {
+                                      const parseT = (t) => {
+                                        const [tp, pr] = t.split(" ");
+                                        let [th, tm] = tp.split(":").map(Number);
+                                        if (pr === "PM" && th !== 12) th += 12;
+                                        if (pr === "AM" && th === 12) th = 0;
+                                        return th * 60 + tm;
+                                      };
+                                      const diff = (parseT(localEndTime) - parseT(localStartTime)) * 60000;
+                                      if (diff > 0) durationMs = diff;
+                                    } catch { }
+                                  }
+                                  const endObj = new Date(selectedDate.getTime() + durationMs);
+                                  let eh = endObj.getHours();
+                                  const emin = endObj.getMinutes();
+                                  const ePeriod = eh >= 12 ? "PM" : "AM";
+                                  eh = eh % 12 || 12;
+                                  setLocalEndTime(`${eh}:${String(emin).padStart(2, "0")} ${ePeriod}`);
+                                } catch (err) {
+                                  console.error("Error parsing datetime-local:", err);
+                                }
+                              }
+                            }}
+                            className="w-full h-[38px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+
+                          {/* <input
                           type="datetime-local"
+                          min={twoHoursFromNowLocal()} // Add this line
                           value={(() => {
                             if (!localDate || !localStartTime) return "";
                             try {
@@ -2639,8 +2752,10 @@ function OutsourcedInterviewerModal({
                             }
                           }}
                           className="w-full h-[38px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
+                        /> */}
+                        </div>
+                      }
+
 
                       {/* Parent Skills Reset Button */}
                       {skills && skills.length > 0 && (
@@ -2668,7 +2783,7 @@ function OutsourcedInterviewerModal({
                             className="w-full h-10 px-4 text-sm rounded-md bg-custom-blue hover:bg-custom-blue/90 text-white duration-200 flex items-center justify-center whitespace-nowrap gap-2"
                           >
                             <RefreshCw className="h-4 w-4" />
-                            Reset Skills
+                            Reset
                           </button>
                         </div>
                       )}
@@ -2819,7 +2934,7 @@ function OutsourcedInterviewerModal({
                             }`}
                         >
                           {role.roleLabel || role.roleName}
-                          <button
+                          {/* <button
                             onClick={() => {
                               setSelectedRoles((prev) =>
                                 prev.filter((r) => r.roleName !== role.roleName)
@@ -2831,11 +2946,11 @@ function OutsourcedInterviewerModal({
                               }`}
                           >
                             <X className="h-3 w-3" />
-                          </button>
+                          </button> */}
                         </span>
                       ))}
                       {/* Add Role Dropdown */}
-                      <div className="inline-block min-w-[140px]">
+                      {/* <div className="inline-block min-w-[140px]">
                         <DropdownWithSearchField
                           value={null}
                           options={
@@ -2878,7 +2993,7 @@ function OutsourcedInterviewerModal({
                           loading={isCurrentRolesFetching}
                           placeholder="+ Add role"
                         />
-                      </div>
+                      </div> */}
                     </div>
 
                     {/* Date & Time Chip */}
@@ -3147,9 +3262,9 @@ function OutsourcedInterviewerModal({
             </div>
           )}
         </div>
-      </SidebarPopup>
+      </SidebarPopup >
       {/* v1.0.2 --------------------------------------------------------------------------> */}
-      <AnimatePresence>
+      < AnimatePresence >
         {selectedInterviewer && navigatedfrom !== "dashboard" && (
           <div className="relative z-[60]">
             <InterviewerDetailsModal
@@ -3157,8 +3272,9 @@ function OutsourcedInterviewerModal({
               onClose={() => setSelectedInterviewer(null)}
             />
           </div>
-        )}
-      </AnimatePresence>
+        )
+        }
+      </AnimatePresence >
 
       {/* {showWalletModal && (
         <WalletTopupPopup
