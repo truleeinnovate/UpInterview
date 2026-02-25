@@ -3027,7 +3027,20 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
       }
 
       customerEmail = userProfile.email || "";
-      customerPhone = userProfile.phone || "";
+      // Build phone with country code for Razorpay
+      if (userProfile.phone) {
+        let rawPhone = userProfile.phone.replace(/[\s\-\(\)\.]/g, '');
+        if (rawPhone.startsWith('+')) {
+          customerPhone = rawPhone;
+        } else if (userProfile.countryCode) {
+          const code = userProfile.countryCode.startsWith('+')
+            ? userProfile.countryCode : `+${userProfile.countryCode}`;
+          customerPhone = `${code}${rawPhone}`;
+        } else {
+          // Default to +91 for 10 digit Indian numbers
+          customerPhone = rawPhone.length === 10 ? `+91${rawPhone}` : rawPhone;
+        }
+      }
     }
 
     // If we still don't have a name, try to get user details from the database
@@ -3037,7 +3050,19 @@ const createCustomer = async (userProfile, ownerId, tenantId) => {
         if (user) {
           customerName = user.name || user.firstName || user.username || "";
           customerEmail = customerEmail || user.email || "";
-          customerPhone = customerPhone || user.phone || "";
+          // Build phone with country code from DB fallback
+          if (!customerPhone && user.phone) {
+            let rawPhone = user.phone.replace(/[\s\-\(\)\.]/g, '');
+            if (rawPhone.startsWith('+')) {
+              customerPhone = rawPhone;
+            } else if (user.countryCode) {
+              const code = user.countryCode.startsWith('+')
+                ? user.countryCode : `+${user.countryCode}`;
+              customerPhone = `${code}${rawPhone}`;
+            } else {
+              customerPhone = rawPhone.length === 10 ? `+91${rawPhone}` : rawPhone;
+            }
+          }
         }
       } catch (userError) {
         console.error("Error fetching user details:", userError);
