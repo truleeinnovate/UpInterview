@@ -30,6 +30,17 @@ export const notify = {
       theme: "colored",
     }),
 
+  // ⏰ Meeting Timer Alerts → Top-Center, persistent (user must close manually via X)
+  meetingAlert: (msg) =>
+    toast.error(msg, {
+      position: "top-center",
+      autoClose: false,
+      closeOnClick: false,
+      closeButton: true,
+      draggable: false,
+      theme: "colored",
+    }),
+
   // 🕒 Background Info → Bottom-Right
   background: (msg) =>
     toast.info(msg, {
