@@ -40,6 +40,8 @@ import { useMockInterviewById } from "../../apiHooks/useMockInterviews.js";
 import QuestionCard, { EmptyState } from "../../Components/QuestionCard.jsx";
 import { Button } from "../../Components/Buttons/Button.jsx";
 import TechnicalSkillsAssessment from "../Dashboard-Part/Tabs/Feedback/TechnicalSkillsAssessment.jsx";
+import { useUserProfile } from "../../apiHooks/useUsers.js";
+import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 // import { useMeeting } from "@videosdk.live/react-sdk";
 
 const dislikeOptions = [
@@ -119,6 +121,13 @@ const FeedbackForm = ({
     [location.search],
   );
   const { useInterviewDetails } = useInterviews();
+  const { userProfile } = useUserProfile();
+
+  const firstName = capitalizeFirstLetter(userProfile?.firstName);
+  const lastName = capitalizeFirstLetter(userProfile?.lastName);
+  // const contactId = formatName(singleContact?.contactId);
+  const fullName = firstName + " " + lastName
+
 
   // Feedback query (existing)
   const {
@@ -772,7 +781,7 @@ const FeedbackForm = ({
   };
 
   // Additional Ratings
-  const StarRating = ({ rating, onChange, size = 'md' }) => {
+  const StarRating = ({ rating, onChange, size = 'md', isReadOnly = false }) => {
     const sizeClasses = {
       sm: 'w-4 h-4',
       md: 'w-5 h-5',
@@ -785,8 +794,9 @@ const FeedbackForm = ({
           <button
             key={star}
             type="button"
-            onClick={() => onChange(star)}
-            className="transition-colors"
+            onClick={() => !isReadOnly && onChange(star)}
+            disabled={isReadOnly}
+            className={`transition-colors ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
           >
             <Star
               className={`${sizeClasses[size]} ${star <= rating
@@ -1719,7 +1729,7 @@ const FeedbackForm = ({
       clearError("skills");
     }
     // IMMEDIATE auto-save
-    if (triggerAutoSave && (isAddMode || isEditMode)) {
+    if (triggerAutoSave && (isAddMode || isEditMode) && !isReadOnly) {
       triggerAutoSave();
     }
   };
@@ -2106,7 +2116,7 @@ const FeedbackForm = ({
                 <input
                   type="text"
                   disabled={true}
-                  value={formData.interviewerName}
+                  value={fullName}
                   className="w-full px-3 py-2 border border-blue-50 bg-blue-50/20 text-gray-700 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent cursor-not-allowed"
                   placeholder="Enter your name"
                 />
@@ -2148,6 +2158,7 @@ const FeedbackForm = ({
               formData={formData}
               setFormData={setFormData}
               onSkillChange={triggerAutoSave}
+              isReadOnly={isReadOnly}
             />
           </div>
 
@@ -2229,15 +2240,17 @@ const FeedbackForm = ({
           <div className="border-t border-gray-200 pt-8">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Technical Competency Ratings</h3>
-              <button
-                type="button"
-                onClick={addSkillRating}
-                style={{ backgroundColor: 'rgb(33, 121, 137)' }}
-                className="flex items-center gap-2 px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                Add Skill
-              </button>
+              {!isReadOnly && (
+                <button
+                  type="button"
+                  onClick={addSkillRating}
+                  style={{ backgroundColor: 'rgb(33, 121, 137)' }}
+                  className="flex items-center gap-2 px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Skill
+                </button>
+              )}
             </div>
             <div className="space-y-4">
               {formData.skillRatings.map((skill, index) => (
@@ -2247,13 +2260,15 @@ const FeedbackForm = ({
                       <input
                         type="text"
                         value={skill.skillName}
+                        readOnly={isReadOnly}
                         onChange={(e) => updateSkillRating(index, 'skillName', e.target.value)}
                         placeholder="e.g., Problem Solving, Coding Skills"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent bg-white"
+                        className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent bg-white'}`}
                       />
                       <div className="flex items-center gap-2">
                         <StarRating
                           rating={skill.rating}
+                          isReadOnly={isReadOnly}
                           onChange={(rating) => updateSkillRating(index, 'rating', rating)}
                         />
                         <span className="text-sm text-gray-600 min-w-[50px]">
@@ -2261,7 +2276,7 @@ const FeedbackForm = ({
                         </span>
                       </div>
                     </div>
-                    {formData.skillRatings.length > 1 && (
+                    {!isReadOnly && formData.skillRatings.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeSkillRating(index)}
@@ -2274,10 +2289,11 @@ const FeedbackForm = ({
                   <div>
                     <textarea
                       value={skill.notes}
+                      readOnly={isReadOnly}
                       onChange={(e) => updateSkillRating(index, 'notes', e.target.value)}
                       rows="2"
                       placeholder="Provide specific observations about this skill..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent bg-white"
+                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent bg-white'}`}
                     />
                   </div>
                 </div>
@@ -2341,7 +2357,7 @@ const FeedbackForm = ({
                   <QuestionCard
                     key={question.questionId || question.id}
                     question={question}
-                    mode="edit"
+                    mode={isReadOnly ? 'view' : 'edit'}
                     onNoteAdd={onClickAddNote}
                     onNoteChange={onChangeInterviewQuestionNotes}
                     onLikeToggle={handleLikeToggle}
@@ -2350,6 +2366,7 @@ const FeedbackForm = ({
                     dislikeQuestionId={dislikeQuestionId}
                     RadioGroupInput={RadioGroupInput}
                     SharePopupSection={SharePopupSection}
+                    isViewMode={isReadOnly}
                   />
                 ))
               ) : (
@@ -2370,15 +2387,17 @@ const FeedbackForm = ({
                 <h3 className="text-lg font-semibold text-gray-900">Strengths</h3>
                 <p className="text-sm text-gray-600 mt-0.5">What did the candidate do well?</p>
               </div>
-              <button
-                type="button"
-                onClick={addStrength}
-                style={{ backgroundColor: 'rgb(33, 121, 137)' }}
-                className="flex items-center gap-2 px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                Add Strength
-              </button>
+              {!isReadOnly && (
+                <button
+                  type="button"
+                  onClick={addStrength}
+                  style={{ backgroundColor: 'rgb(33, 121, 137)' }}
+                  className="flex items-center gap-2 px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Strength
+                </button>
+              )}
             </div>
             <div className="space-y-3">
               {formData.strengths.map((strength, index) => (
@@ -2386,11 +2405,12 @@ const FeedbackForm = ({
                   <input
                     type="text"
                     value={strength}
+                    readOnly={isReadOnly}
                     onChange={(e) => updateStrength(index, e.target.value)}
                     placeholder="e.g., Strong problem-solving approach, Excellent communication skills"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                    className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent'}`}
                   />
-                  {formData.strengths.length > 1 && (
+                  {!isReadOnly && formData.strengths.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeStrength(index)}
@@ -2411,15 +2431,17 @@ const FeedbackForm = ({
                 <h3 className="text-lg font-semibold text-gray-900">Areas for Improvement</h3>
                 <p className="text-sm text-gray-600 mt-0.5">What could the candidate work on?</p>
               </div>
-              <button
-                type="button"
-                onClick={addArea}
-                style={{ backgroundColor: 'rgb(33, 121, 137)' }}
-                className="flex items-center gap-2 px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                Add Area
-              </button>
+              {!isReadOnly && (
+                <button
+                  type="button"
+                  onClick={addArea}
+                  style={{ backgroundColor: 'rgb(33, 121, 137)' }}
+                  className="flex items-center gap-2 px-3 py-1.5 text-white rounded-lg hover:opacity-90 transition-opacity text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Area
+                </button>
+              )}
             </div>
             <div className="space-y-3">
               {formData.areasForImprovement.map((area, index) => (
@@ -2427,11 +2449,12 @@ const FeedbackForm = ({
                   <input
                     type="text"
                     value={area}
+                    readOnly={isReadOnly}
                     onChange={(e) => updateArea(index, e.target.value)}
                     placeholder="e.g., Needs to work on time complexity analysis, Could improve code organization"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                    className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent'}`}
                   />
-                  {formData.areasForImprovement.length > 1 && (
+                  {!isReadOnly && formData.areasForImprovement.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeArea(index)}
@@ -2445,7 +2468,7 @@ const FeedbackForm = ({
             </div>
           </div>
 
-          {/* Additional Comments */}
+          {/* Additional Ratings */}
           <div className="border-t border-gray-200 pt-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Ratings</h3>
             <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
@@ -2455,6 +2478,7 @@ const FeedbackForm = ({
                   <StarRating
                     rating={formData.cultureFit}
                     onChange={(rating) => setFormData({ ...formData, cultureFit: rating })}
+                    isReadOnly={isReadOnly}
                   />
                   <span className="text-sm text-gray-600">
                     {formData.cultureFit > 0 ? `${formData.cultureFit}/5` : 'Not rated'}
@@ -2468,6 +2492,7 @@ const FeedbackForm = ({
                   <StarRating
                     rating={formData.willingnessToLearn}
                     onChange={(rating) => setFormData({ ...formData, willingnessToLearn: rating })}
+                    isReadOnly={isReadOnly}
                   />
                   <span className="text-sm text-gray-600">
                     {formData.willingnessToLearn > 0 ? `${formData.willingnessToLearn}/5` : 'Not rated'}
@@ -2481,6 +2506,7 @@ const FeedbackForm = ({
                   <StarRating
                     rating={formData.communicationRating}
                     onChange={(rating) => setFormData({ ...formData, communicationRating: rating })}
+                    isReadOnly={isReadOnly}
                   />
                   <span className="text-sm text-gray-600">
                     {formData.communicationRating > 0 ? `${formData.communicationRating}/5` : 'Not rated'}
@@ -2503,6 +2529,7 @@ const FeedbackForm = ({
                     rating={formData.overallRating}
                     onChange={(rating) => setFormData({ ...formData, overallRating: rating })}
                     size="lg"
+                    isReadOnly={isReadOnly}
                   />
                   <span className="text-sm text-gray-600">
                     {formData.overallRating > 0 ? `${formData.overallRating}/5` : 'Not rated'}
@@ -2516,8 +2543,9 @@ const FeedbackForm = ({
                 </label>
                 <select
                   value={formData.recommendation}
+                  disabled={isReadOnly}
                   onChange={(e) => setFormData({ ...formData, recommendation: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent'}`}
                 >
                   <option value="Strong Hire">Strong Hire</option>
                   <option value="Hire">Hire</option>
@@ -2535,10 +2563,11 @@ const FeedbackForm = ({
             <p className="text-sm text-gray-600 mb-4">Any other observations or feedback</p>
             <textarea
               value={formData.additionalComments}
+              readOnly={isReadOnly}
               onChange={(e) => setFormData({ ...formData, additionalComments: e.target.value })}
               rows="4"
               placeholder="Share any additional thoughts, observations, or context that would be helpful for the hiring decision..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent"
+              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent'}`}
             />
           </div>
           {/* -------------------------------NEW UI----------------------------------- */}
@@ -2777,12 +2806,12 @@ const FeedbackForm = ({
             <div>
               {!urlData?.isSchedule && (
                 <div className="flex justify-end items-center gap-3 mt-6">
-                  <Button
+                  {/* <Button
                     variant="outline"
                     className="border border-custom-blue text-custom-blue"
                   >
                     Cancel
-                  </Button>
+                  </Button> */}
                   <Button
                     onClick={saveFeedback}
                     variant="outline"
