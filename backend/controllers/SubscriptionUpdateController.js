@@ -1,4 +1,5 @@
 const CustomerSubscription = require("../models/CustomerSubscriptionmodels.js");
+const { handleApiError } = require("../utils/errorHandler");
 const SubscriptionPlan = require("../models/Subscriptionmodels.js");
 const Invoice = require("../models/Invoicemodels.js");
 const SubscriptionHistory = require("../models/SubscriptionHistory.js");
@@ -877,8 +878,6 @@ const updateSubscriptionPlan = async (req, res) => {
       razorpayKeyId: razorpay.key_id,
     });
   } catch (err) {
-    console.error("Error updating subscription:", err);
-
     // Structured internal log for error case
     res.locals.logData = {
       tenantId: tenantId || req.body?.tenantId || "",
@@ -889,9 +888,7 @@ const updateSubscriptionPlan = async (req, res) => {
       message: err.message,
     };
 
-    return res
-      .status(500)
-      .json({ success: false, message: "Failed to update subscription" });
+    return handleApiError(res, err, "Update Subscription Plan");
   }
 };
 

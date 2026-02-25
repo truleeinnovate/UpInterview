@@ -9,6 +9,7 @@ const SubscriptionPlan = require("../models/Subscriptionmodels");
 const Tenant = require("../models/Tenant");
 const { calculateEndDate } = require("./CustomerSubscriptionInvoiceContollers");
 const SUBSCRIPTION_STATUSES = require("../constants/subscriptionStatuses");
+const { handleApiError } = require("../utils/errorHandler");
 
 /**
  * Update tenant limits on renewal (Usage creation removed - handled in RazorpayController)
@@ -107,8 +108,7 @@ const getSubscriptionRenewalStatus = async (req, res) => {
       message: "Subscription renewal is handled automatically by Razorpay",
     });
   } catch (error) {
-    console.error("[SUBSCRIPTION] Status check error:", error);
-    res.status(500).json({ error: error.message });
+    return handleApiError(res, error, "Subscription Renewal Status");
   }
 };
 

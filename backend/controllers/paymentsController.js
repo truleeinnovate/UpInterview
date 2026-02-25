@@ -1,6 +1,7 @@
 // SUPER ADMIN added by Ashok
 const Payments = require("../models/Payments");
 const mongoose = require("mongoose");
+const { handleApiError } = require("../utils/errorHandler");
 
 // SUPER ADMIN - Server-side pagination and filters
 const getPaymentsSummary = async (req, res) => {
@@ -99,10 +100,7 @@ const getPaymentsSummary = async (req, res) => {
       status: true,
     });
   } catch (error) {
-    console.error("Error fetching payments summary:", error);
-    return res
-      .status(500)
-      .json({ message: "Server error", details: error.message, status: false });
+    return handleApiError(res, error, "Fetch Payments Summary");
   }
 };
 
@@ -118,15 +116,7 @@ const getPaymentsById = async (req, res) => {
 
     res.status(200).json({ payments });
   } catch (error) {
-    console.error("Detailed error:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-    });
-    res.status(500).json({
-      error: "Server error",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Fetch Payments By Id");
   }
 };
 
@@ -138,9 +128,7 @@ const getSinglePaymentById = async (req, res) => {
     const payment = await Payments.findById(id);
     res.status(200).json(payment);
   } catch (error) {
-    res.status(500).json({
-      message: "Internal server error",
-    });
+    return handleApiError(res, error, "Fetch Single Payment");
   }
 };
 
