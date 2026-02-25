@@ -38,7 +38,7 @@ const QuestionBankManagerDetails = ({ content, type }) => {
       {/* Assessment Type */}
       <>
         {/* Options */}
-        {content.options && content.options.length > 0 && (
+        {/* {content.options && content.options.length > 0 && (
           <div>
             <h3 className="font-semibold text-gray-800 mb-1">Options</h3>
             <ul className="list-disc ml-6 text-gray-700">
@@ -54,7 +54,70 @@ const QuestionBankManagerDetails = ({ content, type }) => {
             <h3 className="font-semibold text-gray-800 mb-1">Correct Answer</h3>
             <p className="text-gray-700">{content.correctAnswer}</p>
           </div>
-        ) : null}
+        ) : null} */}
+        {/* Options */}
+        {/* Options Section */}
+        {content.options && content.options.length > 0 && (
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-2">Options</h3>
+            <ul className="space-y-2 ml-2">
+              {content.options.map((opt, idx) => {
+                const text = typeof opt === "object" ? opt.optionText : opt;
+                const isCorrect = typeof opt === "object" && opt.isCorrect;
+
+                return (
+                  <li
+                    key={opt._id || idx}
+                    className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
+                      isCorrect
+                        ? "bg-green-50 border-green-300 ring-1 ring-green-300"
+                        : "bg-gray-50 border-gray-200 text-gray-700"
+                    }`}
+                  >
+                    {/* Index Label (a, b, c...) */}
+                    <span
+                      className={`flex-shrink-0 text-sm font-medium mt-0.5 ${
+                        isCorrect ? "text-green-700" : "text-gray-500"
+                      }`}
+                    >
+                      {String.fromCharCode(97 + idx)})
+                    </span>
+
+                    <div className="flex-1 text-sm md:text-base">
+                      <span
+                        className={
+                          isCorrect ? "font-medium text-green-900" : ""
+                        }
+                      >
+                        {text ?? "N/A"}
+                      </span>
+                    </div>
+
+                    {/* Tick Mark Symbol */}
+                    {isCorrect && (
+                      <div className="flex-shrink-0 self-center">
+                        <svg
+                          className="w-5 h-5 text-green-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="3"
+                            d="M5 13l4 4L19 7"
+                          ></path>
+                        </svg>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
       </>
 
       {/* Interview Type */}
