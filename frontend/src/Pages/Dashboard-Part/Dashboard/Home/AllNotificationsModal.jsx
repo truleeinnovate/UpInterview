@@ -109,13 +109,13 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications }) => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100"
               >
                 {isExpanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
               </button>
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100"
               >
                 <X size={20} />
               </button>

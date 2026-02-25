@@ -35,6 +35,7 @@ import SkillsField from "../../../../Tabs/CommonCode-AllTabs/SkillsInput";
 // v1.0.2 ----------------------------------------------------------------------------------->
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
 import Cookies from "js-cookie";
+import { Button } from "../../../../../../Components/Buttons/Button";
 
 const EditInterviewDetails = ({
   from,
@@ -1220,12 +1221,12 @@ const EditInterviewDetails = ({
       )} */}
       {/* v1.0.3 -------------------------------------------------------------------------------------------------> */}
 
-      <div className="sm:p-0 p-6">
+      <div className="pb-6">
         <form className="space-y-6 pb-2">
           {/* //  onSubmit={handleSave} */}
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-y-4">
             {/* Technology Selection */}
-            <div className="space-y-4">
+            <div className="space-y-4 w-full">
               <DropdownWithSearchField
                 disabled={from !== "outsource-interviewer"}
                 value={selectedCandidates || ""}
@@ -1813,14 +1814,15 @@ const EditInterviewDetails = ({
           </div>
         </form>
 
-        <div className="flex justify-end space-x-3">
-          <button
+        <div className="flex justify-end space-x-3 pt-6">
+          <Button
             type="button"
+            variant="outline"
             onClick={handleCloseModal}
-            className="px-6 py-2 h-9 text-custom-blue border border-custom-blue rounded-md font-medium text-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
+            className="text-custom-blue border border-custom-blue"
           >
             Cancel
-          </button>
+          </Button>
 
           <LoadingButton
             type="submit"

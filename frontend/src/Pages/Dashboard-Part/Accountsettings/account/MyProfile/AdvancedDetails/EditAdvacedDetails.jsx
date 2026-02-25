@@ -33,6 +33,7 @@ import {
 import { scrollToFirstError } from "../../../../../../utils/ScrollToFirstError/scrollToFirstError.js";
 import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/useOutsourceInterviewers";
 import LoadingButton from "../../../../../../Components/LoadingButton.jsx";
+import { Button } from "../../../../../../Components/Buttons/Button.jsx";
 // Skills.svg
 
 Modal.setAppElement("#root");
@@ -448,7 +449,7 @@ const EditAdvacedDetails = ({
         </div>
       )} */}
       {/* v1.0.3 ---------------------------------------------------------------------------------------------------> */}
-      <div className="flex flex-col justify-between h-full sm:p-0 p-6">
+      <div className="flex flex-col justify-between h-full pl-1 pr-2">
         <div className="h-full space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2  xl:grid-cols-2  2xl:grid-cols-2 gap-6">
             <div className="flex flex-col">
@@ -586,15 +587,16 @@ const EditAdvacedDetails = ({
             </div>
           </div>
         </div>
-        <div className="sticky bottom-0 bg-white pt-3">
+        <div className="sticky bottom-6 bg-white">
           <div className="flex justify-end gap-3 pt-3 mr-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleCloseModal}
-              className="px-6 py-2 h-9 text-custom-blue border border-custom-blue rounded-md font-medium text-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className="text-custom-blue border border-custom-blue"
             >
               Cancel
-            </button>
+            </Button>
 
             <LoadingButton
               onClick={handleSave}

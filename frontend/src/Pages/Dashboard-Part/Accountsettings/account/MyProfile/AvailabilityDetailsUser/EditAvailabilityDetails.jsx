@@ -30,6 +30,7 @@ import { notify } from "../../../../../../services/toastService";
 // v1.0.2 <------------------------------------------------------------------------------------
 import SidebarPopup from "../../../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import LoadingButton from "../../../../../../Components/LoadingButton";
+import { Button } from "../../../../../../Components/Buttons/Button.jsx";
 // v1.0.2 ------------------------------------------------------------------------------------>
 
 Modal.setAppElement("#root");
@@ -350,7 +351,7 @@ const EditAvailabilityDetails = ({
       {/* v1.0.3 <----------------------------------------------------------------------------------------------- */}
 
       {/* v1.0.3 <----------------------------------------------------------------------------------------------- */}
-      <div className="sm:p-0 p-6">
+      <div className="pb-6 pl-1">
         <div className="flex flex-col md:flex-col lg:flex-col xl:flex-col 2xl:flex-col md:gap-10 lg:gap-10 xl:gap-12 2xl:gap-12">
           {/* Left Side: Time Zone and Availability Times */}
           <div className="flex-1 mb-6 md:mb-0">
@@ -389,7 +390,7 @@ const EditAvailabilityDetails = ({
               {/* {errors.TimeSlot && (
                   <p className="text-red-500 text-sm mb-2">{errors.TimeSlot}</p>
                 )} */}
-              <div className=" p-4  rounded-lg ">
+              <div className="rounded-lg">
                 {/* Availability */}
 
                 <Availability
@@ -444,12 +445,14 @@ const EditAvailabilityDetails = ({
         </div>
 
         <div className="flex justify-end space-x-3 mt-10">
-          <button
+          <Button
+            type="button"
+            variant="outline"
             onClick={handleCloseModal}
-            className="px-6 py-2 h-9 text-custom-blue border border-custom-blue rounded-md font-medium text-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
+            className="text-custom-blue border border-custom-blue"
           >
             Cancel
-          </button>
+          </Button>
           <LoadingButton
             type="submit"
             onClick={handleSave}
