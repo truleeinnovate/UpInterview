@@ -152,10 +152,24 @@ const SubscriptionCardDetails = () => {
     const fetchUserProfile = async () => {
       try {
         if (userProfile) {
+          // Build full phone number with country code for Razorpay
+          let fullPhone = "";
+          if (userProfile.phone) {
+            const rawPhone = userProfile.phone.replace(/[\s\-\(\)\.]/g, '');
+            if (rawPhone.startsWith('+')) {
+              fullPhone = rawPhone;
+            } else if (userProfile.countryCode) {
+              const code = userProfile.countryCode.startsWith('+')
+                ? userProfile.countryCode : `+${userProfile.countryCode}`;
+              fullPhone = `${code}${rawPhone}`;
+            } else {
+              fullPhone = rawPhone.length === 10 ? `+91${rawPhone}` : rawPhone;
+            }
+          }
           setUserProfile({
             name: `${userProfile.firstName} ${userProfile.lastName}`,
             email: userProfile.email,
-            phone: userProfile.phone,
+            phone: fullPhone,
           });
           // console.log("User profile fetched:", userProfile);
         }
