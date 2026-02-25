@@ -31,8 +31,6 @@ const { buildSmartRoundUpdate } = require("./interviewRoundsController.js");
 // const InterviewQuestions = require("../models/InterviewQuestions");
 // const Interview = require("../models/Interview");
 
-
-
 // create feedback api
 const createFeedback = async (req, res) => {
   res.locals.loggedByController = true;
@@ -92,7 +90,6 @@ const createFeedback = async (req, res) => {
     // const tenantId = authContext.actingAsTenantId || bodyTenantId;
     // const ownerId = authContext.actingAsUserId || bodyOwnerId;
 
-
     // console.log("req.body qFeedback", req.body);
 
     // const filteredSkills = (skills || []).filter(s => s.skillName && s.skillName.trim() !== "");
@@ -104,13 +101,18 @@ const createFeedback = async (req, res) => {
     let resolvedInterviewId = null;
     try {
       if (interviewRoundId) {
-        const roundDoc = await InterviewRounds.findById(interviewRoundId).select(
-          "interviewId",
-        );
+        const roundDoc =
+          await InterviewRounds.findById(interviewRoundId).select(
+            "interviewId",
+          );
         resolvedInterviewId = roundDoc?.interviewId || null;
       }
     } catch (e) {
-      console.warn("Unable to resolve interviewId:", interviewRoundId, e?.message);
+      console.warn(
+        "Unable to resolve interviewId:",
+        interviewRoundId,
+        e?.message,
+      );
     }
 
     if (questionFeedback && Array.isArray(questionFeedback)) {
@@ -125,7 +127,8 @@ const createFeedback = async (req, res) => {
         if (typeof rawQuestion === "string") {
           identifier = rawQuestion;
         } else if (rawQuestion && typeof rawQuestion === "object") {
-          identifier = rawQuestion.questionId || rawQuestion._id || rawQuestion.id;
+          identifier =
+            rawQuestion.questionId || rawQuestion._id || rawQuestion.id;
           bankDetails = rawQuestion;
         }
 
@@ -142,22 +145,26 @@ const createFeedback = async (req, res) => {
         if (!selectedDoc) {
           // Try to find by roundId + Bank ID
           // Ensure we only find shared questions OR questions owned by this interviewer
-          const questionOwnerId = (interviewerId && interviewerId.toString()) || (ownerId && ownerId.toString()) || "";
+          const questionOwnerId =
+            (interviewerId && interviewerId.toString()) ||
+            (ownerId && ownerId.toString()) ||
+            "";
 
           selectedDoc = await InterviewQuestions.findOne({
             roundId: interviewRoundId,
             questionId: identifier,
             $or: [
               { addedBy: { $ne: "interviewer" } },
-              { ownerId: questionOwnerId }
-            ]
+              { ownerId: questionOwnerId },
+            ],
           });
 
           if (!selectedDoc) {
             // Create new
             const snapshot = selectedDoc?.snapshot || bankDetails || {};
             const src = selectedDoc?.source || snapshot.source || "custom";
-            const mand = selectedDoc?.mandatory || snapshot.mandatory || "false";
+            const mand =
+              selectedDoc?.mandatory || snapshot.mandatory || "false";
 
             selectedDoc = new InterviewQuestions({
               interviewId: resolvedInterviewId,
@@ -169,7 +176,7 @@ const createFeedback = async (req, res) => {
               questionId: identifier,
               source: src,
               snapshot: snapshot,
-              addedBy: "interviewer"
+              addedBy: "interviewer",
             });
             await selectedDoc.save();
           }
@@ -178,14 +185,15 @@ const createFeedback = async (req, res) => {
         processedQuestionFeedback.push({
           questionId: selectedDoc._id, // Store _id of SelectedInterviewQuestion
           candidateAnswer: qFeedback.candidateAnswer || {
-            answerType: (rawQuestion && rawQuestion.isAnswered) || "not answered",
-            submittedAnswer: ""
+            answerType:
+              (rawQuestion && rawQuestion.isAnswered) || "not answered",
+            submittedAnswer: "",
           },
           interviewerFeedback: qFeedback.interviewerFeedback || {
             liked: (rawQuestion && rawQuestion.isLiked) || "none",
             note: (rawQuestion && rawQuestion.note) || "",
-            dislikeReason: (rawQuestion && rawQuestion.whyDislike) || ""
-          }
+            dislikeReason: (rawQuestion && rawQuestion.whyDislike) || "",
+          },
         });
       }
     }
@@ -281,14 +289,19 @@ const createFeedback = async (req, res) => {
       feedbackInstance.tenantId = tenantId;
       feedbackInstance.ownerId = ownerId;
       feedbackInstance.positionId = positionId;
-      if (technicalSkills !== undefined) feedbackInstance.technicalSkills = technicalSkills;
-      if (technicalCompetency !== undefined) feedbackInstance.technicalCompetency = technicalCompetency;
+      if (technicalSkills !== undefined)
+        feedbackInstance.technicalSkills = technicalSkills;
+      if (technicalCompetency !== undefined)
+        feedbackInstance.technicalCompetency = technicalCompetency;
       feedbackInstance.questionFeedback = processedQuestionFeedback;
       feedbackInstance.questionsAsked = processedQuestionFeedback;
-      feedbackInstance.generalComments = generalComments || additionalComments || "";
-      feedbackInstance.additionalComments = additionalComments || generalComments || "";
+      feedbackInstance.generalComments =
+        generalComments || additionalComments || "";
+      feedbackInstance.additionalComments =
+        additionalComments || generalComments || "";
       if (strengths !== undefined) feedbackInstance.strengths = strengths;
-      if (areasForImprovement !== undefined) feedbackInstance.areasForImprovement = areasForImprovement;
+      if (areasForImprovement !== undefined)
+        feedbackInstance.areasForImprovement = areasForImprovement;
       feedbackInstance.overallImpression = overallImpression || {};
       feedbackInstance.status = type === "submit" ? "submitted" : "draft";
       feedbackInstance.isMockInterview = isMockInterview;
@@ -302,13 +315,14 @@ const createFeedback = async (req, res) => {
         const existingCount = await FeedbackModel.countDocuments({
           interviewRoundId,
         });
-        // If it's the first one, maybe keep original or append -1? 
+        // If it's the first one, maybe keep original or append -1?
         // Logic from before: existingCount === 0 ? code : code-count+1
-        // Usually better to always append or always not. 
+        // Usually better to always append or always not.
         // Per commented code:
-        finalFeedbackCode = existingCount === 0
-          ? `${feedbackCode}`
-          : `${feedbackCode}-${existingCount + 1}`;
+        finalFeedbackCode =
+          existingCount === 0
+            ? `${feedbackCode}`
+            : `${feedbackCode}-${existingCount + 1}`;
       }
 
       feedbackInstance = new FeedbackModel({
@@ -335,8 +349,7 @@ const createFeedback = async (req, res) => {
 
     await feedbackInstance.save();
 
-    const finalStatus =
-      feedbackInstance.status || feedbackInstance.status;
+    const finalStatus = feedbackInstance.status || feedbackInstance.status;
 
     //  Update interview round status
     if (finalStatus === "submitted") {
@@ -344,21 +357,14 @@ const createFeedback = async (req, res) => {
       let res = await updateInterviewRoundFeedbackStatus({
         interviewRoundId: feedbackInstance.interviewRoundId,
         isMock: feedbackInstance?.isMockInterview,
-        actingAsUserId: authContext?.ownerId
+        actingAsUserId: authContext?.ownerId,
       });
       // console.log("finalStatus finalStatus", res)
-
     }
-
 
     // Trigger webhook for feedback submission only (not for drafts)
     // webhooks creation part of feed back this is used in account settings hrms sidebar tab in webhooks tab
     if (feedbackInstance.status === "submitted") {
-
-
-
-
-
       try {
         const webhookPayload = {
           feedbackId: feedbackInstance._id,
@@ -386,10 +392,6 @@ const createFeedback = async (req, res) => {
         );
       }
     }
-
-
-
-
 
     // Final Response
     const responsePayload = {
@@ -440,7 +442,6 @@ const createFeedback = async (req, res) => {
     });
   }
 };
-
 
 //  update Feedback api
 const updateFeedback = async (req, res) => {
@@ -568,8 +569,10 @@ const updateFeedback = async (req, res) => {
     };
 
     // Process questions: Transform Bank IDs/Objects to SelectedInterviewQuestion IDs
-    if (updateData.questionFeedback && Array.isArray(updateData.questionFeedback)) {
-
+    if (
+      updateData.questionFeedback &&
+      Array.isArray(updateData.questionFeedback)
+    ) {
       const processedQuestionFeedback = [];
       const interviewRoundId = existingFeedback.interviewRoundId;
       const tenantId = existingFeedback.tenantId;
@@ -580,7 +583,10 @@ const updateFeedback = async (req, res) => {
       let resolvedInterviewId = null;
       try {
         if (interviewRoundId) {
-          const roundDoc = await InterviewRounds.findById(interviewRoundId).select("interviewId");
+          const roundDoc =
+            await InterviewRounds.findById(interviewRoundId).select(
+              "interviewId",
+            );
           resolvedInterviewId = roundDoc?.interviewId || null;
         }
       } catch (e) {
@@ -597,7 +603,8 @@ const updateFeedback = async (req, res) => {
         if (typeof rawQuestion === "string") {
           identifier = rawQuestion;
         } else if (rawQuestion && typeof rawQuestion === "object") {
-          identifier = rawQuestion.questionId || rawQuestion._id || rawQuestion.id;
+          identifier =
+            rawQuestion.questionId || rawQuestion._id || rawQuestion.id;
           bankDetails = rawQuestion;
         }
 
@@ -610,20 +617,23 @@ const updateFeedback = async (req, res) => {
         // console.log("bankDetails", bankDetails)
 
         if (!selectedDoc) {
-          const questionOwnerId = (interviewerId && interviewerId.toString()) || (ownerId && ownerId.toString()) || "";
+          const questionOwnerId =
+            (interviewerId && interviewerId.toString()) ||
+            (ownerId && ownerId.toString()) ||
+            "";
 
           selectedDoc = await InterviewQuestions.findOne({
             roundId: interviewRoundId,
-            questionId: identifier
+            questionId: identifier,
           });
           // console.log("selectedDoc", selectedDoc)
 
           if (!selectedDoc) {
-
             // console.log("bankDetails selectedDoc", bankDetails)
             const snapshot = bankDetails?.snapshot || bankDetails || {};
             const src = bankDetails?.source || snapshot.source || "custom";
-            const mand = bankDetails?.mandatory || snapshot.mandatory || "false";
+            const mand =
+              bankDetails?.mandatory || snapshot.mandatory || "false";
 
             selectedDoc = new InterviewQuestions({
               interviewId: resolvedInterviewId,
@@ -635,7 +645,7 @@ const updateFeedback = async (req, res) => {
               questionId: identifier,
               source: src,
               snapshot: snapshot,
-              addedBy: "interviewer"
+              addedBy: "interviewer",
             });
             await selectedDoc.save();
           }
@@ -644,7 +654,7 @@ const updateFeedback = async (req, res) => {
         // Push processed structure with valid _id
         processedQuestionFeedback.push({
           ...qFeedback,
-          questionId: selectedDoc._id
+          questionId: selectedDoc._id,
         });
       }
 
@@ -694,7 +704,10 @@ const updateFeedback = async (req, res) => {
 
     if (
       updateData.technicalCompetency !== undefined &&
-      !isDeepEqual(existingFeedback.technicalCompetency, updateData.technicalCompetency)
+      !isDeepEqual(
+        existingFeedback.technicalCompetency,
+        updateData.technicalCompetency,
+      )
     ) {
       updateObject.technicalCompetency = updateData.technicalCompetency;
       hasChanges = true;
@@ -710,7 +723,10 @@ const updateFeedback = async (req, res) => {
 
     if (
       updateData.areasForImprovement !== undefined &&
-      !isDeepEqual(existingFeedback.areasForImprovement, updateData.areasForImprovement)
+      !isDeepEqual(
+        existingFeedback.areasForImprovement,
+        updateData.areasForImprovement,
+      )
     ) {
       updateObject.areasForImprovement = updateData.areasForImprovement;
       hasChanges = true;
@@ -751,18 +767,19 @@ const updateFeedback = async (req, res) => {
       let finalFeedbackCode = feedbackCode;
 
       // Count existing feedbacks for this round to append suffix
-      // Note: We need to be careful not to count *this* feedback if we were creating new, 
+      // Note: We need to be careful not to count *this* feedback if we were creating new,
       // but here we are updating. We want to find the next available slot if we stick to the pattern.
       // However, if we just want to patch the missing code, we can use the count logic.
 
       const existingCount = await FeedbackModel.countDocuments({
         interviewRoundId,
-        _id: { $ne: existingFeedback._id } // Exclude self
+        _id: { $ne: existingFeedback._id }, // Exclude self
       });
 
-      finalFeedbackCode = existingCount === 0
-        ? `${feedbackCode}`
-        : `${feedbackCode}-${existingCount + 1}`;
+      finalFeedbackCode =
+        existingCount === 0
+          ? `${feedbackCode}`
+          : `${feedbackCode}-${existingCount + 1}`;
 
       updateObject.feedbackCode = finalFeedbackCode;
       hasChanges = true;
@@ -826,23 +843,19 @@ const updateFeedback = async (req, res) => {
       }
     }
 
-    const finalStatus =
-      updateObject.status || existingFeedback.status;
+    const finalStatus = updateObject.status || existingFeedback.status;
 
     // console.log("finalStatus", finalStatus)
-
 
     if (finalStatus === "submitted") {
       //  Update interview round status
       let res = await updateInterviewRoundFeedbackStatus({
         interviewRoundId: updatedFeedback.interviewRoundId,
         isMock: updatedFeedback?.isMockInterview,
-        actingAsUserId: authContext?.ownerId
+        actingAsUserId: authContext?.ownerId,
       });
       // console.log("finalStatus finalStatus", res)
-
     }
-
 
     // Trigger webhook for feedback status update if status changed to submitted
     if (updatedFeedback.status === "submitted") {
@@ -997,7 +1010,7 @@ const getAllFeedback = async (req, res) => {
           feedback.interviewRoundId = roundData || feedback.interviewRoundId;
         }
         return feedback;
-      })
+      }),
     );
 
     return res.status(200).json({
@@ -1024,7 +1037,7 @@ const getFeedbackByRoundId = async (req, res) => {
     const isMockInterview = interviewType === "mockinterview";
     console.log("req.query", req.query);
 
-    console.log("roundId", roundId)
+    console.log("roundId", roundId);
 
     console.log("interviewerIdroundId", interviewerId);
     console.log("interviewType", interviewType);
@@ -1035,7 +1048,6 @@ const getFeedbackByRoundId = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Invalid round ID" });
     }
-
 
     // if (interviewerId && !mongoose.Types.ObjectId.isValid(interviewerId)) {
     //   return res
@@ -1100,7 +1112,7 @@ const getFeedbackByRoundId = async (req, res) => {
       feedbackQuery.interviewerId = interviewerId;
     }
 
-    console.log("feedbackQuery interviewerId", feedbackQuery)
+    console.log("feedbackQuery interviewerId", feedbackQuery);
 
     let feedbacks = await FeedbackModel.find(feedbackQuery)
       .populate("candidateId", "FirstName LastName Email Phone ownerId")
@@ -1112,9 +1124,7 @@ const getFeedbackByRoundId = async (req, res) => {
       .populate("ownerId", "firstName lastName email")
       .lean();
 
-    console.log("feedbacks feedbacks", feedbacks)
-
-
+    console.log("feedbacks feedbacks", feedbacks);
 
     // Fetch Resume data for candidate (skills, experience, etc. moved from Candidate)
     const candidateIds = [];
@@ -1176,7 +1186,7 @@ const getFeedbackByRoundId = async (req, res) => {
     }
 
     // Fetch all Interview Questions for the round
-    // Filter questions: Include shared questions (not added by "interviewer") 
+    // Filter questions: Include shared questions (not added by "interviewer")
     // AND questions added by THIS interviewer (if interviewerId is present)
     const questionQuery = { roundId: roundId };
 
@@ -1187,7 +1197,7 @@ const getFeedbackByRoundId = async (req, res) => {
     //   ];
     // }
 
-    let interviewQuestionsList
+    let interviewQuestionsList;
     if (interviewerId) {
       // Only include:
       // - Preselected questions
@@ -1206,14 +1216,12 @@ const getFeedbackByRoundId = async (req, res) => {
       }).lean();
     }
 
-
-
     // const interviewQuestionsList = await InterviewQuestions.find(questionQuery);
 
     // Build question map for easy lookup
     const questionMap = interviewQuestionsList.reduce((acc, q) => {
-      console.log("q questionMap", q)
-      acc[q?._id?.toString()] = q //?.toObject();
+      console.log("q questionMap", q);
+      acc[q?._id?.toString()] = q; //?.toObject();
       //  typeof q?.toObject === "function" ? q.toObject() : q;
       return acc;
     }, {});
@@ -1236,7 +1244,7 @@ const getFeedbackByRoundId = async (req, res) => {
     //   });
 
     //   const mergedQuestions = Object.values(questionMap).map((q) => {
-    //     // Fix: Use q._id (SelectedInterviewQuestion ID) to lookup answer, 
+    //     // Fix: Use q._id (SelectedInterviewQuestion ID) to lookup answer,
     //     // because questionFeedback.questionId stores the SelectedInterviewQuestion ID.
     //     // Fallback to q.questionId (Bank ID) for legacy data compatibility
     //     const ans = fbAnswersMap[q._id.toString()] || fbAnswersMap[q.questionId.toString()];
@@ -1316,13 +1324,13 @@ const getFeedbackByRoundId = async (req, res) => {
         }
       });
 
-      console.log("answerMap", answerMap)
+      console.log("answerMap", answerMap);
 
       // Separate questions by type for this specific feedback
       const preselectedWithAnswers = interviewQuestionsList
         .filter((q) => q.addedBy !== "interviewer" || !q.addedBy)
         .map((q) => {
-          console.log("preselectedWithAnswers", q)
+          console.log("preselectedWithAnswers", q);
           const answer = answerMap[q._id.toString()];
           return {
             ...q,
@@ -1341,7 +1349,7 @@ const getFeedbackByRoundId = async (req, res) => {
         .filter((q) => q.addedBy === "interviewer")
 
         .map((q) => {
-          console.log("interviewerWithAnswers", q)
+          console.log("interviewerWithAnswers", q);
           const answer = answerMap[q._id.toString()];
           return {
             ...q,
@@ -1359,7 +1367,7 @@ const getFeedbackByRoundId = async (req, res) => {
       // Filter interviewer questions by owner if interviewerId is provided
       if (interviewerId) {
         interviewerWithAnswers = interviewerWithAnswers.filter(
-          (q) => q.ownerId?.toString() === interviewerId?.toString()
+          (q) => q.ownerId?.toString() === interviewerId?.toString(),
         );
       }
 
@@ -1371,7 +1379,6 @@ const getFeedbackByRoundId = async (req, res) => {
         },
       };
     });
-
 
     // Separate questions for the interviewQuestions section in response
     // let preselectedQuestions = interviewQuestionsList
@@ -1403,11 +1410,10 @@ const getFeedbackByRoundId = async (req, res) => {
     //   );
     // }
 
-
     // Separate questions for interviewer-added vs preselected
     let preselectedQuestions = interviewQuestionsList
       .filter((q) => q.addedBy !== "interviewer" || !q.addedBy)
-      .map((q) => q);// .toObject()
+      .map((q) => q); // .toObject()
 
     console.log("preselectedQuestions", preselectedQuestions);
     console.log("interviewerId", interviewQuestionsList);
@@ -1747,8 +1753,8 @@ const validateFeedback = async (req, res) => {
       errors,
       value: validatedData,
     } = isUpdate
-        ? validateUpdateFeedback(req.body)
-        : validateCreateFeedback(req.body);
+      ? validateUpdateFeedback(req.body)
+      : validateCreateFeedback(req.body);
 
     if (!isValid) {
       return res.status(400).json({
@@ -1788,14 +1794,14 @@ const validateFeedback = async (req, res) => {
 
 // helper function to get feedback by contactId and roundId
 
-const updateInterviewRoundFeedbackStatus = async ({ interviewRoundId, isMock, actingAsUserId }) => {
-
-
+const updateInterviewRoundFeedbackStatus = async ({
+  interviewRoundId,
+  isMock,
+  actingAsUserId,
+}) => {
   if (!interviewRoundId) return;
 
-  const RoundModel = isMock
-    ? MockInterviewRound
-    : InterviewRounds;
+  const RoundModel = isMock ? MockInterviewRound : InterviewRounds;
 
   // 1. Get interview round
   const round = await RoundModel.findById(interviewRoundId).lean();
@@ -1830,7 +1836,7 @@ const updateInterviewRoundFeedbackStatus = async ({ interviewRoundId, isMock, ac
     status: newStatus,
     interviewerType: round.interviewerType,
     selectedInterviewers: round.interviewers,
-    currentActionReason: newStatus
+    currentActionReason: newStatus,
     // comments: comment || null,
     // rescheduleReason: reasonCode || null,
   };
@@ -1844,8 +1850,6 @@ const updateInterviewRoundFeedbackStatus = async ({ interviewRoundId, isMock, ac
     actingAsUserId,
     statusChanged: true,
   });
-
-
 
   // console.log("smartUpdate", smartUpdate);
 
@@ -1867,7 +1871,6 @@ const updateInterviewRoundFeedbackStatus = async ({ interviewRoundId, isMock, ac
   //   );
   // // }
 
-
   let roundRes = await RoundModel.findByIdAndUpdate(
     interviewRoundId,
     finalUpdate,
@@ -1875,14 +1878,11 @@ const updateInterviewRoundFeedbackStatus = async ({ interviewRoundId, isMock, ac
       new: true,
       runValidators: true,
     },
-  )
-
+  );
 
   // console.log("roundRes roundRes", roundRes);
 
   if (roundRes?.status === "FeedbackSubmitted") {
-
-
     if (roundRes?.interviewerType === "External") {
       try {
         const settlementResult = await processAutoSettlement({
@@ -1894,13 +1894,13 @@ const updateInterviewRoundFeedbackStatus = async ({ interviewRoundId, isMock, ac
           "[updateInterviewRoundStatus] Auto-settlement completed for round:",
           roundRes._id,
           "Result:",
-          settlementResult // Log the result
+          settlementResult, // Log the result
         );
 
         // Return the settlement result along with the round update
         return {
           round: roundRes,
-          settlement: settlementResult
+          settlement: settlementResult,
         };
       } catch (settlementError) {
         console.error(
@@ -1911,18 +1911,15 @@ const updateInterviewRoundFeedbackStatus = async ({ interviewRoundId, isMock, ac
         return {
           round: roundRes,
           settlement: null,
-          error: settlementError.message
+          error: settlementError.message,
         };
         // Continue with status update even if settlement fails
       }
       // }
-
     }
-
   }
   // Return just the round update if no settlement was processed
   return { round: roundRes };
-
 };
 
 const normalizeQuestionId = (raw) => {
@@ -1943,6 +1940,115 @@ const normalizeQuestionId = (raw) => {
   return null;
 };
 
+const getPendingFeedbacks = async (req, res) => {
+  try {
+    const { contactId } = req.query;
+
+    if (!contactId) {
+      return res.status(400).json({
+        success: false,
+        message: "Contact ID is required",
+      });
+    }
+
+    const objectIdContact = new mongoose.Types.ObjectId(contactId);
+
+    // 1. Define statuses that qualify for needing feedback
+    const activeInterviewStatuses = [
+      "Evaluated",
+      "FeedbackPending",
+      "InProgress",
+      "Completed", // Added Completed as feedback is often pending after completion
+    ];
+
+    // 2. Fetch Rounds
+    const [standardRounds, mockRounds] = await Promise.all([
+      InterviewRounds.find({
+        interviewers: { $in: [objectIdContact] },
+        status: { $in: activeInterviewStatuses },
+      })
+        .populate({
+          path: "interviewId",
+          populate: [
+            { path: "candidateId", select: "FirstName LastName Email" },
+            { path: "positionId", select: "title companyname" },
+          ],
+        })
+        .lean(),
+
+      MockInterviewRound.find({
+        interviewers: { $in: [objectIdContact] },
+        status: { $in: activeInterviewStatuses },
+      })
+        .populate({
+          path: "mockInterviewId",
+          select: "title candidateName interviewCode",
+        })
+        .lean(),
+    ]);
+
+    const allRounds = [
+      ...standardRounds.map((r) => ({ ...r, isMock: false })),
+      ...mockRounds.map((r) => ({ ...r, isMock: true })),
+    ];
+
+    if (allRounds.length === 0) {
+      return res.status(200).json({ success: true, count: 0, data: [] });
+    }
+
+    // 3. Optimized Feedback Check: Get all submitted feedbacks for these rounds in ONE query
+    const roundIds = allRounds.map((r) => r._id);
+    const submittedFeedbacks = await FeedbackModel.find({
+      interviewRoundId: { $in: roundIds },
+      interviewerId: objectIdContact,
+      status: "submitted",
+    })
+      .select("interviewRoundId")
+      .lean();
+
+    // Create a Set of IDs that ALREADY have feedback
+    const feedbackExistsSet = new Set(
+      submittedFeedbacks.map((f) => f.interviewRoundId.toString()),
+    );
+
+    // 4. Filter rounds that DON'T have feedback yet
+    const pendingResults = allRounds
+      .filter((round) => !feedbackExistsSet.has(round._id.toString()))
+      .map((round) => ({
+        roundId: round._id,
+        roundTitle: round.roundTitle,
+        dateTime: round.dateTime,
+        status: round.status,
+        isMock: round.isMock,
+        candidateName: round.isMock
+          ? round.mockInterviewId?.candidateName
+          : `${round.interviewId?.candidateId?.FirstName || ""} ${round.interviewId?.candidateId?.LastName || ""}`.trim(),
+        positionTitle: round.isMock
+          ? "Mock Interview"
+          : round.interviewId?.positionId?.title,
+        companyName: round.isMock
+          ? "N/A"
+          : round.interviewId?.positionId?.companyname || "N/A",
+        interviewCode: round.isMock
+          ? round.mockInterviewId?.interviewCode
+          : round.interviewId?.interviewCode,
+      }));
+
+    return res.status(200).json({
+      success: true,
+      count: pendingResults.length,
+      data: pendingResults,
+    });
+  } catch (error) {
+    console.error("Error fetching pending feedbacks:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createFeedback,
   // getFeedbackByTenantId,
@@ -1955,6 +2061,7 @@ module.exports = {
   getFeedbackByContactIdRoundId,
   getCandidateByRoundId,
   getFeedbackRoundId, // getting all feedbacks  by roundid for scheduler only
+  getPendingFeedbacks,
 };
 
 // const getFeedbackByRoundId = async (req, res) => {

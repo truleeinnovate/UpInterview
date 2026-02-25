@@ -172,7 +172,7 @@ function SidebarPopup({
         </div>
 
         {/* Content */}
-        <div className="flex-grow overflow-y-auto px-4 sm:pb-12">
+        <div className="flex-grow overflow-y-auto px-6 py-4 sm:pb-12">
           {children}
         </div>
       </div>

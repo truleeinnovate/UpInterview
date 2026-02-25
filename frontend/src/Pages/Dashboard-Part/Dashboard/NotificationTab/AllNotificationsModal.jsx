@@ -150,7 +150,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications, searchQuery, se
           <div className="flex items-center sm:space-x-0 space-x-2 mb-4">
             <button
               onClick={() => setActiveTab("all")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-300 ${activeTab === "all"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 ${activeTab === "all"
                   ? "bg-indigo-50 text-custom-blue"
                   : "text-gray-600 hover:bg-gray-50"
                 }`}
@@ -166,7 +166,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications, searchQuery, se
 
             <button
               onClick={() => setActiveTab("email")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-xl transition-all duration-300 ${activeTab === "email"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-300 ${activeTab === "email"
                   ? "bg-indigo-50 text-custom-blue"
                   : "text-gray-600 hover:bg-gray-50"
                 }`}
@@ -331,7 +331,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications, searchQuery, se
                       </div>
                       <button
                         onClick={() => setSelectedNotification(notification)}
-                        className="flex items-center justify-center sm:border-0 border border-gray-200 font-medium rounded-lg md:ml-4 sm:text-custom-blue bg-gray-50 sm:py-1.5 p-2 text-gray-600 hover:text-custom-blue transition-colors duration-300"
+                        className="flex items-center justify-center sm:border-0 border border-gray-200 font-medium rounded-md md:ml-4 sm:text-custom-blue bg-gray-50 sm:py-1.5 p-2 text-gray-600 hover:text-custom-blue transition-colors duration-300"
                       >
                         <span className="sm:hidden inline sm:text-xs text-sm">
                           View Details

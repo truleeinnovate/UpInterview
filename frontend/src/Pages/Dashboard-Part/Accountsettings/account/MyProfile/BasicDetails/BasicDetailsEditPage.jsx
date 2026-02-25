@@ -43,6 +43,7 @@ import {
   ProfilePhotoUpload,
 } from "../../../../../../Components/FormFields";
 import LoadingButton from "../../../../../../Components/LoadingButton.jsx";
+import {Button} from "../../../../../../Components/Buttons/Button.jsx";
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode.js";
 Modal.setAppElement("#root");
 
@@ -676,7 +677,7 @@ const BasicDetailsEditPage = ({
     // v1.0.3 <---------------------------------------------------------
     <SidebarPopup title="Edit Basic Details" onClose={handleCloseModal}>
       {/* v1.0.3 --------------------------------------------------------> */}
-      <div className="sm:p-0 p-6">
+      <div className="pb-6 pl-1">
         <form className="space-y-6">
           {errors.form && (
             <p className="text-red-500 text-sm mb-4">{errors.form}</p>
@@ -818,14 +819,15 @@ const BasicDetailsEditPage = ({
             />
           </div>
 
-          <div className="flex justify-end space-x-3">
-            <button
+          <div className="flex justify-end space-x-3 pt-6">
+            <Button
               type="button"
+              variant="outline"
               onClick={handleCloseModal}
-              className="px-6 py-2 h-9 text-custom-blue border border-custom-blue rounded-md font-medium text-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className="text-custom-blue border border-custom-blue"
             >
               Cancel
-            </button>
+            </Button>
 
             <LoadingButton
               type="submit"

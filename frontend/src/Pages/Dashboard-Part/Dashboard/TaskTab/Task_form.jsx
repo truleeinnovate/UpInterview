@@ -21,6 +21,7 @@ import { useUsers } from "../../../../apiHooks/useUsers.js";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
 import LoadingButton from "../../../../Components/LoadingButton.jsx";
+import { Button } from "../../../../Components/Buttons/Button.jsx";
 import {
   useCreateTask,
   useUpdateTask,
@@ -616,7 +617,7 @@ const TaskForm = ({
       onClose={onClose}
     >
       {/* v1.0.5 <---------------------------------- */}
-      <div className="sm:p-0 px-6 py-2 mb-8">
+      <div className="mb-8">
         {/* Show loading state when fetching task data */}
         {taskId && isLoadingTask ? (
           <div className="flex items-center justify-center py-20">
@@ -979,13 +980,14 @@ const TaskForm = ({
                 {/* v1.0.5 <---------------------------------------- */}
                 <div className="flex justify-end space-x-3">
                   {/* v1.0.5 ----------------------------------------> */}
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={onClose}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="text-custom-blue border border-custom-blue"
                   >
                     Cancel
-                  </button>
+                  </Button>
                   <LoadingButton
                     type="submit"
                     isLoading={isSaving}
@@ -1000,8 +1002,6 @@ const TaskForm = ({
           </>
         )}
       </div>
-      {/* </div> */}
-      {/* </Modal> */}
     </SidebarPopup>
     // v1.0.3 ------------------------------------------------------------------------->
   );

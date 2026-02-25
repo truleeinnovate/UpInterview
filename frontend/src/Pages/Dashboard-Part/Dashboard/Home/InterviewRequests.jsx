@@ -331,7 +331,7 @@ const InterviewRequests = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleDetails(request)}
-                    className="px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors duration-300"
+                    className="px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors duration-300"
                   >
                     Details
                   </button>
@@ -346,7 +346,7 @@ const InterviewRequests = () => {
                         )
                       }
                       disabled={acceptingId === request.id}
-                      className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === request.id
+                      className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-md hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === request.id
                         ? "opacity-60 cursor-wait"
                         : "cursor-pointer"
                         }`}
@@ -356,7 +356,7 @@ const InterviewRequests = () => {
                   ) : (
                     <button
                       disabled
-                      className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${request.status === "accepted"
+                      className={`px-2.5 py-1 text-xs font-medium text-white rounded-md cursor-not-allowed opacity-70 ${request.status === "accepted"
                         ? "bg-green-600"
                         : request.status === "declined"
                           ? "bg-red-500"
@@ -532,7 +532,7 @@ const InterviewRequests = () => {
           {(selectedRequest.status !== "accepted") && <div className="fixed bottom-0 right-0 w-full xl:w-1/2 2xl:w-1/2 bg-white px-4 py-3 flex justify-end gap-3 z-10">
             <button
               onClick={closePopup}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-300"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors duration-300"
             >
               Close
             </button>
@@ -546,7 +546,7 @@ const InterviewRequests = () => {
                   )
                 }
                 disabled={acceptingId === selectedRequest.id}
-                className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === selectedRequest.id
+                className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-md hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === selectedRequest.id
                   ? "opacity-60 cursor-wait"
                   : "cursor-pointer"
                   }`}
@@ -558,7 +558,7 @@ const InterviewRequests = () => {
             ) : (
               <button
                 disabled
-                className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${selectedRequest.status === "accepted"
+                className={`px-2.5 py-1 text-xs font-medium text-white rounded-md cursor-not-allowed opacity-70 ${selectedRequest.status === "accepted"
                   ? "bg-green-600"
                   : selectedRequest.status === "declined"
                     ? "bg-red-500"
@@ -675,7 +675,7 @@ const InterviewRequests = () => {
                   <div className="flex items-center gap-2 justify-end">
                     <button
                       onClick={() => handleDetails(req)}
-                      className="px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors duration-300"
+                      className="px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors duration-300"
                     >
                       Details
                     </button>
@@ -686,7 +686,7 @@ const InterviewRequests = () => {
                           handleAccept(req.id, req.interviewerId, req.roundId)
                         }
                         disabled={acceptingId === req.id}
-                        className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-lg hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === req.id
+                        className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-md hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === req.id
                           ? "opacity-60 cursor-wait"
                           : "cursor-pointer"
                           }`}
@@ -696,7 +696,7 @@ const InterviewRequests = () => {
                     ) : (
                       <button
                         disabled
-                        className={`px-2.5 py-1 text-xs font-medium text-white rounded-lg cursor-not-allowed opacity-70 ${req.status === "accepted"
+                        className={`px-2.5 py-1 text-xs font-medium text-white rounded-md cursor-not-allowed opacity-70 ${req.status === "accepted"
                           ? "bg-green-600"
                           : req.status === "declined"
                             ? "bg-red-500"

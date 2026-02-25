@@ -3,6 +3,8 @@ import { fetchFilterData } from "../api.js";
 import { usePermissions } from "../Context/PermissionsContext";
 import axios from "axios";
 import toast from "react-hot-toast";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
 
 export const useFeedbacks = (filters = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
@@ -116,7 +118,7 @@ export const useFeedbackData = ({ roundId, interviewerId, interviewType }) => {
 
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/feedback/round/${roundId}`,
-        { params }
+        { params },
       );
 
       // {
@@ -147,5 +149,37 @@ export const useFeedbackData = ({ roundId, interviewerId, interviewType }) => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
+  });
+};
+
+export const usePendingFeedbacks = () => {
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+  
+  const contactId = tokenPayload?.userId; 
+
+  return useQuery({
+    queryKey: ["pendingFeedbacks", contactId],
+    queryFn: async () => {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/feedback/pending-feedbacks`,
+        { 
+          params: { contactId }
+        }
+      );
+
+      if (response.data.success) {
+        return response.data.data;
+      } else {
+        throw new Error(
+          response.data.message || "Failed to fetch pending feedbacks"
+        );
+      }
+    },
+    enabled: !!contactId,
+    retry: 1,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
   });
 };

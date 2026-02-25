@@ -447,7 +447,7 @@ const CompanyEditProfile = () => {
       title="Update Company Profile"
       onClose={() => navigate("/account-settings/profile")}
     >
-      <div className="sm:p-4 p-6">
+      <div className="pb-8">
         <form className="space-y-6">
           <div className="space-y-6">
             <div className="flex flex-col items-center">
