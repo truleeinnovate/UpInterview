@@ -841,6 +841,8 @@ const updateInterviewRound = async (req, res) => {
         // Helper already sent a response (e.g. error); stop further processing.
         return walletHoldResponse;
       }
+      // clearing the  participants
+      updatePayload.$set.participants = [];
     }
 
     // 2. RequestSent → Draft (user removing interviewers / cancelling requests)
@@ -885,6 +887,9 @@ const updateInterviewRound = async (req, res) => {
       updatePayload.$set.meetingId = ""; // Clear assigned meetingId
       updatePayload.$set.meetPlatform = ""; // Clear assigned meetPlatform
       updatePayload.$set.interviewerType = "";
+      // clearing the  participants
+      updatePayload.$set.participants = [];
+
     }
 
     // 3. Scheduled → Draft (cancelling after acceptance)
@@ -932,6 +937,9 @@ const updateInterviewRound = async (req, res) => {
       updatePayload.$set.meetingId = ""; // Clear assigned meetingId
       updatePayload.$set.meetPlatform = ""; // Clear assigned meetPlatform
       updatePayload.$set.interviewerType = "";
+
+      updatePayload.$set.participants = [];   // clearing the  participants
+
       // === SEND CANCELLATION EMAILS ===
       // Only if there was an accepted interviewer (we know who was cancelled)
       if (
@@ -989,6 +997,10 @@ const updateInterviewRound = async (req, res) => {
       const scheduleAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
 
       updatePayload.$set.status = scheduleAction;
+      // clearing the  participants
+      updatePayload.$set.participants = [];
+
+
       shouldSendInternalEmail = true; // First scheduling → send email
       shouldcreateRequestFlow = true;
       generateMeetingLink = true;
@@ -1012,6 +1024,9 @@ const updateInterviewRound = async (req, res) => {
       updatePayload.$set.interviewers = []; // making accepted interviwers clear
       updatePayload.$set.meetingId = ""; // Clear assigned meetingId
       updatePayload.$set.meetPlatform = ""; // Clear assigned meetPlatform
+      // clearing the  participants
+      updatePayload.$set.participants = [];
+
       await InterviewRequest.updateMany(
         { roundId: existingRound._id, status: "accepted" },
         { status: "cancelled", respondedAt: new Date() },

@@ -15,9 +15,14 @@ const useAutoSaveFeedback = ({
   interviewerSectionData,
   preselectedQuestionsResponses,
   skillRatings,
+  technicalSkills, // New: Categorized skills
+  strengths,       // New: Strengths array
+  areasForImprovement, // New: Areas for improvement array
   overallRating,
   communicationRating,
   recommendation,
+  cultureFit,      // New: Culture fit rating
+  willingnessToLearn, // New: Willingness to learn rating
   comments,
   candidateId,
   positionId,
@@ -45,9 +50,14 @@ const useAutoSaveFeedback = ({
     interviewerSectionData,
     preselectedQuestionsResponses,
     skillRatings,
+    technicalSkills,
+    strengths,
+    areasForImprovement,
     overallRating,
     communicationRating,
     recommendation,
+    cultureFit,
+    willingnessToLearn,
     comments,
     candidateId,
     positionId,
@@ -66,9 +76,14 @@ const useAutoSaveFeedback = ({
       interviewerSectionData,
       preselectedQuestionsResponses,
       skillRatings,
+      technicalSkills,
+      strengths,
+      areasForImprovement,
       overallRating,
       communicationRating,
       recommendation,
+      cultureFit,
+      willingnessToLearn,
       comments,
       candidateId,
       positionId,
@@ -84,9 +99,14 @@ const useAutoSaveFeedback = ({
     interviewerSectionData,
     preselectedQuestionsResponses,
     skillRatings,
+    technicalSkills,
+    strengths,
+    areasForImprovement,
     overallRating,
     communicationRating,
     recommendation,
+    cultureFit,
+    willingnessToLearn,
     comments,
     candidateId,
     positionId,
@@ -103,13 +123,29 @@ const useAutoSaveFeedback = ({
   const toBackendAnswerType = (ui) => {
     if (ui === "Fully Answered") return "correct";
     if (ui === "Partially Answered") return "partial";
-    if (ui === "Not Answered") return "incorrect";
+    if (ui === "Not Answered") return "not answered";
     return "not answered";
   };
 
   // Prepare feedback payload using the current data from ref
   const prepareFeedbackPayload = useCallback(() => {
     const data = dataRef.current;
+
+    const formattedTechnicalSkills = [];
+    if (data.technicalSkills) {
+      if (data.technicalSkills.strong) {
+        data.technicalSkills.strong.forEach(s => formattedTechnicalSkills.push({ skillName: s, level: 'strong', rating: 5, note: 'Strong' }));
+      }
+      if (data.technicalSkills.good) {
+        data.technicalSkills.good.forEach(s => formattedTechnicalSkills.push({ skillName: s, level: 'good', rating: 4, note: 'Good' }));
+      }
+      if (data.technicalSkills.basic) {
+        data.technicalSkills.basic.forEach(s => formattedTechnicalSkills.push({ skillName: s, level: 'basic', rating: 3, note: 'Basic' }));
+      }
+      if (data.technicalSkills.noExperience) {
+        data.technicalSkills.noExperience.forEach(s => formattedTechnicalSkills.push({ skillName: s, level: 'noExperience', rating: 1, note: 'No Experience' }));
+      }
+    }
 
     return {
       type: "draft",
@@ -119,20 +155,22 @@ const useAutoSaveFeedback = ({
       candidateId: data.candidateId || undefined,
       positionId: data.positionId || undefined,
       interviewerId: data.interviewerId || undefined,
-      skills:
-        data.skillRatings && data.skillRatings.length > 0
-          ? data.skillRatings
-            .filter((skill) => skill.skill && skill.skill.trim() !== "") // Filter empty skills
-            .map((skill) => ({
-              skillName: skill.skill,
-              rating: skill.rating,
-              note: skill.comments || "",
-            }))
-          : undefined,
+
+      // New: Structured Technical Skills
+      technicalSkills: formattedTechnicalSkills,
+
+      // New: Technical Competency (Star Ratings)
+      technicalCompetency: data.skillRatings && data.skillRatings.length > 0
+        ? data.skillRatings
+          .filter((skill) => (skill.skill || skill.skillName) && (skill.skill || skill.skillName).trim() !== "")
+          .map((skill) => ({
+            skillName: skill.skillName || skill.skill,
+            rating: skill.rating || 0,
+            notes: skill.notes || skill.comments || "",
+          }))
+        : [],
+
       questionFeedback: [
-        // Interviewer section questions
-        // For new interviewer-added questions, send full question object
-        // For existing ones, send _id (InterviewQuestions ID) for backend matching
         ...(data.interviewerSectionData || []).map((question) => ({
           questionId: question.addedBy === "interviewer" && !question.originalData
             ? question
@@ -149,10 +187,6 @@ const useAutoSaveFeedback = ({
             dislikeReason: question.whyDislike || undefined,
           },
         })),
-        // Preselected questions responses
-        // IMPORTANT: Send _id (InterviewQuestions ID) as questionId, NOT
-        // questionId (QuestionBank ID), because the backend answerMap keys
-        // by questionId and looks up by InterviewQuestions._id
         ...(data.preselectedQuestionsResponses || []).map((response) => ({
           questionId:
             typeof response === "string"
@@ -171,13 +205,39 @@ const useAutoSaveFeedback = ({
           },
         })),
       ],
+
+      // New: Questions Asked (detailed)
+      questionsAsked: [
+        ...(data.interviewerSectionData || []).map((question) => ({
+          questionId: question._id || question.questionId || question.id,
+          question: question.question,
+          candidateAnswer: {
+            answerType: toBackendAnswerType(question.isAnswered || "Not Answered"),
+            submittedAnswer: "",
+          },
+          interviewerFeedback: {
+            liked: question.isLiked || "none",
+            dislikeReason: question.whyDislike || undefined,
+            note: question.note || undefined,
+          },
+          answered: question.isAnswered && question.isAnswered !== "Not Answered",
+          notes: question.note || "",
+        })),
+      ],
+
       isMockInterview: data.isMockInterview,
+      strengths: (data.strengths || []).filter(s => s && s.trim()),
+      areasForImprovement: (data.areasForImprovement || []).filter(s => s && s.trim()),
       generalComments: data.comments || "",
+      additionalComments: data.comments || "",
+
       overallImpression: {
         overallRating: data.overallRating || 0,
-        communicationRating: data.communicationRating || 0,
         recommendation: data.recommendation || "Maybe",
-        note: "",
+        note: data.comments || "",
+        cultureFit: data.cultureFit || 0,
+        willingnessToLearn: data.willingnessToLearn || 0,
+        communicationRating: data.communicationRating || 0,
       },
       status: "draft",
       feedbackCode: data.feedbackCode,
@@ -284,9 +344,14 @@ const useAutoSaveFeedback = ({
     interviewerSectionData,
     preselectedQuestionsResponses,
     skillRatings,
+    technicalSkills,
+    strengths,
+    areasForImprovement,
     overallRating,
     communicationRating,
     recommendation,
+    cultureFit,
+    willingnessToLearn,
     comments,
     triggerAutoSave,
   ]);

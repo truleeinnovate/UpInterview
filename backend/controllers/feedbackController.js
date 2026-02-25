@@ -72,9 +72,14 @@ const createFeedback = async (req, res) => {
       candidateId,
       positionId,
       interviewerId,
-      skills,
+      technicalSkills,
+      technicalCompetency,
       questionFeedback,
+      questionsAsked,
+      strengths,
+      areasForImprovement,
       generalComments,
+      additionalComments,
       overallImpression,
 
       isMockInterview,
@@ -276,9 +281,14 @@ const createFeedback = async (req, res) => {
       feedbackInstance.tenantId = tenantId;
       feedbackInstance.ownerId = ownerId;
       feedbackInstance.positionId = positionId;
-      feedbackInstance.skills = skills;
+      if (technicalSkills !== undefined) feedbackInstance.technicalSkills = technicalSkills;
+      if (technicalCompetency !== undefined) feedbackInstance.technicalCompetency = technicalCompetency;
       feedbackInstance.questionFeedback = processedQuestionFeedback;
-      feedbackInstance.generalComments = generalComments || "";
+      feedbackInstance.questionsAsked = processedQuestionFeedback;
+      feedbackInstance.generalComments = generalComments || additionalComments || "";
+      feedbackInstance.additionalComments = additionalComments || generalComments || "";
+      if (strengths !== undefined) feedbackInstance.strengths = strengths;
+      if (areasForImprovement !== undefined) feedbackInstance.areasForImprovement = areasForImprovement;
       feedbackInstance.overallImpression = overallImpression || {};
       feedbackInstance.status = type === "submit" ? "submitted" : "draft";
       feedbackInstance.isMockInterview = isMockInterview;
@@ -308,9 +318,14 @@ const createFeedback = async (req, res) => {
         candidateId,
         positionId,
         interviewerId,
-        skills,
+        technicalSkills,
+        technicalCompetency,
         questionFeedback: processedQuestionFeedback,
-        generalComments: generalComments || "",
+        questionsAsked: processedQuestionFeedback,
+        generalComments: generalComments || additionalComments || "",
+        additionalComments: additionalComments || generalComments || "",
+        strengths,
+        areasForImprovement,
         overallImpression: overallImpression || {},
         status: type === "submit" ? "submitted" : "draft", // Fix logic to allow submitting new feedback directly
         feedbackCode: finalFeedbackCode,
@@ -644,18 +659,10 @@ const updateFeedback = async (req, res) => {
         )
       ) {
         updateObject.questionFeedback = normalizedQuestionFeedback;
+        updateObject.questionsAsked = normalizedQuestionFeedback;
         hasChanges = true;
         // console.log("Question feedback changed");
       }
-    }
-
-    // CHANGE 5: Check other fields for changes
-    if (
-      updateData.skills &&
-      !isDeepEqual(existingFeedback.skills, updateData.skills)
-    ) {
-      updateObject.skills = updateData.skills;
-      hasChanges = true;
     }
 
     if (
@@ -674,6 +681,48 @@ const updateFeedback = async (req, res) => {
       )
     ) {
       updateObject.overallImpression = updateData.overallImpression;
+      hasChanges = true;
+    }
+
+    if (
+      updateData.technicalSkills !== undefined &&
+      !isDeepEqual(existingFeedback.technicalSkills, updateData.technicalSkills)
+    ) {
+      updateObject.technicalSkills = updateData.technicalSkills;
+      hasChanges = true;
+    }
+
+    if (
+      updateData.technicalCompetency !== undefined &&
+      !isDeepEqual(existingFeedback.technicalCompetency, updateData.technicalCompetency)
+    ) {
+      updateObject.technicalCompetency = updateData.technicalCompetency;
+      hasChanges = true;
+    }
+
+    if (
+      updateData.strengths !== undefined &&
+      !isDeepEqual(existingFeedback.strengths, updateData.strengths)
+    ) {
+      updateObject.strengths = updateData.strengths;
+      hasChanges = true;
+    }
+
+    if (
+      updateData.areasForImprovement !== undefined &&
+      !isDeepEqual(existingFeedback.areasForImprovement, updateData.areasForImprovement)
+    ) {
+      updateObject.areasForImprovement = updateData.areasForImprovement;
+      hasChanges = true;
+    }
+
+    if (
+      updateData.additionalComments !== undefined &&
+      updateData.additionalComments !== existingFeedback.additionalComments
+    ) {
+      updateObject.additionalComments = updateData.additionalComments;
+      // also sync to generalComments for legacy
+      updateObject.generalComments = updateData.additionalComments;
       hasChanges = true;
     }
 
