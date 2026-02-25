@@ -155,7 +155,7 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
         if (hasEndedRef.current) return;
         hasEndedRef.current = true;
 
-        notify.critical("⏰ Meeting ended. Closing call...");
+        notify.meetingAlert("⏰ Meeting ended. Closing call...");
 
         try {
             end();
@@ -214,7 +214,7 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
             if (now >= scheduledEnd && now < fiveMinCountdown) {
                 if (!shownNotificationsRef.current.graceStarted) {
                     shownNotificationsRef.current.graceStarted = true;
-                    notify.critical("Grace period started (10 min)");
+                    notify.meetingAlert("Grace period started (10 min)");
                 }
                 return;
             }
@@ -223,7 +223,7 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
             if (now >= tenMinWarning && now < scheduledEnd) {
                 if (!shownNotificationsRef.current.tenMinWarning) {
                     shownNotificationsRef.current.tenMinWarning = true;
-                    notify.critical("10 minutes remaining before scheduled end time.");
+                    notify.meetingAlert("10 minutes remaining before scheduled end time.");
                 }
                 return;
             }
