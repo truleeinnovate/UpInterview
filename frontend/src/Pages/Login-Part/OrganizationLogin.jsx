@@ -348,11 +348,18 @@ const OrganizationLogin = () => {
                 if (status === 400) {
                     if (data.fields) {
                         setErrors(data.fields);
-                    } else if (data.message === "Invalid email or password") {
+                    } else if (data.message === "No account found") {
                         setErrors({
-                            email: "Invalid credentials",
-                            password: "Invalid credentials",
+                            email: "No account found",
+                            password: "",
                         });
+                    } else if (data.message === "Incorrect password") {
+                        setErrors({
+                            email: "",
+                            password: "Incorrect password",
+                        });
+                    } else {
+                        notify.error(data.message || "Something went wrong. Please refresh the screen or contact customer support.");
                     }
                 } else if (status === 403) {
                     if (data.isEmailVerified === false) {
@@ -360,13 +367,15 @@ const OrganizationLogin = () => {
                         await handleResendVerification();
                         setCountdown(60);
                     } else {
-                        toast.error(data.message || "Access denied");
+                        notify.error(data.message || "Access denied");
                     }
                 } else if (status >= 500) {
-                    toast.error("Login failed. Please try again later.");
+                    notify.error("Something went wrong. Please refresh the screen or contact customer support.");
+                } else {
+                    notify.error(data.message || "Something went wrong. Please refresh the screen or contact customer support.");
                 }
             } else {
-                toast.error("Network error. Please check your connection.");
+                notify.error("Something went wrong. Please refresh the screen or contact customer support.");
             }
         } finally {
             setIsLoading(false);

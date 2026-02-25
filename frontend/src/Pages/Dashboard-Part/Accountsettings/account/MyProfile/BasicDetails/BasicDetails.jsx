@@ -151,7 +151,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
           <div>
             <div className="flex items-center gap-2 mb-0.5">
               <p className="text-sm text-gray-500">Email</p>
-              {contactData.isEmailVerified && (
+              {contactData.isEmailVerified ? (
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700 border border-green-200" title="Email is verified">
                   <svg
                     className="w-3 h-3 mr-0.5"
@@ -165,6 +165,23 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
                     />
                   </svg>
                   Verified
+                </span>
+              ) : !contactData.newEmail && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-700 border border-red-200" title="Email is not verified">
+                  <svg
+                    className="w-3 h-3 mr-0.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                  Not Verified
                 </span>
               )}
               {contactData.newEmail && (
@@ -283,7 +300,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
             </p>
           </div>
 
-          {contactData.roleName === "Internal_Interviewer" && (
+          {contactData.roleName === "Internal_Interviewer" && mode === "users" && (
             <div>
               <p className="text-sm text-gray-500">Profile Completed</p>
               <p className="font-medium truncate sm:text-sm">

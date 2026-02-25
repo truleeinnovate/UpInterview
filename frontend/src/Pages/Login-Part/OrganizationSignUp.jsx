@@ -1120,7 +1120,7 @@ export const Organization = () => {
                 </div>
 
                 {!formSubmitted ? (
-                  <form onSubmit={handleSubmit} className="space-y-6">
+                  <form className="space-y-6">
                     {/* Company Information Section */}
                     <div className="bg-gray-50 rounded-xl p-4 mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -1558,6 +1558,7 @@ export const Organization = () => {
 
                     <button
                       type="submit"
+                      onClick={handleSubmit}
                       disabled={isSubmitting}
                       className={`w-full text-lg font-medium rounded-lg py-3 transition-all duration-300 flex items-center justify-center ${isSubmitting
                           ? "bg-gray-400 cursor-not-allowed transform scale-95"

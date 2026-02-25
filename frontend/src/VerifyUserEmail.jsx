@@ -25,27 +25,31 @@ const VerifyUserEmail = () => {
           `${config.REACT_APP_API_URL}/Organization/verify-user-email?token=${token}`
         );
 
-        
+
 
         if (response.data.success) {
           setVerificationStatus('success');
-         notify.success('Email verified successfully!');
-          // Redirect after 3 seconds
-          // setTimeout(() => {
-          //   // navigate('/organization-login');
-          // }, 5000);
+          if (response.data.alreadyVerified) {
+            notify.success('Email is already verified');
+          } else {
+            notify.success('Email verified successfully!');
+          }
+          // Redirect after 5 seconds
+          setTimeout(() => {
+            navigate('/organization-login');
+          }, 5000);
         } else {
           setVerificationStatus('failed');
           notify.error(response.data.message || 'Verification failed');
         }
       }
       catch (error) {
-  console.error('Verification error:', error);
-  setVerificationStatus('failed');
-  toast.error(
-    error.response?.data?.message || 'Verification failed. Please try again.'
-  );
-}
+        console.error('Verification error:', error);
+        setVerificationStatus('failed');
+        toast.error(
+          error.response?.data?.message || 'Verification failed. Please try again.'
+        );
+      }
 
       // } catch (error) {
       //   console.error('Verification error:', error);

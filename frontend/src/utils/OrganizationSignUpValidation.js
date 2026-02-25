@@ -158,6 +158,7 @@ export const validateOrganizationSignup = async (
   errors.profileId = await validateProfileId(formData.profileId, checkProfileIdExists);
 
   // Other fields
+  errors.firstName = !formData.firstName ? 'First Name is required' : '';
   errors.lastName = !formData.lastName ? 'Last Name is required' : '';
   errors.phone = validatePhone(formData.phone, formData.countryCode);
   errors.jobTitle = validateJobTitle(formData.jobTitle);

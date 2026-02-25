@@ -27,6 +27,7 @@ import {
   ArrowsRightLeftIcon,
   VideoCameraIcon,
 } from "@heroicons/react/24/outline";
+import Loading from "../../../Components/Loading";
 
 const AccountSettingsSidebar = () => {
   const { checkPermission, isInitialized, loading } = usePermissionCheck();
@@ -219,6 +220,8 @@ const AccountSettingsSidebar = () => {
 
   // Redirect to appropriate tab on initial load
   useEffect(() => {
+    if (!isInitialized) return;
+
     if (location.pathname === "/account-settings") {
       const isAdmin = effectivePermissions_RoleName === "Admin";
       if (organization && isAdmin && userType !== "superAdmin") {
@@ -234,20 +237,20 @@ const AccountSettingsSidebar = () => {
       //   console.log('🎯 Sidebar: Redirecting to /account-settings/my-profile/basic');
       navigate("/account-settings/my-profile/basic", { replace: true });
     }
-  }, [location.pathname, navigate, organization, userType]);
+  }, [
+    location.pathname,
+    navigate,
+    organization,
+    userType,
+    isInitialized,
+    effectivePermissions_RoleName,
+  ]);
 
-  // Early return for loading or uninitialized states
-  // if (!authToken) {
-  //   // console.log('🎯 Sidebar: No auth token, redirecting to login');
-  //   navigate('/login');
-  //   return null;
-  // }
 
   if (loading || !isInitialized) {
-    // console.log('🎯 Sidebar: Waiting for initialization', { loading, isInitialized });
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gray-50 z-50">
-        <div>Loading...</div> {/* Replace with your Loading component */}
+        <div><Loading /></div>
       </div>
     );
   }

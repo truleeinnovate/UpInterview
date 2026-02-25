@@ -28,6 +28,7 @@ const BasicDetails = ({
     const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
     const [suggestedProfileIds, setSuggestedProfileIds] = useState([]);
     const [profileError, setProfileError] = useState("");
+    const [isProfileIdManuallyModified, setIsProfileIdManuallyModified] = useState(false);
     const toValidDate = (v) => {
         if (!v) return null;
         const d = v instanceof Date ? v : new Date(v);
@@ -125,6 +126,7 @@ const BasicDetails = ({
         if (name === "profileId") {
             setShowSuggestions(false);
             handleProfileIdValidation(value);
+            setIsProfileIdManuallyModified(true);
         }
     };
 
@@ -150,6 +152,7 @@ const BasicDetails = ({
             ...prev,
             profileId: suggestion,
         }));
+        setIsProfileIdManuallyModified(true);
         setSuggestedProfileIds([]);
         setShowSuggestions(false);
         setErrors((prev) => ({ ...prev, profileId: "" }));
@@ -197,6 +200,7 @@ const BasicDetails = ({
             clearTimeout(profileIdTimeoutRef.current);
             handleProfileIdValidation(value);
             setShowSuggestions(false);
+            setIsProfileIdManuallyModified(true);
         }
     };
 
@@ -235,7 +239,7 @@ const BasicDetails = ({
     };
 
     useEffect(() => {
-        if (basicDetailsData.email && !basicDetailsData.profileId) {
+        if (basicDetailsData.email && !basicDetailsData.profileId && !isProfileIdManuallyModified) {
             const generatedProfileId = generateProfileId(basicDetailsData.email);
             setBasicDetailsData((prev) => ({
                 ...prev,
@@ -394,6 +398,7 @@ const BasicDetails = ({
                                 const value = e.target.value.replace(/[^a-zA-Z0-9.]/g, "");
                                 setBasicDetailsData((prev) => ({ ...prev, profileId: value }));
                                 handleProfileIdValidation(value);
+                                setIsProfileIdManuallyModified(true);
                             }}
                             onBlur={handleBlur}
                             onFocus={handleProfileIdFocus}
@@ -435,7 +440,7 @@ const BasicDetails = ({
                 {/* Phone Number */}
                 <div className="sm:col-span-6 w-full">
                     <PhoneField
-                        
+
                         countryCodeOptions={countryCodeOptions}
                         countryCodeValue={basicDetailsData.countryCode}
                         onCountryCodeChange={(e) => handleInputChange(e, "countryCode")}

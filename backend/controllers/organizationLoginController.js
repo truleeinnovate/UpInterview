@@ -165,7 +165,7 @@ const organizationUserCreation = async (req, res) => {
         countryCode,
         //   status: status || "active",
         status: isSuperAdmin ? "active" : "inactive",
-        isEmailVerified: isEmailVerified || false,
+        // isEmailVerified: isEmailVerified || false,
         // <-------------------------------v1.0.3
         ...(isSuperAdmin
           ? {}
@@ -248,7 +248,7 @@ const loginOrganization = async (req, res) => {
     if (!user) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid email or password" });
+        .json({ success: false, message: "No account found" });
     }
 
     if (!user.isEmailVerified) {
@@ -275,7 +275,7 @@ const loginOrganization = async (req, res) => {
     if (!isPasswordValid) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid email or password" });
+        .json({ success: false, message: "Incorrect password" });
     }
 
     // Internal (super admin) login
@@ -978,12 +978,24 @@ const verifyEmailChange = async (req, res) => {
     }
 
     const user = await Users.findById(decoded.userId);
-    const contacts = await Contacts.findById(decoded.userId);
-    // if (!user || user.newEmail !== decoded.newEmail) {
-    //   return res.status(400).json({ success: false, message: 'Email change verification failed' });
-    // }
+    const contacts = await Contacts.findOne({ ownerId: decoded.userId });
 
-    if (!user || user.newEmail !== decoded.newEmail) {
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Check if email is already verified/changed
+    if (user.email === decoded.newEmail && !user.newEmail) {
+      return res.status(200).json({
+        success: true,
+        message: "Email is already verified",
+        alreadyVerified: true,
+      });
+    }
+
+    if (user.newEmail !== decoded.newEmail) {
       return res
         .status(400)
         .json({ success: false, message: "Email change verification failed" });
@@ -998,7 +1010,6 @@ const verifyEmailChange = async (req, res) => {
       await contacts.save();
     }
     //     user.newEmail = null;
-    contacts.email = decoded.newEmail;
     await user.save();
 
     return res.json({
@@ -1060,6 +1071,13 @@ const getAllOrganizations = async (req, res) => {
     const pipeline = [
       { $match: matchStage },
 
+      // Add tenantIdStr for joining with models that store tenantId as string
+      {
+        $addFields: {
+          tenantIdStr: { $toString: "$_id" },
+        },
+      },
+
       // CONTACT LOOKUP
       {
         $lookup: {
@@ -1069,17 +1087,13 @@ const getAllOrganizations = async (req, res) => {
           as: "contact",
         },
       },
-      { $unwind: { path: "$contact", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          contact: { $arrayElemAt: ["$contact", 0] },
+        },
+      },
 
       // SUBSCRIPTION LOOKUP (replaced "let")
-      // {
-      //   $lookup: {
-      //     from: "customersubscriptions",
-      //     localField: "tenantIdStr",
-      //     foreignField: "tenantId",
-      //     as: "subscription",
-      //   },
-      // },
       {
         $lookup: {
           from: "customersubscriptions",

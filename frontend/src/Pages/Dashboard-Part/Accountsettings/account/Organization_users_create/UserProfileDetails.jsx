@@ -27,6 +27,8 @@ import EditAvailabilityDetails from "../MyProfile/AvailabilityDetailsUser/EditAv
 
 // import ConfirmationModal from './ConfirmModel';
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup";
+import { notify } from "../../../../../services/toastService";
+
 
 //this is already have common code but due to z index i have added here
 const ConfirmationModal = ({
@@ -118,7 +120,7 @@ const UserProfileDetails = ({ type }) => {
   };
 
   const handleAvailabilityEditClick = (data) => {
-   
+
     setAvailabilityData(data);
     setAvailabilityEditOpen(true);
   };
@@ -173,15 +175,15 @@ const UserProfileDetails = ({ type }) => {
   const isInternalInterviewer = userData.roleName === "Internal_Interviewer";
   const tabs = isInternalInterviewer
     ? [
-        { id: "basic", label: "Basic Details" },
-        { id: "advanced", label: "Advanced Details" },
-        { id: "interview", label: "Interview Details" },
-        { id: "availability", label: "Availability" },
-      ]
+      { id: "basic", label: "Basic Details" },
+      { id: "advanced", label: "Advanced Details" },
+      { id: "interview", label: "Interview Details" },
+      { id: "availability", label: "Availability" },
+    ]
     : [
-        { id: "basic", label: "Basic Details" },
-        { id: "advanced", label: "Advanced Details" },
-      ];
+      { id: "basic", label: "Basic Details" },
+      { id: "advanced", label: "Advanced Details" },
+    ];
 
 
 
@@ -222,6 +224,10 @@ const UserProfileDetails = ({ type }) => {
     </div>
   );
 
+  const canToggle =
+    Boolean(userData?.isSkipped) ||
+    Boolean(userData?.isProfileCompleted);
+
   const renderAvailability = () => {
     return (
       <div className={isFullScreen ? "mx-3" : ""}>
@@ -255,11 +261,11 @@ const UserProfileDetails = ({ type }) => {
                       userData.imageData?.path ||
                       (userData.gender === "Male"
                         ? // ? maleImage
-                          "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
+                        "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
                         : userData.gender === "Female"
-                        ? // ? femaleImage
+                          ? // ? femaleImage
                           "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099369/woman_mffxrj.png"
-                        : // : genderlessImage)
+                          : // : genderlessImage)
                           "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099367/transgender_le4gvu.png")
                     }
                     alt={userData?.firstName || "User"}
@@ -276,11 +282,11 @@ const UserProfileDetails = ({ type }) => {
                   <h3 className="sm:text-lg md:text-lg lg:text-lg xl:text-xl 2xl:text-xl font-bold text-gray-900">
                     {userData.firstName
                       ? userData.firstName.charAt(0).toUpperCase() +
-                        userData.firstName.slice(1)
+                      userData.firstName.slice(1)
                       : ""}{" "}
                     {userData.lastName
                       ? userData.lastName.charAt(0).toUpperCase() +
-                        userData.lastName.slice(1)
+                      userData.lastName.slice(1)
                       : ""}
                   </h3>
                   <p className="text-gray-600">
@@ -290,19 +296,22 @@ const UserProfileDetails = ({ type }) => {
               </div>
               <div className="flex items-center sm:justify-end sm:w-full md:justify-end md:w-full space-x-2">
                 <span
-                  className={`text-sm font-medium ${
-                    newStatus === "active"
-                      ? "text-custom-blue"
-                      : "text-gray-500"
-                  }`}
+                  className={`text-sm font-medium ${newStatus === "active"
+                    ? "text-custom-blue"
+                    : "text-gray-500"
+                    }`}
                 >
                   {newStatus === "active" ? "Active" : "Inactive"}
                 </span>
-                <label className="relative inline-flex items-center cursor-pointer">
+                <label
+                  className={`relative inline-flex items-center cursor-pointer`}
+                >
                   <input
                     type="checkbox"
                     checked={newStatus === "active"}
-                    onChange={handleStatusToggle}
+                    onChange={() => {
+                      handleStatusToggle();
+                    }}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-custom-blue rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-custom-blue"></div>

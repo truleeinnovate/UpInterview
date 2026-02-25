@@ -182,81 +182,7 @@ const MultiStepForm = () => {
     preferredDuration: "",
     availability: [],
   });
-  // Local state for file uploads
-  // const [file, setFile] = useState(null);
-  // const [filePreview, setFilePreview] = useState('');
-  // const [isProfileRemoved, setIsProfileRemoved] = useState(false);
-  // const [resumeFile, setResumeFile] = useState(null);
-  // const [coverLetterFile, setCoverLetterFile] = useState(null);
-  // const [isResumeRemoved, setIsResumeRemoved] = useState(false);
-  // const [isCoverLetterRemoved, setIsCoverLetterRemoved] = useState(false);
-  // Other state variables
-  // const [selectedTechnologyies, setSelectedTechnologyies] = useState([]);
-  // const [selectedSkills, setSelectedSkills] = useState([]);
-  // const [previousInterviewExperience, setPreviousInterviewExperience] = useState('');
-  // const [isMockInterviewSelected, setIsMockInterviewSelected] = useState(false);
-  // const [times, setTimes] = useState({
-  // Sun: [{ startTime: null, endTime: null }],
-  // Mon: [{ startTime: null, endTime: null }],
-  // Tue: [{ startTime: null, endTime: null }],
-  // Wed: [{ startTime: null, endTime: null }],
-  // Thu: [{ startTime: null, endTime: null }],
-  // Fri: [{ startTime: null, endTime: null }],
-  // Sat: [{ startTime: null, endTime: null }],
-  // });
-  // // Save form data to local storage whenever it changes
-  // useEffect(() => {
-  // const formData = {
-  // basicDetails,
-  // additionalDetails,
-  // interviewDetails,
-  // availabilityDetails,
-  // currentStep,
-  // };
-  // localStorage.setItem("interviewerFormData", JSON.stringify(formData));
-  // }, [
-  // basicDetails,
-  // additionalDetails,
-  // interviewDetails,
-  // availabilityDetails,
-  // currentStep,
-  // ]);
-  // // Load form data from local storage on component mount
-  // useEffect(() => {
-  // const savedFormData = localStorage.getItem("interviewerFormData");
-  // if (savedFormData) {
-  // const {
-  // basicDetails: savedBasicDetails,
-  // additionalDetails: savedAdditionalDetails,
-  // interviewDetails: savedInterviewDetails,
-  // availabilityDetails: savedAvailabilityDetails,
-  // currentStep: savedCurrentStep,
-  // } = JSON.parse(savedFormData);
-  // if (savedBasicDetails)
-  // setBasicDetails((prev) => ({ ...prev, ...savedBasicDetails }));
-  // if (savedAdditionalDetails)
-  // setAdditionalDetails((prev) => ({
-  // ...prev,
-  // ...savedAdditionalDetails,
-  // }));
-  // if (savedInterviewDetails)
-  // setInterviewDetails((prev) => ({
-  // ...prev,
-  // ...savedInterviewDetails,
-  // // Ensure rates structure is maintained
-  // rates: {
-  // ...prev.rates,
-  // ...(savedInterviewDetails.rates || {}),
-  // },
-  // }));
-  // if (savedAvailabilityDetails)
-  // setAvailabilityDetails((prev) => ({
-  // ...prev,
-  // ...savedAvailabilityDetails,
-  // }));
-  // if (savedCurrentStep !== undefined) setCurrentStep(savedCurrentStep);
-  // }
-  // }, []);
+
   const {
     Freelancer,
     profession,
@@ -282,6 +208,8 @@ const MultiStepForm = () => {
   }, [contactLoading]);
   const [selectedTimezone, setSelectedTimezone] = useState({});
   const [errors, setErrors] = useState({});
+  console.log("errors", errors);
+
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [selectedSkills, setSelectedSkills] = useState([]);
@@ -712,7 +640,7 @@ const MultiStepForm = () => {
         const { rates = {} } = interviewDetailsData;
 
         // Check junior level rates if visible
-        if (showJuniorLevel) {
+        if (showJuniorLevel && !isProfileCompleteStateOrg) {
           if (!rates.junior?.usd) {
             currentErrors.rates = currentErrors.rates || {};
             currentErrors.rates.junior = currentErrors.rates.junior || {};
@@ -726,7 +654,7 @@ const MultiStepForm = () => {
         }
 
         // Check mid level rates if visible
-        if (showMidLevel) {
+        if (showMidLevel && !isProfileCompleteStateOrg) {
           if (!rates.mid?.usd) {
             currentErrors.rates = currentErrors.rates || {};
             currentErrors.rates.mid = currentErrors.rates.mid || {};
@@ -740,7 +668,7 @@ const MultiStepForm = () => {
         }
 
         // Check senior level rates if visible
-        if (showSeniorLevel) {
+        if (showSeniorLevel && !isProfileCompleteStateOrg) {
           if (!rates.senior?.usd) {
             currentErrors.rates = currentErrors.rates || {};
             currentErrors.rates.senior = currentErrors.rates.senior || {};
@@ -754,7 +682,7 @@ const MultiStepForm = () => {
         }
 
         // Check if there are any existing rate validation errors from handleRateBlur
-        if (errors.rates) {
+        if (errors.rates && !isProfileCompleteStateOrg) {
           currentErrors.rates = {
             ...currentErrors.rates,
             ...errors.rates,
@@ -925,14 +853,20 @@ const MultiStepForm = () => {
 
         // Update errors state but don't prevent navigation if it's just empty values
         if (hasActualErrors) {
-          setErrors((prev) => ({
-            ...prev,
-            ...currentErrors,
-            rates: {
-              ...prev.rates,
-              ...(currentErrors.rates || {}),
-            },
-          }));
+          setErrors((prev) => {
+            const newErrors = {
+              ...prev,
+              ...currentErrors,
+              rates: {
+                ...prev.rates,
+                ...(currentErrors.rates || {}),
+              },
+            };
+            if (isProfileCompleteStateOrg) {
+              delete newErrors.rates;
+            }
+            return newErrors;
+          });
           return false;
         }
       }
@@ -1251,7 +1185,7 @@ const MultiStepForm = () => {
             if (isProfileCompleteStateOrg) {
               navigate("/home");
               // if( currentStep === 3 ){
-              notify.success("Individual Signup Successfully");
+              notify.success("Account activated successfully.");
               // }
             } else {
               // Check if user has an active subscription before navigating
