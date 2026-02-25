@@ -293,7 +293,7 @@ export const useMockInterviewById = ({
   refetchInterval,
 }) => {
   const { effectivePermissions } = usePermissions();
-  // const hasViewPermission = effectivePermissions?.MockInterviews?.View;
+  const hasViewPermission = effectivePermissions?.MockInterviews?.View;
 
   const isEnabled =
     typeof enabledOverride === "boolean"
