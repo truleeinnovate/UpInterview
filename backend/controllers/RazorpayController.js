@@ -10,6 +10,7 @@ const Invoicemodels = require("../models/Invoicemodels");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
 const Receipt = require("../models/Receiptmodels.js");
 const Tenant = require("../models/Tenant");
+const { handleApiError } = require("../utils/errorHandler");
 
 // Import helper functions directly from the controller
 const helpers = require("./CustomerSubscriptionInvoiceContollers.js");
@@ -938,11 +939,7 @@ const verifyPayment = async (req, res) => {
       responseBody: error,
       //  responseMessage: responseBody.message
     };
-    return res.status(500).json({
-      message: "Error verifying payment",
-      error: error.message,
-      status: "failed",
-    });
+    return handleApiError(res, error, "Verify Payment");
   }
 };
 
@@ -1112,7 +1109,7 @@ const handleWebhook = async (req, res) => {
     //         error: 'Webhook processing failed'
     //     }
     // };
-    res.status(500).json({ error: "Webhook processing failed" });
+    return handleApiError(res, error, "Webhook Processing");
   }
 };
 
@@ -3266,27 +3263,15 @@ const createRecurringSubscription = async (req, res) => {
             customerId = existingCustomer.id;
           } else {
             console.error('Could not find existing customer with email:', userEmail, 'or phone:', userPhone);
-            return res.status(500).json({
-              status: "error",
-              message: "Failed to create or find customer in Razorpay",
-              error: customerError.message || customerError.error?.description,
-            });
+            return handleApiError(res, customerError, "Create Razorpay Customer");
           }
         } catch (fetchError) {
           console.error("Error fetching existing customer:", fetchError);
-          return res.status(500).json({
-            status: "error",
-            message: "Failed to create or find customer in Razorpay",
-            error: fetchError.message,
-          });
+          return handleApiError(res, fetchError, "Fetch Razorpay Customer");
         }
       } else {
         // No email or phone available to search for existing customer
-        return res.status(500).json({
-          status: "error",
-          message: "Failed to create customer in Razorpay and no email/phone to search existing",
-          error: customerError.message || customerError.error?.description,
-        });
+        return handleApiError(res, customerError, "Create Razorpay Customer");
       }
     }
 
@@ -3433,11 +3418,7 @@ const createRecurringSubscription = async (req, res) => {
       //  console.log('Subscription created successfully:', subscription.id);
     } catch (subscriptionError) {
       console.error("Error creating subscription:", subscriptionError);
-      return res.status(500).json({
-        status: "error",
-        message: "Failed to create subscription in Razorpay",
-        error: subscriptionError.message,
-      });
+      return handleApiError(res, subscriptionError, "Create Razorpay Subscription");
     }
 
     // 5. Create or update CustomerSubscription record
@@ -3469,10 +3450,7 @@ const createRecurringSubscription = async (req, res) => {
             "Failed to create invoice for new subscription:",
             invErr
           );
-          return res.status(500).json({
-            status: "error",
-            message: "Failed to create invoice for subscription",
-          });
+          return handleApiError(res, invErr, "Create Subscription Invoice");
         }
 
         // Build features from plan if available
@@ -3652,11 +3630,7 @@ const createRecurringSubscription = async (req, res) => {
     //     }
     // };
 
-    return res.status(500).json({
-      status: "error",
-      message: "Error creating subscription",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Create Subscription");
   }
 };
 

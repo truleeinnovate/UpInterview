@@ -1,6 +1,7 @@
 // SUPER ADMIN added by Ashok
 
 const Receipts = require("../models/Receiptmodels");
+const { handleApiError } = require("../utils/errorHandler");
 
 // const getReceiptById = async (req, res) => {
 //   try {
@@ -27,8 +28,7 @@ const getReceiptById = async (req, res) => {
 
     res.status(200).json(receipt);
   } catch (error) {
-    console.error("Error fetching receipt by id: ", error.message);
-    res.status(500).json({ message: "Internal server error" });
+    return handleApiError(res, error, "Fetch Receipt By Id");
   }
 };
 
@@ -85,8 +85,7 @@ const getReceiptsByTenantId = async (req, res) => {
 
     res.status(200).json({ receipts });
   } catch (error) {
-    console.error("Error fetching receipt by id: ", error.message);
-    res.status(500).json({ message: "Internal server error" });
+    return handleApiError(res, error, "Fetch Receipts By Tenant");
   }
 };
 
@@ -179,8 +178,7 @@ const getReceiptsSummary = async (req, res) => {
       status: true,
     });
   } catch (error) {
-    console.error("Error fetching receipt summary:", error);
-    return res.status(500).json({ message: "Server error", details: error.message, status: false });
+    return handleApiError(res, error, "Fetch Receipts Summary");
   }
 };
 

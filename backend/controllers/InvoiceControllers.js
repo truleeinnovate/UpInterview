@@ -1,5 +1,6 @@
 const Invoice = require("../models/Invoicemodels.js");
 const mongoose = require("mongoose");
+const { handleApiError } = require("../utils/errorHandler");
 
 // GET: Fetch invoices by ownerId or tenantId based on isOrganization query param
 // const getInvoice = async (req, res) => {
@@ -140,15 +141,7 @@ const getInvoice = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Detailed error:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-    });
-    res.status(500).json({
-      error: "Server error",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Fetch Invoices");
   }
 };
 
@@ -214,8 +207,8 @@ const createInvoice = async (req, res) => {
         amountPaid >= totalAmount
           ? "paid"
           : amountPaid > 0
-          ? "partially_paid"
-          : "pending",
+            ? "partially_paid"
+            : "pending",
     });
 
     await newInvoice.save();
@@ -225,8 +218,7 @@ const createInvoice = async (req, res) => {
       invoice: newInvoice,
     });
   } catch (error) {
-    console.error("Error creating invoice:", error);
-    return res.status(500).json({ error: "Failed to create invoice" });
+    return handleApiError(res, error, "Create Invoice");
   }
 };
 
@@ -347,16 +339,7 @@ const getInvoices = async (req, res) => {
       status: true,
     });
   } catch (error) {
-    console.error("Detailed error:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-    });
-    return res.status(500).json({
-      error: "Server error",
-      details: error.message,
-      status: false,
-    });
+    return handleApiError(res, error, "Fetch Invoices Summary");
   }
 };
 
@@ -368,13 +351,7 @@ const getInvoicesByTenantId = async (req, res) => {
       invoices,
     });
   } catch (error) {
-    console.error("Detailed error:", {
-      message: error.message,
-    });
-    res.status(500).json({
-      error: "Internal server error",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Fetch Invoices By Tenant");
   }
 };
 
@@ -385,7 +362,7 @@ const getSingleInvoiceById = async (req, res) => {
     const invoice = await Invoice.findById(id);
     res.status(200).json(invoice);
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    return handleApiError(res, error, "Fetch Single Invoice");
   }
 };
 

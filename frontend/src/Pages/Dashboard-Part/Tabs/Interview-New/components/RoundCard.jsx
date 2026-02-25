@@ -2286,7 +2286,7 @@ const RoundCard = ({
                             }
                           } catch (err) {
                             console.error("Error fetching recording:", err);
-                            notify.error("Failed to fetch recording.");
+                            notify.error("No recording available for this round yet.");
                           } finally {
                             setFetchingVideo(false);
                           }

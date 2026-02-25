@@ -96,6 +96,7 @@
 
 require("dotenv").config();
 const Tenant = require("../models/Tenant"); // Adjust path
+const { handleApiError } = require("../utils/errorHandler");
 const CustomerSubscription = require("../models/CustomerSubscriptionmodels"); // Adjust path
 const Invoice = require("../models/Invoicemodels"); // Adjust path
 const { Users } = require("../models/Users"); // Adjust path
@@ -292,7 +293,6 @@ const cancelSubscription = async (req, res) => {
       subscription: updatedSubscription || null,
     });
   } catch (error) {
-    console.error("Error in subscription cancellation:", error);
     res.locals.logData = {
       tenantId: req.body?.tenantId || "",
       ownerId,
@@ -304,9 +304,7 @@ const cancelSubscription = async (req, res) => {
         error,
       },
     };
-    return res
-      .status(500)
-      .json({ message: "Error cancelling subscription", error: error.message });
+    return handleApiError(res, error, "Cancel Subscription");
   }
 };
 

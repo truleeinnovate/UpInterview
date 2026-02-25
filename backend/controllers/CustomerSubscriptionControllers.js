@@ -1,6 +1,7 @@
 const SubscriptionPlan = require("../models/Subscriptionmodels.js");
 const CustomerSubscription = require("../models/CustomerSubscriptionmodels.js");
 const Invoicemodels = require("../models/Invoicemodels.js");
+const { handleApiError } = require("../utils/errorHandler");
 const Wallet = require("../models/WalletTopup.js");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
 const {
@@ -595,10 +596,10 @@ const createSubscriptionControllers = async (req, res) => {
                 f?.name === "Internal_Interviews"
                   ? "Internal Interviews"
                   : f?.name === "Question_Bank_Access"
-                  ? "Question Bank Access"
-                  : f?.name === "Bandwidth"
-                  ? "User Bandwidth"
-                  : f?.name,
+                    ? "Question Bank Access"
+                    : f?.name === "Bandwidth"
+                      ? "User Bandwidth"
+                      : f?.name,
               utilized: 0,
               remaining: Number(f?.limit) || 0,
             }));
@@ -659,8 +660,7 @@ const createSubscriptionControllers = async (req, res) => {
         'Invalid payment status. Allowed values are "pending", "created", or "active".',
     });
   } catch (error) {
-    console.error("Error creating/updating subscription:", error);
-    res.status(500).json({ message: "An error occurred.", error });
+    return handleApiError(res, error, "Create Subscription");
   }
 };
 
@@ -871,7 +871,7 @@ const updateCustomerSubscriptionControllers = async (req, res) => {
       message: error.message,
       status: "error",
     };
-    res.status(500).json({ message: "An error occurred.", error });
+    return handleApiError(res, error, "Update Customer Subscription");
   }
 };
 
@@ -883,17 +883,16 @@ const getAllCustomerSubscription = async (req, res) => {
     }
     return res.status(200).json(CustSubscription);
   } catch (error) {
-    console.error("Error creating/updating subscription:", error);
     // Log error details
     res.locals.logData = {
       tenantId: req.body?.userDetails?.tenantId || "",
       ownerId: req.body?.userDetails?.ownerId || "",
-      processName: "Create Subscription",
+      processName: "Get All Customer Subscriptions",
       requestBody: req.body,
       message: error.message,
       status: "error",
     };
-    res.status(500).json({ message: "An error occurred.", error });
+    return handleApiError(res, error, "Get All Customer Subscriptions");
   }
 };
 
@@ -949,8 +948,7 @@ const getBasedTentIdCustomerSubscription = async (req, res) => {
       customerSubscription: subscriptionsWithPlanNames,
     });
   } catch (error) {
-    console.error("Error fetching subscription plans:", error);
-    return res.status(500).json({ message: "An error occurred.", error });
+    return handleApiError(res, error, "Fetch Subscription By Tenant");
   }
 };
 

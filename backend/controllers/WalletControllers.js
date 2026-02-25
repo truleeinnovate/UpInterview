@@ -26,6 +26,7 @@ const { InterviewRounds } = require("../models/Interview/InterviewRounds");
 const Invoicemodels = require("../models/Invoicemodels");
 const { RegionalTaxConfig } = require("../models/RegionalTaxConfig");
 const Tenant = require("../models/Tenant");
+const { handleApiError } = require("../utils/errorHandler");
 
 const {
   computeSettlementAmounts,
@@ -120,12 +121,7 @@ const getPlatformWallet = async (req, res) => {
       wallet,
     });
   } catch (error) {
-    console.error("[getPlatformWallet] Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch platform wallet",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Fetch Platform Wallet");
   }
 };
 
@@ -161,8 +157,7 @@ const getWalletByOwnerId = async (req, res) => {
 
     res.status(200).json({ walletDetials: [wallet] });
   } catch (error) {
-    console.error("Error fetching wallet:", error);
-    res.status(500).json({ error: "Server error" });
+    return handleApiError(res, error, "Fetch Wallet By Owner");
   }
 };
 
@@ -226,8 +221,7 @@ const getWalletTransactions = async (req, res) => {
       hasMore: skip + limit < totalCount,
     });
   } catch (error) {
-    console.error("Error fetching wallet transactions:", error);
-    res.status(500).json({ error: "Server error" });
+    return handleApiError(res, error, "Fetch Wallet Transactions");
   }
 };
 
@@ -251,9 +245,7 @@ const createTopupOrder = async (req, res) => {
 
     if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
       console.error("Razorpay keys are not configured");
-      return res.status(500).json({
-        error: "Payment configuration error. Please contact support.",
-      });
+      return handleApiError(res, new Error("Razorpay keys not configured"), "Create Topup Order");
     }
 
     // Determine walletCode: reuse existing wallet's code if present, otherwise generate a new one
@@ -269,12 +261,7 @@ const createTopupOrder = async (req, res) => {
       try {
         walletCode = await generateUniqueId("WLT", WalletTopup, "walletCode");
       } catch (error) {
-        console.error("Failed to generate wallet code:", error);
-        return res.status(500).json({
-          success: false,
-          error:
-            "Unable to generate unique wallet code. Please try again later.",
-        });
+        return handleApiError(res, error, "Generate Wallet Code");
       }
     }
 
@@ -352,10 +339,7 @@ const createTopupOrder = async (req, res) => {
         error: razorpayErrorData || error,
       },
     };
-    res.status(500).json({
-      error: errorDescription || "Failed to create topup order",
-      maxAmount: (errorDescription && errorDescription.includes("exceeds maximum")) ? 500000 : undefined,
-    });
+    return handleApiError(res, error, "Create Topup Order");
   }
 };
 
@@ -540,9 +524,7 @@ const walletVerifyPayment = async (req, res) => {
           },
         };
 
-        return res.status(500).json({
-          error: "Database error when accessing wallet",
-        });
+        return handleApiError(res, error, "Wallet Payment Verification");
       }
     }
 
@@ -761,11 +743,7 @@ const walletVerifyPayment = async (req, res) => {
         stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
       },
     };
-    res.status(500).json({
-      error: "Failed to verify payment",
-      message: error.message || "Unknown error",
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-    });
+    return handleApiError(res, error, "Wallet Payment Verification");
   }
 };
 
@@ -1079,10 +1057,7 @@ const addBankAccount = async (req, res) => {
       },
     };
 
-    res.status(500).json({
-      error: "Failed to add bank account",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Add Bank Account");
   }
 };
 
@@ -1111,11 +1086,7 @@ const getBankAccounts = async (req, res) => {
       bankAccounts,
     });
   } catch (error) {
-    console.error("Error fetching bank accounts:", error);
-    res.status(500).json({
-      error: "Failed to fetch bank accounts",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Fetch Bank Accounts");
   }
 };
 
@@ -1223,10 +1194,7 @@ const deleteBankAccount = async (req, res) => {
       },
     };
 
-    res.status(500).json({
-      error: "Failed to delete bank account",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Delete Bank Account");
   }
 };
 
@@ -1675,10 +1643,7 @@ const verifyBankAccount = async (req, res) => {
       },
     };
 
-    return res.status(500).json({
-      error: "Failed to verify bank account",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Verify Bank Account");
   }
 };
 
@@ -1914,10 +1879,7 @@ const createWithdrawalRequest = async (req, res) => {
         },
       };
 
-      return res.status(500).json({
-        error: "Failed to create withdrawal request. Please try again.",
-        details: error.message,
-      });
+      return handleApiError(res, error, "Create Withdrawal Request");
     }
 
     // Check if withdrawal was created
@@ -1934,9 +1896,7 @@ const createWithdrawalRequest = async (req, res) => {
         },
       };
 
-      return res.status(500).json({
-        error: "Failed to create withdrawal request after multiple attempts.",
-      });
+      return handleApiError(res, new Error("Failed after multiple attempts"), "Create Withdrawal Request");
     }
 
     // Deduct amount from wallet and add to hold using common function
@@ -1962,10 +1922,7 @@ const createWithdrawalRequest = async (req, res) => {
       console.error("Error creating withdrawal hold transaction:", walletError);
       // Rollback withdrawal request if wallet update fails
       await WithdrawalRequest.findByIdAndDelete(withdrawalRequest._id);
-      return res.status(500).json({
-        error: "Failed to hold amount in wallet. Withdrawal request cancelled.",
-        details: walletError.message,
-      });
+      return handleApiError(res, walletError, "Withdrawal Hold Transaction");
     }
 
     // Create push notification for pending withdrawal
@@ -2041,10 +1998,7 @@ const createWithdrawalRequest = async (req, res) => {
       },
     };
 
-    res.status(500).json({
-      error: "Failed to create withdrawal request",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Create Withdrawal Request");
   }
 };
 
@@ -2284,10 +2238,7 @@ const failManualWithdrawal = async (req, res) => {
       },
     };
 
-    res.status(500).json({
-      error: "Failed to process withdrawal failure",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Process Withdrawal Failure");
   }
 };
 
@@ -2513,10 +2464,7 @@ const processManualWithdrawal = async (req, res) => {
       },
     };
 
-    res.status(500).json({
-      error: "Failed to process withdrawal",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Process Manual Withdrawal");
   }
 };
 
@@ -2726,11 +2674,7 @@ const getAllWithdrawalRequests = async (req, res) => {
       status: true,
     });
   } catch (error) {
-    console.error("Error fetching all withdrawal requests:", error);
-    res.status(500).json({
-      error: "Failed to fetch withdrawal requests",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Fetch All Withdrawal Requests");
   }
 };
 
@@ -2764,12 +2708,7 @@ const getWithdrawalRequestById = async (req, res) => {
       withdrawalRequest: withdrawalRequest,
     });
   } catch (error) {
-    console.error("Error fetching withdrawal request by ID:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to fetch withdrawal request",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Fetch Withdrawal Request By ID");
   }
 };
 
@@ -2811,11 +2750,7 @@ const getWithdrawalRequests = async (req, res) => {
       hasMore: total > skip + limit,
     });
   } catch (error) {
-    console.error("Error fetching withdrawal requests:", error);
-    res.status(500).json({
-      error: "Failed to fetch withdrawal requests",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Fetch Withdrawal Requests");
   }
 };
 
@@ -2945,10 +2880,7 @@ const cancelWithdrawalRequest = async (req, res) => {
       },
     };
 
-    res.status(500).json({
-      error: "Failed to cancel withdrawal request",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Cancel Withdrawal Request");
   }
 };
 
@@ -3161,10 +3093,7 @@ const fixVerifiedBankAccounts = async (req, res) => {
       },
     };
 
-    return res.status(500).json({
-      error: "Failed to fix verified bank accounts",
-      details: error.message,
-    });
+    return handleApiError(res, error, "Fix Verified Bank Accounts");
   }
 };
 
@@ -4129,10 +4058,7 @@ const settleInterviewPayment = async (req, res) => {
 
     if (!updatedOrgWallet) {
       await session.abortTransaction();
-      return res.status(500).json({
-        success: false,
-        message: "Failed to update organization wallet",
-      });
+      return handleApiError(res, new Error("Failed to update organization wallet"), "Settle Interview Payment");
     }
 
     // Log refund transaction if applicable
@@ -4240,10 +4166,7 @@ const settleInterviewPayment = async (req, res) => {
 
       if (!updatedInterviewerWallet) {
         await session.abortTransaction();
-        return res.status(500).json({
-          success: false,
-          message: "Failed to update interviewer wallet",
-        });
+        return handleApiError(res, new Error("Failed to update interviewer wallet"), "Settle Interview Payment");
       }
     }
 
@@ -4427,11 +4350,7 @@ const settleInterviewPayment = async (req, res) => {
       responseBody: { error: error.message },
     };
 
-    return res.status(500).json({
-      success: false,
-      message: "Failed to settle interview payment",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Settle Interview Payment");
   } finally {
     session.endSession();
   }
