@@ -43,18 +43,24 @@ exports.individualLogin = async (req, res) => {
 
     // Account Activation for Org Users
     if (isProfileCompleteStateOrg === true) {
-      updatedUserData.status = 'active';
       if (isSkip) {
         updatedUserData.isSkipped = true;
+        updatedUserData.status = 'active';
       }
 
       // If NOT skipping, check if we should mark profile as completed
       if (!isSkip) {
-        if (
-          (userData.isFreelancer && currentStep === 3) || // freelancers at step 3
-          (!userData.isFreelancer && currentStep === 1) // non-freelancers at step 1
-        ) {
-          updatedUserData.isProfileCompleted = true;
+        if (isInternalInterviewer) {
+          if (currentStep === 3) {
+            updatedUserData.isProfileCompleted = true;
+            updatedUserData.status = 'active';
+          }
+        } else {
+          // Others
+          if (currentStep === 1) {
+            updatedUserData.isProfileCompleted = true;
+            updatedUserData.status = 'active';
+          }
         }
       }
     }

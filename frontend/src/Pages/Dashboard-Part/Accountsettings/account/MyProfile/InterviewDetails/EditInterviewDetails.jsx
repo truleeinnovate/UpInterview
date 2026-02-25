@@ -49,8 +49,8 @@ const EditInterviewDetails = ({
   const navigate = useNavigate();
   const resolvedId = usersId || id;
 
-    const tokenPayload = decodeJwt(Cookies.get("authToken"));
-    const organization = tokenPayload?.organization;
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const organization = tokenPayload?.organization;
   // v1.0.3 <--------------------------------------------------
   const [loading, setLoading] = useState(false);
   // v1.0.3 -------------------------------------------------->
@@ -1138,31 +1138,39 @@ const EditInterviewDetails = ({
       // console.log("Mid-Level Range:", midRange);
       // console.log("Senior Range:", seniorRange);
 
-      const newRates = {
-        junior: {
-          usd: juniorRange.usd?.min || 0,
-          inr: juniorRange.inr?.min || 0,
-          isVisible: formData.rates?.junior?.isVisible || false,
-        },
-        mid: {
-          usd: midRange.usd?.min || 0,
-          inr: midRange.inr?.min || 0,
-          isVisible: formData.rates?.mid?.isVisible || false,
-        },
-        senior: {
-          usd: seniorRange.usd?.min || 0,
-          inr: seniorRange.inr?.min || 0,
-          isVisible: formData.rates?.senior?.isVisible || false,
-        },
-      };
+      setFormData((prev) => {
+        const currentRates = prev.rates || {};
 
-      // console.log("FINAL RATES BEING SET:", newRates);
-      // console.log("========================");
+        const newRates = {
+          junior: {
+            usd:
+              parseFloat(currentRates.junior?.usd) || juniorRange.usd?.min || 0,
+            inr:
+              parseFloat(currentRates.junior?.inr) || juniorRange.inr?.min || 0,
+            isVisible: currentRates.junior?.isVisible || false,
+          },
+          mid: {
+            usd: parseFloat(currentRates.mid?.usd) || midRange.usd?.min || 0,
+            inr: parseFloat(currentRates.mid?.inr) || midRange.inr?.min || 0,
+            isVisible: currentRates.mid?.isVisible || false,
+          },
+          senior: {
+            usd:
+              parseFloat(currentRates.senior?.usd) || seniorRange.usd?.min || 0,
+            inr:
+              parseFloat(currentRates.senior?.inr) || seniorRange.inr?.min || 0,
+            isVisible: currentRates.senior?.isVisible || false,
+          },
+        };
 
-      setFormData((prev) => ({
-        ...prev,
-        rates: newRates,
-      }));
+        // console.log("FINAL RATES BEING SET:", newRates);
+        // console.log("========================");
+
+        return {
+          ...prev,
+          rates: newRates,
+        };
+      });
     }
   }, [
     rateCards,

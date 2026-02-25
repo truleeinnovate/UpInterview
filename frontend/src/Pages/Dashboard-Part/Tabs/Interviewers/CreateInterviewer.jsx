@@ -483,8 +483,8 @@ const CreateInterviewer = () => {
               {formData.team_id && formData.contactId && (
                 <div
                   className={`mt-2 p-2 rounded text-sm ${userAlreadyInTeam
-                      ? "bg-green-50 text-green-700 border border-green-200"
-                      : "bg-blue-50 text-blue-700 border border-blue-200"
+                    ? "bg-green-50 text-green-700 border border-green-200"
+                    : "bg-blue-50 text-blue-700 border border-blue-200"
                     }`}
                 >
                   {userAlreadyInTeam

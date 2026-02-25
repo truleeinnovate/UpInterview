@@ -278,14 +278,6 @@ const InterviewDetails = ({
                 normalizedRole === normalizedSelectedValue ||
                 normalizedRole.includes(normalizedSelectedValue) ||
                 normalizedSelectedValue.includes(normalizedRole);
-              console.log(
-                "Checking role:",
-                role,
-                "normalized:",
-                normalizedRole,
-                "match:",
-                isMatch,
-              );
               return isMatch;
             });
             if (match) {
@@ -658,7 +650,7 @@ const InterviewDetails = ({
     const range = getRateRanges(level.rangeKey);
     let error = "";
 
-    if (value) {
+    if (value && !isProfileCompleteStateOrg) {
       const numValue = parseFloat(value);
 
       if (isNaN(numValue)) {
@@ -675,7 +667,7 @@ const InterviewDetails = ({
           error = `${currency.toUpperCase()} rate should not exceed ${max}`;
         }
       }
-    } else {
+    } else if (!isProfileCompleteStateOrg) {
       // This handles the "required" error
       error = `${currency.toUpperCase()} rate is required`;
     }
