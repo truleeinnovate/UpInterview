@@ -292,6 +292,7 @@ const InterviewerView = ({
             <div className="py-2 sm:px-3 px-6">
               {activeTab === "candidate" && (
                 <CandidateMiniTab
+                  fromMeeting={true}
                   // selectedData={selectedCandidate}
                   isAddMode={true}
                 // decodedData={decodedData}
