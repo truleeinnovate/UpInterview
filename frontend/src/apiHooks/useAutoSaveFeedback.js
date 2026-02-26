@@ -9,28 +9,29 @@ import { useCreateFeedback, useUpdateFeedback } from "./useFeedbacks.js";
 
 const useAutoSaveFeedback = ({
   isAddMode,
+  isEditMode,
   interviewRoundId,
   tenantId,
   interviewerId,
   interviewerSectionData,
   preselectedQuestionsResponses,
   skillRatings,
-  technicalSkills, // New: Categorized skills
-  strengths,       // New: Strengths array
-  areasForImprovement, // New: Areas for improvement array
+  technicalSkills,
+  strengths,
+  areasForImprovement,
   overallRating,
   communicationRating,
   recommendation,
-  cultureFit,      // New: Culture fit rating
-  willingnessToLearn, // New: Willingness to learn rating
+  cultureFit,
+  willingnessToLearn,
   comments,
   candidateId,
   positionId,
   ownerId,
   feedbackCode,
   isMockInterview,
-  feedbackId, // For PATCH operations if feedback already exists
-  isLoaded = true, // New prop to prevent saving before data is loaded
+  feedbackId,
+  isLoaded = true,
 }) => {
   const timeoutRef = useRef(null);
   const lastSavedDataRef = useRef(null);
@@ -256,7 +257,7 @@ const useAutoSaveFeedback = ({
   }, [prepareFeedbackPayload]);
 
   const triggerAutoSave = useCallback(() => {
-    if (!isAddMode) return;
+    if (!isAddMode && !isEditMode) return;
 
     // Clear any existing timeout to ensure we debounce
     if (timeoutRef.current) {
@@ -316,11 +317,11 @@ const useAutoSaveFeedback = ({
         isSavingRef.current = false;
       }
     }, 1000); // 1 second debounce
-  }, [isAddMode, prepareFeedbackPayload, hasDataChanged, createFeedback, updateFeedback]);
+  }, [isAddMode, isEditMode, prepareFeedbackPayload, hasDataChanged, createFeedback, updateFeedback]);
 
-  // Debounced auto-save effect
+  // Debounced auto-save effect — resets whenever any tracked field changes
   useEffect(() => {
-    if (!isAddMode) return;
+    if (!isAddMode && !isEditMode) return;
 
     // Clear existing timeout
     if (timeoutRef.current) {

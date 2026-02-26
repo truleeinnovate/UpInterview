@@ -39,7 +39,27 @@ const AddFeedbackForm = ({
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     selectedRoundId: paramId || "", // Store the selected round ID
+    candidateName: "",
+    position: "",
+    roundTitle: "",
+    interviewerName: "",
+    interviewDate: "",
+    isMockInterview: false
   });
+
+  // Helper function to parse date from different formats
+  const parseDateForInput = (dateTimeString) => {
+    if (!dateTimeString) return '';
+
+    // Handle format like "15-02-2026 12:57 PM - 01:57 PM"
+    const datePart = dateTimeString.split(' ')[0]; // Gets "15-02-2026"
+    if (datePart && datePart.includes('-')) {
+      const [day, month, year] = datePart.split('-');
+      // Return in yyyy-MM-dd format for input type="date"
+      return `${year}-${month}-${day}`;
+    }
+    return '';
+  };
 
   // Determine which tab should be active based on mode
 
@@ -96,11 +116,34 @@ const AddFeedbackForm = ({
 
 
 
+  // useEffect(() => {
+  //   if (paramId && roundOptions.length > 0) {
+  //     const selectedOption = roundOptions.find(opt => opt.value === paramId);
+  //     if (selectedOption) {
+  //       setSelectedRoundDetails(selectedOption);
+  //     }
+  //   }
+  // }, [paramId, roundOptions]);
+
   useEffect(() => {
     if (paramId && roundOptions.length > 0) {
       const selectedOption = roundOptions.find(opt => opt.value === paramId);
       if (selectedOption) {
         setSelectedRoundDetails(selectedOption);
+        // Update form data with selected round details
+        setFormData(prev => ({
+          ...prev,
+          selectedRoundId: paramId,
+          candidateName: selectedOption.candidateName || selectedOption.fullDetails?.candidate?.fullName || '',
+          // Handle position differently for mock vs regular interviews
+          position: selectedOption.isMock
+            ? selectedOption.fullDetails?.mockDetails?.currentRole || selectedOption.fullDetails?.position?.title || ''
+            : selectedOption.fullDetails?.position?.title || selectedOption.fullDetails?.candidate?.position || '',
+          roundTitle: selectedOption.roundTitle || '',
+          // interviewerName: fullName,
+          interviewDate: parseDateForInput(selectedOption.dateTime),
+          isMockInterview: selectedOption.isMock || false
+        }));
       }
     }
   }, [paramId, roundOptions]);
@@ -110,10 +153,28 @@ const AddFeedbackForm = ({
     const selectedValue = e.target.value;
     const selectedOption = roundOptions.find(opt => opt.value === selectedValue);
 
+    // setFormData({
+    //   ...formData,
+    //   selectedRoundId: selectedValue,
+    // });
+    console.log("selectedOption", selectedOption)
+
+    // Update form data with selected round details
     setFormData({
       ...formData,
       selectedRoundId: selectedValue,
+      candidateName: selectedOption?.candidateName || selectedOption?.fullDetails?.candidate?.fullName || '',
+      // Handle position differently for mock vs regular interviews
+      position: selectedOption?.isMock
+        ? selectedOption?.fullDetails?.mockDetails?.currentRole || selectedOption?.fullDetails?.position?.title || ''
+        : selectedOption?.fullDetails?.position?.title || selectedOption?.fullDetails?.candidate?.position || '',
+      roundTitle: selectedOption?.roundTitle || '',
+      // interviewerName: fullName,
+      interviewDate: parseDateForInput(selectedOption?.dateTime),
+      isMockInterview: selectedOption?.isMock || false
     });
+
+
 
     setSelectedRoundDetails(selectedOption || null);
 
@@ -257,6 +318,16 @@ const AddFeedbackForm = ({
     });
   };
 
+
+  if (roundOptions?.length === 0) {
+
+    return <div className="flex justify-center items-center h-screen">
+      <h1 className="text-center p-3">No Rounds Found</h1>
+    </div>
+  }
+
+
+
   const renderTabContent = () => {
     const effectiveRoundId = roundId || formData.selectedRoundId;
     const effectiveInterviewType = selectedRoundDetails?.isMock;
@@ -277,20 +348,21 @@ const AddFeedbackForm = ({
             interviewType={effectiveInterviewType}
             roundId={effectiveRoundId}
             isAddMode={true}
-          // interviewerSectionData={interviewerSectionData}
-          // setInterviewerSectionData={setInterviewerSectionData}
-          // removedQuestionIds={removedQuestionIds}
-          // setRemovedQuestionIds={setRemovedQuestionIds}
-          // isQuestionBankOpen={isQuestionBankOpen}
-          // setIsQuestionBankOpen={setIsQuestionBankOpen}
-          // handleAddQuestionToRound={handleAddQuestionToRound}
-          // handleRemoveQuestion={handleRemoveQuestion}
-          // handleToggleMandatory={handleToggleMandatory}
-          // preselectedQuestionsResponses={preselectedQuestionsResponses}
-          // setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
-          // handlePreselectedQuestionResponse={
-          //   handlePreselectedQuestionResponse
-          // }
+            // interviewData={selectedCandidate}
+            interviewerSectionData={interviewerSectionData}
+            setInterviewerSectionData={setInterviewerSectionData}
+            removedQuestionIds={removedQuestionIds}
+            setRemovedQuestionIds={setRemovedQuestionIds}
+            isQuestionBankOpen={isQuestionBankOpen}
+            setIsQuestionBankOpen={setIsQuestionBankOpen}
+            handleAddQuestionToRound={handleAddQuestionToRound}
+            handleRemoveQuestion={handleRemoveQuestion}
+            handleToggleMandatory={handleToggleMandatory}
+            preselectedQuestionsResponses={preselectedQuestionsResponses}
+            setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
+            handlePreselectedQuestionResponse={
+              handlePreselectedQuestionResponse
+            }
           />
         );
       case 1:
@@ -321,7 +393,7 @@ const AddFeedbackForm = ({
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-6">
               {/* Round Selection Dropdown */}
-              <>
+              <div className="flex flex-col">
                 <DropdownWithSearchField
                   label="Select Interview"
                   options={roundOptions}
@@ -331,11 +403,12 @@ const AddFeedbackForm = ({
                   required
                   placeholder="Search by interview code, round title, or candidate name..."
                 />
-                <span></span>
-              </>
+                <span className="text-xs mt-1 text-gray-500">Please select an interview round to proceed</span>
+
+              </div>
 
               {/* Display selected round details (optional) */}
-              {selectedRoundDetails && (
+              {/* {selectedRoundDetails && (
                 <div className="mt-2 p-3 bg-gray-50 rounded-md">
                   <p className="text-sm font-medium text-gray-700">Selected Round Details:</p>
                   <div className="mt-1 text-xs text-gray-600 space-y-1">
@@ -346,6 +419,98 @@ const AddFeedbackForm = ({
                     <p>Type: {selectedRoundDetails.isMock ? 'Mock Interview' : 'Regular Interview'}</p>
                     <p>Status: {selectedRoundDetails.interviewStatus}</p>
                     <p>Date & Time: {selectedRoundDetails.dateTime}</p>
+                  </div>
+                </div>
+              )} */}
+
+              {/* Basic Information Section */}
+              {selectedRoundDetails && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+                  <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Candidate Name
+                        {/* <span className="text-red-500">*</span> */}
+                      </label>
+                      <input
+                        type="text"
+                        disabled={true}
+                        value={formData.candidateName}
+                        className="w-full px-3 py-2 border border-blue-50 bg-blue-50/20 text-gray-700 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent cursor-not-allowed"
+                        placeholder="Enter candidate name"
+                      />
+                    </div>
+
+                    {!formData.isMockInterview && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Position
+                          {/* <span className="text-red-500">*</span> */}
+                        </label>
+                        <input
+                          type="text"
+                          disabled={true}
+                          value={formData.position}
+                          className="w-full px-3 py-2 border border-blue-50 bg-blue-50/20 text-gray-700 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent cursor-not-allowed"
+                          placeholder="e.g., Senior Software Engineer"
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Round Title
+                        {/* <span className="text-red-500">*</span> */}
+                      </label>
+                      <input
+                        type="text"
+                        disabled={true}
+                        value={formData.roundTitle}
+                        className="w-full px-3 py-2 border border-blue-50 bg-blue-50/20 text-gray-700 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent cursor-not-allowed"
+                        placeholder="e.g., Technical Screening, System Design"
+                      />
+                    </div>
+
+                    {/* <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Interviewer Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        disabled={true}
+                        value={formData.interviewerName}
+                        className="w-full px-3 py-2 border border-blue-50 bg-blue-50/20 text-gray-700 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent cursor-not-allowed"
+                        placeholder="Enter your name"
+                      />
+                    </div> */}
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Interview Date
+                        {/* <span className="text-red-500">*</span> */}
+                      </label>
+                      <input
+                        type="date"
+                        disabled={true}
+                        value={formData.interviewDate}
+                        className="w-full px-3 py-2 border border-blue-50 bg-blue-50/20 text-gray-700 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent cursor-not-allowed"
+                      />
+                    </div>
+                    {formData.isMockInterview && (
+                      <div className="flex items-center pt-6">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            disabled
+                            checked={formData.isMockInterview}
+                            className="w-4 h-4 accent-custom-blue text-[rgb(33,121,137)] border-gray-300 rounded focus:ring-[rgb(33,121,137)]"
+                          />
+                          <span className="ml-2 text-sm font-medium text-gray-700">
+                            This is a Mock Interview
+                          </span>
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -397,9 +562,9 @@ const AddFeedbackForm = ({
           <div className="flex items-center gap-2">
             <p className="text-sm text-gray-500">Step {currentFormStep} of 2</p>
             {currentFormStep === 1 ? (
-              <span className="text-sm text-gray-500">Selection </span>
+              <span className="text-sm text-gray-500">Select Interview </span>
             ) : (
-              <span className="text-sm text-gray-500">Configuration</span>
+              <span className="text-sm text-gray-500">Feedback</span>
             )}
           </div>
         </div>
@@ -419,7 +584,7 @@ const AddFeedbackForm = ({
             ))}
           </ul>
         )}
-        <div className="w-full p-4 rounded-lg border bg-white">
+        <div className="w-full  rounded-lg border bg-white">
           {formContent}
         </div>
       </div>

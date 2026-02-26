@@ -89,6 +89,34 @@ const fromBackendAnswerType = (backend) => {
 };
 //---v1.0.0----->
 
+// ─── StarRating ────────────────────────────────────────────────────────────────
+// Defined at module level so its reference stays stable across renders.
+// If defined inside FeedbackForm, React creates a new type on every render
+// which causes unmount/remount and makes star clicks impossible.
+const StarRating = ({ rating, onChange, size = 'md', isReadOnly = false }) => {
+  const sizeClasses = { sm: 'w-4 h-4', md: 'w-5 h-5', lg: 'w-6 h-6' };
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={() => !isReadOnly && onChange && onChange(star)}
+          disabled={isReadOnly}
+          className={`transition-colors ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
+        >
+          <Star
+            className={`${sizeClasses[size]} ${star <= rating
+              ? 'fill-yellow-400 text-yellow-400'
+              : 'text-gray-300'
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  );
+};
+
 const FeedbackForm = ({
   custom,
   // interviewerSectionData = [],
@@ -125,7 +153,7 @@ const FeedbackForm = ({
 
   const firstName = capitalizeFirstLetter(userProfile?.firstName);
   const lastName = capitalizeFirstLetter(userProfile?.lastName);
-  // const contactId = formatName(singleContact?.contactId);
+  const contactId = userProfile?.contactId;
   const fullName = firstName + " " + lastName
 
 
@@ -135,7 +163,7 @@ const FeedbackForm = ({
     isLoading: feedbackLoading,
     isError: feedbackError,
   } = useFeedbackData({
-    roundId: isViewMode ? roundId : !urlData?.isCandidate ? urlData?.interviewRoundId : null,
+    roundId: isViewMode ? roundId : !urlData?.isCandidate ? (urlData?.interviewRoundId || roundId) : roundId || null,
     interviewerId: !urlData?.isCandidate && !urlData?.isSchedule ? urlData?.interviewerId : null,
     interviewType: urlData?.interviewType || interviewType,
     // roundId: !urlData.isCandidate ? urlData.interviewRoundId : null,
@@ -178,7 +206,7 @@ const FeedbackForm = ({
     mockInterviewNotes: ''
   });
 
-  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType || locationFeedback?.isMockInterview;
+  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType === true || interviewType === "mockinterview" || locationFeedback?.isMockInterview;
 
   // const isMockInterview = urlData?.interviewType === "mockinterview" || interviewType === "mockinterview";
   // console.log("isMockInterview", isMockInterview);
@@ -211,15 +239,14 @@ const FeedbackForm = ({
     // enabled: !isMockInterview,
   });
 
-  const candidateData = isMockInterview
+  const candidateData = useMemo(() => isMockInterview
     ? mockinterview
-    : interviewData?.candidateId || {};
+    : interviewData?.candidateId || {}, [isMockInterview, mockinterview, interviewData]);
 
 
-  const interviewRoundData =
-    interviewData || mockinterview || {};
+  const interviewRoundData = useMemo(() => interviewData || mockinterview || {}, [interviewData, mockinterview]);
 
-  const positionData = isMockInterview ? {} : interviewData?.positionId || {};
+  const positionData = useMemo(() => isMockInterview ? {} : interviewData?.positionId || {}, [isMockInterview, interviewData]);
 
   console.log("candidateData", candidateData)
 
@@ -745,6 +772,20 @@ const FeedbackForm = ({
       i === index ? { ...skill, [field]: value } : skill
     );
     setFormData({ ...formData, skillRatings: updated });
+
+    if (field === 'rating') {
+      const updatedSkill = updated[index];
+      const skillName = (updatedSkill?.skillName || updatedSkill?.skill || '').trim();
+      // Clear Communication-specific error
+      if (value > 0 && skillName.toLowerCase() === 'communication') {
+        clearError('communicationRating');
+      }
+      // Clear all-skills error once every named skill has a rating
+      const allNamedRated = updated
+        .filter(s => (s.skillName || s.skill || '').trim())
+        .every(s => s.rating > 0);
+      if (allNamedRated) clearError('skills');
+    }
   };
 
   // Strengths Handlers
@@ -780,35 +821,7 @@ const FeedbackForm = ({
     setFormData({ ...formData, areasForImprovement: updated });
   };
 
-  // Additional Ratings
-  const StarRating = ({ rating, onChange, size = 'md', isReadOnly = false }) => {
-    const sizeClasses = {
-      sm: 'w-4 h-4',
-      md: 'w-5 h-5',
-      lg: 'w-6 h-6'
-    };
-
-    return (
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => !isReadOnly && onChange(star)}
-            disabled={isReadOnly}
-            className={`transition-colors ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
-          >
-            <Star
-              className={`${sizeClasses[size]} ${star <= rating
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'text-gray-300'
-                }`}
-            />
-          </button>
-        ))}
-      </div>
-    );
-  };
+  // StarRating is defined at module level — see above.
 
 
   // Sync formData with secondary data
@@ -1096,7 +1109,19 @@ const FeedbackForm = ({
     skills: "",
     comments: "",
     questions: "",
+    technicalSkills: "",
+    preselectedQuestions: "",
+    strengths: "",
+    areasForImprovement: "",
   });
+
+  // Section refs for auto-scroll on validation error
+  const technicalSkillsRef = React.useRef(null);
+  const competencyRef = React.useRef(null);
+  const preselectedQRef = React.useRef(null);
+  const strengthsRef = React.useRef(null);
+  const areasRef = React.useRef(null);
+  const overallRef = React.useRef(null);
 
   // console.log("feedbackData", feedbackData);
 
@@ -1108,9 +1133,11 @@ const FeedbackForm = ({
     interviewRoundId:
       interviewRoundId ||
       urlData?.interviewRoundId ||
-      decodedData?.interviewRoundId,
+      decodedData?.interviewRoundId ||
+      roundId ||
+      currentRound?._id,
     tenantId: currentTenantId,
-    interviewerId: interviewerId || decodedData?.interviewerId || urlData?.interviewerId,
+    interviewerId: interviewerId || decodedData?.interviewerId || urlData?.interviewerId || page == "Popup" && contactId,
     interviewerSectionData,
     preselectedQuestionsResponses,
     skillRatings: formData.skillRatings,
@@ -1132,9 +1159,9 @@ const FeedbackForm = ({
       undefined,
     ownerId: currentOwnerId,
     feedbackId: autoSaveFeedbackId,
-    isMockInterview: urlData?.interviewType === "mockinterview" || false,
+    isMockInterview: urlData?.interviewType === "mockinterview" || isMockInterview || false,
     feedbackCode:
-      urlData?.interviewType === "mockinterview" ? (interviewRoundData?.mockInterviewCode || "MOCK") + "-001" :
+      (urlData?.interviewType === "mockinterview" || isMockInterview) ? (interviewRoundData?.mockInterviewCode || "MOCK") + "-001" :
         (interviewRoundData?.interviewCode
           ? `${interviewRoundData.interviewCode}-00${interviewRoundData?.rounds?.[0]?.sequence || ""}`
           : "") || "",
@@ -1354,6 +1381,8 @@ const FeedbackForm = ({
       }
       return [...prev, { questionId, isAnswered: value }];
     });
+    // Clear the preselectedQuestions error as soon as the user selects any response
+    clearError('preselectedQuestions');
     //---v1.0.0----->
   };
 
@@ -1514,45 +1543,53 @@ const FeedbackForm = ({
     );
   };
 
-  const RadioGroupInput = React.memo(({ each }) => {
+  const RadioGroupInput = React.memo(({ each, showError }) => {
+    const qId = each.questionId || each.id;
+    const hasResponse = !!(each.isAnswered && each.isAnswered.trim());
     return (
-      <div className="flex flex-row items-center rounded-md my-2">
-        <p className="text-sm font-bold text-gray-600 sm:mb-2 md:mb-2">
-          Response Type{" "}
-          {(each.mandatory === "true" ||
-            each.snapshot?.mandatory === "true") && (
-              <span className="text-[red]">*</span>
+      <div className="flex flex-col rounded-md my-2">
+        <div className="flex flex-row items-center">
+          <p className="text-sm font-bold text-gray-600 sm:mb-2 md:mb-2">
+            Response Type{" "}
+            {(each.mandatory === "true" ||
+              each.snapshot?.mandatory === "true") && (
+                <span className="text-[red]">*</span>
+              )}
+          </p>
+          <div className={`grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3`}>
+            {["Not Answered", "Partially Answered", "Fully Answered"].map(
+              (option) => (
+                <span key={option} className="flex items-center gap-2 pl-8 sm:pl-0">
+                  <input
+                    checked={each.isAnswered === option}
+                    value={option}
+                    name={`isAnswered-${qId}`}
+                    type="radio"
+                    id={`isAnswered-${qId}-${option}`}
+                    onChange={(e) =>
+                      onChangeRadioInput(
+                        qId,
+                        e.target.value,
+                      )
+                    }
+                    disabled={isReadOnly}
+                    className="accent-custom-blue whitespace-nowrap"
+                  />
+                  <label
+                    htmlFor={`isAnswered-${qId}-${option}`}
+                    className="text-xs cursor-pointer"
+                  >
+                    {option}
+                  </label>
+                </span>
+              ),
             )}
-        </p>
-        <div className={`grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-3`}>
-          {["Not Answered", "Partially Answered", "Fully Answered"].map(
-            (option) => (
-              <span key={option} className="flex items-center gap-2 pl-8 sm:pl-0">
-                <input
-                  checked={each.isAnswered === option}
-                  value={option}
-                  name={`isAnswered-${each.questionId || each.id}`}
-                  type="radio"
-                  id={`isAnswered-${each.questionId || each.id}-${option}`}
-                  onChange={(e) =>
-                    onChangeRadioInput(
-                      each.questionId || each.id,
-                      e.target.value,
-                    )
-                  }
-                  disabled={isReadOnly}
-                  className="accent-custom-blue whitespace-nowrap"
-                />
-                <label
-                  htmlFor={`isAnswered-${each.questionId || each.id}-${option}`}
-                  className="text-xs cursor-pointer"
-                >
-                  {option}
-                </label>
-              </span>
-            ),
-          )}
+          </div>
         </div>
+        {/* Per-question error: shown when submitted without selecting a response */}
+        {showError && !hasResponse && (
+          <span className="text-xs text-red-500 mt-0.5">Please select a response for this question</span>
+        )}
       </div>
     );
   });
@@ -1618,7 +1655,7 @@ const FeedbackForm = ({
   const { mutate: createFeedback, isLoading: isCreating } = useCreateFeedback();
   const { mutate: updateFeedback, isLoading: isUpdating } = useUpdateFeedback();
 
-  // Validation function
+  // Validation function — mock/real-interview aware
   const validateForm = () => {
     const newErrors = {
       overallRating: "",
@@ -1626,41 +1663,87 @@ const FeedbackForm = ({
       skills: "",
       comments: "",
       questions: "",
+      technicalSkills: "",
+      preselectedQuestions: "",
+      strengths: "",
+      areasForImprovement: "",
     };
 
-    // Validate overall rating
-    if (formData.overallRating === 0) {
-      newErrors.overallRating = "Please provide an overall rating";
+    let firstErrorRef = null;
+
+    // ── Section 1: Technical Skills Assessment ──────────────────────────────
+    // At least one skill must be placed in any category
+    const totalCategorizedSkills = Object.values(formData.technicalSkills || {}).flat().length;
+    if (totalCategorizedSkills === 0) {
+      newErrors.technicalSkills = "Please assess at least one technical skill (drag a skill into Strong / Good / Basic / No Experience)";
+      if (!firstErrorRef) firstErrorRef = technicalSkillsRef;
     }
 
-    // Validate communication rating
-    if (formData.communicationRating === 0) {
-      newErrors.communicationRating = "Please provide a communication rating";
-    }
-
-    // Validate skills - filter out empty names first
-    const validSkills = formData.skillRatings.filter(
-      (s) => (s.skillName || s.skill) && (s.skillName || s.skill).trim() !== "",
+    // ── Section 2: Technical Competency Ratings ──────────────────────────────
+    // Communication is always mandatory — find it by name
+    const communicationSkill = (formData.skillRatings || []).find(
+      (s) => (s.skillName || s.skill || '').trim().toLowerCase() === 'communication'
     );
-    if (
-      validSkills.length === 0 ||
-      validSkills.some((skill) => skill.rating === 0)
-    ) {
-      newErrors.skills = "Please provide ratings for all listed skills";
+    if (!communicationSkill || !communicationSkill.rating || communicationSkill.rating === 0) {
+      newErrors.communicationRating = "Communication rating is required";
+      if (!firstErrorRef) firstErrorRef = competencyRef;
+    }
+    // ALL named skills must have a star rating > 0
+    const namedSkills = (formData.skillRatings || []).filter(
+      (s) => (s.skillName || s.skill || '').trim() !== ''
+    );
+    if (namedSkills.some((s) => !s.rating || s.rating === 0)) {
+      newErrors.skills = "Please provide a star rating for all Technical Competency skills";
+      if (!firstErrorRef) firstErrorRef = competencyRef;
     }
 
-    // Validate comments
-    if (!formData.additionalComments.trim()) {
-      newErrors.comments = "Please provide overall comments";
+    // ── Section 3: Preselected Questions ────────────────────────────────────
+    // Every preselected question must have an explicit response selected
+    // (isAnswered must be non-empty; "Not Answered" IS valid only if user clicked it)
+    const unansweredPreselected = (preselectedQuestionsResponses || []).filter(
+      (q) => !q.isAnswered || q.isAnswered.trim() === ""
+    );
+    if (unansweredPreselected.length > 0) {
+      newErrors.preselectedQuestions = `${unansweredPreselected.length} preselected question(s) are missing a response. Please select "Fully Answered", "Partially Answered", or "Not Answered" for each.`;
+      // Also fire a toast so the user notices even if scrolled away
+      notify.error(
+        `${unansweredPreselected.length} preselected question(s) need a response — scroll to the Preselected Questions section.`
+      );
+      if (!firstErrorRef) firstErrorRef = preselectedQRef;
     }
 
-    // Validate questions
-    // if (interviewerSectionData.length === 0) {
-    //   newErrors.questions = 'Please add at least one question from the question bank';
-    // }
+    // ── Section 4: Strengths & Areas for Improvement ────────────────────────
+    // Mandatory ONLY for mock interviews
+    if (isMockInterview) {
+      const filledStrengths = (formData.strengths || []).filter((s) => s?.trim());
+      if (filledStrengths.length === 0) {
+        newErrors.strengths = "At least one Strength is required for mock interviews";
+        if (!firstErrorRef) firstErrorRef = strengthsRef;
+      }
+      const filledAreas = (formData.areasForImprovement || []).filter((s) => s?.trim());
+      if (filledAreas.length === 0) {
+        newErrors.areasForImprovement = "At least one Area for Improvement is required for mock interviews";
+        if (!firstErrorRef) firstErrorRef = areasRef;
+      }
+    }
+
+    // ── Section 6: Overall Assessment ───────────────────────────────────────
+    // Mandatory for both real and mock
+    if (!formData.overallRating || formData.overallRating === 0) {
+      newErrors.overallRating = "Overall Rating is required";
+      if (!firstErrorRef) firstErrorRef = overallRef;
+    }
 
     setErrors(newErrors);
-    return !Object.values(newErrors).some((error) => error !== "");
+
+    const isValid = !Object.values(newErrors).some((e) => e !== "");
+
+    // Auto-scroll to the first error section
+    if (!isValid && firstErrorRef?.current) {
+      firstErrorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    return isValid;
   };
 
   // Clear specific error when user interacts with field
@@ -1826,6 +1909,9 @@ const FeedbackForm = ({
             onSuccess: (data) => {
               if (data.success) {
                 notify.success("Feedback submitted successfully!");
+                if (page == "Popup") {
+                  navigate("/feedback");
+                }
               } else {
                 notify.error("Failed to update feedback: " + data.message);
               }
@@ -1840,6 +1926,9 @@ const FeedbackForm = ({
           onSuccess: (data) => {
             if (data.success) {
               notify.success("Feedback submitted successfully!");
+              if (page == "Popup") {
+                navigate("/feedback");
+              }
               // Optionally, reset form or redirect
             } else {
               notify.error("Failed to submit feedback: " + data.message);
@@ -1850,6 +1939,8 @@ const FeedbackForm = ({
           },
         });
       }
+
+
 
 
       if (interviewRoundData?.meetPlatform === "platform") {
@@ -2049,7 +2140,7 @@ const FeedbackForm = ({
 
       {/* v1.0.3 <--------------------------------------------------------- */}
       <div
-        className="bg-white px-6 pt-6 pb-20"
+        className="bg-white p-4 pb-20"
       // className="bg-white rounded-lg sm:px-3 px-6 py-6 shadow-sm pb-20 mb-8"
       >
         {/* v1.0.3 ---------------------------------------------------------> */}
@@ -2153,13 +2244,20 @@ const FeedbackForm = ({
           </div>
 
           {/* Technical Skills Assessment */}
-          <div className="border-t border-gray-200 pt-8">
+          <div className="border-t border-gray-200 pt-8" ref={technicalSkillsRef}>
             <TechnicalSkillsAssessment
               formData={formData}
-              setFormData={setFormData}
+              setFormData={(data) => {
+                setFormData(data);
+                clearError('technicalSkills');
+              }}
               onSkillChange={triggerAutoSave}
               isReadOnly={isReadOnly}
+              presetSkillNames={initialSkillRatings.map(s => s.skillName || s.skill || '')}
             />
+            {errors.technicalSkills && (
+              <span className="text-xs text-red-500 mt-1 block">{errors.technicalSkills}</span>
+            )}
           </div>
 
 
@@ -2236,10 +2334,11 @@ const FeedbackForm = ({
             </div>
           </div> */}
 
-          {/* Skill Ratings */}
-          <div className="border-t border-gray-200 pt-8">
-            <div className="flex justify-between items-center mb-4">
+          {/* Skill Ratings — Technical Competency */}
+          <div className="border-t border-gray-200 pt-8" ref={competencyRef}>
+            <div className="flex justify-between items-center mb-1">
               <h3 className="text-lg font-semibold text-gray-900">Technical Competency Ratings</h3>
+
               {!isReadOnly && (
                 <button
                   type="button"
@@ -2252,77 +2351,95 @@ const FeedbackForm = ({
                 </button>
               )}
             </div>
+
+            {/* Inline error for skills */}
+            {(errors.communicationRating || errors.skills) && (
+              <span className="text-xs text-red-500 mb-2 block">{errors.communicationRating || errors.skills}</span>
+            )}
+
             <div className="space-y-4">
-              {formData.skillRatings.map((skill, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-4 flex-1">
-                      <input
-                        type="text"
-                        value={skill.skillName}
-                        readOnly={isReadOnly}
-                        onChange={(e) => updateSkillRating(index, 'skillName', e.target.value)}
-                        placeholder="e.g., Problem Solving, Coding Skills"
-                        className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent bg-white'}`}
-                      />
-                      <div className="flex items-center gap-2">
-                        <StarRating
-                          rating={skill.rating}
-                          isReadOnly={isReadOnly}
-                          onChange={(rating) => updateSkillRating(index, 'rating', rating)}
+              {formData.skillRatings.map((skill, index) => {
+                const isCommunication = (skill.skillName || skill.skill || '').trim().toLowerCase() === 'communication';
+                return (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-4 flex-1">
+                        <input
+                          type="text"
+                          value={skill.skillName}
+                          readOnly={isReadOnly || isCommunication}
+                          onChange={(e) => !isCommunication && updateSkillRating(index, 'skillName', e.target.value)}
+                          placeholder="e.g., Problem Solving, Coding Skills"
+                          className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none ${isReadOnly || isCommunication
+                            ? 'bg-gray-100 cursor-not-allowed text-gray-500'
+                            : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent bg-white'
+                            }`}
                         />
-                        <span className="text-sm text-gray-600 min-w-[50px]">
-                          {skill.rating > 0 ? `${skill.rating}/5` : 'Rate'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <StarRating
+                            rating={skill.rating}
+                            isReadOnly={isReadOnly}
+                            onChange={(rating) => updateSkillRating(index, 'rating', rating)}
+                          />
+                          <span className="text-sm text-gray-600 min-w-[50px]">
+                            {skill.rating > 0 ? `${skill.rating}/5` : 'Rate'}
+                          </span>
+                        </div>
                       </div>
+                      {/* Hide delete button for Communication — it's always mandatory */}
+                      {!isReadOnly && !isCommunication && formData.skillRatings.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeSkillRating(index)}
+                          className="ml-2 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
-                    {!isReadOnly && formData.skillRatings.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeSkillRating(index)}
-                        className="ml-2 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
+                    <div>
+                      <textarea
+                        value={skill.notes}
+                        readOnly={isReadOnly}
+                        onChange={(e) => updateSkillRating(index, 'notes', e.target.value)}
+                        rows="2"
+                        placeholder="Provide specific observations about this skill..."
+                        className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent bg-white'}`}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <textarea
-                      value={skill.notes}
-                      readOnly={isReadOnly}
-                      onChange={(e) => updateSkillRating(index, 'notes', e.target.value)}
-                      rows="2"
-                      placeholder="Provide specific observations about this skill..."
-                      className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent bg-white'}`}
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
 
           {/* Questions Asked */}
-          <div className="flex sm:flex-row sm:items-center justify-between">
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Questions Asked
-              </label>
-              <span className="text-xs text-gray-500 mt-1 block">
-                {questionsWithFeedback.length} question(s) from question bank
-              </span>
+          <div ref={preselectedQRef}>
+            <div className="flex sm:flex-row sm:items-center justify-between">
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Questions Asked
+                </label>
+                <span className="text-xs text-gray-500 mt-1 block">
+                  {questionsWithFeedback.length} question(s) from question bank
+                </span>
+              </div>
+              {!isReadOnly && (
+                <Button
+                  className="flex items-center gap-2 bg-custom-blue text-white hover:bg-custom-blue/90 font-medium"
+                  onClick={openQuestionBank}
+                  title="Add Question from Question Bank"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add</span>
+                  <span className="sm:hidden inline">Question</span>
+                </Button>
+              )}
             </div>
-            {!isReadOnly && (
-              <Button
-                className="flex items-center gap-2 bg-custom-blue text-white hover:bg-custom-blue/90 font-medium"
-                onClick={openQuestionBank}
-                title="Add Question from Question Bank"
-              // disabled={decodedData?.schedule}
-              >
-                <Plus className="h-4 w-4" />
-                <span>Add</span>
-                <span className="sm:hidden inline">Question</span>
-              </Button>
+            {/* Inline error for preselected questions */}
+            {errors.preselectedQuestions && (
+              <span className="text-xs text-red-500 mt-1 block">{errors.preselectedQuestions}</span>
             )}
           </div>
 
@@ -2353,22 +2470,32 @@ const FeedbackForm = ({
             // EDIT/ADD MODE - Interactive display
             <div className="space-y-4">
               {questionsToRender?.length > 0 ? (
-                questionsToRender.map((question) => (
-                  <QuestionCard
-                    key={question.questionId || question.id}
-                    question={question}
-                    mode={isReadOnly ? 'view' : 'edit'}
-                    onNoteAdd={onClickAddNote}
-                    onNoteChange={onChangeInterviewQuestionNotes}
-                    onLikeToggle={handleLikeToggle}
-                    onDislikeToggle={handleDislikeToggle}
-                    DisLikeSection={DisLikeSection}
-                    dislikeQuestionId={dislikeQuestionId}
-                    RadioGroupInput={RadioGroupInput}
-                    SharePopupSection={SharePopupSection}
-                    isViewMode={isReadOnly}
-                  />
-                ))
+                questionsToRender.map((question) => {
+                  const qId = question.questionId || question.id;
+                  // isPreselected = came from the round's question bank, not added freshly by interviewer
+                  const isPreselected = question.addedBy !== "interviewer" || !!question.originalData;
+                  // Find live response state
+                  const liveQ = interviewerSectionData.find(q => (q.questionId || q.id) === qId);
+                  const hasResponse = !!(liveQ?.isAnswered && liveQ.isAnswered.trim());
+                  const shouldShowError = !!errors.preselectedQuestions && isPreselected && !hasResponse;
+
+                  return (
+                    <QuestionCard
+                      key={qId}
+                      question={question}
+                      mode={isReadOnly ? 'view' : 'edit'}
+                      onNoteAdd={onClickAddNote}
+                      onNoteChange={onChangeInterviewQuestionNotes}
+                      onLikeToggle={handleLikeToggle}
+                      onDislikeToggle={handleDislikeToggle}
+                      DisLikeSection={DisLikeSection}
+                      dislikeQuestionId={dislikeQuestionId}
+                      RadioGroupInput={(props) => <RadioGroupInput {...props} showError={shouldShowError} />}
+                      SharePopupSection={SharePopupSection}
+                      isViewMode={isReadOnly}
+                    />
+                  );
+                })
               ) : (
                 <EmptyState
                   message="No questions selected from question bank"
@@ -2381,10 +2508,12 @@ const FeedbackForm = ({
 
 
           {/* Strengths */}
-          <div className="border-t border-gray-200 pt-8">
-            <div className="flex justify-between items-center mb-4">
+          <div className="border-t border-gray-200 pt-8" ref={strengthsRef}>
+            <div className="flex justify-between items-center mb-1">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Strengths</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Strengths {isMockInterview && <span className="text-red-500">*</span>}
+                </h3>
                 <p className="text-sm text-gray-600 mt-0.5">What did the candidate do well?</p>
               </div>
               {!isReadOnly && (
@@ -2406,9 +2535,9 @@ const FeedbackForm = ({
                     type="text"
                     value={strength}
                     readOnly={isReadOnly}
-                    onChange={(e) => updateStrength(index, e.target.value)}
+                    onChange={(e) => { updateStrength(index, e.target.value); if (e.target.value.trim()) clearError('strengths'); }}
                     placeholder="e.g., Strong problem-solving approach, Excellent communication skills"
-                    className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent'}`}
+                    className={`flex-1 px-3 py-2 border ${errors.strengths && isMockInterview ? 'border-red-400' : 'border-gray-300'} rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent'}`}
                   />
                   {!isReadOnly && formData.strengths.length > 1 && (
                     <button
@@ -2422,13 +2551,18 @@ const FeedbackForm = ({
                 </div>
               ))}
             </div>
+            {errors.strengths && (
+              <span className="text-xs text-red-500 mt-1 block">{errors.strengths}</span>
+            )}
           </div>
 
           {/* Areas for Improvement */}
-          <div className="border-t border-gray-200 pt-8">
-            <div className="flex justify-between items-center mb-4">
+          <div className="border-t border-gray-200 pt-8" ref={areasRef}>
+            <div className="flex justify-between items-center mb-1">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Areas for Improvement</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Areas for Improvement {isMockInterview && <span className="text-red-500">*</span>}
+                </h3>
                 <p className="text-sm text-gray-600 mt-0.5">What could the candidate work on?</p>
               </div>
               {!isReadOnly && (
@@ -2450,9 +2584,9 @@ const FeedbackForm = ({
                     type="text"
                     value={area}
                     readOnly={isReadOnly}
-                    onChange={(e) => updateArea(index, e.target.value)}
+                    onChange={(e) => { updateArea(index, e.target.value); if (e.target.value.trim()) clearError('areasForImprovement'); }}
                     placeholder="e.g., Needs to work on time complexity analysis, Could improve code organization"
-                    className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent'}`}
+                    className={`flex-1 px-3 py-2 border ${errors.areasForImprovement && isMockInterview ? 'border-red-400' : 'border-gray-300'} rounded-lg focus:outline-none ${isReadOnly ? 'bg-gray-50' : 'focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent'}`}
                   />
                   {!isReadOnly && formData.areasForImprovement.length > 1 && (
                     <button
@@ -2466,6 +2600,9 @@ const FeedbackForm = ({
                 </div>
               ))}
             </div>
+            {errors.areasForImprovement && (
+              <span className="text-xs text-red-500 mt-1 block">{errors.areasForImprovement}</span>
+            )}
           </div>
 
           {/* Additional Ratings */}
@@ -2517,8 +2654,9 @@ const FeedbackForm = ({
           </div>
 
           {/* Overall Assessment */}
-          <div className="border-t border-gray-200 pt-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Overall Assessment</h3>
+          <div className="border-t border-gray-200 pt-8" ref={overallRef}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Overall Assessment</h3>
+
             <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2527,7 +2665,7 @@ const FeedbackForm = ({
                 <div className="flex items-center gap-3">
                   <StarRating
                     rating={formData.overallRating}
-                    onChange={(rating) => setFormData({ ...formData, overallRating: rating })}
+                    onChange={(rating) => { setFormData({ ...formData, overallRating: rating }); clearError('overallRating'); }}
                     size="lg"
                     isReadOnly={isReadOnly}
                   />
@@ -2535,6 +2673,9 @@ const FeedbackForm = ({
                     {formData.overallRating > 0 ? `${formData.overallRating}/5` : 'Not rated'}
                   </span>
                 </div>
+                {errors.overallRating && (
+                  <span className="text-xs text-red-500 mb-2 block">{errors.overallRating}</span>
+                )}
               </div>
 
               <div>

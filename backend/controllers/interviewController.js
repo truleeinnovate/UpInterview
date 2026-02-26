@@ -1611,7 +1611,7 @@ const getInterviewDataforOrg = async (req, res) => {
 
     // console.log("Received interviewId:", interviewId);
     // console.log("Received roundId:", roundId  );
-    console.log("response rounds", interviewId, roundId)
+    // console.log("response rounds", interviewId, roundId)
     // ❌ Both not allowed (extra safety)
     if (interviewId && roundId) {
       return res.status(400).json({
