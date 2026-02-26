@@ -382,7 +382,7 @@ const InterviewRequests = () => {
       {/* Details Popup (same UI) */}
       {selectedRequest && (
         <SidebarPopup title="Interview Request Details" onClose={closePopup}>
-          <div className="mt-4 pb-16 px-4">
+          <div className="pb-16">
             <div className="space-y-5">
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
@@ -598,7 +598,7 @@ const InterviewRequests = () => {
             </div>
           ) : (
             // Render your requests
-            <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 items-stretch gap-4 mt-4 sm:mx-0 mx-4 pb-20">
+            <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 items-stretch gap-4 pb-20">
               {requests.map((req) => (
                 <div
                   key={req._id || req.id}

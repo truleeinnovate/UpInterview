@@ -720,7 +720,7 @@ const Wallet = () => {
           }}
         >
           {/* Search */}
-          <div className="px-4 pt-4 pb-2">
+          <div className="pt-4 pb-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
@@ -738,7 +738,7 @@ const Wallet = () => {
             )}
           </div>
 
-          <div className="px-4 pb-20 space-y-3">
+          <div className="pb-6 space-y-3">
             {txnLoading && txnPage === 0 ? (
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-custom-blue"></div>
@@ -842,7 +842,7 @@ const Wallet = () => {
                     <button
                       onClick={() => setTxnPage((prev) => prev + 1)}
                       disabled={txnFetching}
-                      className="flex items-center gap-2 text-sm font-medium text-custom-blue hover:text-custom-blue/80 px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-300 disabled:opacity-50"
+                      className="flex items-center gap-2 text-sm font-medium text-custom-blue hover:text-custom-blue/80 px-4 py-2 rounded-md hover:bg-blue-50 transition-all duration-300 disabled:opacity-50"
                     >
                       {txnFetching ? (
                         <>

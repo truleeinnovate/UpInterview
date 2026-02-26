@@ -55,8 +55,8 @@ const CompanyDetails = () => {
       }
       onClose={() => navigate(-1)}
     >
-      <div className="space-y-4 mt-8 mb-8">
-        <div className="bg-white rounded-xl p-6 mx-4 shadow-sm border border-gray-100">
+      <div className="space-y-4 mb-8">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
             Company Details
           </h4>
@@ -93,7 +93,7 @@ const CompanyDetails = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 mx-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
             Contact
           </h4>
@@ -142,7 +142,7 @@ const CompanyDetails = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-6 mx-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
             Metadata
           </h4>

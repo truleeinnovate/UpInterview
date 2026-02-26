@@ -59,7 +59,7 @@ const TaskProfileDetails = ({ task, taskId, onClosetask }) => {
       {/* v1.0.0 <----------------------------------------------------------------- */}
       {/* v1.0.1 <----------------------------------------------------------------- */}
       <SidebarPopup title="Task Profile Details" onClose={handleClose}>
-        <div className="sm:px-0 px-4 mb-14">
+        <div className="mb-14">
           {/* Tab Navigation */}
           <div className="flex border-b border-gray-200 mb-6">
             <button

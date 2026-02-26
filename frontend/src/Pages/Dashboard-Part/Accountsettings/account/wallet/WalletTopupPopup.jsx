@@ -20,6 +20,7 @@ import {
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 import InputField from "../../../../../Components/FormFields/InputField.jsx";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
+import { Button } from "../../../../../Components/Buttons/Button.jsx";
 // v1.0.3 ------------------------------------------------------------------>
 
 export function WalletTopupPopup({ onClose, onTopup }) {
@@ -240,9 +241,9 @@ export function WalletTopupPopup({ onClose, onTopup }) {
   const isStandalonePage = !onClose;
 
   const formContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full pb-6">
       {/* Scrollable content */}
-      <div className="p-4 sm:p-0 flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         <form id="topup-form" onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -308,14 +309,14 @@ export function WalletTopupPopup({ onClose, onTopup }) {
 
       {/* Fixed footer button */}
       <div className="bg-white px-2 py-3 flex justify-end">
-        <button
+        <Button
           type="submit"
           form="topup-form"
           disabled={!amount || isProcessing}
-          className="w-32 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {isProcessing ? "Processing..." : "Top Up Now"}
-        </button>
+        </Button>
       </div>
     </div>
   );

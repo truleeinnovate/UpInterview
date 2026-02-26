@@ -387,7 +387,7 @@ const CompanyForm = ({ mode, id, onClose, onSuccess }) => {
     >
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col px-4 mb-8"
+        className="flex flex-col mb-8"
         noValidate
       >
         <div className="flex-1 space-y-4">
@@ -649,7 +649,7 @@ const CompanyForm = ({ mode, id, onClose, onSuccess }) => {
           </section>
 
           {/* Footer Actions */}
-          <div className="flex justify-end gap-3 bg-white mt-6">
+          <div className="flex justify-end gap-3 bg-white pt-6">
             <Button
               variant="outline"
               type="button"
