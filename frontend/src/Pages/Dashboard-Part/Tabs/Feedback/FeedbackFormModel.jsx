@@ -216,7 +216,7 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
     <SidebarPopup title="Interview Feedback" onClose={handleClose}>
       <div>
         <ul
-          className="flex items-center gap-8 cursor-pointer py-1 sm:px-4 px-8 
+          className="flex items-center gap-8 cursor-pointer mb-4 border-b border-gray-200
              overflow-x-auto"
         >
           { }
