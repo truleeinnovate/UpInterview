@@ -104,14 +104,22 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
   useEffect(() => {
     if (!activeFeedback) return;
 
-    const candidate = feedbackData?.candidate || {};
+    // const candidate = feedbackData?.candidate || {};
+    const candidate = feedbackData?.candidateId || {};
     const candidateName =
       `${candidate.FirstName || ""} ${candidate.LastName || ""}`.trim() ||
       activeFeedback.candidateName ||
       "";
 
-    const position = feedbackData?.position || {};
+    // const position = feedbackData?.position || {};
+    const position = feedbackData?.positionId || {};
     const positionTitle = position.title || activeFeedback.position || "";
+
+    const interviewer = feedbackData?.interviewerId || {};
+    const interviewerName =
+      `${interviewer.firstName || ""} ${interviewer.lastName || ""}`.trim() ||
+      activeFeedback.interviewerId?.name ||
+      "";
 
     const round = feedbackData?.interviewRound || {};
     const roundTitle = round.roundTitle || activeFeedback.roundTitle || "";
@@ -143,7 +151,8 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
       candidateName,
       position: positionTitle,
       roundTitle,
-      interviewerName: activeFeedback.interviewerId?.name || "",
+      // interviewerName: activeFeedback.interviewerId?.name || "",
+      interviewerName: interviewerName || "",
       interviewDate: activeFeedback.createdAt
         ? new Date(activeFeedback.createdAt).toISOString().split("T")[0]
         : "",
@@ -251,7 +260,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
       </div>
       {/* Overall Assessment */}
       <div className="border-t border-b border-gray-200 pt-6 pb-6">
-        <div className="grid grid-cols-3 sm:grid-cols-1 gap-6">
+        <div className="grid grid-cols-3 sm:grid-cols-1 gap-4">
           <div className="bg-gray-50 p-3 rounded-md">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Overall Rating
@@ -259,10 +268,10 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
             <div className="flex items-center gap-3">
               <StarRating
                 rating={formData.overallRating}
-                size="md"
+                size="sm"
                 isReadOnly={true}
               />
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-600 font-medium">
                 {formData.overallRating > 0
                   ? `${formData.overallRating}/5`
                   : "Not rated"}
