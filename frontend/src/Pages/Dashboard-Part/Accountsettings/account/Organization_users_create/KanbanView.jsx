@@ -136,22 +136,21 @@ const KanbanView = ({
                         <img
                           className="h-8 w-8 rounded-full object-cover"
                           src={users.imageData.path}
-                          alt={`${users.firstName || ""} ${
-                            users.lastName || ""
-                          }`}
+                          alt={`${users.firstName || ""} ${users.lastName || ""
+                            }`}
                           // v1.0.0 <----------------------------------------------------------------------------------------------------------
                           onError={(e) => {
                             e.target.src =
                               users.gender === "Male"
                                 ? // ? maleImage
-                                  "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
+                                "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
                                 : users.gender === "Female"
-                                ? // ? femaleImage
+                                  ? // ? femaleImage
                                   "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099369/woman_mffxrj.png"
-                                : // : genderlessImage;
+                                  : // : genderlessImage;
                                   "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099367/transgender_le4gvu.png";
                           }}
-                          // v1.0.0 ---------------------------------------------------------------------------------------------------------->
+                        // v1.0.0 ---------------------------------------------------------------------------------------------------------->
                         />
                       ) : (
                         <div className="h-8 w-8 rounded-full bg-custom-blue flex items-center justify-center text-white text-sm font-semibold">
@@ -165,40 +164,41 @@ const KanbanView = ({
                       <h4 className="text-sm font-medium text-gray-900">
                         {users.firstName
                           ? users.firstName.charAt(0).toUpperCase() +
-                            users.firstName.slice(1)
+                          users.firstName.slice(1)
                           : ""}{" "}
                         {users.lastName
                           ? users.lastName.charAt(0).toUpperCase() +
-                            users.lastName.slice(1)
+                          users.lastName.slice(1)
                           : ""}
                       </h4>
                     </div>
                   </div>
                   {/* Action buttons */}
                   <div className="flex items-center gap-1">
-                    <button
-                      className={`p-1.5 ${
-                        users.status === "active"
+                    {(Boolean(users.isProfileCompleted) || Boolean(users.isSkipped)) && (
+                      <button
+                        className={`p-1.5 ${users.status === "active"
                           ? "text-green-600"
                           : "text-red-600"
-                      } hover:bg-blue-50 rounded-lg transition-colors`}
-                      // className="hover:bg-gray-200 w-full p-1 rounded pl-3 cursor-pointer flex items-center gap-2"
-                      onClick={() => handleStatusToggle(users)}
-                      title="Toggle Status"
-                    >
-                      {users.status === "active" ? (
-                        <CheckCircle
-                          size={16}
+                          } hover:bg-blue-50 rounded-lg transition-colors`}
+                        // className="hover:bg-gray-200 w-full p-1 rounded pl-3 cursor-pointer flex items-center gap-2"
+                        onClick={() => handleStatusToggle(users)}
+                        title="Toggle Status"
+                      >
+                        {users.status === "active" ? (
+                          <CheckCircle
+                            size={16}
                           // className='fill-white-500'
-                        />
-                      ) : (
-                        <XCircle
-                          size={16}
+                          />
+                        ) : (
+                          <XCircle
+                            size={16}
                           // className='fill-white-400'
-                        />
-                      )}
-                      {/* {users.status === "active" ? "In Active" : "Active"} */}
-                    </button>
+                          />
+                        )}
+                        {/* {users.status === "active" ? "In Active" : "Active"} */}
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         navigate(`details/${users._id}`, {
@@ -278,17 +278,15 @@ const KanbanView = ({
       {/* Confirmation Popup */}
       <ConfirmationModal
         show={showConfirmation}
-        userName={`${
-          selectedUser?.firstName
+        userName={`${selectedUser?.firstName
             ? selectedUser?.firstName.charAt(0).toUpperCase() +
-              selectedUser?.firstName.slice(1)
+            selectedUser?.firstName.slice(1)
             : ""
-        } ${
-          selectedUser?.lastName
+          } ${selectedUser?.lastName
             ? selectedUser?.lastName.charAt(0).toUpperCase() +
-              selectedUser?.lastName.slice(1)
+            selectedUser?.lastName.slice(1)
             : ""
-        }`}
+          }`}
         newStatus={newStatus}
         onCancel={cancelStatusChange}
         onConfirm={confirmStatusChange}

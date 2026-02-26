@@ -26,6 +26,7 @@ export const formatDateOfBirth = (dateString) => {
 
 const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
   const [contactData, setContactData] = useState({});
+
   const navigate = useNavigate();
   //   const location = useLocation();
   const ownerId = AuthCookieManager.getCurrentUserId();
@@ -101,7 +102,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
                 Resend Email Verification
               </button>
             )}
-            {!contactData.newEmail && (
+            {!contactData.isEmailVerified && !contactData.newEmail && (
               <button
                 onClick={handleResendPasswordChange}
                 className="px-4 py-2 text-sm bg-custom-blue text-white rounded-md  transition-colors"
@@ -166,7 +167,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
                   </svg>
                   Verified
                 </span>
-              ) : !contactData.newEmail && (
+              ) : !contactData.isEmailVerified && !contactData.newEmail && (
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-700 border border-red-200" title="Email is not verified">
                   <svg
                     className="w-3 h-3 mr-0.5"
