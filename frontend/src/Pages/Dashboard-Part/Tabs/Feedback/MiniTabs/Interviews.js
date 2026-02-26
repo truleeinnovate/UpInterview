@@ -111,7 +111,7 @@ const InterviewsMiniTabComponent = ({
 
   // console.log("feedbackDatas feedbackDatas", feedbackDatas)
 
-  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType || locationFeedback?.isMockInterview;
+  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType || interviewType === true || locationFeedback?.isMockInterview;
 
   // console.log("isMockInterviewisMockInterview", isMockInterview)
 
@@ -172,7 +172,7 @@ const InterviewsMiniTabComponent = ({
 
   const getDefaultTab = () => {
     // If mock interview → default to Interviewer Questions (id: 2)
-    if (urlData?.interviewType || interviewType === "mockinterview" || feedbackData?.isMockInterview === true) {
+    if (isMockInterview || urlData?.interviewType || interviewType === "mockinterview" || feedbackData?.isMockInterview === true) {
       return 2;
     }
 
@@ -693,7 +693,7 @@ const InterviewsMiniTabComponent = ({
   return (
     // v1.0.1 <-----------------------------------------------------------
     <div className="pb-6">
-      {!custom && isAddMode && (
+      {!custom && isAddMode && page !== "Popup" && (
         <div className="mb-6">
           <div className="flex justify-end items-center gap-3">
             <button
@@ -735,8 +735,8 @@ const InterviewsMiniTabComponent = ({
       >
         {interviewMiniTabsList
           .filter((each) => {
-            const isMock =
-              urlData?.interviewType === "mockinterview" || interviewType === "mockinterview" || locationFeedback?.isMockInterview;
+            const isMock = isMockInterview
+            // urlData?.interviewType === "mockinterview" || interviewType === "mockinterview" || locationFeedback?.isMockInterview;
 
             if (urlData?.isSchedule && each.id === 2) return false;
             if (isMock && each.id === 1) return false;

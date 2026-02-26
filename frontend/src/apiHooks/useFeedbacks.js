@@ -5,6 +5,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../utils/AuthCookieManager/jwtDecode";
+import { useSingleContact } from "./useUsers.js";
 
 export const useFeedbacks = (filters = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
@@ -153,10 +154,13 @@ export const useFeedbackData = ({ roundId, interviewerId, interviewType }) => {
 };
 
 export const usePendingFeedbacks = () => {
-  const authToken = Cookies.get("authToken");
-  const tokenPayload = decodeJwt(authToken);
+  // const authToken = Cookies.get("authToken");
+  // const tokenPayload = decodeJwt(authToken);
 
-  const contactId = tokenPayload?.userId;
+  const { singleContact } = useSingleContact();
+
+  const contactId = singleContact?.contactId;
+
 
 
   return useQuery({

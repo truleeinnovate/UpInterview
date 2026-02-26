@@ -30,6 +30,7 @@ const CandidateMiniTab = ({
   decodedData: propsDecodedData,
   isViewMode,
   roundId,
+  page,
   interviewType
 }) => {
   useScrollLock(true);
@@ -44,7 +45,7 @@ const CandidateMiniTab = ({
     [location.search],
   );
 
-  const isMockInterview = urlData?.interviewType === "mockinterview" || interviewType === "mockinterview" || feedback?.isMockInterview;
+  const isMockInterview = urlData?.interviewType === "mockinterview" || interviewType === "mockinterview" || interviewType === true || feedback?.isMockInterview;
 
   // console.log("feedback", feedback)
 
@@ -140,7 +141,7 @@ const CandidateMiniTab = ({
       {/* v1.0.0 <----------------------------------------------------------- */}
       {/* Basic Info */}
 
-      {isAddMode && (
+      {isAddMode && page !== "Popup" && (
         <div className="top-14 right-4 z-40 pt-3">
           <div className="flex justify-end items-center gap-3">
             <button

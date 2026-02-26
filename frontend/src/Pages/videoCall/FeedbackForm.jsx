@@ -104,7 +104,7 @@ const FeedbackForm = ({
   interviewType,
   roundId,
   // preselectedQuestionsResponses = [],
-
+  page,
   decodedData,
   isAddMode,
   // isScheduler,
@@ -2027,7 +2027,7 @@ const FeedbackForm = ({
   return (
     // v1.0.4 <----------------------------------------------------------------------
     <>
-      {!custom && isAddMode && (
+      {!custom && isAddMode && page !== "Popup" && (
         <div className="right-4 z-40  pb-3 top-5">
           <div className="flex justify-end items-center gap-3">
             <button
@@ -2082,7 +2082,7 @@ const FeedbackForm = ({
                 />
               </div>
 
-              {urlData?.interviewType !== "mockinterview" && (
+              {!isMockInterview && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Position <span className="text-red-500">*</span>
@@ -2133,7 +2133,7 @@ const FeedbackForm = ({
                   className="w-full px-3 py-2 border border-blue-50 bg-blue-50/20 text-gray-700 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[rgb(33,121,137)] focus:border-transparent cursor-not-allowed"
                 />
               </div>
-              {urlData?.interviewType === "mockinterview" && (
+              {isMockInterview && (
                 <div className="flex items-center pt-6">
                   <label className="flex items-center cursor-pointer">
                     <input

@@ -48,6 +48,9 @@ import { queryClient } from "./utils/queryClient"; // Import shared query client
 import { usePersistenceConfig } from "./utils/persistenceConfig"; // Import persistence config
 import VideoSdkPanel from "./VideoSDK1/VideoSdkPanel.js";
 import { WalletTopupPopup } from "./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTopupPopup.jsx";
+import FeedbackForm from "./Pages/videoCall/FeedbackForm.jsx";
+import CandidateMiniTab from "./Pages/Dashboard-Part/Tabs/Feedback/MiniTabs/Candidate.js";
+import InterviewsMiniTabComponent from "./Pages/Dashboard-Part/Tabs/Feedback/MiniTabs/Interviews.js";
 
 const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
 const SelectProfession = lazy(() => import("./Pages/Login-Part/Individual-3"));
@@ -1250,6 +1253,30 @@ const MainAppRoutes = ({
                   element={
                     <>
                       <AddFeedbackForm /> <FeedbackTab />
+                    </>
+                  }
+                />
+                <Route
+                  path="/feedback/:id"
+                  element={
+                    <>
+                      <AddFeedbackForm mode="feedback" /> <FeedbackTab />
+                    </>
+                  }
+                />
+                <Route
+                  path="/feedback-candidate/:id"
+                  element={
+                    <>
+                      <AddFeedbackForm mode="candidate" /> <FeedbackTab />
+                    </>
+                  }
+                />
+                <Route
+                  path="/interviews-questions/:id"
+                  element={
+                    <>
+                      <AddFeedbackForm mode="interviews" /> <FeedbackTab />
                     </>
                   }
                 />
