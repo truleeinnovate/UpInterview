@@ -188,8 +188,8 @@ const UserProfileDetails = ({ type }) => {
 
 
   const renderBasicDetails = () => (
-    <div className={isFullScreen ? "mx-3" : ""}>
-      <div className="bg-white p-6 rounded-lg">
+    <div className={isFullScreen ? "mx-3" : "mb-3"}>
+      <div className="bg-white rounded-lg">
         <BasicDetails
           mode="users"
           type={type}
@@ -202,7 +202,7 @@ const UserProfileDetails = ({ type }) => {
 
   const renderAdvancedDetails = () => (
     <div className={isFullScreen ? "mx-3" : ""}>
-      <div className="bg-white p-6 rounded-lg">
+      <div className="bg-white rounded-lg">
         <AdvancedDetails
           mode="users"
           usersId={userData?._id}
@@ -214,7 +214,7 @@ const UserProfileDetails = ({ type }) => {
 
   const renderInterviewDetails = () => (
     <div className={isFullScreen ? "mx-3" : ""}>
-      <div className="bg-white p-6 rounded-lg">
+      <div className="bg-white rounded-lg">
         <InterviewUserDetails
           mode="users"
           usersId={userData?._id}
@@ -248,11 +248,11 @@ const UserProfileDetails = ({ type }) => {
       <div>
         <div
           className={classNames("h-full", {
-            "max-w-7xl mx-auto px-2": isFullScreen,
+            "mb-6": isFullScreen,
           })}
         >
           <div>
-            <div className="flex sm:flex-col md:flex-col sm:items-start md:items-start sm:gap-4 md:gap-4 items-center justify-between mb-2 mx-3">
+            <div className="flex sm:flex-col md:flex-col sm:items-start md:items-start sm:gap-4 md:gap-4 items-center justify-between mb-2">
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <img
@@ -294,29 +294,31 @@ const UserProfileDetails = ({ type }) => {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center sm:justify-end sm:w-full md:justify-end md:w-full space-x-2">
-                <span
-                  className={`text-sm font-medium ${newStatus === "active"
-                    ? "text-custom-blue"
-                    : "text-gray-500"
-                    }`}
-                >
-                  {newStatus === "active" ? "Active" : "Inactive"}
-                </span>
-                <label
-                  className={`relative inline-flex items-center cursor-pointer`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={newStatus === "active"}
-                    onChange={() => {
-                      handleStatusToggle();
-                    }}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-custom-blue rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-custom-blue"></div>
-                </label>
-              </div>
+              {canToggle && (
+                <div className="flex items-center sm:justify-end sm:w-full md:justify-end md:w-full space-x-2">
+                  <span
+                    className={`text-sm font-medium ${newStatus === "active"
+                      ? "text-custom-blue"
+                      : "text-gray-500"
+                      }`}
+                  >
+                    {newStatus === "active" ? "Active" : "Inactive"}
+                  </span>
+                  <label
+                    className={`relative inline-flex items-center cursor-pointer`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={newStatus === "active"}
+                      onChange={() => {
+                        handleStatusToggle();
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-custom-blue rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-custom-blue"></div>
+                  </label>
+                </div>
+              )}
             </div>
 
             {/* Tab Navigation */}

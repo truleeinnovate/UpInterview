@@ -375,11 +375,11 @@ const UsersAccountTab = () => {
                   e.target.src =
                     row.gender === "Male"
                       ? // ? maleImage
-                        "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
+                      "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099365/man_u11smn.png"
                       : row.gender === "Female"
-                      ? // ? femaleImage
+                        ? // ? femaleImage
                         "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099369/woman_mffxrj.png"
-                      : // : genderlessImage;
+                        : // : genderlessImage;
                         "https://res.cloudinary.com/dnlrzixy8/image/upload/v1756099367/transgender_le4gvu.png";
                   // v1.0.3 ----------------------------------------------------------------------------------------------------->
                 }}
@@ -395,17 +395,15 @@ const UsersAccountTab = () => {
               className="text-sm font-medium text-custom-blue cursor-pointer"
               onClick={() => handleView(row)}
             >
-              {`${
-                row.firstName
+              {`${row.firstName
                   ? row.firstName.charAt(0).toUpperCase().trim() +
-                    row.firstName.slice(1).trim()
+                  row.firstName.slice(1).trim()
                   : ""
-              } ${
-                row.lastName
+                } ${row.lastName
                   ? row.lastName.charAt(0).toUpperCase().trim() +
-                    row.lastName.slice(1)
+                  row.lastName.slice(1)
                   : ""
-              }`.trim() || "Unknown"}
+                }`.trim() || "Unknown"}
             </div>
           </div>
         </div>
@@ -459,6 +457,7 @@ const UsersAccountTab = () => {
         if (!row.status) return "Unknown Status";
         return row.status === "active" ? "In Active" : "Active";
       },
+      show: (row) => Boolean(row.isProfileCompleted) || Boolean(row.isSkipped),
       icon: (row) => (
         <div
           className="flex items-center justify-center w-6 h-6"
@@ -617,7 +616,7 @@ const UsersAccountTab = () => {
                     <KanbanView
                       currentFilteredRows={currentFilteredRows}
                       loading={loading}
-                      setActionViewMore={() => {}}
+                      setActionViewMore={() => { }}
                       userData={dataSource}
                       toggleSidebar={() => navigate("new")}
                     />
@@ -759,17 +758,15 @@ const UsersAccountTab = () => {
       <div>
         <ConfirmationModal
           show={showConfirmation}
-          userName={`${
-            selectedUser?.firstName
+          userName={`${selectedUser?.firstName
               ? selectedUser?.firstName.charAt(0).toUpperCase() +
-                selectedUser?.firstName.slice(1)
+              selectedUser?.firstName.slice(1)
               : ""
-          } ${
-            selectedUser?.lastName
+            } ${selectedUser?.lastName
               ? selectedUser?.lastName.charAt(0).toUpperCase() +
-                selectedUser?.lastName.slice(1)
+              selectedUser?.lastName.slice(1)
               : ""
-          }`}
+            }`}
           newStatus={newStatus}
           onCancel={cancelStatusChange}
           onConfirm={confirmStatusChange}
