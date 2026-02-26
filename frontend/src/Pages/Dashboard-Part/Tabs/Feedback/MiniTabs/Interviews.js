@@ -16,6 +16,7 @@ import useAutoSaveFeedback from "../../../../../apiHooks/useAutoSaveFeedback";
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode";
 import { flattenQuestionFeedback } from "../../../../videoCall/FeedbackForm";
+import { useUserProfile } from "../../../../../apiHooks/useUsers";
 
 const interviewMiniTabsList = [
   {
@@ -85,6 +86,11 @@ const InterviewsMiniTabComponent = ({
     [location.search],
   );
   const { useInterviewDetails } = useInterviews();
+  const { userProfile } = useUserProfile();
+
+
+  const contactId = userProfile?.contactId;
+
 
 
   // Validation errors state
@@ -102,7 +108,7 @@ const InterviewsMiniTabComponent = ({
     isLoading: feedbackLoading,
     isError: feedbackError,
   } = useFeedbackData({
-    roundId: isViewMode ? roundId : !urlData.isCandidate ? urlData.interviewRoundId : null,
+    roundId: isViewMode ? roundId : !urlData.isCandidate ? (urlData.interviewRoundId || roundId) : roundId || null,
     // interviewerId: !urlData.isCandidate ? urlData.interviewerId : null,
     interviewerId: !urlData?.isCandidate && !urlData?.isSchedule ? urlData?.interviewerId : null,
 
@@ -143,6 +149,7 @@ const InterviewsMiniTabComponent = ({
 
   const interviewRoundData =
     interviewData || mockinterview || {};
+  console.log("interviewRoundDatafeedbackData", interviewRoundData)
 
   const feedbackData = useMemo(() => {
     const raw = locationFeedback || feedbackDatas || {};
@@ -400,9 +407,10 @@ const InterviewsMiniTabComponent = ({
     interviewRoundId:
       interviewRoundId ||
       urlData?.interviewRoundId ||
-      decodedData?.interviewRoundId,
+      roundId ||
+      interviewRoundData?._id || interviewRoundData?.rounds?.[0]?._id,
     tenantId: currentTenantId,
-    interviewerId: decodedData?.interviewerId || urlData?.interviewerId,
+    interviewerId: decodedData?.interviewerId || urlData?.interviewerId || page == "Popup" && contactId,
     interviewerSectionData,
     preselectedQuestionsResponses,
     skillRatings: [],
@@ -418,10 +426,10 @@ const InterviewsMiniTabComponent = ({
       undefined,
     ownerId: currentOwnerId,
     feedbackId: autoSaveFeedbackId,
-    isMockInterview: urlData?.interviewType === "mockinterview" || false,
+    isMockInterview: urlData?.interviewType === "mockinterview" || isMockInterview || false,
 
     feedbackCode:
-      urlData?.interviewType === "mockinterview" ? interviewRoundData?.mockInterviewCode + "-001" :
+      (urlData?.interviewType === "mockinterview" || isMockInterview) ? (interviewRoundData?.mockInterviewCode || "MOCK") + "-001" :
         (interviewRoundData?.interviewCode
           ? `${interviewRoundData.interviewCode}-00${interviewRoundData?.rounds?.[0]?.sequence || ""}`
           : "") || "",
