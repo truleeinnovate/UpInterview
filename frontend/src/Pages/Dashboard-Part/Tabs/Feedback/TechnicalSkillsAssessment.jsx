@@ -98,15 +98,7 @@ export default function TechnicalSkillsAssessment({ formData, setFormData, onSki
             <div key={skill} className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-100">
               <div className="flex items-center gap-1 min-w-[90px] overflow-hidden">
                 <span className="block text-sm font-medium text-gray-900 truncate" title={skill}>{skill}</span>
-                {!isReadOnly && (
-                  <button
-                    type="button"
-                    onClick={() => removeSkill(skill)}
-                    className="text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
+
               </div>
               <div className="flex gap-1 ml-auto">
                 {levels.map((level) => (
@@ -129,6 +121,16 @@ export default function TechnicalSkillsAssessment({ formData, setFormData, onSki
                   </button>
                 ))}
               </div>
+              {!isReadOnly && (
+                <button
+                  type="button"
+                  onClick={() => removeSkill(skill)}
+                  className="text-gray-400 hover:text-red-500 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+
             </div>
           );
         })}

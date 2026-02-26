@@ -1,6 +1,6 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../../../Components/Buttons/Button";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 
@@ -11,9 +11,11 @@ import FeedbackForm from "../../../videoCall/FeedbackForm";
 import { usePendingFeedbacks } from '../../../../apiHooks/useFeedbacks';
 
 const tabsList = [
-  { id: 1, tab: "Candidate" },
+  { id: 1, tab: "Feedback" },
   { id: 2, tab: "Interview Questions" },
-  { id: 3, tab: "Feedback Form" },
+  { id: 3, tab: "Candidate" },
+
+
 ];
 
 const AddFeedbackForm = ({
@@ -21,50 +23,194 @@ const AddFeedbackForm = ({
   onClose,
   roundId,
   interviewType,
+  mode = "feedback"
 }) => {
   const navigate = useNavigate();
+  const { id: paramId } = useParams();
   const formRef = useRef(null);
+
+  console.log("interviewType", interviewType)
 
   const { data, isLoading, isError, error } = usePendingFeedbacks();
   console.log("PENDING FEEDBACKS DATA ================================> ", data);
 
   // General Form Step State
-  const [currentFormStep, setCurrentFormStep] = useState(1);
+  const [currentFormStep, setCurrentFormStep] = useState(paramId ? 2 : 1);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
-    feedbackCategory: "",
+    selectedRoundId: paramId || "", // Store the selected round ID
   });
 
-  // Step 2 Logic States (Copied from FeedbackFormModal)
-  const [activeTab, setActiveTab] = useState(1);
+  // Determine which tab should be active based on mode
+
+  const getActiveTabFromMode = () => {
+    switch (mode) {
+      case "candidate":
+        return 3; // Candidate tab
+      case "interviews":
+        return 2; // Interview Questions tab
+      case "feedback":
+      default:
+        return 1; // Feedback Form tab
+    }
+  };
+
+
+  // Step 2 Logic States
+  const [activeTab, setActiveTab] = useState(getActiveTabFromMode()); // Set based on mode
+
+  useEffect(() => {
+    setActiveTab(getActiveTabFromMode());
+  }, [mode]);
+
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
   const [removedQuestionIds, setRemovedQuestionIds] = useState([]);
   const [isQuestionBankOpen, setIsQuestionBankOpen] = useState(false);
   const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] =
     useState([]);
+  // State to store selected round details (includes interviewCode and sequence)
+  const [selectedRoundDetails, setSelectedRoundDetails] = useState(null);
 
-  const categoryOptions = useMemo(
-    () => [
-      { value: "technical", label: "Technical Skills" },
-      { value: "behavioral", label: "Behavioral" },
-      { value: "culture", label: "Culture Fit" },
-    ],
-    [],
-  );
+  // Transform all pending feedbacks into dropdown options
+  const roundOptions = useMemo(() => {
+    if (!data || !Array.isArray(data)) return [];
 
-  const handleClose = () => {
-    if (isModal && onClose) onClose();
-    else navigate(-1);
+    return data.map(item => ({
+      value: item.roundId,
+      label: `${item.interviewCode || 'N/A'}-${item?.sequence ? item.sequence : 1}  - ${item.roundTitle || 'Round'} - ${item.candidate?.fullName || 'Unknown Candidate'} `,
+      // Store all relevant details
+      interviewCode: item.interviewCode,
+      sequence: item.sequence || 1,
+      roundId: item.roundId,
+      roundTitle: item.roundTitle,
+      candidateName: item.candidate?.fullName,
+      interviewType: item.interviewType,
+      isMock: item.isMock,
+      dateTime: item.dateTime,
+      interviewStatus: item.interviewStatus,
+      // Store the entire item for reference if needed
+      fullDetails: item
+    }));
+  }, [data]);
+
+
+
+
+  useEffect(() => {
+    if (paramId && roundOptions.length > 0) {
+      const selectedOption = roundOptions.find(opt => opt.value === paramId);
+      if (selectedOption) {
+        setSelectedRoundDetails(selectedOption);
+      }
+    }
+  }, [paramId, roundOptions]);
+
+  // Handle round selection
+  const handleRoundChange = (e) => {
+    const selectedValue = e.target.value;
+    const selectedOption = roundOptions.find(opt => opt.value === selectedValue);
+
+    setFormData({
+      ...formData,
+      selectedRoundId: selectedValue,
+    });
+
+    setSelectedRoundDetails(selectedOption || null);
+
+    // Clear error for this field if it exists
+    if (errors.selectedRoundId) {
+      setErrors(prev => ({ ...prev, selectedRoundId: undefined }));
+    }
   };
 
+  const handleClose = () => {
+    if (currentFormStep === 2) {
+      setCurrentFormStep(1);
+      navigate("/feedback/new");
+    } else {
+      if (isModal && onClose) onClose();
+      else navigate("/feedback");
+    }
+  };
+
+  // const handleProceed = () => {
+  //   if (!formData.feedbackCategory) {
+  //     setErrors({ feedbackCategory: "Category is required" });
+  //     return;
+  //   }
+  //   setCurrentFormStep(2);
+  //   formRef.current?.scrollIntoView({ behavior: "smooth" });
+  // };
+  // const handleProceed = () => {
+  //   const newErrors = {};
+
+  //   if (!formData.selectedRoundId) {
+  //     newErrors.selectedRoundId = "Please select a round";
+  //   }
+
+  //   if (Object.keys(newErrors).length > 0) {
+  //     setErrors(newErrors);
+  //     return;
+  //   }
+
+  //   setCurrentFormStep(2);
+  //   formRef.current?.scrollIntoView({ behavior: "smooth" });
+  // };
   const handleProceed = () => {
-    if (!formData.feedbackCategory) {
-      setErrors({ feedbackCategory: "Category is required" });
+    const newErrors = {};
+
+    if (!formData.selectedRoundId) {
+      newErrors.selectedRoundId = "Please select a round";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    // Update URL before proceeding
+    const selectedValue = formData.selectedRoundId;
+    switch (mode) {
+      case "candidate":
+        navigate(`/feedback-candidate/${selectedValue}`, { replace: true });
+        break;
+      case "interviews":
+        navigate(`/interviews-questions/${selectedValue}`, { replace: true });
+        break;
+      case "feedback":
+      default:
+        navigate(`/feedback/${selectedValue}`, { replace: true });
+        break;
+    }
+
     setCurrentFormStep(2);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Handle tab change - Update mode and URL when tab changes
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+
+    // Update mode and URL based on selected tab
+    if (formData.selectedRoundId) {
+      switch (tabId) {
+        case 1: // Feedback Form tab
+          navigate(`/feedback/${formData.selectedRoundId}`);
+          break;
+        case 2: // Interview Questions tab
+          navigate(`/interviews-questions/${formData.selectedRoundId}`);
+          break;
+        case 3: // Candidate tab
+          navigate(`/feedback-candidate/${formData.selectedRoundId}`);
+          break;
+
+
+        default:
+          break;
+      }
+    }
+  };
+
 
   // Logic Handlers (Step 2)
   const handleAddQuestionToRound = (question) => {
@@ -112,10 +258,15 @@ const AddFeedbackForm = ({
   };
 
   const renderTabContent = () => {
+    const effectiveRoundId = roundId || formData.selectedRoundId;
+    const effectiveInterviewType = selectedRoundDetails?.isMock;
+    console.log("selectedRoundDetails", selectedRoundDetails)
+    console.log("effectiveInterviewType", effectiveInterviewType)
+
     switch (activeTab) {
-      case 1:
+      case 3:
         return (
-          <CandidateMiniTab roundId={roundId} interviewType={interviewType} />
+          <CandidateMiniTab roundId={effectiveRoundId} page="Popup" interviewType={effectiveInterviewType} />
         );
       case 2:
         return (
@@ -123,34 +274,36 @@ const AddFeedbackForm = ({
             tab={true}
             page="Popup"
             closePopup={handleClose}
-            interviewType={interviewType}
-            roundId={roundId}
-            interviewerSectionData={interviewerSectionData}
-            setInterviewerSectionData={setInterviewerSectionData}
-            removedQuestionIds={removedQuestionIds}
-            setRemovedQuestionIds={setRemovedQuestionIds}
-            isQuestionBankOpen={isQuestionBankOpen}
-            setIsQuestionBankOpen={setIsQuestionBankOpen}
-            handleAddQuestionToRound={handleAddQuestionToRound}
-            handleRemoveQuestion={handleRemoveQuestion}
-            handleToggleMandatory={handleToggleMandatory}
-            preselectedQuestionsResponses={preselectedQuestionsResponses}
-            setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
-            handlePreselectedQuestionResponse={
-              handlePreselectedQuestionResponse
-            }
+            interviewType={effectiveInterviewType}
+            roundId={effectiveRoundId}
+            isAddMode={true}
+          // interviewerSectionData={interviewerSectionData}
+          // setInterviewerSectionData={setInterviewerSectionData}
+          // removedQuestionIds={removedQuestionIds}
+          // setRemovedQuestionIds={setRemovedQuestionIds}
+          // isQuestionBankOpen={isQuestionBankOpen}
+          // setIsQuestionBankOpen={setIsQuestionBankOpen}
+          // handleAddQuestionToRound={handleAddQuestionToRound}
+          // handleRemoveQuestion={handleRemoveQuestion}
+          // handleToggleMandatory={handleToggleMandatory}
+          // preselectedQuestionsResponses={preselectedQuestionsResponses}
+          // setPreselectedQuestionsResponses={setPreselectedQuestionsResponses}
+          // handlePreselectedQuestionResponse={
+          //   handlePreselectedQuestionResponse
+          // }
           />
         );
-      case 3:
+      case 1:
         return (
           <FeedbackForm
             tab={true}
             page="Popup"
-            interviewType={interviewType}
-            roundId={roundId}
+            interviewType={effectiveInterviewType}
+            roundId={effectiveRoundId}
             interviewerSectionData={interviewerSectionData}
             setInterviewerSectionData={setInterviewerSectionData}
             preselectedQuestionsResponses={preselectedQuestionsResponses}
+            isAddMode={true}
           />
         );
       default:
@@ -163,20 +316,39 @@ const AddFeedbackForm = ({
       {currentFormStep === 1 && (
         <div className="space-y-6">
           <h4 className="text-lg font-semibold text-gray-800">
-            Feedback Setup
+            Feedback
           </h4>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-6">
-              <DropdownWithSearchField
-                label="Feedback Category"
-                options={categoryOptions}
-                value={formData.feedbackCategory}
-                onChange={(e) =>
-                  setFormData({ ...formData, feedbackCategory: e.target.value })
-                }
-                error={errors.feedbackCategory}
-                required
-              />
+              {/* Round Selection Dropdown */}
+              <>
+                <DropdownWithSearchField
+                  label="Select Interview"
+                  options={roundOptions}
+                  value={formData.selectedRoundId}
+                  onChange={handleRoundChange}
+                  error={errors.selectedRoundId}
+                  required
+                  placeholder="Search by interview code, round title, or candidate name..."
+                />
+                <span></span>
+              </>
+
+              {/* Display selected round details (optional) */}
+              {selectedRoundDetails && (
+                <div className="mt-2 p-3 bg-gray-50 rounded-md">
+                  <p className="text-sm font-medium text-gray-700">Selected Round Details:</p>
+                  <div className="mt-1 text-xs text-gray-600 space-y-1">
+                    <p>Interview Code: {selectedRoundDetails.interviewCode}</p>
+                    <p>Round: {selectedRoundDetails.roundTitle}</p>
+                    <p>Sequence: {selectedRoundDetails.sequence}</p>
+                    <p>Candidate: {selectedRoundDetails.candidateName}</p>
+                    <p>Type: {selectedRoundDetails.isMock ? 'Mock Interview' : 'Regular Interview'}</p>
+                    <p>Status: {selectedRoundDetails.interviewStatus}</p>
+                    <p>Date & Time: {selectedRoundDetails.dateTime}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-8">
@@ -195,15 +367,18 @@ const AddFeedbackForm = ({
             </Button>
           </div>
         </div>
-      )}
+      )
+      }
 
-      {currentFormStep === 2 && (
-        <div className="space-y-4">
-          {/* Dynamic Tab Content */}
-          <div className="min-h-[400px] py-4">{renderTabContent()}</div>
-        </div>
-      )}
-    </div>
+      {
+        currentFormStep === 2 && (
+          <div className="space-y-4">
+            {/* Dynamic Tab Content */}
+            <div className="min-h-[400px] py-4">{renderTabContent()}</div>
+          </div>
+        )
+      }
+    </div >
   );
 
   return (
@@ -234,11 +409,10 @@ const AddFeedbackForm = ({
               <li
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-2 px-1 flex-shrink-0 text-sm font-semibold transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? "border-b-2 border-custom-blue text-custom-blue"
-                    : "text-gray-600 hover:text-gray-700"
-                }`}
+                className={`pb-2 px-1 flex-shrink-0 text-sm font-semibold transition-all duration-200 ${activeTab === tab.id
+                  ? "border-b-2 border-custom-blue text-custom-blue"
+                  : "text-gray-600 hover:text-gray-700"
+                  }`}
               >
                 {tab.tab}
               </li>
