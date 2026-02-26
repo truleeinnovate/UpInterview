@@ -2,6 +2,7 @@
 const Interviewer = require("../models/Interviewer");
 const { Users } = require("../models/Users");
 const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
+const { handleApiError } = require("../utils/errorHandler");
 
 // Get all interviewers with pagination and filters
 const getAllInterviewers = async (req, res) => {
@@ -206,11 +207,7 @@ const getAllInterviewers = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching interviewers:", error);
-    return res.status(500).json({
-      message: "Error fetching interviewers",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Fetch Interviewers");
   }
 };
 
@@ -252,11 +249,7 @@ const getAllInterviewersData = async (req, res) => {
 
     return res.status(200).json(interviewers);
   } catch (error) {
-    console.error("Error fetching all interviewers:", error);
-    return res.status(500).json({
-      message: "Error fetching interviewers",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Fetch All Interviewers");
   }
 };
 
@@ -502,11 +495,7 @@ const toggleInterviewerActive = async (req, res) => {
       data: updatedInterviewer,
     });
   } catch (error) {
-    console.error("Error toggling interviewer status:", error);
-    res.status(500).json({
-      message: "Error toggling interviewer status",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Toggle Interviewer Status");
   }
 };
 

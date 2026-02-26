@@ -14,6 +14,7 @@ const { hasPermission } = require("../middleware/permissionMiddleware");
 const { Users } = require("../models/Users");
 const { Interview } = require("../models/Interview/Interview.js");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
+const { handleApiError } = require("../utils/errorHandler");
 
 //  post call for position
 const createPosition = async (req, res) => {
@@ -30,7 +31,7 @@ const createPosition = async (req, res) => {
   if (isStandardType) {
     schemaToUse = positionValidationSchema.fork(["rounds"], (field) =>
       field.items(validateRoundDataStandard).optional(),
-    
+
     );
   }
 
@@ -120,9 +121,9 @@ const createPosition = async (req, res) => {
         sequence: round?.sequence || 0,
         questions: round?.questions
           ? round.questions?.map((q) => ({
-              questionId: q.questionId,
-              snapshot: q.snapshot,
-            }))
+            questionId: q.questionId,
+            snapshot: q.snapshot,
+          }))
           : [],
         ...round,
       }));
@@ -177,10 +178,7 @@ const createPosition = async (req, res) => {
       status: "error",
     };
 
-    return res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    return handleApiError(res, error, "Create Position");
   }
 };
 
@@ -285,9 +283,9 @@ const updatePosition = async (req, res) => {
         sequence: round.sequence || 0,
         questions: round.questions
           ? round.questions.map((q) => ({
-              questionId: q.questionId || null,
-              snapshot: q.snapshot || null,
-            }))
+            questionId: q.questionId || null,
+            snapshot: q.snapshot || null,
+          }))
           : [],
         ...round,
       }));
@@ -440,10 +438,7 @@ const updatePosition = async (req, res) => {
       status: "error",
     };
 
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
+    return handleApiError(res, error, "Update Position");
   }
 };
 
@@ -498,12 +493,7 @@ const deletePosition = async (req, res) => {
       message: "Position deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting position:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error while deleting position",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    return handleApiError(res, error, "Delete Position");
   }
 };
 
@@ -566,11 +556,7 @@ const getPositionById = async (req, res) => {
       });
     }
 
-    res.status(500).json({
-      success: false,
-      error: "Failed to fetch position details",
-      message: error.message,
-    });
+    return handleApiError(res, error, "Fetch Position By Id");
   }
 };
 
@@ -739,7 +725,7 @@ const saveInterviewRoundPosition = async (req, res) => {
       status: "error",
     };
 
-    return res.status(500).json({ message: "Internal server error." });
+    return handleApiError(res, error, "Save Interview Round");
   }
 };
 
@@ -1022,7 +1008,7 @@ const updateInterviewRound = async (req, res) => {
       status: "error",
     };
 
-    return res.status(500).json({ message: "Internal server error." });
+    return handleApiError(res, err, "Update Interview Round");
   }
 };
 
@@ -1130,7 +1116,7 @@ const deleteRound = async (req, res) => {
       status: "error",
     };
 
-    res.status(500).json({ message: "Error deleting round" });
+    return handleApiError(res, error, "Delete Round");
   }
 };
 

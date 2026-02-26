@@ -43,6 +43,8 @@ import { useMasterData } from "../../../../../../apiHooks/useMasterData.js";
 import { ReactComponent as LuFilterX } from "../../../../../../icons/LuFilterX.svg";
 import { ReactComponent as LuFilter } from "../../../../../../icons/LuFilter.svg";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { config } from "../../../../../../config";
 
 export const OutsourcedInterviewerCard = ({
   interviewer,
@@ -618,6 +620,41 @@ function OutsourcedInterviewerModal({
       }
     }
   }, [currentRole, currentRoles]);
+
+  // Fetch related roles from API when currentRole is set and add them to selectedRoles
+  const hasInitializedRelatedRolesRef = useRef(false);
+  useEffect(() => {
+    if (!currentRole || currentRole.trim() === "" || hasInitializedRelatedRolesRef.current) return;
+
+    const fetchRelatedRoles = async () => {
+      try {
+        const res = await axios.get(
+          `${config.REACT_APP_API_URL}/master-data/roles/related`,
+          { params: { roleName: currentRole } }
+        );
+        const data = res?.data;
+        if (data?.relatedRoles && data.relatedRoles.length > 0) {
+          hasInitializedRelatedRolesRef.current = true;
+          setSelectedRoles((prev) => {
+            const newRoles = data.relatedRoles
+              .filter((rr) => !prev.some((p) => p.roleName === rr.roleName))
+              .map((rr) => ({
+                roleName: rr.roleName,
+                roleLabel: rr.roleLabel || rr.roleName,
+                fromParent: false,
+                fromRelated: true,
+              }));
+            if (newRoles.length === 0) return prev;
+            return [...prev, ...newRoles];
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching related roles:", error);
+      }
+    };
+
+    fetchRelatedRoles();
+  }, [currentRole]);
 
   // Parse dateTime prop into local date/time state for availability view
   useEffect(() => {
@@ -2923,14 +2960,16 @@ function OutsourcedInterviewerModal({
                     {/* Role Filter Dropdown + Chips */}
                     <div className="flex mt-4 flex-wrap items-center gap-1.5">
                       <span className="text-xs text-gray-500 mr-1">
-                        Roles:
+                        Applied Roles:
                       </span>
                       {selectedRoles.map((role) => (
                         <span
                           key={role.roleName}
                           className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${role.fromParent
                             ? "bg-blue-100 border-blue-200 text-blue-800"
-                            : "bg-gray-100 border-gray-200 text-gray-800"
+                            : role.fromRelated
+                              ? "bg-green-100 border-green-200 text-green-800"
+                              : "bg-gray-100 border-gray-200 text-gray-800"
                             }`}
                         >
                           {role.roleLabel || role.roleName}

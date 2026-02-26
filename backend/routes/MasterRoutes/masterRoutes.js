@@ -9,12 +9,16 @@ const {
   deleteMaster,
   getAllMasters,
   searchSkills,
+  getRelatedRoles,
 } = require("../../controllers/MasterControllers/masterControllers");
 
 const loggingService = require("../../middleware/loggingService.js");
 
 // Skills search endpoint - must be before /:type to avoid conflict
 router.get("/skills/search", searchSkills);
+
+// Related roles endpoint - must be before /:type to avoid conflict
+router.get("/roles/related", getRelatedRoles);
 
 router.post(
   "/:type",

@@ -6,6 +6,7 @@ const { Resume } = require("../models/Resume.js");
 const { generateOTP } = require("../utils/generateOtp");
 const Otp = require("../models/Otp");
 const mongoose = require("mongoose");
+const { handleApiError } = require("../utils/errorHandler");
 const cron = require("node-cron");
 const ScheduleAssessment = require("../models/Assessment/assessmentsSchema");
 const {
@@ -36,11 +37,7 @@ exports.getCandidateAssessmentBasedOnId = async (req, res) => {
       candidateAssessment: document,
     });
   } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: "Failed to get candidate assessment details",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Get Candidate Assessment");
   }
 };
 
@@ -107,11 +104,7 @@ exports.getPublicCandidateDetailsByAssessmentId = async (req, res) => {
       "[CandidateAssessment] Error fetching public candidate details:",
       error,
     );
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch candidate details",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Fetch Public Candidate Details");
   }
 };
 
@@ -156,11 +149,7 @@ exports.verifyOtp = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Error verifying OTP:", error);
-    return res.status(500).json({
-      isValid: false,
-      message: "Internal server error. Please try again.",
-    });
+    return handleApiError(res, error, "Verify OTP");
   }
 };
 
@@ -471,7 +460,7 @@ exports.submitCandidateAssessment = async (req, res) => {
           passScore: sectionPassScore,
           sectionResult,
           sectionPassed: sectionResult === "pass",
-          Answers: processedAnswers, 
+          Answers: processedAnswers,
         };
       }),
     );
@@ -500,7 +489,7 @@ exports.submitCandidateAssessment = async (req, res) => {
     // Update candidate assessment
     const oldStatus = candidateAssessment.status;
     const updateData = {
-      status: overallResult, 
+      status: overallResult,
       sections: processedSections,
       totalScore,
       submittedAt: new Date(submittedAt),
@@ -760,11 +749,7 @@ exports.extendCandidateAssessment = async (req, res) => {
       message: error.message,
     };
 
-    return res.status(500).json({
-      success: false,
-      message: "Failed to extend assessments",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Extend Assessments");
   }
 };
 
@@ -920,11 +905,7 @@ exports.cancelCandidateAssessments = async (req, res) => {
       message: error.message,
     };
 
-    return res.status(500).json({
-      success: false,
-      message: "Failed to cancel assessments",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Cancel Assessments");
   }
 };
 
@@ -1069,11 +1050,7 @@ exports.updateScheduleStatus = async (req, res) => {
       message: error.message,
     };
 
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update schedule assessment status",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Update Schedule Assessment Status");
   }
 };
 
@@ -1292,7 +1269,7 @@ const performExpiryCheckInternal = async () => {
 
 exports.checkAndUpdateExpiredAssessments = async (req, res) => {
   // Add this line to ensure res.locals exists even when called by Cron
-  res.locals = res.locals || {}; 
+  res.locals = res.locals || {};
 
   res.locals.loggedByController = true;
   res.locals.processName = "Check And Update Expired Assessments";
@@ -1309,7 +1286,7 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
     return results; // Return for cron if needed
   } catch (error) {
     if (typeof res.status === "function") {
-      return res.status(500).json({ success: false, error: error.message });
+      return handleApiError(res, error, "Check Expiry");
     }
     // If it's a cron job, we should log the error since there's no HTTP response
     console.error("Cron Expiry Check Error:", error.message);
@@ -1373,11 +1350,7 @@ exports.updateAllScheduleStatuses = async (req, res) => {
       message: error.message,
     };
 
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update schedule assessment statuses",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Update Schedule Assessment Statuses");
   }
 };
 

@@ -3,6 +3,7 @@ const AssessmentQuestionsSchema = require('../models/Assessment/selectedAssessme
 const mongoose = require('mongoose');
  // <-------------------------------v1.0.0
 const Assessment = require("../models/Assessment/assessmentTemplates");
+const { handleApiError } = require("../utils/errorHandler");
 // ------------------------------v1.0.0 >
 
 
@@ -77,12 +78,7 @@ exports.getByAssessmentId = async (req, res) => {
       data: assessmentQuestions
     });
   } catch (error) {
-    console.error('Error in getByAssessmentId:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error.message
-    });
+    return handleApiError(res, error, "Get Assessment Questions");
   }
 }
 
@@ -167,11 +163,7 @@ exports.upsertAssessmentQuestions = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      error: error.name
-    });
+    return handleApiError(res, error, "Create Assessment Questions");
   }
 };
 

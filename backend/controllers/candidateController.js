@@ -8,6 +8,7 @@ const {
 } = require("../validations/candidateValidation.js");
 const { hasPermission } = require("../middleware/permissionMiddleware");
 const { Candidate } = require("../models/candidate.js");
+const { handleApiError } = require("../utils/errorHandler");
 const { Resume } = require("../models/Resume.js");
 const Role = require("../models/RolesData.js");
 const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
@@ -222,11 +223,7 @@ const addCandidatePostCall = async (req, res) => {
     console.log("❌ [addCandidatePostCall] Error generated successfully");
 
     // Send error response
-    res.status(500).json({
-      status: "error",
-      message: "Failed to create candidate. Please try again later.",
-      data: { error: error.message },
-    });
+    return handleApiError(res, error, "Create Candidate");
 
     console.log("❌ [addCandidatePostCall] Error response sent successfully");
   }
@@ -593,10 +590,7 @@ const updateCandidatePatchCall = async (req, res) => {
       status: "error",
     };
 
-    res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    return handleApiError(res, error, "Update Candidate");
   }
 };
 
@@ -787,7 +781,7 @@ const getCandidatesData = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return handleApiError(res, error, "Fetch Candidates");
   }
 };
 
@@ -855,7 +849,7 @@ const searchCandidates = async (req, res) => {
 
     res.json({ data: results });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return handleApiError(res, error, "Search Candidates");
   }
 };
 
@@ -881,8 +875,7 @@ const getCandidates = async (req, res) => {
 
     res.json(candidates);
   } catch (error) {
-    console.error("[getCandidates] Error:", error.message);
-    res.status(500).json({ message: "Error fetching candidates", error });
+    return handleApiError(res, error, "Fetch Candidates");
   }
 };
 
@@ -951,10 +944,7 @@ const getCandidateById = async (req, res) => {
 
     res.status(200).json(response);
   } catch (error) {
-    console.error("🔥 [getCandidateById] Error:", error);
-    res
-      .status(500)
-      .json({ message: "Error fetching candidate", error: error.message });
+    return handleApiError(res, error, "Fetch Candidate By Id");
   }
 };
 
@@ -1104,13 +1094,7 @@ const deleteCandidate = async (req, res) => {
       message: "Candidate deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting candidate:", error);
-
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error while deleting candidate",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    return handleApiError(res, error, "Delete Candidate");
   }
 };
 
@@ -1128,9 +1112,7 @@ const checkEmailExists = async (req, res) => {
     const exists = await Candidate.exists({ Email: email, tenantId });
     res.status(200).json({ exists: !!exists });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error checking email", error: error.message });
+    return handleApiError(res, error, "Check Email Exists");
   }
 };
 
@@ -1146,9 +1128,7 @@ const checkPhoneExists = async (req, res) => {
     const exists = await Candidate.exists({ Phone: phone, tenantId });
     res.status(200).json({ exists: !!exists });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error checking phone", error: error.message });
+    return handleApiError(res, error, "Check Phone Exists");
   }
 };
 
@@ -1164,9 +1144,7 @@ const checkLinkedInExists = async (req, res) => {
     const exists = await Candidate.exists({ linkedInUrl: url, tenantId });
     res.status(200).json({ exists: !!exists });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error checking LinkedIn", error: error.message });
+    return handleApiError(res, error, "Check LinkedIn Exists");
   }
 };
 // ----------------------------- Uniqueness validation apis for Email, phone, linkedin ---------------------------------
@@ -1182,8 +1160,7 @@ const getCandidateResumes = async (req, res) => {
 
     res.json(resumes);
   } catch (error) {
-    console.error("Error fetching resumes:", error);
-    res.status(500).json({ message: "Error fetching resumes", error: error.message });
+    return handleApiError(res, error, "Fetch Candidate Resumes");
   }
 };
 
@@ -1207,8 +1184,7 @@ const setResumeActive = async (req, res) => {
 
     res.json({ message: "Resume set as active", resume: updatedResume });
   } catch (error) {
-    console.error("Error setting active resume:", error);
-    res.status(500).json({ message: "Error updating resume status", error: error.message });
+    return handleApiError(res, error, "Set Resume Active");
   }
 };
 
@@ -1230,8 +1206,7 @@ const getCandidateStats = async (req, res) => {
       interviews: interviewCount
     });
   } catch (error) {
-    console.error("Error fetching candidate stats:", error);
-    res.status(500).json({ message: "Error fetching candidate stats", error: error.message });
+    return handleApiError(res, error, "Fetch Candidate Stats");
   }
 };
 

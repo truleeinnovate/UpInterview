@@ -6,6 +6,7 @@ const InterviewRequest = require("../models/InterviewRequest.js");
 const Wallet = require("../models/WalletTopup");
 const { Candidate } = require("../models/candidate.js");
 const FeedbackModel = require("../models/feedback.js");
+const { handleApiError } = require("../utils/errorHandler");
 const {
   shareAssessment,
 } = require("./EmailsController/assessmentEmailController.js");
@@ -249,10 +250,7 @@ const saveInterviewRound = async (req, res) => {
           assessmentResponse?.data?.scheduledAssessmentId;
 
         if (!scheduledAssessmentId) {
-          return res.status(500).json({
-            message: "Assessment created but scheduleAssessmentId missing",
-            status: "error",
-          });
+          return handleApiError(res, new Error("Assessment created but scheduleAssessmentId missing"), "Schedule Assessment");
         }
 
         // ✅ Persist in round
@@ -1939,11 +1937,7 @@ const updateInterviewRoundStatus = async (req, res) => {
       data: updatedRound,
     });
   } catch (error) {
-    console.error("updateInterviewRoundStatus error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    return handleApiError(res, error, "Update Interview Round Status");
   }
 };
 
@@ -2045,12 +2039,7 @@ const getValdiateRoundStatus = async (req, res) => {
       });
     }
 
-    console.error('Error validating round status:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error.message
-    });
+    return handleApiError(res, error, "Validate Round Status");
   }
 }
 
@@ -3035,7 +3024,7 @@ const fetchAndSaveRecording = async (req, res) => {
 
     if (!apiKey || !secret) {
       console.error("[Recording] Missing VIDEOSDK_API_KEY or VIDEOSDK_SECRET in .env");
-      return res.status(500).json({ success: false, message: "VideoSDK credentials not configured" });
+      return handleApiError(res, new Error("VideoSDK credentials not configured"), "Fetch Recording");
     }
 
     const token = jwt.sign(
@@ -3106,12 +3095,7 @@ const fetchAndSaveRecording = async (req, res) => {
       message: "Recording URL(s) saved successfully",
     });
   } catch (error) {
-    console.error("[Recording] fetchAndSaveRecording error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Fetch Recording");
   }
 };
 

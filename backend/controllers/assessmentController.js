@@ -12,6 +12,7 @@ const {
   CandidateAssessment,
 } = require("../models/Assessment/candidateAssessment.js");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
+const { handleApiError } = require("../utils/errorHandler");
 
 const mongoose = require("mongoose");
 const ScheduleAssessment = require("../models/Assessment/assessmentsSchema.js");
@@ -194,11 +195,7 @@ exports.deleteAssessment = async (req, res) => {
     //   message: error.message,
     // };
 
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete assessment",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    return handleApiError(res, error, "Delete Assessment");
   }
 };
 
@@ -252,11 +249,7 @@ exports.getAssessmentById = async (req, res) => {
       });
     }
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    return handleApiError(res, error, "Get Assessment By Id");
   }
 };
 
@@ -279,12 +272,7 @@ exports.validateAssessmentStep = async (req, res) => {
       message: "Validation passed for " + tab,
     });
   } catch (error) {
-    console.error("[ASSESSMENT] Error validating assessment step:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to validate assessment",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Validate Assessment Step");
   }
 };
 
@@ -451,11 +439,7 @@ exports.newAssessment = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({
-      success: false,
-      message: "Failed to create assessment",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Create Assessment");
   }
 };
 //update is using
@@ -652,11 +636,7 @@ exports.updateAssessment = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({
-      success: false,
-      message: "Failed to update assessment",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Update Assessment");
   }
 };
 
@@ -807,7 +787,7 @@ exports.getAssessmentResults = async (req, res) => {
 
     res.status(200).json({ success: true, data: results });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return handleApiError(res, error, "Search Assessments");
   }
 };
 
@@ -867,11 +847,7 @@ exports.getAssignedCandidates = async (req, res) => {
       assignedCandidates: uniqueAssignedCandidates,
     });
   } catch (error) {
-    console.error("Error fetching assigned candidates:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error fetching assigned candidates",
-    });
+    return handleApiError(res, error, "Fetch Assigned Candidates");
   }
 };
 
@@ -923,7 +899,7 @@ exports.getAllAssessments = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    return handleApiError(res, error, "Create Assessment List");
   }
 };
 
@@ -1005,11 +981,7 @@ exports.createList = async (req, res) => {
       message: error.message,
     };
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Update Assessment List");
   }
 };
 
