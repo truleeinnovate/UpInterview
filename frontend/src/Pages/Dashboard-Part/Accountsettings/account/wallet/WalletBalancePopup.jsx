@@ -60,7 +60,7 @@ const WalletBalancePopup = ({ walletBalance, onClose }) => {
       title="Wallet Balance"
       onClose={onClose || (() => navigate("/account-settings/wallet"))}
     >
-      <div className="p-6">
+      <div className="pb-6">
         <div className="space-y-6">
           {/* Main Balance Card */}
           <div className="bg-custom-blue/10 rounded-xl p-6 border border-blue-100">

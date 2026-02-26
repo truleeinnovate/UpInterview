@@ -319,7 +319,7 @@ const UserForm = ({ mode }) => {
         </div>
       )} */}
 
-      <div className="sm:px-4 md:px-4 p-6 mb-10">
+      <div className="pb-6">
         <form id="user-form">
           {errors.form && (
             <p className="text-red-500 text-sm mb-6 text-center">

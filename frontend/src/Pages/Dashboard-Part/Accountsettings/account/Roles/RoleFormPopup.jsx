@@ -27,6 +27,7 @@ import AuthCookieManager from "../../../../../utils/AuthCookieManager/AuthCookie
 import Loading from "../../../../../Components/Loading";
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 import { notify } from "../../../../../services/toastService";
+import { Button } from "../../../../../Components/Buttons/Button.jsx";
 
 
 // Set app element for accessibility
@@ -865,7 +866,7 @@ const RoleFormPopup = ({ onSave, onClose }) => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-custom-blue"></div>
         </div>
       )}
-      <div className="sm:px-2 px-4 mb-12">
+      <div className="pb-6">
         <form onSubmit={handleSubmit} className="space-y-6 p-1">
           <div className="mb-8">
             <h3 className="sm:text-md md:text-md lg:text-lg xl:text-xl 2xl:text-xl font-medium mb-4">
@@ -1253,21 +1254,22 @@ const RoleFormPopup = ({ onSave, onClose }) => {
             </div>
           </div>
 
-          <div className="flex justify-end py-2 mt-10">
-            <button
+          <div className="flex justify-end py-2 pt-10 gap-3">
+            <Button
               type="button"
+              variant="outline"
               onClick={() => navigate("/account-settings/roles")}
-              className="text-sm px-4 py-2 border border-custom-blue rounded-lg hover:bg-custom-blue/90 hover:text-white transition-colors duration-200"
+              className="border border-custom-blue text-custom-blue"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className={`text-sm ml-2 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 transition-colors duration-200${userType === "superAdmin" ? " font-semibold" : ""
+              className={`bg-custom-blue text-white ${userType === "superAdmin" ? " font-semibold" : ""
                 }`}
             >
               {editMode ? "Save Changes" : "Create Role"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

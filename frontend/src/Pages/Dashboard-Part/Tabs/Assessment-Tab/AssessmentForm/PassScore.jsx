@@ -10,6 +10,7 @@ import InputField from "../../../../../Components/FormFields/InputField.jsx";
 // v1.0.1 <-----------------------------------------------------------------------------------------
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 // v1.0.1 ----------------------------------------------------------------------------------------->
+import { Button } from "../../../../../Components/Buttons/Button.jsx";
 
 const PassScore = forwardRef(
   (
@@ -330,7 +331,7 @@ const PassScore = forwardRef(
       <SidebarPopup title="Pass Score" onClose={handleClose}>
         <div className="flex flex-col justify-between h-full bg-white">
           {/* Content */}
-          <div className="flex-1 sm:p-2 p-6">
+          <div className="flex-1">
             <div className="mx-auto">
               <form onSubmit={handleSave} className="space-y-6">
                 {/* Pass Score Type */}
@@ -553,15 +554,15 @@ const PassScore = forwardRef(
           </div>
 
           {/* Footer Buttons */}
-          <div className="bg-white p-4 mb-10">
+          <div className="bg-white mb-10">
             <div className="mx-auto flex justify-end">
-              <button
+              <Button
                 type="button"
                 onClick={handleSave}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                className="bg-custom-blue hover:bg-custom-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue disabled:opacity-50"
               >
                 Save
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -18,6 +18,7 @@ import DeleteConfirmModal from "../../../Tabs/CommonCode-AllTabs/DeleteConfirmMo
 
 import Cookies from "js-cookie";
 import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
+import { Button } from "../../../../../Components/Buttons/Button.jsx";
 
 export function BankAccountsPopup({ onClose, onSelectAccount }) {
   const { userProfile, isLoading: profileLoading } = useUserProfile();
@@ -332,17 +333,17 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
       </div>
 
       <div className="flex justify-end space-x-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={() => setIsAddingAccount(false)}
-          className="px-6 py-2 h-9 text-custom-blue border border-custom-blue rounded-md font-medium text-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
+          className="text-custom-blue border border-custom-blue"
         >
           Cancel
-        </button>
+        </Button>
         <LoadingButton
           type="submit"
           loading={addingAccount}
-          className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
         >
           {addingAccount ? "Adding..." : "Add Account"}
         </LoadingButton>
@@ -364,12 +365,12 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
         {bankAccounts.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <p className="mb-4">No bank accounts added yet</p>
-            <button
+            <Button
               onClick={() => setIsAddingAccount(true)}
-              className="px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
+              className="bg-custom-blue text-white"
             >
               Add Your First Bank Account
-            </button>
+            </Button>
           </div>
         ) : (
           <>
@@ -439,12 +440,12 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
               </div>
             ))}
             <div className="flex justify-end items-center">
-              <button
+              <Button
                 onClick={() => setIsAddingAccount(true)}
-                className="w-44 px-4 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80"
+                className="w-44 px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80"
               >
                 Add Bank Account
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -456,7 +457,7 @@ export function BankAccountsPopup({ onClose, onSelectAccount }) {
   // v1.0.2 <----------------------------------------------------------------------
   return (
     <SidebarPopup title="Bank Accounts" onClose={onClose}>
-      <div className="sm:p-0 p-4 flex-1 overflow-y-auto space-y-6">
+      <div className="flex-1 pb-6 overflow-y-auto space-y-6">
         <div className="bg-blue-50 border-l-4 border-custom-blue p-4 rounded-r-lg">
           <p className="text-sm text-custom-blue">
             Add your bank account details to receive payments for completed

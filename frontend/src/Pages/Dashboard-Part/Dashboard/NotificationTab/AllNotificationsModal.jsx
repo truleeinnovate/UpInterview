@@ -145,7 +145,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications, searchQuery, se
         onClose={onClose}
       >
         {/* Header */}
-        <div className="sm:px-0 p-6 border-b border-gray-200">
+        <div className="mb-6">
           {/* Notification Type Tabs */}
           <div className="flex items-center sm:space-x-0 space-x-2 mb-4">
             <button
@@ -174,7 +174,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications, searchQuery, se
               <Mail size={18} />
               <span className="text-sm">Email</span>
               {counts.email > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 text-xs bg-indigo-100 text-custom-blue rounded-full">
+                <span className="ml-1 px-1.5 py-0.5 text-xs bg-indigo-100 text-custom-blue rounded-md">
                   {counts.email}
                 </span>
               )}
@@ -213,7 +213,7 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications, searchQuery, se
                 placeholder="Search notifications..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             {/* <div className="flex items-center gap-3">
@@ -248,17 +248,16 @@ const AllNotificationsModal = ({ isOpen, onClose, notifications, searchQuery, se
 
         {/* Notifications List */}
         <div
-          className="overflow-y-auto"
-          style={{ height: "calc(100vh - 230px)" }}
+          className="overflow-y-auto max-h-[calc(100vh-238px)]"
         >
-          <div className="sm:px-0 p-6 space-y-4">
+          <div className="space-y-4">
             {allNotifications?.length > 0 ? (
               allNotifications?.map((notification) => (
                 <motion.div
                   key={notification._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-all duration-300"
+                  className={`p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-all duration-300 ${notification.length > 2 ? "mr-4" : "mr-0"}`}
                 >
                   <div className="flex flex-col items-start justify-between">
                     <div className="flex-1 min-w-0 space-y-2">

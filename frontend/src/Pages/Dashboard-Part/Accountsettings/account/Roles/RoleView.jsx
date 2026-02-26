@@ -72,7 +72,7 @@ const RoleView = () => {
       id={role._id} // required for onEdit to receive it
       onEdit={() => navigate(`/account-settings/roles/role-edit/${role._id}`)}
     >
-      <div className="px-6 sm:px-3 pt-2 pb-20">
+      <div className="pt-2 pb-6">
         <div className="space-y-6">
           {userType !== "superAdmin" &&
             role.inherits &&

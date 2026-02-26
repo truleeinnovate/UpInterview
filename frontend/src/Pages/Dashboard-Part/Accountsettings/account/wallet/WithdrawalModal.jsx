@@ -9,6 +9,7 @@ import { ChevronDown, AlertCircle, Info, CreditCard, Clock, Shield, History } fr
 import LoadingButton from "../../../../../Components/LoadingButton";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
 import { notify } from "../../../../../services/toastService";
+import { Button } from "../../../../../Components/Buttons/Button";
 
 export function WithdrawalModal({ onClose, onSuccess }) {
   useScrollLock(true);
@@ -173,7 +174,7 @@ export function WithdrawalModal({ onClose, onSuccess }) {
         </button>
       }
     >
-      <div className="sm:p-0 p-4 flex-1 overflow-y-auto">
+      <div className="pb-4 flex-1 overflow-y-auto">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Available Balance Card */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
@@ -460,18 +461,19 @@ export function WithdrawalModal({ onClose, onSuccess }) {
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-3 pt-4">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={onClose}
-              className="px-6 py-2 h-9 text-custom-blue border border-custom-blue rounded-md font-medium text-sm flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className="text-custom-blue border border-custom-blue"
             >
               Cancel
-            </button>
+            </Button>
             <LoadingButton
               type="submit"
               loading={processingWithdrawal}
               disabled={!selectedBankAccount || !amount || processingWithdrawal}
-              className="px-6 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-custom-blue text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {processingWithdrawal ? "Processing..." : "Withdraw Funds"}
             </LoadingButton>

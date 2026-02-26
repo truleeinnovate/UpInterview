@@ -302,7 +302,7 @@ export function WithdrawalHistory({ onClose }) {
           </div>
 
           {/* Withdrawals List - scrollable area with calculated height */}
-          <div className="flex-1 overflow-y-auto space-y-4 mt-4" style={{ paddingBottom: withdrawalRequests.length > 0 ? '100px' : '16px' }}>
+          <div className="flex-1 overflow-y-auto space-y-4 mt-4 pb-2 max-h-[calc(100vh-250px)]">
             {isLoading ? (
               <div className="text-center py-8">
                 <div className="text-gray-500">Loading withdrawal history...</div>
@@ -382,7 +382,7 @@ export function WithdrawalHistory({ onClose }) {
 
           {/* Summary Stats - Fixed at bottom */}
           {withdrawalRequests.length > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 bg-white border-t px-4 py-6 z-10">
+            <div className="absolute bottom-0 left-0 right-0 bg-white border-t py-5 z-10">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-sm text-gray-500">Total Withdrawn</p>

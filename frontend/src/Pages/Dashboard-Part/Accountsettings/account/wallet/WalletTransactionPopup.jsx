@@ -139,7 +139,7 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
       title="Transaction Details"
       onClose={onClose || (() => navigate('/account-settings/wallet'))}
     >
-      <div className="p-6">
+      <div className="pb-6">
         <div className="space-y-5">
           {/* Transaction Header Card */}
           <div className={`bg-gradient-to-br ${txnStyle.bgGradient} rounded-xl p-5 border ${txnStyle.borderColor}`}>
