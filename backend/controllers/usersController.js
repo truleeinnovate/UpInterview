@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const { format, parse, parseISO } = require("date-fns");
 const RolesPermissionObject = require("../models/rolesPermissionObject");
 const { RoleMaster } = require("../models/MasterSchemas/RoleMaster");
+const { handleApiError } = require("../utils/errorHandler");
 
 // // Controller to fetch all users with populated tenantId
 // const getUsers = async (req, res) => {
@@ -513,7 +514,7 @@ const getInterviewers = async (req, res) => {
       error.message,
       error.stack
     );
-    res.status(500).json({ error: "Internal server error" });
+    return handleApiError(res, error, "Login User");
   }
 };
 
@@ -563,7 +564,7 @@ const UpdateUser = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({ error: "Internal server error." });
+    return handleApiError(res, error, "Update User");
   }
 };
 
@@ -909,11 +910,7 @@ const getSuperAdminUsers = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error in getSuperAdminUsers:", error);
-    return res.status(500).json({
-      message: "Server error while fetching super admin users",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Fetch Super Admin Users");
   }
 };
 
@@ -1205,11 +1202,7 @@ const getUsersByTenant = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Fetch Users");
   }
 };
 const getUniqueUserByOwnerId = async (req, res) => {
@@ -1308,7 +1301,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
 
     res.status(200).json(combinedUser);
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error });
+    return handleApiError(res, error, "Get User By Id");
   }
 };
 
@@ -1357,8 +1350,7 @@ const getPlatformUsers = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching platform users:", error);
-    res.status(500).json({ error: "Server error" });
+    return handleApiError(res, error, "Fetch Platform Users");
   }
 };
 // ------------------------------------------------------------->

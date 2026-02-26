@@ -13,6 +13,7 @@ const InterviewTemplate = require("../models/InterviewTemplate.js");
 const { Contacts } = require("../models/Contacts");
 // v1.0.2 <-----------------------------------------
 const { Candidate } = require("../models/candidate.js");
+const { handleApiError } = require("../utils/errorHandler");
 const interviewQuestions = require("../models/Interview/selectedInterviewQuestion.js");
 const { Position } = require("../models/Position/position.js");
 const Wallet = require("../models/WalletTopup");
@@ -379,9 +380,7 @@ const createInterview = async (req, res) => {
       message: error.message,
     };
 
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    return handleApiError(res, error, "Create Interview");
   }
 };
 
@@ -662,10 +661,7 @@ const updateInterview = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Update Interview");
   }
 };
 
@@ -833,8 +829,7 @@ const getDashboardStats = async (req, res) => {
       chartData,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error" });
+    return handleApiError(res, error, "Fetch Interviews");
   }
 };
 
@@ -890,12 +885,7 @@ const deleteInterview = async (req, res) => {
       message: "Interview and its related rounds deleted successfully.",
     });
   } catch (error) {
-    console.error("Error deleting interview:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error while deleting interview",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
+    return handleApiError(res, error, "Delete Interview");
   }
 };
 
@@ -906,8 +896,7 @@ const deleteRound = async (req, res) => {
     await InterviewRounds.findByIdAndDelete(id);
     res.json({ message: "Round deleted successfully" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error" });
+    return handleApiError(res, error, "Delete Interview Round");
   }
 };
 
@@ -954,8 +943,7 @@ const getInterviews = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error" });
+    return handleApiError(res, error, "Fetch Interview By Id");
   }
 };
 
@@ -1001,8 +989,7 @@ const getAllInterviews = async (req, res) => {
     // reverse like frontend (latest first)
     res.status(200).json(enrichedInterviews.reverse());
   } catch (error) {
-    console.error("Error fetching interviews:", error);
-    res.status(500).json({ error: "Server error" });
+    return handleApiError(res, error, "Fetch All Interviews");
   }
 };
 // v1.0.0 <-------------------------SUPER ADMIN------------------------------------->
@@ -1035,11 +1022,7 @@ const checkInternalInterviewUsage = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error checking internal interview usage:", error);
-    return res.status(500).json({
-      message: "Error checking usage limits",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Check Interview Usage");
   }
 };
 
@@ -1117,11 +1100,7 @@ const updateInterviewStatusController = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({
-      success: false,
-      message: "Error updating interview status",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Update Interview Status");
   }
 };
 // -----v1.0.6---->
@@ -1416,12 +1395,7 @@ const getAllInterviewRounds = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching interview rounds:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch interview rounds",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Fetch Interview Rounds");
   }
 };
 
@@ -1625,12 +1599,7 @@ const getInterviewRoundTransaction = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching interview round transaction:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch transaction data",
-      error: error.message,
-    });
+    return handleApiError(res, error, "Fetch Interview Round Transaction");
   }
 };
 
@@ -1878,12 +1847,7 @@ const getInterviewDataforOrg = async (req, res) => {
       data: interview,
     });
   } catch (err) {
-    console.error("Interview Fetch Failed:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: err.message,
-    });
+    return handleApiError(res, err, "Fetch Interview Details");
   }
 };
 
@@ -2142,11 +2106,7 @@ const getUpcomingRoundsForInterviews = async (req, res) => {
       data: allUpcoming
     });
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: 'Server error',
-      error: err.message
-    });
+    return handleApiError(res, err, "Fetch Upcoming Interviews");
   }
 };
 

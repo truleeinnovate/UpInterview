@@ -155,7 +155,7 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
         if (hasEndedRef.current) return;
         hasEndedRef.current = true;
 
-        notify.meetingAlert("⏰ Meeting ended. Closing call...");
+        notify.critical("⏰ Meeting ended. Closing call...");
 
         try {
             end();

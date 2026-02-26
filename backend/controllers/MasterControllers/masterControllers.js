@@ -457,6 +457,72 @@ const searchSkills = async (req, res) => {
   }
 };
 
+// ✅ GET RELATED ROLES - Fetch related roles for a given roleName
+// GET /master-data/roles/related?roleName=accelerator_engineer
+const getRelatedRoles = async (req, res) => {
+  try {
+    const { roleName } = req.query;
+
+    if (!roleName) {
+      return res.status(400).json({ error: "roleName query parameter is required" });
+    }
+
+    // Find the role document by roleName
+    const roleDoc = await RoleMaster.findOne({ roleName }).lean();
+
+    if (!roleDoc) {
+      return res.json({ role: null, relatedRoles: [] });
+    }
+
+    // If no relatedRoles, return empty array
+    if (!roleDoc.relatedRoles || roleDoc.relatedRoles.length === 0) {
+      return res.json({
+        role: {
+          roleName: roleDoc.roleName,
+          roleLabel: roleDoc.roleLabel,
+          roleCategory: roleDoc.roleCategory,
+        },
+        relatedRoles: [],
+      });
+    }
+
+    // Look up roleLabel for each related role name
+    const relatedRoleDocs = await RoleMaster.find({
+      roleName: { $in: roleDoc.relatedRoles },
+    })
+      .select("roleName roleLabel roleCategory")
+      .lean();
+
+    // Build a map for quick lookup
+    const relatedRoleMap = {};
+    relatedRoleDocs.forEach((r) => {
+      relatedRoleMap[r.roleName] = r;
+    });
+
+    // Return related roles with labels (preserve order from relatedRoles array)
+    const relatedRoles = roleDoc.relatedRoles.map((rName) => {
+      const matched = relatedRoleMap[rName];
+      return {
+        roleName: rName,
+        roleLabel: matched?.roleLabel || rName,
+        roleCategory: matched?.roleCategory || "",
+      };
+    });
+
+    res.json({
+      role: {
+        roleName: roleDoc.roleName,
+        roleLabel: roleDoc.roleLabel,
+        roleCategory: roleDoc.roleCategory,
+      },
+      relatedRoles,
+    });
+  } catch (error) {
+    console.error("Error fetching related roles:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   createMaster,
   getMasterById,
@@ -464,4 +530,5 @@ module.exports = {
   updateMaster,
   deleteMaster,
   searchSkills,
+  getRelatedRoles,
 };

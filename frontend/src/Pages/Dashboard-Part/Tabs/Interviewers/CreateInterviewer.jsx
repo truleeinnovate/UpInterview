@@ -12,8 +12,9 @@ import {
   useTeamsQuery,
   useUpdateTeam,
 } from "../../../../apiHooks/useInterviewerGroups";
-import useInterviewersHook from "../../../../hooks/useInterviewers";
 import { notify } from "../../../../services/toastService";
+import axios from "axios";
+import { config } from "../../../../config";
 
 // Common Form Components
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
@@ -72,9 +73,32 @@ const CreateInterviewer = () => {
   const { data: teams, isLoading: teamsLoading } = useTeamsQuery();
   const { data: tagsData } = useInterviewerTags({ active_only: true });
 
-  // Use the hook to get internal users
-  const { interviewers: internalUsers, loading: usersLoading } =
-    useInterviewersHook();
+  // Fetch users from getUsersByTenant API
+  const [internalUsers, setInternalUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    const fetchUsers = async () => {
+      setUsersLoading(true);
+      try {
+        const res = await axios.get(
+          `${config.REACT_APP_API_URL}/users/${tenantId}`,
+          { params: { limit: 100 } }
+        );
+        const data = res?.data;
+        // getUsersByTenant returns { users: [...], pagination: {...} }
+        const allUsers = data?.users || data || [];
+        setInternalUsers(allUsers);
+      } catch (error) {
+        console.error("Error fetching users by tenant:", error);
+        setInternalUsers([]);
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+    fetchUsers();
+  }, [tenantId]);
 
   // console.log("teams===", teams);
 
@@ -94,14 +118,11 @@ const CreateInterviewer = () => {
       if (!userId && interviewerData.email && internalUsers.length > 0) {
         const matchingUser = internalUsers.find(
           (u) =>
-            u?.contact?.Email?.toLowerCase() ===
-            interviewerData.email.toLowerCase() ||
-            u?.contact?.email?.toLowerCase() ===
+            u?.email?.toLowerCase() ===
             interviewerData.email.toLowerCase(),
         );
         if (matchingUser) {
-          userId = matchingUser.contact?._id || matchingUser._id;
-          // console.log("Found user by email match:", matchingUser);
+          userId = matchingUser.contactId || matchingUser._id;
         }
       }
 
@@ -132,19 +153,9 @@ const CreateInterviewer = () => {
 
       // If user is linked, find and set user data
       if (userId && internalUsers.length > 0) {
-        console.log(
-          "Looking for user in internalUsers. Available contacts:",
-          internalUsers.map((u) => ({
-            contact_id: u?.contact?._id,
-            _id: u?._id,
-          })),
-        );
-
         const linkedUser = internalUsers.find(
-          (u) => u?.contact?._id === userId || u?._id === userId,
+          (u) => u?.contactId === userId || u?._id === userId,
         );
-
-        // console.log("Found linkedUser:", linkedUser);
         if (linkedUser) {
           setSelectedUserData(linkedUser);
         }
@@ -162,17 +173,16 @@ const CreateInterviewer = () => {
           : formData.contactId;
 
       const selectedUser = internalUsers.find(
-        (u) => u?.contact?._id === userId || u?._id === userId,
+        (u) => u?.contactId === userId || u?._id === userId,
       );
       if (selectedUser) {
         setSelectedUserData(selectedUser);
-        const contact = selectedUser.contact || selectedUser;
         const fullName =
-          `${contact.firstName || ""} ${contact.lastName || ""}`.trim();
+          `${selectedUser.firstName || ""} ${selectedUser.lastName || ""}`.trim();
         setFormData((prev) => ({
           ...prev,
           full_name: fullName || prev.full_name,
-          email: contact.Email || contact.email || prev.email,
+          email: selectedUser.email || prev.email,
         }));
       }
     } else if (
@@ -311,17 +321,17 @@ const CreateInterviewer = () => {
     label: team.name,
   }));
 
-  // Build user options - store contact._id as value
+  // Build user options - only show Active users, store contactId as value
   const userOptions = internalUsers
-    .filter((user) => user.type === "internal" || user.roleLabel === "Admin")
+    .filter((user) => (user.status || "").toLowerCase() === "active")
     .map((user) => ({
-      value: user?.contact?._id || user?._id, // Store contact._id
+      value: user?.contactId || user?._id,
       label:
-        `${user?.contact?.firstName || ""} ${user?.contact?.lastName || ""}`.trim() ||
-        user?.contact?.Email ||
+        `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+        user?.email ||
         "Unknown",
-      email: user?.contact?.Email || "",
-      currentRole: user?.contact?.CurrentRole || user?.roleLabel || "",
+      email: user?.email || "",
+      currentRole: user?.currentRole || user?.label || "",
     }))
     .filter((opt) => opt.value);
 
@@ -421,7 +431,7 @@ const CreateInterviewer = () => {
           {/* User Details - Read Only */}
           {isUserLinked &&
             (() => {
-              const contact = selectedUserData?.contact || selectedUserData;
+              const contact = selectedUserData;
               return (
                 <div className="bg-gray-50 rounded-lg p-4 space-y-4">
                   <p className="text-sm text-gray-500 mb-2">
@@ -444,7 +454,7 @@ const CreateInterviewer = () => {
                     />
                   </div>
                   <InputField
-                    value={contact?.Email || contact?.email || ""}
+                    value={contact?.email || ""}
                     label="Email"
                     name="userEmail"
                     disabled

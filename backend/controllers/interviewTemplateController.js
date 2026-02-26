@@ -4,6 +4,7 @@ const { Interview } = require("../models/Interview/Interview");
 const InterviewTemplate = require("../models/InterviewTemplate");
 const { Position } = require("../models/Position/position");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
+const { handleApiError } = require("../utils/errorHandler");
 
 // Create a new interview template
 exports.createInterviewTemplate = async (req, res) => {
@@ -62,12 +63,7 @@ exports.createInterviewTemplate = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({
-      status: false,
-      message:
-        error.message ||
-        "Internal server error while creating interview template",
-    });
+    return handleApiError(res, error, "Create Interview Template");
   }
 };
 
@@ -199,10 +195,7 @@ exports.updateTemplate = async (req, res) => {
       message: error.message || "Failed to update template",
     };
 
-    res.status(500).json({
-      status: false,
-      message: error.message || "Failed to update template",
-    });
+    return handleApiError(res, error, "Update Interview Template");
   }
 };
 
@@ -276,11 +269,7 @@ exports.deleteTemplate = async (req, res) => {
       message: "Template deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting interview template:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Internal server error while deleting template",
-    });
+    return handleApiError(res, error, "Delete Interview Template");
   }
 };
 
@@ -309,8 +298,7 @@ exports.deleteRound = async (req, res) => {
 
     res.status(200).json({ message: "Round deleted successfully" });
   } catch (error) {
-    console.error("Error deleting round:", error);
-    res.status(500).json({ message: "Error deleting round" });
+    return handleApiError(res, error, "Delete Template Round");
   }
 };
 
@@ -320,8 +308,7 @@ exports.getTemplatesByTenantId = async (req, res) => {
     const templates = await InterviewTemplate.find({ tenantId });
     res.status(200).json({ templates });
   } catch (error) {
-    console.error("Error fetching templates:", error);
-    res.status(500).json({ message: "Error fetching templates" });
+    return handleApiError(res, error, "Fetch Interview Templates");
   }
 };
 
@@ -346,7 +333,6 @@ exports.getTemplateById = async (req, res) => {
     }
     res.status(200).json({ template });
   } catch (error) {
-    console.error("Error fetching template:", error);
-    res.status(500).json({ message: "Error fetching template" });
+    return handleApiError(res, error, "Fetch Interview Template By Id");
   }
 };
