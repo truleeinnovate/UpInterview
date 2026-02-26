@@ -20,7 +20,7 @@ import {
 } from "../../apiHooks/useVideoCall";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
-const PositionDetails = () => {
+const PositionDetails = ({ fromFeedbackTab }) => {
   const location = useLocation();
   const feedback = location.state?.feedback || {};
 
@@ -57,8 +57,6 @@ const PositionDetails = () => {
     enabled: !isMockInterview,
   });
 
-  console.log("INTERVIEW DATA ======================> ", interviewData);
-
   const [expandedSections, setExpandedSections] = useState({
     skills: true,
     certificates: false,
@@ -81,7 +79,7 @@ const PositionDetails = () => {
   };
 
   return (
-    <div className="sm:px-0 px-5 py-6 space-y-6 min-h-screen">
+    <div className={`space-y-6 min-h-screen ${fromFeedbackTab ? "px-0" : "px-5 pb-6"}`}>
       {/* Basic Info */}
       <div className="bg-white rounded-lg p-6 border border-gray-200 mt-2">
         <div className="flex items-center mb-4">
@@ -105,7 +103,8 @@ const PositionDetails = () => {
                     interviewData?.positionId?.title,
                   )}
                 >
-                  {capitalizeFirstLetter(interviewData?.positionId?.title) || "Not Provided"}
+                  {capitalizeFirstLetter(interviewData?.positionId?.title) ||
+                    "Not Provided"}
                 </p>
               </div>
             </div>
@@ -137,7 +136,8 @@ const PositionDetails = () => {
                     interviewData?.positionId?.Location,
                   )}
                 >
-                  {capitalizeFirstLetter(interviewData?.positionId?.Location) || "Not Provided"}
+                  {capitalizeFirstLetter(interviewData?.positionId?.Location) ||
+                    "Not Provided"}
                 </p>
               </div>
             </div>
@@ -175,14 +175,14 @@ const PositionDetails = () => {
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-100"
               >
                 <div className="flex flex-col items-start">
-                  <p className="sm:text-sm font-semibold text-gray-900">
+                  <p className="sm:text-sm font-semibold text-gray-900 mb-1">
                     {skill.skill}
                   </p>
                   {!isMockInterview && (
                     <p
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${expertiseStyles[skill.expertise] || "bg-gray-100 text-gray-800"}`}
+                      className="text-sm text-gray-400"
                     >
-                      {skill.expertise}
+                      {skill.experience} Years Experience
                     </p>
                   )}
                 </div>

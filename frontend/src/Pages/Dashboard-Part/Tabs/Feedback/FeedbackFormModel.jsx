@@ -6,15 +6,17 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import CandidateMiniTab from "./MiniTabs/Candidate";
 import InterviewsMiniTabComponent from "./MiniTabs/Interviews";
 import FeedbackForm from "../../../videoCall/FeedbackForm";
+import PositionDetails from "../../../videoCall/PositionDetails";
 // v1.0.0 <-----------------------------------------------------------
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { useFeedbackData } from "../../../../apiHooks/useFeedbacks";
 // v1.0.0 ----------------------------------------------------------->
 
 const tabsList = [
-  { id: 1, tab: "Candidate" },
+  { id: 1, tab: "Feedback" },
   { id: 2, tab: "Interview Questions" },
-  { id: 3, tab: "Feedback Form" },
+  { id: 3, tab: "Candidate" },
+  { id: 4, tab: "Position" },
 ];
 
 const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
@@ -29,7 +31,6 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
 
   const isViewMode = mode === "view" || Viewmode;
 
-
   const handleClose = () => {
     if (Viewmode) {
       onClose();
@@ -37,9 +38,6 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
       navigate(-1); // Go back to previous page
     }
   };
-
-
-
 
   // Feedback query (existing)
   const {
@@ -52,17 +50,11 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
     interviewType: interviewType,
   });
 
-
-
-  const feedback = routeFeedback ? routeFeedback : feedbackDatas
+  const feedback = routeFeedback ? routeFeedback : feedbackDatas;
   //  || routeFeedback;
 
   // console.log("feedback  useFeedbackData", feedback)
   // console.log("feedback  isViewMode", isViewMode)
-
-
-
-
 
   // Question Bank State Management
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
@@ -101,7 +93,7 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
   const handleRemoveQuestion = (questionId) => {
     // Remove question from interviewer section data
     setInterviewerSectionData((prev) =>
-      prev.filter((q) => (q.questionId || q.id) !== questionId)
+      prev.filter((q) => (q.questionId || q.id) !== questionId),
     );
 
     // Add to removed question IDs
@@ -119,9 +111,9 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
             mandatory: newMandatory,
             snapshot: q.snapshot
               ? {
-                ...q.snapshot,
-                mandatory: newMandatory,
-              }
+                  ...q.snapshot,
+                  mandatory: newMandatory,
+                }
               : undefined,
           };
         }
@@ -150,7 +142,27 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
   const displayData = () => {
     switch (activeTab) {
       case 1:
-        return <CandidateMiniTab isViewMode={isViewMode} roundId={roundId} interviewType={interviewType} />;
+        return (
+          <FeedbackForm
+            tab={true}
+            page="Popup"
+            isEditMode={isEditMode}
+            isViewMode={isViewMode}
+            interviewerSectionData={interviewerSectionData}
+            setInterviewerSectionData={setInterviewerSectionData}
+            interviewType={interviewType}
+            roundId={roundId}
+            // interviewRoundId={decodedData?.interviewRoundId}
+            // candidateId={selectedCandidate?.candidate?._id}
+            // positionId={selectedCandidate?.position?._id}
+            // interviewerId={decodedData?.interviewerId}
+            // tenantId={decodedData?.tenantId}
+            // isEditMode={false}
+            // feedbackId={null}
+            preselectedQuestionsResponses={preselectedQuestionsResponses}
+            schedulerFeedbackData={feedback}
+          />
+        );
       case 2:
         return (
           <InterviewsMiniTabComponent
@@ -180,26 +192,15 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
         );
       case 3:
         return (
-          <FeedbackForm
-            tab={true}
-            page="Popup"
-            isEditMode={isEditMode}
+          <CandidateMiniTab
             isViewMode={isViewMode}
-            interviewerSectionData={interviewerSectionData}
-            setInterviewerSectionData={setInterviewerSectionData}
-
-            interviewType={interviewType}
             roundId={roundId}
-            // interviewRoundId={decodedData?.interviewRoundId}
-            // candidateId={selectedCandidate?.candidate?._id}
-            // positionId={selectedCandidate?.position?._id}
-            // interviewerId={decodedData?.interviewerId}
-            // tenantId={decodedData?.tenantId}
-            // isEditMode={false}
-            // feedbackId={null}
-            preselectedQuestionsResponses={preselectedQuestionsResponses}
-            schedulerFeedbackData={feedback}
+            interviewType={interviewType}
           />
+        );
+      case 4:
+        return (
+          <PositionDetails fromFeedbackTab={true} />
         );
 
       default:
@@ -219,13 +220,14 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
           className="flex items-center gap-8 cursor-pointer mb-4 border-b border-gray-200
              overflow-x-auto"
         >
-          { }
+          {}
           {tabsList.map((EachTab) => (
             <li
               key={EachTab.id}
               onClick={() => setActiveTab(EachTab.id)}
-              className={`pb-2 flex-shrink-0 ${activeTab === EachTab.id ? "border-b-2 border-[#227a8a]" : ""
-                }`}
+              className={`pb-2 flex-shrink-0 ${
+                activeTab === EachTab.id ? "border-b-2 border-[#227a8a]" : ""
+              }`}
             >
               {EachTab.tab}
             </li>

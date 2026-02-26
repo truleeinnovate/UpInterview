@@ -628,6 +628,7 @@ export function MeetingContainer({
                   <div className="flex-1 overflow-y-auto">
                     {sideBarMode === "CANDIDATE" ? (
                       <CandidateMiniTab
+                        fromMeeting={true}
                       // roundId={roundId} interviewType={interviewType}
                       // candidateData={candidateData}
                       // positionData={positionData}

@@ -28,6 +28,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { notify } from "../../../../services/toastService";
 import { formatDateTime } from "../../../../utils/dateFormatter";
+import { Button } from "../../../../Components/Buttons/Button";
 
 
 
@@ -529,15 +530,17 @@ const InterviewRequests = () => {
           </div>
 
           {/* Fixed bottom buttons */}
-          {(selectedRequest.status !== "accepted") && <div className="fixed bottom-0 right-0 w-full xl:w-1/2 2xl:w-1/2 bg-white px-4 py-3 flex justify-end gap-3 z-10">
-            <button
+          {(selectedRequest.status !== "accepted") && <div className="fixed bottom-4 right-2 w-full xl:w-1/2 2xl:w-1/2 bg-white px-4 py-3 flex justify-end gap-3 z-10">
+            <Button
               onClick={closePopup}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors duration-300"
+              type="button"
+              variant="outline"
+              className="border border-custom-blue text-custom-blue"
             >
               Close
-            </button>
+            </Button>
             {selectedRequest.status === "inprogress" ? (
-              <button
+              <Button
                 onClick={() =>
                   handleAccept(
                     selectedRequest.id,
@@ -546,7 +549,7 @@ const InterviewRequests = () => {
                   )
                 }
                 disabled={acceptingId === selectedRequest.id}
-                className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-md hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === selectedRequest.id
+                className={`font-medium text-white bg-custom-blue hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === selectedRequest.id
                   ? "opacity-60 cursor-wait"
                   : "cursor-pointer"
                   }`}
@@ -554,11 +557,11 @@ const InterviewRequests = () => {
                 {acceptingId === selectedRequest.id
                   ? "Accepting..."
                   : "Accept"}
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 disabled
-                className={`px-2.5 py-1 text-xs font-medium text-white rounded-md cursor-not-allowed opacity-70 ${selectedRequest.status === "accepted"
+                className={`font-medium text-white cursor-not-allowed opacity-70 ${selectedRequest.status === "accepted"
                   ? "bg-green-600"
                   : selectedRequest.status === "declined"
                     ? "bg-red-500"
@@ -572,7 +575,7 @@ const InterviewRequests = () => {
                   }`}
               >
                 {capitalizeFirstLetter(selectedRequest?.status)}
-              </button>
+              </Button>
             )}
           </div>}
         </SidebarPopup>

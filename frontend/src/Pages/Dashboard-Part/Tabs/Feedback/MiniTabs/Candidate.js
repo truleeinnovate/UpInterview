@@ -31,7 +31,8 @@ const CandidateMiniTab = ({
   isViewMode,
   roundId,
   page,
-  interviewType
+  interviewType,
+  fromMeeting,
 }) => {
   useScrollLock(true);
   const location = useLocation();
@@ -137,7 +138,7 @@ const CandidateMiniTab = ({
 
   return (
     // v1.0.0 <-----------------------------------------------------------
-    <div className="pb-6 space-y-6 min-h-screen">
+    <div className={`pb-6 space-y-6 min-h-screen ${fromMeeting ? "px-5" : "px-0"}`}>
       {/* v1.0.0 <----------------------------------------------------------- */}
       {/* Basic Info */}
 
