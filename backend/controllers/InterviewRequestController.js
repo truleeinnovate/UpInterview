@@ -605,6 +605,7 @@ exports.getInterviewRequests = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 exports.acceptInterviewRequest = async (req, res) => {
   // Mark that logging will be handled by this controller
   res.locals.loggedByController = true;

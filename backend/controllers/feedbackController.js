@@ -1753,8 +1753,8 @@ const validateFeedback = async (req, res) => {
       errors,
       value: validatedData,
     } = isUpdate
-      ? validateUpdateFeedback(req.body)
-      : validateCreateFeedback(req.body);
+        ? validateUpdateFeedback(req.body)
+        : validateCreateFeedback(req.body);
 
     if (!isValid) {
       return res.status(400).json({
@@ -1940,9 +1940,120 @@ const normalizeQuestionId = (raw) => {
   return null;
 };
 
+// const getPendingFeedbacks = async (req, res) => {
+//   try {
+//     const { contactId } = req.query;
+//      console.log("contactId", contactId)
+
+//     if (!contactId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Contact ID is required",
+//       });
+//     }
+
+//     const objectIdContact = new mongoose.Types.ObjectId(contactId);
+
+//     // 1. Define statuses that qualify for needing feedback
+//     const activeInterviewStatuses = [
+//       "Evaluated",
+//       "FeedbackPending",
+//       "InProgress",
+//       "Completed", // Added Completed as feedback is often pending after completion
+//     ];
+
+//     // 2. Fetch Rounds
+//     const [standardRounds, mockRounds] = await Promise.all([
+//       InterviewRounds.find({
+//         interviewers: { $in: [objectIdContact] },
+//         status: { $in: activeInterviewStatuses },
+//       })
+//         .populate({
+//           path: "interviewId",
+//           populate: [
+//             { path: "candidateId", select: "FirstName LastName Email" },
+//             { path: "positionId", select: "title companyname" },
+//           ],
+//         })
+//         .lean(),
+
+//       MockInterviewRound.find({
+//         interviewers: { $in: [objectIdContact] },
+//         status: { $in: activeInterviewStatuses },
+//       })
+//         .populate({
+//           path: "mockInterviewId",
+//           select: "title candidateName interviewCode",
+//         })
+//         .lean(),
+//     ]);
+
+//     const allRounds = [
+//       ...standardRounds.map((r) => ({ ...r, isMock: false })),
+//       ...mockRounds.map((r) => ({ ...r, isMock: true })),
+//     ];
+
+//     if (allRounds.length === 0) {
+//       return res.status(200).json({ success: true, count: 0, data: [] });
+//     }
+
+//     // 3. Optimized Feedback Check: Get all submitted feedbacks for these rounds in ONE query
+//     const roundIds = allRounds.map((r) => r._id);
+//     const submittedFeedbacks = await FeedbackModel.find({
+//       interviewRoundId: { $in: roundIds },
+//       interviewerId: objectIdContact,
+//       status: "submitted",
+//     })
+//       .select("interviewRoundId")
+//       .lean();
+
+//     // Create a Set of IDs that ALREADY have feedback
+//     const feedbackExistsSet = new Set(
+//       submittedFeedbacks.map((f) => f.interviewRoundId.toString()),
+//     );
+
+//     // 4. Filter rounds that DON'T have feedback yet
+//     const pendingResults = allRounds
+//       .filter((round) => !feedbackExistsSet.has(round._id.toString()))
+//       .map((round) => ({
+//         roundId: round._id,
+//         roundTitle: round.roundTitle,
+//         dateTime: round.dateTime,
+//         status: round.status,
+//         isMock: round.isMock,
+//         candidateName: round.isMock
+//           ? round.mockInterviewId?.candidateName
+//           : `${round.interviewId?.candidateId?.FirstName || ""} ${round.interviewId?.candidateId?.LastName || ""}`.trim(),
+//         positionTitle: round.isMock
+//           ? "Mock Interview"
+//           : round.interviewId?.positionId?.title,
+//         companyName: round.isMock
+//           ? "N/A"
+//           : round.interviewId?.positionId?.companyname || "N/A",
+//         interviewCode: round.isMock
+//           ? round.mockInterviewId?.interviewCode
+//           : round.interviewId?.interviewCode,
+//       }));
+
+//     return res.status(200).json({
+//       success: true,
+//       count: pendingResults.length,
+//       data: pendingResults,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching pending feedbacks:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//       error: error.message,
+//     });
+//   }
+// };
+
 const getPendingFeedbacks = async (req, res) => {
   try {
     const { contactId } = req.query;
+    console.log("contactId", contactId);
 
     if (!contactId) {
       return res.status(400).json({
@@ -1958,93 +2069,259 @@ const getPendingFeedbacks = async (req, res) => {
       "Evaluated",
       "FeedbackPending",
       "InProgress",
-      "Completed", // Added Completed as feedback is often pending after completion
+      "Completed",
     ];
 
-    // 2. Fetch Rounds
-    const [standardRounds, mockRounds] = await Promise.all([
-      InterviewRounds.find({
-        interviewers: { $in: [objectIdContact] },
-        status: { $in: activeInterviewStatuses },
+    // 2. Fetch Standard Interview Rounds with complete population
+    const standardRounds = await InterviewRounds.find({
+      interviewers: { $in: [objectIdContact] },
+      status: { $in: activeInterviewStatuses },
+    })
+      .populate({
+        path: "interviewId",
+        select: "candidateId positionId interviewCode status",
+        populate: [
+          {
+            path: "candidateId",
+            select: "FirstName LastName Email phone candidateCode",
+            model: "Candidate"
+          },
+          {
+            path: "positionId",
+            select: "title companyname positionCode minExperience maxExperience",
+            model: "Position",
+            populate: {
+              path: "companyname",
+              select: "companyName companyCode",
+              model: "TenantCompany"
+            }
+          },
+        ],
       })
-        .populate({
-          path: "interviewId",
-          populate: [
-            { path: "candidateId", select: "FirstName LastName Email" },
-            { path: "positionId", select: "title companyname" },
-          ],
-        })
-        .lean(),
-
-      MockInterviewRound.find({
-        interviewers: { $in: [objectIdContact] },
-        status: { $in: activeInterviewStatuses },
+      .populate({
+        path: "interviewers",
+        select: "FirstName LastName Email",
+        model: "Contacts"
       })
-        .populate({
-          path: "mockInterviewId",
-          select: "title candidateName interviewCode",
-        })
-        .lean(),
-    ]);
+      .lean();
 
+    // 3. Fetch Mock Interview Rounds with complete population
+    const mockRounds = await MockInterviewRound.find({
+      interviewers: { $in: [objectIdContact] },
+      status: { $in: activeInterviewStatuses },
+    })
+      .populate({
+        path: "mockInterviewId",
+        select: "mockInterviewCode candidateName skills jobDescription currentRole currentExperience higherQualification resume createdBy",
+        model: "MockInterview",
+        populate: {
+          path: "createdBy",
+          select: "name email",
+          model: "Users"
+        }
+      })
+      .populate({
+        path: "interviewers",
+        select: "FirstName LastName Email",
+        model: "Contacts"
+      })
+      .lean();
+
+    // 4. Combine rounds with proper type identification
     const allRounds = [
-      ...standardRounds.map((r) => ({ ...r, isMock: false })),
-      ...mockRounds.map((r) => ({ ...r, isMock: true })),
+      ...standardRounds.map(round => ({
+        ...round,
+        isMock: false,
+        roundType: 'standard'
+      })),
+      ...mockRounds.map(round => ({
+        ...round,
+        isMock: true,
+        roundType: 'mock'
+      }))
     ];
 
     if (allRounds.length === 0) {
-      return res.status(200).json({ success: true, count: 0, data: [] });
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: [],
+        message: "No pending feedbacks found"
+      });
     }
 
-    // 3. Optimized Feedback Check: Get all submitted feedbacks for these rounds in ONE query
-    const roundIds = allRounds.map((r) => r._id);
+    // 5. Optimized Feedback Check: Get all submitted feedbacks for these rounds
+    const roundIds = allRounds.map(r => r._id);
     const submittedFeedbacks = await FeedbackModel.find({
       interviewRoundId: { $in: roundIds },
       interviewerId: objectIdContact,
       status: "submitted",
     })
-      .select("interviewRoundId")
+      .select("interviewRoundId submittedAt feedback")
       .lean();
 
     // Create a Set of IDs that ALREADY have feedback
     const feedbackExistsSet = new Set(
-      submittedFeedbacks.map((f) => f.interviewRoundId.toString()),
+      submittedFeedbacks.map(f => f.interviewRoundId.toString())
     );
 
-    // 4. Filter rounds that DON'T have feedback yet
+    // Get feedback counts for debugging/logging
+    const feedbackCounts = {
+      total: submittedFeedbacks.length,
+      unique: feedbackExistsSet.size
+    };
+
+    // 6. Filter rounds that DON'T have feedback yet and map with complete data
     const pendingResults = allRounds
-      .filter((round) => !feedbackExistsSet.has(round._id.toString()))
-      .map((round) => ({
-        roundId: round._id,
-        roundTitle: round.roundTitle,
-        dateTime: round.dateTime,
-        status: round.status,
-        isMock: round.isMock,
-        candidateName: round.isMock
-          ? round.mockInterviewId?.candidateName
-          : `${round.interviewId?.candidateId?.FirstName || ""} ${round.interviewId?.candidateId?.LastName || ""}`.trim(),
-        positionTitle: round.isMock
-          ? "Mock Interview"
-          : round.interviewId?.positionId?.title,
-        companyName: round.isMock
-          ? "N/A"
-          : round.interviewId?.positionId?.companyname || "N/A",
-        interviewCode: round.isMock
-          ? round.mockInterviewId?.interviewCode
-          : round.interviewId?.interviewCode,
-      }));
+      .filter(round => !feedbackExistsSet.has(round._id.toString()))
+      .map(round => {
+        // Base round info
+        const baseInfo = {
+          roundId: round._id,
+          roundTitle: round.roundTitle || 'Untitled Round',
+          dateTime: round.dateTime,
+          status: round.status,
+          isMock: round.isMock,
+          roundType: round.roundType,
+          meetingId: round.meetingId,
+          meetPlatform: round.meetPlatform,
+          duration: round.duration,
+          interviewMode: round.interviewMode,
+          interviewType: round.interviewType,
+          interviewerType: round.interviewerType,
+          instructions: round.instructions,
+          noShowJobId: round.noShowJobId,
+          createdAt: round.createdAt,
+          updatedAt: round.updatedAt
+        };
+
+        // Handle Standard Interview Rounds
+        if (!round.isMock && round.interviewId) {
+          const interview = round.interviewId;
+          const candidate = interview.candidateId || {};
+          const position = interview.positionId || {};
+          const company = position.companyname || {};
+
+          return {
+            ...baseInfo,
+            interviewCode: interview.interviewCode,
+            interviewStatus: interview.status,
+            candidate: {
+              id: candidate._id,
+              firstName: candidate.FirstName || '',
+              lastName: candidate.LastName || '',
+              fullName: `${candidate.FirstName || ''} ${candidate.LastName || ''}`.trim(),
+              email: candidate.Email || '',
+              phone: candidate.phone || '',
+              candidateCode: candidate.candidateCode
+            },
+            position: {
+              id: position._id,
+              title: position.title || 'Position Not Specified',
+              positionCode: position.positionCode,
+              minExperience: position.minExperience,
+              maxExperience: position.maxExperience,
+              company: {
+                id: company._id,
+                name: company.companyName || position.companyname || 'Company Not Specified',
+                companyCode: company.companyCode
+              }
+            }
+          };
+        }
+
+        // Handle Mock Interview Rounds
+        if (round.isMock && round.mockInterviewId) {
+          const mock = round.mockInterviewId;
+          const createdBy = mock.createdBy || {};
+
+          return {
+            ...baseInfo,
+            interviewCode: mock.mockInterviewCode,
+            mockDetails: {
+              id: mock._id,
+              candidateName: mock.candidateName || 'Candidate Not Specified',
+              skills: mock.skills || [],
+              jobDescription: mock.jobDescription || '',
+              currentRole: mock.currentRole || '',
+              currentExperience: mock.currentExperience || '',
+              higherQualification: mock.higherQualification || '',
+              resume: mock.resume || null,
+              createdBy: {
+                id: createdBy._id,
+                name: createdBy.name || 'Unknown',
+                email: createdBy.email
+              }
+            }
+          };
+        }
+
+        // Fallback for incomplete data
+        return {
+          ...baseInfo,
+          interviewCode: round.interviewCode || round.mockInterviewId?.mockInterviewCode,
+          candidate: round.isMock ?
+            { fullName: round.mockInterviewId?.candidateName || 'Candidate Info Missing' } :
+            { fullName: 'Candidate Info Missing' },
+          position: round.isMock ?
+            { title: 'Mock Interview' } :
+            { title: 'Position Info Missing' }
+        };
+      });
+
+    // 7. Enrich with interviewer details if needed
+    const enrichedResults = pendingResults.map(result => {
+      const originalRound = allRounds.find(r => r._id.toString() === result.roundId.toString());
+
+      if (originalRound && originalRound.interviewers) {
+        result.interviewers = originalRound.interviewers.map(interviewer => ({
+          id: interviewer._id,
+          name: `${interviewer.FirstName || ''} ${interviewer.LastName || ''}`.trim(),
+          email: interviewer.Email
+        }));
+      }
+
+      // Add round history if available and relevant
+      if (originalRound && originalRound.history && originalRound.history.length > 0) {
+        result.roundHistory = originalRound.history.map(h => ({
+          action: h.action,
+          reasonCode: h.reasonCode,
+          comment: h.comment,
+          scheduledAt: h.scheduledAt,
+          createdAt: h.createdAt
+        }));
+      }
+
+      return result;
+    });
+
+    // 8. Sort by date (most recent first)
+    enrichedResults.sort((a, b) => {
+      const dateA = a.dateTime ? new Date(a.dateTime) : new Date(0);
+      const dateB = b.dateTime ? new Date(b.dateTime) : new Date(0);
+      return dateB - dateA;
+    });
 
     return res.status(200).json({
       success: true,
-      count: pendingResults.length,
-      data: pendingResults,
+      count: enrichedResults.length,
+      totalRoundsFound: allRounds.length,
+      feedbackCounts,
+      data: enrichedResults,
+      summary: {
+        standardRounds: standardRounds.length,
+        mockRounds: mockRounds.length,
+        pendingFeedbacks: enrichedResults.length
+      }
     });
+
   } catch (error) {
     console.error("Error fetching pending feedbacks:", error);
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Internal server error while fetching pending feedbacks",
       error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

@@ -2869,7 +2869,7 @@ router.get(
                   mockInterview = await MockInterview.findById(roundDetails.mockInterviewId).lean();
                 }
 
-                console.log("mockInterview mockInterview", mockInterview)
+                // console.log("mockInterview mockInterview", mockInterview)
 
                 if (mockInterview) {
 
