@@ -55,7 +55,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
     : (feedbackData?._id ? [feedbackData] : []);
   const location = useLocation();
   const [activeFeedbackIndex, setActiveFeedbackIndex] = useState(0);
-  const activeFeedback = feedbacks[activeFeedbackIndex] || {};
+  const activeFeedback = feedbacks[activeFeedbackIndex];
 
   // Extract URL data once
   const urlData = useMemo(
@@ -64,7 +64,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
   );
 
   // Mock interview flag
-  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : feedbackData.isMockInterview;
+  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : feedbackData?.isMockInterview;
 
   // Initial form state (matching FeedbackForm structure)
   const [formData, setFormData] = useState({
@@ -97,13 +97,13 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
   useEffect(() => {
     if (!activeFeedback) return;
 
-    const candidate = feedbackData.candidate || {};
+    const candidate = feedbackData?.candidate || {};
     const candidateName = `${candidate.FirstName || ""} ${candidate.LastName || ""}`.trim() || activeFeedback.candidateName || "";
 
-    const position = feedbackData.position || {};
+    const position = feedbackData?.position || {};
     const positionTitle = position.title || activeFeedback.position || "";
 
-    const round = feedbackData.interviewRound || {};
+    const round = feedbackData?.interviewRound || {};
     const roundTitle = round.roundTitle || activeFeedback.roundTitle || "";
 
     // Normalize technicalSkills from backend array to UI object if needed
@@ -153,8 +153,8 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
 
   // Context-specific variables for QuestionCard/TechnicalSkillsAssessment
   const questionsWithFeedback = useMemo(() => {
-    const rawQF = activeFeedback.questionFeedback || [];
-    const interviewQuestions = feedbackData.interviewQuestions || {};
+    const rawQF = activeFeedback?.questionFeedback || [];
+    const interviewQuestions = feedbackData?.interviewQuestions || {};
 
     // Combine preselected + interviewer-added questions to get snapshots
     const allRoundQuestions = [
@@ -172,7 +172,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
       ...qf,
       snapshot: qf.snapshot || questionDetailsMap[qf.questionId] || {}
     }));
-  }, [activeFeedback, feedbackData.interviewQuestions]);
+  }, [activeFeedback, feedbackData?.interviewQuestions]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
