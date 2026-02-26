@@ -15,6 +15,8 @@ import {
 import TechnicalSkillsAssessment from "../Dashboard-Part/Tabs/Feedback/TechnicalSkillsAssessment.jsx";
 import QuestionCard, { EmptyState } from "../../Components/QuestionCard.jsx";
 import { Button } from "../../Components/Buttons/Button.jsx";
+import { extractUrlData } from "../../apiHooks/useVideoCall.js";
+import { useLocation } from "react-router-dom";
 
 // Replicating the StarRating component from FeedbackForm.jsx
 const StarRating = ({ rating, onChange, size = 'md', isReadOnly = false }) => {
@@ -51,12 +53,18 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
   const feedbacks = Array.isArray(feedbackData?.feedbacks)
     ? feedbackData.feedbacks
     : (feedbackData?._id ? [feedbackData] : []);
-
+  const location = useLocation();
   const [activeFeedbackIndex, setActiveFeedbackIndex] = useState(0);
   const activeFeedback = feedbacks[activeFeedbackIndex] || {};
 
+  // Extract URL data once
+  const urlData = useMemo(
+    () => extractUrlData(location.search),
+    [location.search],
+  );
+
   // Mock interview flag
-  const isMockInterview = activeFeedback.isMockInterview || feedbackData.isMockInterview;
+  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : feedbackData.isMockInterview;
 
   // Initial form state (matching FeedbackForm structure)
   const [formData, setFormData] = useState({
