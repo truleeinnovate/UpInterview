@@ -92,7 +92,7 @@ export const useUpdateFeedback = () => {
 
 export const useFeedbackData = ({ roundId, interviewerId, interviewType }) => {
   return useQuery({
-    queryKey: ["feedbackDatas", roundId, interviewerId],
+    queryKey: ["feedbackDatas", roundId, interviewerId, interviewType],
     queryFn: async () => {
       if (!roundId) {
         return null;
@@ -133,7 +133,7 @@ export const useFeedbackData = ({ roundId, interviewerId, interviewType }) => {
       //     // 'Authorization': `Bearer ${Cookies.get('authToken')}`
       //   },
       // });
-      // console.log("response response", response)
+      console.log("response response", response)
 
       if (response.data.success) {
         return response.data.data;

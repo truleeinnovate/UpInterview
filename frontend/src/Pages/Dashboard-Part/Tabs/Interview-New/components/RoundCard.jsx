@@ -2261,8 +2261,8 @@ const RoundCard = ({
                     )}
 
                   {/* Meeting Video - only show after meeting has ended */}
-                  {round?.roundTitle !== "Assessment" &&
-                    !["In Progress", "Scheduled", "Draft", "scheduled", "draft", "RequestSent"].includes(round?.status) && (
+                  {round?.roundTitle !== "Assessment" && round?.interviewMode !== "Face to Face" &&
+                    ["Evaluated", "FeedbackSubmitted"].includes(round?.status) && (
                       <button
                         onClick={async () => {
                           if (videoUrls.length > 0) {

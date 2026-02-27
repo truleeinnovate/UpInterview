@@ -595,21 +595,19 @@ const AddFeedbackForm = ({
           >
             <ArrowLeft className="h-5 w-5 mr-2" /> Back to Feedbacks
           </button>
-          {roundOptions?.length > 0 &&
-            <>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Add Interview Feedback
-              </h3>
-              <div className="flex items-center gap-2">
-                <p className="text-sm text-gray-500">Step {currentFormStep} of 2</p>
-                {currentFormStep === 1 ? (
-                  <span className="text-sm text-gray-500">Select Interview </span>
-                ) : (
-                  <span className="text-sm text-gray-500">Feedback</span>
-                )}
-              </div>
-            </>
-          }
+
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Add Interview Feedback
+          </h3>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-gray-500">Step {currentFormStep} of 2</p>
+            {currentFormStep === 1 ? (
+              <span className="text-sm text-gray-500">Select Interview </span>
+            ) : (
+              <span className="text-sm text-gray-500">Feedback</span>
+            )}
+          </div>
+
         </div>
         {currentFormStep === 2 && (
           <ul className="flex self-start gap-5 cursor-pointer border-b mb-6 w-full">

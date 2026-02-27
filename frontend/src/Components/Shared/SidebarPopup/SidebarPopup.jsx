@@ -45,12 +45,21 @@ function SidebarPopup({
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
 
+  // const toggleExpand = () => {
+  //   setIsExpanded((prev) => {
+  //     const newValue = !prev;
+  //     if (setIsFullscreen) setIsFullscreen(newValue);
+  //     return newValue;
+  //   });
+  // };
+
+
   const toggleExpand = () => {
-    setIsExpanded((prev) => {
-      const newValue = !prev;
-      if (setIsFullscreen) setIsFullscreen(newValue);
-      return newValue;
-    });
+    const newValue = !isExpanded;
+    setIsExpanded(newValue);
+    if (setIsFullscreen) {
+      setIsFullscreen(newValue);
+    }
   };
 
   const handleEdit = () => {
@@ -88,9 +97,8 @@ function SidebarPopup({
         //     ? "w-full"
         //     : "w-full sm:w-full md:w-full lg:w-1/2 xl:w-1/2 2xl:w-1/2"
         // }`}
-        className={`relative bg-white shadow-xl overflow-hidden transition-all duration-300 max-w-full h-screen flex flex-col w-full ${
-          !isExpanded && !resolvedWidth ? "xl:w-1/2 2xl:w-1/2" : ""
-        }`}
+        className={`relative bg-white shadow-xl overflow-hidden transition-all duration-300 max-w-full h-screen flex flex-col w-full ${!isExpanded && !resolvedWidth ? "xl:w-1/2 2xl:w-1/2" : ""
+          }`}
         style={
           !isExpanded && resolvedWidth && isDesktop
             ? { width: resolvedWidth }

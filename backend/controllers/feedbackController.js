@@ -1079,6 +1079,7 @@ const getFeedbackByRoundId = async (req, res) => {
     // const interviewSection = await Interview.findOne({
     //   _id: interviewRound.interviewId,
     // });
+    // console.log(" interviewRound.mockInterviewId,", interviewRound.mockInterviewId)
 
     let interviewSection = null;
 
@@ -1086,6 +1087,21 @@ const getFeedbackByRoundId = async (req, res) => {
       interviewSection = await MockInterview.findById(
         interviewRound.mockInterviewId,
       ).lean();
+      // FIX: Create candidate data from mock interview fields
+      if (interviewSection) {
+        // Store candidate info directly in interviewSection.candidateId format
+        interviewSection.candidateId = {
+          _id: interviewSection._id,
+          FirstName: interviewSection.candidateName || 'Candidate',
+          LastName: '',
+          Email: '',
+          Phone: '',
+          skills: interviewSection.skills || [],
+          CurrentExperience: interviewSection.currentExperience,
+          CurrentRole: interviewSection.currentRole,
+          higherQualification: interviewSection.higherQualification
+        };
+      }
     } else {
       interviewSection = await Interview.findById(interviewRound.interviewId)
         .populate("candidateId", "FirstName LastName Email Phone")
@@ -1094,7 +1110,10 @@ const getFeedbackByRoundId = async (req, res) => {
           "title companyname jobDescription minexperience maxexperience Location minSalary maxSalary",
         )
         .lean();
+
+
     }
+    console.log("interviewSection", interviewSection)
     // Fetch CandidatePosition
     // let candidatePosition = await CandidatePosition.findOne({
     //   interviewId: interviewRound.interviewId,
@@ -1349,7 +1368,7 @@ const getFeedbackByRoundId = async (req, res) => {
         .filter((q) => q.addedBy === "interviewer")
 
         .map((q) => {
-          console.log("interviewerWithAnswers", q);
+          // console.log("interviewerWithAnswers", q);
           const answer = answerMap[q._id.toString()];
           return {
             ...q,
@@ -1478,7 +1497,7 @@ const getFeedbackByRoundId = async (req, res) => {
         interviewerAddedQuestions,
       },
     };
-    // console.log("responseData", responseData)
+    console.log("responseData", responseData)
 
     res.status(200).json({
       success: true,
@@ -1663,6 +1682,8 @@ const getFeedbackRoundId = async (req, res) => {
     const round = await InterviewRounds.findById(objectRoundId)
       .populate("interviewId")
       .populate("interviewers");
+
+
 
     if (!round) {
       return res.status(404).json({ message: "Round not found" });

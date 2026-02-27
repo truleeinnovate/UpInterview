@@ -26,7 +26,7 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
   const location = useLocation();
   const { state } = location;
   const { mode = "view", feedback: routeFeedback } = state || {};
-
+  const [fullscreenState, setFullscreenState] = useState(false)
   const [activeTab, setActiveTab] = useState(1);
   const isEditMode = mode === "edit";
 
@@ -57,8 +57,7 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
   const effectiveRoundId = roundId || feedback?.interviewRoundId?._id || feedback?.interviewRoundId || feedback?.mockInterviewRoundId;
   const effectiveInterviewType = interviewType || feedback?.interviewType || (feedback?.isMockInterview ? "mockinterview" : undefined) || (feedback?.mockInterviewRoundId ? "mockinterview" : undefined);
 
-  // console.log("feedback  useFeedbackData", feedback)
-  // console.log("feedback  isViewMode", isViewMode)
+
 
   // Question Bank State Management
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
@@ -70,7 +69,13 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
     useState([]);
 
 
-  const tabsList = getFilteredTabsList(interviewType);
+  const tabsList = getFilteredTabsList(effectiveInterviewType);
+
+  const handleFullscreenChange = (isFullscreen) => {
+    setFullscreenState(isFullscreen);
+
+  };
+
 
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
@@ -168,6 +173,7 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
             // feedbackId={null}
             preselectedQuestionsResponses={preselectedQuestionsResponses}
             schedulerFeedbackData={feedback}
+            fullscreenState={fullscreenState}
           />
         );
       case 2:
@@ -207,7 +213,9 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
         );
       case 4:
         return (
-          <PositionDetails fromFeedbackTab={true} />
+          <PositionDetails fromFeedbackTab={true} roundId={effectiveRoundId}
+            interviewType={effectiveInterviewType}
+          />
         );
 
       default:
@@ -221,7 +229,7 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
 
   return (
     // v1.0.0 <-----------------------------------------------------------------------------
-    <SidebarPopup title="Interview Feedback" onClose={handleClose}>
+    <SidebarPopup title="Interview Feedback" onClose={handleClose} setIsFullscreen={handleFullscreenChange} >
       <div>
         <ul
           className="flex items-center gap-8 cursor-pointer mb-4 border-b border-gray-200

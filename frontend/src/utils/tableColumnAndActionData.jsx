@@ -1300,7 +1300,7 @@ export const getFeedbackColumns = (navigate, options = {}) => {
             header: "Candidate Name",
             render: (value, row) => {
                 const candidate = row.candidateId;
-                console.log("candidate candidate", candidate)
+
                 const name = candidate ? `${candidate.FirstName || ""} ${candidate.LastName || ""}` : "Not Provided";
                 return (
                     <div className="flex items-center" title={name}>
@@ -1333,7 +1333,7 @@ export const getFeedbackColumns = (navigate, options = {}) => {
             key: "position",
             header: "Position",
             render: (value, row) => {
-                console.log("rowrowrow", row)
+
                 const position = row.positionId;
                 const title = position?.title || "Unknown";
                 const toolTipMsg = `${title} • ${position?.companyname || "No Company"} • ${position?.Location || "No location"}`;

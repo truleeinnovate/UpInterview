@@ -17,7 +17,7 @@ const levels = [
  *                                 Any skill in skillOrder NOT in this list is custom-added
  *                                 and WILL show a remove button.
  */
-export default function TechnicalSkillsAssessment({ formData, setFormData, onSkillChange, isReadOnly, presetSkillNames }) {
+export default function TechnicalSkillsAssessment({ formData, setFormData, onSkillChange, isReadOnly, presetSkillNames, fullscreenState }) {
   const [customSkillInput, setCustomSkillInput] = useState('');
   const [customSkillLevel, setCustomSkillLevel] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
@@ -83,6 +83,8 @@ export default function TechnicalSkillsAssessment({ formData, setFormData, onSki
     }
   };
 
+  console.log("fullscreenState", fullscreenState)
+
   return (
     <div className="space-y-4">
       <div>
@@ -90,7 +92,10 @@ export default function TechnicalSkillsAssessment({ formData, setFormData, onSki
         <p className="text-sm text-gray-600">Select proficiency level for each skill</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-1 xl:grid-cols-2  2xl:grid-cols-2 gap-2">
+      <div className={`grid gap-2 ${fullscreenState
+        ? 'sm:grid-cols-1 md:grid-cols-1 grid-cols-2 '
+        : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2  '
+        }`}>
         {(formData.skillOrder || []).map((skill) => {
           const currentLevel = getSkillLevel(skill);
           const isPreset = isPresetSkill(skill);

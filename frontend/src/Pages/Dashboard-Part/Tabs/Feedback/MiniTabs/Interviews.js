@@ -91,7 +91,7 @@ const InterviewsMiniTabComponent = ({
 
   const contactId = userProfile?.contactId;
 
-
+  console.log("effectiveInterviewType", interviewType)
 
   // Validation errors state
   const [errors, setErrors] = useState({
@@ -117,9 +117,9 @@ const InterviewsMiniTabComponent = ({
 
   // console.log("feedbackDatas feedbackDatas", feedbackDatas)
 
-  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType || interviewType === true || locationFeedback?.isMockInterview;
+  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType === "mockinterview" || interviewType === true || locationFeedback?.isMockInterview;
 
-  // console.log("isMockInterviewisMockInterview", isMockInterview)
+  console.log("isMockInterviewisMockInterview", isMockInterview)
 
   // ✅ ALWAYS call hooks
   const {
