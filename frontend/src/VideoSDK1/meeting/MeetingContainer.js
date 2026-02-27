@@ -691,6 +691,8 @@ export function MeetingContainer({
             bottomBarHeight={bottomBarHeight}
             setIsMeetingLeft={setIsMeetingLeft}
             isSchedule={isSchedule}
+            isMockInterview={isMockInterview}
+            isCandidate={isCandidate}
           />
         </div>
       </div>

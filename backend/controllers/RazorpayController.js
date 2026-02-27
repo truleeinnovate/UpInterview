@@ -1479,16 +1479,27 @@ const handlePaymentFailed = async (payment, res) => {
       // Calculate amount in rupees (payment.amount is in paise)
       const amount = payment.amount / 100;
 
-      // Record failed transaction using common function
+      // Record failed transaction WITHOUT crediting wallet
+      // IMPORTANT: Do NOT use createWalletTransaction here — it would credit the balance!
+      // Instead, push a failed transaction record directly with no balance change.
       try {
-        await createWalletTransaction({
-          ownerId,
-          businessType: WALLET_BUSINESS_TYPES.SUBSCRIBE_CREDITED,
+        const prevBalance = wallet.availableBalance || 0;
+        const prevHold = wallet.holdBalance || 0;
+
+        const failedTransaction = {
+          type: "topup",
+          effect: "CREDITED",
+          bucket: "AVAILABLE",
           amount: amount,
+          totalAmount: amount,
           description: `Wallet Top-up failed - ${payment.error_description || payment.error_code || "Payment failed"}`,
           relatedInvoiceId: payment.order_id,
           status: "failed",
           reason: "TOPUP_FAILED",
+          balanceBefore: prevBalance,
+          balanceAfter: prevBalance, // NO change — payment failed
+          holdBalanceBefore: prevHold,
+          holdBalanceAfter: prevHold,
           metadata: {
             paymentId: payment.id,
             orderId: payment.order_id,
@@ -1499,9 +1510,18 @@ const handlePaymentFailed = async (payment, res) => {
             errorReason: payment.error_reason,
             walletCode: walletCode || wallet.walletCode,
             razorpayPaymentId: payment.id,
-            source: "razorpay_topup_failed",
+            source: "razorpay_topup_failed_webhook",
           },
-        });
+          createdDate: new Date(),
+        };
+
+        await WalletTopup.findOneAndUpdate(
+          { ownerId },
+          { $push: { transactions: failedTransaction } },
+          { new: true, runValidators: true }
+        );
+
+        console.log(`[WALLET-WEBHOOK] Recorded failed top-up for ownerId: ${ownerId}, amount: ${amount}, paymentId: ${payment.id}`);
       } catch (walletError) {
         console.error("Error recording failed wallet top-up:", walletError);
       }
