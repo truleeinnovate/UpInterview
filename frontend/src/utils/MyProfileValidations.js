@@ -79,7 +79,7 @@ export const validateAdvancedForm = (formData) => {
   return errors;
 };
 
-export const validateInterviewForm = (formData, isReady) => {
+export const validateInterviewForm = (formData, isReady, organization = false) => {
   const errors = {};
 
   // Technology validation - checks if at least one technology is selected
@@ -89,61 +89,65 @@ export const validateInterviewForm = (formData, isReady) => {
 
 
   // Skills validation - checks if at least one skill is selected
-if (!Array.isArray(formData.skills) || formData.skills.length < 3) {
-  errors.skills = "At least three skills are required";
-}
+  if (!Array.isArray(formData.skills) || formData.skills.length < 3) {
+    errors.skills = "At least three skills are required";
+  }
 
-  // Previous Experience validation - checks if option is selected
-  if (!formData.PreviousExperienceConductingInterviews) {
-    errors.PreviousExperienceConductingInterviews = "Please select an option";
-  } else if (formData.PreviousExperienceConductingInterviews === "yes") {
-    // Additional validation if 'yes' is selected
-    // Check for empty, null, undefined, or 0
-    if (!formData.PreviousExperienceConductingInterviewsYears ||
-      formData.PreviousExperienceConductingInterviewsYears === 0 ||
-      formData.PreviousExperienceConductingInterviewsYears === "0") {
-      errors.PreviousExperienceConductingInterviewsYears = "Years of Experience is required (minimum 1)";
-    } else if (!/^\d+$/.test(formData.PreviousExperienceConductingInterviewsYears) ||
-      Number(formData.PreviousExperienceConductingInterviewsYears) < 1 ||
-      Number(formData.PreviousExperienceConductingInterviewsYears) > 15) {
-      errors.PreviousExperienceConductingInterviewsYears = "Enter a Number between 1 and 15";
+  if (!organization) {
+    // Previous Experience validation - checks if option is selected
+    if (!formData.PreviousExperienceConductingInterviews) {
+      errors.PreviousExperienceConductingInterviews = "Please select an option";
+    } else if (formData.PreviousExperienceConductingInterviews === "yes") {
+      // Additional validation if 'yes' is selected
+      // Check for empty, null, undefined, or 0
+      if (!formData.PreviousExperienceConductingInterviewsYears ||
+        formData.PreviousExperienceConductingInterviewsYears === 0 ||
+        formData.PreviousExperienceConductingInterviewsYears === "0") {
+        errors.PreviousExperienceConductingInterviewsYears = "Years of Experience is required (minimum 1)";
+      } else if (!/^\d+$/.test(formData.PreviousExperienceConductingInterviewsYears) ||
+        Number(formData.PreviousExperienceConductingInterviewsYears) < 1 ||
+        Number(formData.PreviousExperienceConductingInterviewsYears) > 15) {
+        errors.PreviousExperienceConductingInterviewsYears = "Enter a Number between 1 and 15";
+      }
     }
   }
 
-  // Professional Title validation
-  if (!formData.professionalTitle) {
-    errors.professionalTitle = "Professional Title is required";
-  } else if (formData.professionalTitle.length < 30) {
-    errors.professionalTitle = "Professional Title must be at least 30 characters";
-  } else if (formData.professionalTitle.length > 100) {
-    errors.professionalTitle = "Professional Title cannot exceed 100 characters";
-    formData.professionalTitle = formData.professionalTitle.substring(0, 100);
-  }
-
-  // Professional Bio validation - Made optional with length constraints
-  if (formData.bio) {
-    if (formData.bio.length < 150) {
-      errors.bio = "Professional Bio must be at least 150 characters";
-    } else if (formData.bio.length > 500) {
-      errors.bio = "Professional Bio cannot exceed 500 characters";
+  if (!organization) {
+    // Professional Title validation
+    if (!formData.professionalTitle) {
+      errors.professionalTitle = "Professional Title is required";
+    } else if (formData.professionalTitle.length < 30) {
+      errors.professionalTitle = "Professional Title must be at least 30 characters";
+    } else if (formData.professionalTitle.length > 100) {
+      errors.professionalTitle = "Professional Title cannot exceed 100 characters";
+      formData.professionalTitle = formData.professionalTitle.substring(0, 100);
     }
-  }
 
-  // Interview Format validation - checks if at least one format is selected
-  if (!formData.interviewFormatWeOffer || formData.interviewFormatWeOffer.length === 0) {
-    errors.interviewFormatWeOffer = "Interview format is required";
-  }
+    // Professional Bio validation - Made optional with length constraints
+    if (formData.bio) {
+      if (formData.bio.length < 150) {
+        errors.bio = "Professional Bio must be at least 150 characters";
+      } else if (formData.bio.length > 500) {
+        errors.bio = "Professional Bio cannot exceed 500 characters";
+      }
+    }
 
-  // FIXED: Mock Interview validation - Check if discount is required but missing
-  if (formData.interviewFormatWeOffer?.includes("mock")) {
-    if (!formData.mock_interview_discount) {
-      errors.mock_interview_discount = "Mock interview discount is required ";
+    // Interview Format validation - checks if at least one format is selected
+    if (!formData.interviewFormatWeOffer || formData.interviewFormatWeOffer.length === 0) {
+      errors.interviewFormatWeOffer = "Interview format is required";
+    }
+
+    // FIXED: Mock Interview validation - Check if discount is required but missing
+    if (formData.interviewFormatWeOffer?.includes("mock")) {
+      if (!formData.mock_interview_discount) {
+        errors.mock_interview_discount = "Mock interview discount is required ";
+      }
     }
   }
 
   return errors;
 };
-export const validateAvailabilityForm = (formData,times) => {
+export const validateAvailabilityForm = (formData, times) => {
   const errors = {};
 
   // Time Zone validation

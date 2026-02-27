@@ -1009,65 +1009,69 @@ const InterviewDetails = ({
       </div>
 
       <div className="col-span-2 sm:col-span-6 space-y-6">
-        <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
-          <p>
-            Do you have any previous experience conducting interviews?{" "}
-            <span className="text-red-500">*</span>
-          </p>
-          <div className="mt-3 mb-3 flex space-x-6">
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                className="form-radio text-gray-600 accent-custom-blue"
-                name="previousInterviewExperience"
-                value="yes"
-                checked={previousInterviewExperience === "yes"}
-                onChange={handleRadioChange}
-              />
-              <span className="ml-2">Yes</span>
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                className="form-radio text-gray-600 accent-custom-blue"
-                name="previousInterviewExperience"
-                value="no"
-                checked={previousInterviewExperience === "no"}
-                onChange={handleRadioChange}
-              />
-              <span className="ml-2">No</span>
-            </label>
-          </div>
-          {errors.previousInterviewExperience && (
-            <p className="text-red-500 text-xs font-normal">
-              {errors.previousInterviewExperience}
-            </p>
-          )}
-        </div>
-
-        {previousInterviewExperience === "yes" && (
-          <div>
-            <div className="w-1/2 sm:w-full">
-              <IncreaseAndDecreaseField
-                name="previousInterviewExperienceYears"
-                value={
-                  interviewDetailsData.previousInterviewExperienceYears || ""
-                }
-                onChange={handleChangeExperienceYears}
-                min={1}
-                max={15}
-                label="How many years of experience do you have in conducting interviews?"
-                required={true}
-                error={errors.previousInterviewExperienceYears}
-                className={
-                  errors.previousInterviewExperienceYears
-                    ? "border-red-500"
-                    : "border-gray-400"
-                }
-                placeholder="Enter Years of Interview Experience"
-              />
+        {!isProfileCompleteStateOrg && (
+          <>
+            <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
+              <p>
+                Do you have any previous experience conducting interviews?{" "}
+                <span className="text-red-500">*</span>
+              </p>
+              <div className="mt-3 mb-3 flex space-x-6">
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    className="form-radio text-gray-600 accent-custom-blue"
+                    name="previousInterviewExperience"
+                    value="yes"
+                    checked={previousInterviewExperience === "yes"}
+                    onChange={handleRadioChange}
+                  />
+                  <span className="ml-2">Yes</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    className="form-radio text-gray-600 accent-custom-blue"
+                    name="previousInterviewExperience"
+                    value="no"
+                    checked={previousInterviewExperience === "no"}
+                    onChange={handleRadioChange}
+                  />
+                  <span className="ml-2">No</span>
+                </label>
+              </div>
+              {errors.previousInterviewExperience && (
+                <p className="text-red-500 text-xs font-normal">
+                  {errors.previousInterviewExperience}
+                </p>
+              )}
             </div>
-          </div>
+
+            {previousInterviewExperience === "yes" && (
+              <div>
+                <div className="w-1/2 sm:w-full">
+                  <IncreaseAndDecreaseField
+                    name="previousInterviewExperienceYears"
+                    value={
+                      interviewDetailsData.previousInterviewExperienceYears || ""
+                    }
+                    onChange={handleChangeExperienceYears}
+                    min={1}
+                    max={15}
+                    label="How many years of experience do you have in conducting interviews?"
+                    required={true}
+                    error={errors.previousInterviewExperienceYears}
+                    className={
+                      errors.previousInterviewExperienceYears
+                        ? "border-red-500"
+                        : "border-gray-400"
+                    }
+                    placeholder="Enter Years of Interview Experience"
+                  />
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* <div>
@@ -1406,118 +1410,121 @@ const InterviewDetails = ({
           </div>
         )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Interview Formats You Offer <span className="text-red-500">*</span>
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-            <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
-              <div className="flex items-center h-5">
-                <input
-                  id="format_technical"
-                  type="checkbox"
-                  value="technical"
-                  checked={interviewDetailsData?.interviewFormatWeOffer?.includes(
-                    "technical",
-                  )}
-                  onChange={handleInterviewFormatChange}
-                  className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
-                />
+
+        {!isProfileCompleteStateOrg && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Interview Formats You Offer <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+              <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
+                <div className="flex items-center h-5">
+                  <input
+                    id="format_technical"
+                    type="checkbox"
+                    value="technical"
+                    checked={interviewDetailsData?.interviewFormatWeOffer?.includes(
+                      "technical",
+                    )}
+                    onChange={handleInterviewFormatChange}
+                    className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                  />
+                </div>
+                <div className="ml-3">
+                  <label
+                    htmlFor="format_technical"
+                    className="font-medium text-gray-700"
+                  >
+                    Technical Coding
+                  </label>
+                  <p className="text-sm text-gray-500">
+                    Algorithmic problem-solving and coding challenges
+                  </p>
+                </div>
               </div>
-              <div className="ml-3">
-                <label
-                  htmlFor="format_technical"
-                  className="font-medium text-gray-700"
-                >
-                  Technical Coding
-                </label>
-                <p className="text-sm text-gray-500">
-                  Algorithmic problem-solving and coding challenges
-                </p>
+              <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
+                <div className="flex items-center h-5">
+                  <input
+                    id="format_system_design"
+                    type="checkbox"
+                    value="system_design"
+                    checked={interviewDetailsData?.interviewFormatWeOffer?.includes(
+                      "system_design",
+                    )}
+                    onChange={handleInterviewFormatChange}
+                    className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                  />
+                </div>
+                <div className="ml-3">
+                  <label
+                    htmlFor="format_system_design"
+                    className="font-medium text-gray-700"
+                  >
+                    System Design
+                  </label>
+                  <p className="text-sm text-gray-500">
+                    Architecture and scalability discussions
+                  </p>
+                </div>
+              </div>
+              <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
+                <div className="flex items-center h-5">
+                  <input
+                    id="format_behavioral"
+                    type="checkbox"
+                    value="behavioral"
+                    checked={interviewDetailsData?.interviewFormatWeOffer?.includes(
+                      "behavioral",
+                    )}
+                    onChange={handleInterviewFormatChange}
+                    className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                  />
+                </div>
+                <div className="ml-3">
+                  <label
+                    htmlFor="format_behavioral"
+                    className="font-medium text-gray-700"
+                  >
+                    Behavioral
+                  </label>
+                  <p className="text-sm text-gray-500">
+                    Soft skills and situational questions
+                  </p>
+                </div>
+              </div>
+              <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
+                <div className="flex items-center h-5">
+                  <input
+                    id="format_mock"
+                    type="checkbox"
+                    value="mock"
+                    checked={interviewDetailsData?.interviewFormatWeOffer?.includes(
+                      "mock",
+                    )}
+                    onChange={handleInterviewFormatChange}
+                    className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                  />
+                </div>
+                <div className="ml-3">
+                  <label
+                    htmlFor="format_mock"
+                    className="font-medium text-gray-700"
+                  >
+                    Mock Interviews
+                  </label>
+                  <p className="text-sm text-gray-500">
+                    Full interview simulation with feedback
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
-              <div className="flex items-center h-5">
-                <input
-                  id="format_system_design"
-                  type="checkbox"
-                  value="system_design"
-                  checked={interviewDetailsData?.interviewFormatWeOffer?.includes(
-                    "system_design",
-                  )}
-                  onChange={handleInterviewFormatChange}
-                  className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
-                />
-              </div>
-              <div className="ml-3">
-                <label
-                  htmlFor="format_system_design"
-                  className="font-medium text-gray-700"
-                >
-                  System Design
-                </label>
-                <p className="text-sm text-gray-500">
-                  Architecture and scalability discussions
-                </p>
-              </div>
-            </div>
-            <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
-              <div className="flex items-center h-5">
-                <input
-                  id="format_behavioral"
-                  type="checkbox"
-                  value="behavioral"
-                  checked={interviewDetailsData?.interviewFormatWeOffer?.includes(
-                    "behavioral",
-                  )}
-                  onChange={handleInterviewFormatChange}
-                  className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
-                />
-              </div>
-              <div className="ml-3">
-                <label
-                  htmlFor="format_behavioral"
-                  className="font-medium text-gray-700"
-                >
-                  Behavioral
-                </label>
-                <p className="text-sm text-gray-500">
-                  Soft skills and situational questions
-                </p>
-              </div>
-            </div>
-            <div className="relative flex items-start p-4 rounded-lg border border-gray-200 hover:border-custom-blue transition-colors">
-              <div className="flex items-center h-5">
-                <input
-                  id="format_mock"
-                  type="checkbox"
-                  value="mock"
-                  checked={interviewDetailsData?.interviewFormatWeOffer?.includes(
-                    "mock",
-                  )}
-                  onChange={handleInterviewFormatChange}
-                  className="h-4 w-4 text-custom-blue accent-custom-blue focus:ring-custom-blue border-gray-300 rounded"
-                />
-              </div>
-              <div className="ml-3">
-                <label
-                  htmlFor="format_mock"
-                  className="font-medium text-gray-700"
-                >
-                  Mock Interviews
-                </label>
-                <p className="text-sm text-gray-500">
-                  Full interview simulation with feedback
-                </p>
-              </div>
-            </div>
+            {errors.interviewFormatWeOffer && (
+              <p className="mt-2 text-xs text-red-500">
+                {errors.interviewFormatWeOffer}
+              </p>
+            )}
           </div>
-          {errors.interviewFormatWeOffer && (
-            <p className="mt-2 text-xs text-red-500">
-              {errors.interviewFormatWeOffer}
-            </p>
-          )}
-        </div>
+        )}
 
         {isMockInterviewSelected && (
           <div className="p-4 rounded-lg border border-gray-200">
@@ -1689,91 +1696,95 @@ const InterviewDetails = ({
           </div>
         )}
 
-        <div className="sm:col-span-6 col-span-2">
-          <InputField
-            value={interviewDetailsData.professionalTitle || ""}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              if (newValue.length <= 100) {
-                setInterviewDetailsData((prev) => ({
-                  ...prev,
-                  professionalTitle: newValue,
-                }));
+        {!isProfileCompleteStateOrg && (
+          <>
+            <div className="sm:col-span-6 col-span-2">
+              <InputField
+                value={interviewDetailsData.professionalTitle || ""}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  if (newValue.length <= 100) {
+                    setInterviewDetailsData((prev) => ({
+                      ...prev,
+                      professionalTitle: newValue,
+                    }));
 
-                if (errors.professionalTitle) {
-                  setErrors((prev) => ({
-                    ...prev,
-                    professionalTitle: "",
-                  }));
-                }
-              }
-            }}
-            name="professionalTitle"
-            error={errors.professionalTitle}
-            label="Professional Title"
-            required
-            min={30}
-            max={100}
-            showCounter={true}
-            placeholder="Senior Software Engineer With 5+ Years Of Experience In FullStack Development"
-          />
-        </div>
+                    if (errors.professionalTitle) {
+                      setErrors((prev) => ({
+                        ...prev,
+                        professionalTitle: "",
+                      }));
+                    }
+                  }
+                }}
+                name="professionalTitle"
+                error={errors.professionalTitle}
+                label="Professional Title"
+                required
+                min={30}
+                max={100}
+                showCounter={true}
+                placeholder="Senior Software Engineer With 5+ Years Of Experience In FullStack Development"
+              />
+            </div>
 
-        <div className="sm:col-span-6 col-span-2">
-          <DescriptionField
-            showCounter={false}
-            value={interviewDetailsData.bio || ""}
-            onChange={(e) => {
-              handleBioChange(e);
-              if (e.target.value.length >= 150) {
-                setErrors((prev) => ({ ...prev, bio: "" }));
-              }
-            }}
-            onBlur={(e) => {
-              const value = e.target.value.trim();
-              if (!value) {
-                setErrors((prev) => ({
-                  ...prev,
-                  bio: "Professional Bio is required",
-                }));
-              } else if (value.length < 150) {
-                setErrors((prev) => ({
-                  ...prev,
-                  bio: "Professional Bio must be at least 150 characters",
-                }));
-              } else {
-                setErrors((prev) => ({ ...prev, bio: "" }));
-              }
-            }}
-            name="bio"
-            error={errors.bio}
-            label="Professional Bio"
-            required
-            rows={5}
-            minLength={150}
-            maxLength={500}
-            placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer. Please provide detailed information about your experience, skills, and any specific areas of expertise you have in conducting interviews..."
-          />
-          <div className="flex justify-between mt-1">
-            <p className="text-xs text-gray-500">
-              {errors.bio ? (
-                <span className="text-red-500">{errors.bio}</span>
-              ) : (
-                "Min 150 characters"
-              )}
-            </p>
-            {interviewDetailsData.bio?.length > 0 && (
-              <p
-                className={`text-xs ${interviewDetailsData.bio.length < 150 || errors.bio
-                  ? "text-red-500"
-                  : "text-gray-500"
-                  }`}
-              >
-                {interviewDetailsData.bio.length}/500
-              </p>
-            )}
-          </div>
-        </div>
+            <div className="sm:col-span-6 col-span-2">
+              <DescriptionField
+                showCounter={false}
+                value={interviewDetailsData.bio || ""}
+                onChange={(e) => {
+                  handleBioChange(e);
+                  if (e.target.value.length >= 150) {
+                    setErrors((prev) => ({ ...prev, bio: "" }));
+                  }
+                }}
+                onBlur={(e) => {
+                  const value = e.target.value.trim();
+                  if (!value) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      bio: "Professional Bio is required",
+                    }));
+                  } else if (value.length < 150) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      bio: "Professional Bio must be at least 150 characters",
+                    }));
+                  } else {
+                    setErrors((prev) => ({ ...prev, bio: "" }));
+                  }
+                }}
+                name="bio"
+                error={errors.bio}
+                label="Professional Bio"
+                required
+                rows={5}
+                minLength={150}
+                maxLength={500}
+                placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer. Please provide detailed information about your experience, skills, and any specific areas of expertise you have in conducting interviews..."
+              />
+              <div className="flex justify-between mt-1">
+                <p className="text-xs text-gray-500">
+                  {errors.bio ? (
+                    <span className="text-red-500">{errors.bio}</span>
+                  ) : (
+                    "Min 150 characters"
+                  )}
+                </p>
+                {interviewDetailsData.bio?.length > 0 && (
+                  <p
+                    className={`text-xs ${interviewDetailsData.bio.length < 150 || errors.bio
+                      ? "text-red-500"
+                      : "text-gray-500"
+                      }`}
+                  >
+                    {interviewDetailsData.bio.length}/500
+                  </p>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
       {/* </div> */}
     </React.Fragment>

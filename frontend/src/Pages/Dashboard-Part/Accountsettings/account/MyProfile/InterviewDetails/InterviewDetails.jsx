@@ -251,33 +251,34 @@ const InterviewUserDetails = ({
             </div>
           </div>
 
-          {/* Row 2: Interview Experience */}
-          <div className="space-y-1">
-            <p className="text-sm text-gray-500">
-              Previous Experience Conducting Interviews
-            </p>
-            <p className="text-sm font-medium">
-              {contactData?.previousExperienceConductingInterviews === "yes"
-                ? "Yes"
-                : "No"}
-            </p>
-          </div>
+          {!organization && (
+            <>
+              {/* Row 2: Interview Experience */}
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">
+                  Previous Experience Conducting Interviews
+                </p>
+                <p className="text-sm font-medium">
+                  {contactData?.previousExperienceConductingInterviews === "yes"
+                    ? "Yes"
+                    : "No"}
+                </p>
+              </div>
 
-          {contactData?.previousExperienceConductingInterviews === "yes" && (
-            <div className="space-y-1">
-              <p className="text-sm text-gray-500">
-                Years of Experience Conducting Interviews
-              </p>
-              <p className="text-sm font-medium">
-                {/* {contactData?.previousExperienceConductingInterviewsYears ||
-                  "0"}{" "}
-                Years */}
-                {contactData?.previousExperienceConductingInterviewsYears || "0"}{" "}
-                {Number(contactData?.previousExperienceConductingInterviewsYears) === 1
-                  ? "Year"
-                  : "Years"}
-              </p>
-            </div>
+              {contactData?.previousExperienceConductingInterviews === "yes" && (
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">
+                    Years of Experience Conducting Interviews
+                  </p>
+                  <p className="text-sm font-medium">
+                    {contactData?.previousExperienceConductingInterviewsYears || "0"}{" "}
+                    {Number(contactData?.previousExperienceConductingInterviewsYears) === 1
+                      ? "Year"
+                      : "Years"}
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           {/* Row 3: Rates and Interview Formats */}
@@ -307,64 +308,72 @@ const InterviewUserDetails = ({
               );
             })}
 
-          <div className="space-y-2">
-            <p className="text-sm text-gray-500">Interview Formats</p>
-            <div className="flex flex-wrap gap-2">
-              {contactData?.[formatKey]?.length > 0 ? (
-                contactData?.[formatKey]?.map((format, index) => (
-                  <span
-                    key={index}
-                    className="px-2 py-1 bg-blue-50 text-custom-blue rounded-full text-xs"
-                  >
-                    {formatInterviewType(format)}
-                  </span>
-                ))
-              ) : (
-                <p className="text-gray-500 text-sm">-</p>
-              )}
+          {!organization && (
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">Interview Formats</p>
+              <div className="flex flex-wrap gap-2">
+                {contactData?.[formatKey]?.length > 0 ? (
+                  contactData?.[formatKey]?.map((format, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-blue-50 text-custom-blue rounded-full text-xs"
+                    >
+                      {formatInterviewType(format)}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm">-</p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Row 5: Discount and Professional Title */}
-          {contactData?.mock_interview_discount ? (
-            <div className="space-y-1">
-              <p className="text-sm text-gray-500">Discount</p>
-              <p className="text-sm font-medium">
-                {contactData.mock_interview_discount}%
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              <p className="text-sm text-gray-500">Discount</p>
-              <p className="text-sm text-gray-500">-</p>
-            </div>
+          {!organization && (
+            <>
+              {/* Row 5: Discount and Professional Title */}
+              {contactData?.mock_interview_discount ? (
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Discount</p>
+                  <p className="text-sm font-medium">
+                    {contactData.mock_interview_discount}%
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">Discount</p>
+                  <p className="text-sm text-gray-500">-</p>
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* v1.0.2 <-------------------------------------------------------------------------------------------------------------- */}
-        <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-          {/* v1.0.2 --------------------------------------------------------------------------------------------------------------> */}
-          <div className="space-y-1">
-            <p className="text-sm text-gray-500">Professional Title</p>
-            <p
-              className="text-sm font-medium truncate"
-              title={contactData?.professionalTitle || ""}
-            >
-              {contactData?.professionalTitle || "-"}
-            </p>
-          </div>
+        {!organization && (
+          <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+            {/* v1.0.2 --------------------------------------------------------------------------------------------------------------> */}
+            <div className="space-y-1">
+              <p className="text-sm text-gray-500">Professional Title</p>
+              <p
+                className="text-sm font-medium truncate"
+                title={contactData?.professionalTitle || ""}
+              >
+                {contactData?.professionalTitle || "-"}
+              </p>
+            </div>
 
-          {/* Row 6: Bio (full width) */}
-          <div className="space-y-1">
-            <p className="text-sm text-gray-500">Professional Bio</p>
-            <p
-              className="text-sm font-medium truncate"
-              title={contactData?.bio || ""}
-            >
-              {contactData?.bio || "No bio provided"}
-            </p>
+            {/* Row 6: Bio (full width) */}
+            <div className="space-y-1">
+              <p className="text-sm text-gray-500">Professional Bio</p>
+              <p
+                className="text-sm font-medium truncate"
+                title={contactData?.bio || ""}
+              >
+                {contactData?.bio || "No bio provided"}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
