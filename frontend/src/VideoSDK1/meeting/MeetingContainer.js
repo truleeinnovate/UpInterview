@@ -48,6 +48,7 @@ export function MeetingContainer({
   candidateData,
   positionData,
   interviewRoundData,
+  isMockInterview
 }) {
   const { setSelectedMic, setSelectedWebcam, setSelectedSpeaker } =
     useMeetingAppContext();
@@ -317,6 +318,7 @@ export function MeetingContainer({
     },
   });
 
+
   // Navigation items configuration
   const getNavigationItems = () => {
     return [
@@ -347,7 +349,10 @@ export function MeetingContainer({
         label: "Position Details",
         tooltip: "Position Details",
         icon: <Briefcase className="w-4 h-4" />,
-        show: isInterviewer || isSchedule,
+        // show: isInterviewer || isSchedule,
+
+        // Hide position tab if it's a mock interview
+        show: !isMockInterview && (isInterviewer || isSchedule),
         // show: isCandidate || isInterviewer || isSchedule,
       },
       {
@@ -635,39 +640,39 @@ export function MeetingContainer({
                       />
                     )
                       : sideBarMode === "POSITION" ? (
-                      <PositionDetails />
-                    ) : sideBarMode === "FEEDBACK" ? (
-                      <FeedbackForm
-                        custom={true}
-                        isAddMode={true}
-                        onClose={() => setSideBarMode(null)} />
-                    ) : sideBarMode === "INTERVIEWACTIONS" ? (
-                      <div className="p-4">
-                        <InterviewActions
-                          custom={true}
-                          onClose={() => setSideBarMode(null)}
-                          interviewData={{
-                            interviewRound: {
-                              dateTime: new Date().toLocaleString(),
-                              status: "Scheduled",
-                              _id: "mock-id",
-                            },
-                          }}
-                          isAddMode={false}
-                          decodedData={{}}
-                          onActionComplete={() => { }}
-                        />
-                      </div>
-                    ) : sideBarMode === "QUESTIONBANK" ? (
-                      <div className="">
-                        <InterviewsMiniTabComponent
+                        <PositionDetails />
+                      ) : sideBarMode === "FEEDBACK" ? (
+                        <FeedbackForm
                           custom={true}
                           isAddMode={true}
-                          isMeetingSidePanel={sideBarMode === "QUESTIONBANK"}
-                        />
+                          onClose={() => setSideBarMode(null)} />
+                      ) : sideBarMode === "INTERVIEWACTIONS" ? (
+                        <div className="p-4">
+                          <InterviewActions
+                            custom={true}
+                            onClose={() => setSideBarMode(null)}
+                            interviewData={{
+                              interviewRound: {
+                                dateTime: new Date().toLocaleString(),
+                                status: "Scheduled",
+                                _id: "mock-id",
+                              },
+                            }}
+                            isAddMode={false}
+                            decodedData={{}}
+                            onActionComplete={() => { }}
+                          />
+                        </div>
+                      ) : sideBarMode === "QUESTIONBANK" ? (
+                        <div className="">
+                          <InterviewsMiniTabComponent
+                            custom={true}
+                            isAddMode={true}
+                            isMeetingSidePanel={sideBarMode === "QUESTIONBANK"}
+                          />
 
-                      </div>
-                    ) : null}
+                        </div>
+                      ) : null}
                   </div>
                 </div>
               ) : (

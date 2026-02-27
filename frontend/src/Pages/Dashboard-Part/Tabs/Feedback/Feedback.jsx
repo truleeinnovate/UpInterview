@@ -555,7 +555,7 @@ const Feedback = () => {
   const handleAddFeedback = () => {
     // navigate("/dashboard/feedbacks/add");
     navigate("/feedback/new");
-    setIsFeedbackCreationOpen(true);
+    // setIsFeedbackCreationOpen(true);
   };
 
   const getStatusIcon = (status) => {
@@ -1049,16 +1049,16 @@ const Feedback = () => {
         data={summaryData}
       />
 
-      {isFeedbackCreationOpen && (
+      {/* {isFeedbackCreationOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           
-          {/* Black Overlay */}
+       
           <div
             className="absolute inset-0 bg-black bg-opacity-60"
             onClick={() => setIsFeedbackCreationOpen(false)}
           ></div>
 
-          {/* Center Card */}
+         
           <div className="relative bg-white rounded-xl shadow-xl w-[90%] max-w-md p-6 z-10">
             
             <h2 className="text-lg font-semibold mb-4 text-gray-800">
@@ -1086,7 +1086,7 @@ const Feedback = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </>
   );
 };
