@@ -3,18 +3,18 @@ export const validateEmail = async (email, checkEmailExists) => {
   let errorMessage = '';
 
   if (!email) {
-    errorMessage = 'Email is required';
+    errorMessage = 'Work Email is required';
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errorMessage = 'Invalid email format';
+    errorMessage = 'Invalid Work Email format';
   } else if (checkEmailExists) {
     try {
       const exists = await checkEmailExists(email);
       if (exists) {
-        errorMessage = 'Email already registered';
+        errorMessage = 'Work Email already registered';
       }
     } catch (err) {
-      console.error('Error checking email:', err);
-      errorMessage = 'Error verifying email';
+      console.error('Error checking Work Email:', err);
+      errorMessage = 'Error verifying Work Email';
     }
   }
 

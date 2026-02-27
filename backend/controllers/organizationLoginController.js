@@ -421,7 +421,12 @@ const resetPassword = async (req, res) => {
 
     await user.save();
 
-    return res.json({ success: true, message: "Password reset successful" });
+    const successMessage =
+      type === "usercreatepass"
+        ? "Password created successfully"
+        : "Password reset successful";
+
+    return res.json({ success: true, message: successMessage });
   } catch (error) {
     console.error("Reset Password Error:", error);
     return res
