@@ -338,6 +338,8 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           tenantId: interview.tenantId,
           ownerId: interview.ownerId,
           recipientId: candidate._id,
+          toAddress: [candidateEmail],
+          fromAddress: supportEmail,
           createdBy: interview.ownerId,
           updatedBy: interview.ownerId,
         });
@@ -393,6 +395,8 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             tenantId: interview.tenantId,
             ownerId: interview.ownerId,
             recipientId: interviewer.email,
+            toAddress: [interviewer.email],
+            fromAddress: supportEmail,
             createdBy: interview.ownerId,
             updatedBy: interview.ownerId,
           });
@@ -448,6 +452,8 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           tenantId: interview.tenantId,
           ownerId: interview.ownerId,
           recipientId: schedulerEmail,
+          toAddress: [schedulerEmail],
+          fromAddress: supportEmail,
           createdBy: interview.ownerId,
           updatedBy: interview.ownerId,
         });
@@ -563,6 +569,8 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           tenantId: interview.tenantId,
           ownerId: interview.ownerId,
           recipientId: candidate._id,
+          toAddress: [candidateEmail],
+          fromAddress: supportEmail,
           createdBy: interview.ownerId,
           updatedBy: interview.ownerId,
         });
@@ -646,6 +654,8 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             tenantId: interview.tenantId,
             ownerId: interview.ownerId,
             recipientId: interviewer.email,
+            toAddress: [interviewer.email],
+            fromAddress: supportEmail,
             createdBy: interview.ownerId,
             updatedBy: interview.ownerId,
           });
@@ -730,6 +740,8 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           tenantId: interview.tenantId,
           ownerId: interview.ownerId,
           recipientId: schedulerEmail,
+          toAddress: [schedulerEmail],
+          fromAddress: supportEmail,
           createdBy: interview.ownerId,
           updatedBy: interview.ownerId,
         });
@@ -954,6 +966,8 @@ exports.sendOutsourceInterviewRequestEmails = async (req, res = null) => {
         tenantId: interview.tenantId,
         ownerId: interview.ownerId,
         recipientId: interviewer._id,
+        toAddress: [interviewer.email],
+        fromAddress: supportEmail,
         createdBy: interview.ownerId,
         updatedBy: interview.ownerId,
       });
@@ -1178,7 +1192,7 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
     );
 
     notifications.push(
-      createNotification(subject, candidateBody, candidate._id)
+      createNotification(subject, candidateBody, candidate._id, candidateEmail)
     );
 
     // Send to Interviewers
@@ -1204,7 +1218,7 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
           }))
       );
 
-      notifications.push(createNotification(subject, body, interviewer.email));
+      notifications.push(createNotification(subject, body, interviewer.email, interviewer.email));
     }
 
     // Send to Scheduler
@@ -1229,11 +1243,11 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
           }))
       );
 
-      notifications.push(createNotification(subject, body, schedulerEmail));
+      notifications.push(createNotification(subject, body, schedulerEmail, schedulerEmail));
     }
 
     // Helper to create notification object
-    function createNotification(title, body, recipientId) {
+    function createNotification(title, body, recipientId, recipientEmail) {
       return {
         title,
         body,
@@ -1243,6 +1257,8 @@ exports.sendInterviewRoundCancellationEmails = async (req, res = null) => {
         tenantId: interview.tenantId,
         ownerId: interview.ownerId,
         recipientId,
+        toAddress: [recipientEmail],
+        fromAddress: supportEmail,
         createdBy: interview.ownerId,
         updatedBy: interview.ownerId,
       };
@@ -1525,6 +1541,8 @@ exports.sendInterviewerCancelledEmails = async (req, res = null) => {
       tenantId: interview.tenantId,
       ownerId: interview.ownerId,
       recipientId: email,
+      toAddress: [email],
+      fromAddress: supportEmail,
       createdBy: interview.ownerId,
       updatedBy: interview.ownerId,
     };
