@@ -212,12 +212,27 @@ export function WalletTopupPopup({ onClose, onTopup }) {
       };
 
       const razorpay = new window.Razorpay(options);
-      razorpay.on("payment.failed", function (response) {
+      razorpay.on("payment.failed", async function (response) {
         console.error("Razorpay payment failed:", response);
         const description =
           response?.error?.description || response?.error?.reason;
-        // Note: Failed payments are recorded when the success handler fires
-        // and the backend checks the actual payment status from Razorpay
+
+        // Record the failed payment attempt in backend for audit trail
+        // No signature is sent, so backend will record as failed without crediting
+        try {
+          await verifyWalletPayment.mutateAsync({
+            razorpay_order_id: response?.error?.metadata?.order_id,
+            razorpay_payment_id: response?.error?.metadata?.payment_id || "",
+            razorpay_signature: "", // Empty = backend treats as failed payment recording
+            ownerId: ownerId,
+            tenantId: tenantId || "default",
+            amount: parseFloat(amount),
+            description: `Wallet Top-up failed – ${description || "Payment failed"}`,
+          });
+        } catch (err) {
+          // Don't block UI — the user already sees the error
+          console.warn("Could not record failed payment:", err);
+        }
 
         setError(
           description ||
