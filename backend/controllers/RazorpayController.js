@@ -1483,8 +1483,8 @@ const handlePaymentFailed = async (payment, res) => {
       // IMPORTANT: Do NOT use createWalletTransaction here — it would credit the balance!
       // Instead, push a failed transaction record directly with no balance change.
       try {
-        const prevBalance = wallet.availableBalance || 0;
-        const prevHold = wallet.holdBalance || 0;
+        const prevBalance = wallet.balance || 0;
+        const prevHold = wallet.holdAmount || 0;
 
         const failedTransaction = {
           type: "topup",
