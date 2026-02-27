@@ -603,7 +603,7 @@ const MoockRoundCard = ({
             </div>
 
             {/* Meeting Video Button - only show after meeting has ended */}
-            {!["In Progress", "Scheduled", "Draft", "scheduled", "draft", "RequestSent"].includes(round?.status) && (
+            {["Evaluated", "FeedbackSubmitted"].includes(round?.status) && (
               <div className="overflow-x-auto">
                 <div className="mt-6 pt-4 border-t border-gray-100 w-full flex gap-2 whitespace-nowrap justify-end">
                   <button

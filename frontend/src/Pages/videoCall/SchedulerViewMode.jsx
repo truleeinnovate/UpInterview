@@ -50,7 +50,7 @@ const StarRating = ({ rating, onChange, size = "md", isReadOnly = false }) => {
   );
 };
 
-export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview }) => {
+export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, fullscreenState }) => {
   // Handle multiple feedbacks if they exist
   const feedbacks = Array.isArray(feedbackData?.feedbacks)
     ? feedbackData.feedbacks
@@ -60,9 +60,9 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview }) =
   const location = useLocation();
   const [activeFeedbackIndex, setActiveFeedbackIndex] = useState(0);
   const activeFeedback = feedbacks[activeFeedbackIndex];
-  console.log("activeFeedback", feedbackData)
+  // console.log("activeFeedback", feedbackData)
 
-  console.log("activeFeedback activeFeedback", activeFeedback)
+  // console.log("activeFeedback activeFeedback", activeFeedback)
   // Extract URL data once
   const urlData = useMemo(
     () => extractUrlData(location.search),
@@ -182,86 +182,6 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview }) =
     });
   }, [activeFeedback, feedbackData, isMockInterview]); // Keep all dependencies
 
-  // Data normalization logic (similar to FeedbackForm load logic)
-  // useEffect(() => {
-  //   if (!activeFeedback) return;
-
-
-
-  //   // Fix: Access candidate data correctly from activeFeedback
-  //   const candidate = activeFeedback.candidateId || {};
-  //   const candidateName = candidate.FirstName && candidate.LastName
-  //     ? `${candidate.FirstName} ${candidate.LastName}`.trim()
-  //     : candidate.name || activeFeedback.candidateName || "N/A";
-
-  //   // Fix: Access position data correctly from activeFeedback
-  //   const position = activeFeedback.positionId || {};
-  //   const positionTitle = position.title || activeFeedback.position || "N/A";
-
-  //   // Fix: Access interviewer data correctly from activeFeedback
-  //   const interviewer = activeFeedback.interviewerId || {};
-  //   const interviewerName = interviewer.firstName && interviewer.lastName
-  //     ? `${interviewer.firstName} ${interviewer.lastName}`.trim()
-  //     : interviewer.name || activeFeedback.interviewerName || "N/A";
-
-  //   // Get round title if available
-  //   const roundTitle = activeFeedback.roundTitle || "Technical Interview – Round 2";
-
-  //   // Normalize technicalSkills from backend array to UI object if needed
-  //   const rawTS = activeFeedback.technicalSkills || [];
-  //   const technicalSkills = {
-  //     strong: [],
-  //     good: [],
-  //     basic: [],
-  //     noExperience: [],
-  //   };
-  //   const skillOrder = activeFeedback.skillOrder || [];
-
-  //   if (Array.isArray(rawTS)) {
-  //     rawTS.forEach((s) => {
-  //       if (s.level && technicalSkills[s.level]) {
-  //         technicalSkills[s.level].push(s.skillName);
-  //         if (!skillOrder.includes(s.skillName)) skillOrder.push(s.skillName);
-  //       }
-  //     });
-  //   } else if (typeof rawTS === "object" && rawTS !== null) {
-  //     Object.assign(technicalSkills, rawTS);
-  //   }
-
-  //   const impression = activeFeedback.overallImpression || {};
-
-  //   setFormData({
-  //     candidateName,
-  //     position: positionTitle,
-  //     roundTitle,
-  //     interviewerName: interviewerName,
-  //     interviewDate: activeFeedback.createdAt
-  //       ? new Date(activeFeedback.createdAt).toISOString().split("T")[0]
-  //       : "",
-  //     isMockInterview: !!isMockInterview,
-  //     overallRating: impression.overallRating || 0,
-  //     communicationRating: impression.communicationRating || 0,
-  //     recommendation: impression.recommendation || "Maybe",
-  //     skillRatings: (activeFeedback.technicalCompetency || []).map((s) => ({
-  //       skillName: s.skillName || s.skill || "",
-  //       rating: s.rating || 0,
-  //       notes: s.notes || s.note || "",
-  //     })),
-  //     technicalSkills,
-  //     skillOrder,
-  //     strengths: activeFeedback.strengths?.length ? activeFeedback.strengths : [""],
-  //     areasForImprovement: activeFeedback.areasForImprovement?.length ? activeFeedback.areasForImprovement : [""],
-  //     additionalComments:
-  //       activeFeedback.additionalComments ||
-  //       activeFeedback.generalComments ||
-  //       "",
-  //     cultureFit: impression.cultureFit || 0,
-  //     willingnessToLearn: impression.willingnessToLearn || 0,
-  //     submittedAt: activeFeedback.createdAt,
-  //   });
-  // }, [activeFeedback, isMockInterview]); // Remove feedbackData from dependencies since we're using activeFeedback
-
-  const isReadOnly = true;
 
   // Context-specific variables for QuestionCard/TechnicalSkillsAssessment
   const questionsWithFeedback = useMemo(() => {
@@ -348,6 +268,23 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview }) =
               </div>
               {/* </div> */}
             </div>
+
+            {isMockInterview && (
+              <div className="flex items-center pt-6">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    disabled
+                    checked={formData.isMockInterview}
+                    onChange={(e) => setFormData({ ...formData, isMockInterview: e.target.checked })}
+                    className="w-4 h-4 accent-custom-blue text-[rgb(33,121,137)] border-gray-300 rounded focus:ring-[rgb(33,121,137)]"
+                  />
+                  <span className="ml-2 text-sm font-medium text-gray-700">
+                    This is a Mock Interview
+                  </span>
+                </label>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -452,6 +389,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview }) =
             formData={formData}
             setFormData={setFormData}
             isReadOnly={true}
+            fullscreenState={fullscreenState}
           />
 
           {/* Technical Competency Ratings */}

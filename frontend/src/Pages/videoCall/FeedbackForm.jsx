@@ -137,6 +137,7 @@ const FeedbackForm = ({
   isAddMode,
   // isScheduler,
   schedulerFeedbackData,
+  fullscreenState
 }) => {
   // console.log("feedbackCandidate", isEditMode, isViewMode, isAddMode);
   useScrollLock(true);
@@ -2075,7 +2076,7 @@ const FeedbackForm = ({
   //<---v1.0.2-----Ranjith----solved feedback issues
 
   if (urlData?.isSchedule || isViewMode) {
-    return <SchedulerViewMode feedbackData={schedulerFeedbackData || feedbackDatas} isViewMode={isViewMode} MockInterview={isMockInterview} />;
+    return <SchedulerViewMode feedbackData={schedulerFeedbackData || feedbackDatas} isViewMode={isViewMode} MockInterview={isMockInterview} fullscreenState={fullscreenState} />;
   }
 
   //<---v1.0.2-----Ranjith----solved feedback issues
@@ -2260,6 +2261,7 @@ const FeedbackForm = ({
               onSkillChange={triggerAutoSave}
               isReadOnly={isReadOnly}
               presetSkillNames={initialSkillRatings.map(s => s.skillName || s.skill || '')}
+
             />
             {errors.technicalSkills && (
               <span className="text-xs text-red-500 mt-1 block">{errors.technicalSkills}</span>
