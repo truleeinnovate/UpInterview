@@ -2962,9 +2962,10 @@ router.get(
               status: "draft",
             };
 
+
             const feedbackTotalCount = await FeedbackModel.countDocuments(baseQuery);
             data = {
-              data: feedbackTotalCount,
+              feedbackTotalCount,
             };
           }
 

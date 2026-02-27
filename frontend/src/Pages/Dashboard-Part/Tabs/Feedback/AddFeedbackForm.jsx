@@ -27,13 +27,13 @@ const AddFeedbackForm = ({
   const { id: paramId } = useParams();
   const formRef = useRef(null);
 
-  console.log("interviewType", interviewType);
+  // console.log("interviewType", interviewType);
 
   const { data, isLoading, isError, error } = usePendingFeedbacks();
-  console.log(
-    "PENDING FEEDBACKS DATA ================================> ",
-    data,
-  );
+  // console.log(
+  //   "PENDING FEEDBACKS DATA ================================> ",
+  //   data,
+  // );
 
   // General Form Step State
   const [currentFormStep, setCurrentFormStep] = useState(paramId ? 2 : 1);
@@ -138,11 +138,11 @@ const AddFeedbackForm = ({
           // Handle position differently for mock vs regular interviews
           position: selectedOption.isMock
             ? selectedOption.fullDetails?.mockDetails?.currentRole ||
-              selectedOption.fullDetails?.position?.title ||
-              ""
+            selectedOption.fullDetails?.position?.title ||
+            ""
             : selectedOption.fullDetails?.position?.title ||
-              selectedOption.fullDetails?.candidate?.position ||
-              "",
+            selectedOption.fullDetails?.candidate?.position ||
+            "",
           roundTitle: selectedOption.roundTitle || "",
           // interviewerName: fullName,
           interviewDate: parseDateForInput(selectedOption.dateTime),
@@ -163,7 +163,7 @@ const AddFeedbackForm = ({
     //   ...formData,
     //   selectedRoundId: selectedValue,
     // });
-    console.log("selectedOption", selectedOption);
+    // console.log("selectedOption", selectedOption);
 
     // Update form data with selected round details
     setFormData({
@@ -176,11 +176,11 @@ const AddFeedbackForm = ({
       // Handle position differently for mock vs regular interviews
       position: selectedOption?.isMock
         ? selectedOption?.fullDetails?.mockDetails?.currentRole ||
-          selectedOption?.fullDetails?.position?.title ||
-          ""
+        selectedOption?.fullDetails?.position?.title ||
+        ""
         : selectedOption?.fullDetails?.position?.title ||
-          selectedOption?.fullDetails?.candidate?.position ||
-          "",
+        selectedOption?.fullDetails?.candidate?.position ||
+        "",
       roundTitle: selectedOption?.roundTitle || "",
       // interviewerName: fullName,
       interviewDate: parseDateForInput(selectedOption?.dateTime),
@@ -327,19 +327,13 @@ const AddFeedbackForm = ({
     });
   };
 
-  if (roundOptions?.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <h1 className="text-center p-3">No Rounds Found</h1>
-      </div>
-    );
-  }
+
 
   const renderTabContent = () => {
     const effectiveRoundId = roundId || formData.selectedRoundId;
     const effectiveInterviewType = selectedRoundDetails?.isMock;
-    console.log("selectedRoundDetails", selectedRoundDetails);
-    console.log("effectiveInterviewType", effectiveInterviewType);
+    // console.log("selectedRoundDetails", selectedRoundDetails);
+    // console.log("effectiveInterviewType", effectiveInterviewType);
 
     switch (activeTab) {
       case 3:
@@ -398,26 +392,65 @@ const AddFeedbackForm = ({
     <div ref={formRef}>
       {currentFormStep === 1 && (
         <div className="space-y-6">
-          <h4 className="text-lg font-semibold text-gray-800">Feedback</h4>
+          {roundOptions?.length > 0 && <h4 className="text-lg font-semibold text-gray-800">Feedback</h4>}
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-6">
               {/* Round Selection Dropdown */}
               <div>
-                <div className="grid grid-cols-2 gap-6">
-                  <DropdownWithSearchField
-                    label="Select Interview"
-                    options={roundOptions}
-                    value={formData.selectedRoundId}
-                    onChange={handleRoundChange}
-                    error={errors.selectedRoundId}
-                    required
-                    placeholder="Search by interview code, round title, or candidate name..."
-                  />
-                </div>
-                <span className="text-xs mt-1 text-gray-500">
-                  Please select an interview round to proceed
-                </span>
+                {roundOptions?.length === 0 ? (
+                  <div className="flex flex-col justify-center items-center h-[400px]">
+                    <div className="text-center">
+                      <svg
+                        className="mx-auto h-24 w-24 text-gray-400 mb-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.25 2.25v.104c0 .414-.336.75-.75.75h-4.5a.75.75 0 01-.75-.75v-.104c0-.208.028-.41.08-.603zm0 0c-.296.115-.57.277-.817.445a.75.75 0 01-.983-.277A2.25 2.25 0 0110.5 2.25h-1.5a2.25 2.25 0 00-2.25 2.25v6.75m12 0c0 .414-.336.75-.75.75h-6.75a.75.75 0 01-.75-.75v-6.75a.75.75 0 01.75-.75h6.75a.75.75 0 01.75.75v6.75z"
+                        />
+                      </svg>
+                      <h2 className="text-2xl font-semibold text-gray-700 mb-2">
+                        No Pending Feedbacks Found
+                      </h2>
+                      <p className="text-gray-500 max-w-md mb-8">
+                        There are no interviews pending for feedback at the moment.
+                        Please check back later when interviews are completed.
+                      </p>
+                      <div className="flex justify-center">
+                        {/* <Button
+                          variant="outline"
+                          className="border border-custom-blue text-custom-blue px-6"
+                          onClick={handleClose}
+                        >
+                          Go Back
+                        </Button> */}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-6">
+                      <DropdownWithSearchField
+                        label="Select Interview"
+                        options={roundOptions}
+                        value={formData.selectedRoundId}
+                        onChange={handleRoundChange}
+                        error={errors.selectedRoundId}
+                        required
+                        placeholder="Search by interview code, round title, or candidate name..."
+                      />
+                    </div>
+                    <span className="text-xs mt-1 text-gray-500">
+                      Please select an interview round which you have not given feedback yet
+                    </span>
+                  </>
+                )}
               </div>
+
 
               {/* Basic Information Section */}
               {selectedRoundDetails && (
@@ -514,21 +547,23 @@ const AddFeedbackForm = ({
               )}
             </div>
           </div>
-          <div className="flex justify-end gap-3 mt-8">
-            <Button
-              variant="outline"
-              className="border border-custom-blue text-custom-blue"
-              onClick={handleClose}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleProceed}
-              className="bg-custom-blue text-white"
-            >
-              Proceed
-            </Button>
-          </div>
+          {roundOptions?.length > 0 &&
+            <div className="flex justify-end gap-3 mt-8">
+              <Button
+                variant="outline"
+                className="border border-custom-blue text-custom-blue"
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleProceed}
+                className="bg-custom-blue text-white"
+              >
+                Proceed
+              </Button>
+            </div>
+          }
         </div>
       )}
 
@@ -551,17 +586,21 @@ const AddFeedbackForm = ({
           >
             <ArrowLeft className="h-5 w-5 mr-2" /> Back to Feedbacks
           </button>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Add Interview Feedback
-          </h3>
-          <div className="flex items-center gap-2">
-            <p className="text-sm text-gray-500">Step {currentFormStep} of 2</p>
-            {currentFormStep === 1 ? (
-              <span className="text-sm text-gray-500">Select Interview </span>
-            ) : (
-              <span className="text-sm text-gray-500">Feedback</span>
-            )}
-          </div>
+          {roundOptions?.length > 0 &&
+            <>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Add Interview Feedback
+              </h3>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-gray-500">Step {currentFormStep} of 2</p>
+                {currentFormStep === 1 ? (
+                  <span className="text-sm text-gray-500">Select Interview </span>
+                ) : (
+                  <span className="text-sm text-gray-500">Feedback</span>
+                )}
+              </div>
+            </>
+          }
         </div>
         {currentFormStep === 2 && (
           <ul className="flex self-start gap-6 cursor-pointer border-b mb-6 w-full">
@@ -569,11 +608,10 @@ const AddFeedbackForm = ({
               <li
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-2 px-1 flex-shrink-0 text-sm font-semibold transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? "border-b-2 border-custom-blue text-custom-blue"
-                    : "text-gray-600 hover:text-gray-700"
-                }`}
+                className={`pb-2 px-1 flex-shrink-0 text-sm font-semibold transition-all duration-200 ${activeTab === tab.id
+                  ? "border-b-2 border-custom-blue text-custom-blue"
+                  : "text-gray-600 hover:text-gray-700"
+                  }`}
               >
                 {tab.tab}
               </li>

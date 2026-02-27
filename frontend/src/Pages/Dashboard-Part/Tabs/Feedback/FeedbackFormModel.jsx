@@ -12,12 +12,12 @@ import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopu
 import { useFeedbackData } from "../../../../apiHooks/useFeedbacks";
 // v1.0.0 ----------------------------------------------------------->
 
-const tabsList = [
-  { id: 1, tab: "Feedback" },
-  { id: 2, tab: "Interview Questions" },
-  { id: 3, tab: "Candidate" },
-  { id: 4, tab: "Position" },
-];
+// const tabsList = [
+//   { id: 1, tab: "Feedback" },
+//   { id: 2, tab: "Interview Questions" },
+//   { id: 3, tab: "Candidate" },
+//   { id: 4, tab: "Position" },
+// ];
 
 const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
   const navigate = useNavigate();
@@ -53,6 +53,9 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
   const feedback = routeFeedback ? routeFeedback : feedbackDatas;
   //  || routeFeedback;
 
+  const effectiveRoundId = roundId || feedback?.interviewRoundId?._id || feedback?.interviewRoundId || feedback?.mockInterviewRoundId;
+  const effectiveInterviewType = interviewType || feedback?.interviewType || (feedback?.isMockInterview ? "mockinterview" : undefined) || (feedback?.mockInterviewRoundId ? "mockinterview" : undefined);
+
   // console.log("feedback  useFeedbackData", feedback)
   // console.log("feedback  isViewMode", isViewMode)
 
@@ -64,6 +67,26 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
   // Preselected Questions Responses State Management
   const [preselectedQuestionsResponses, setPreselectedQuestionsResponses] =
     useState([]);
+
+
+  // Filter tabs based on interview type
+  const getFilteredTabsList = () => {
+    const allTabs = [
+      { id: 1, tab: "Feedback" },
+      { id: 2, tab: "Interview Questions" },
+      { id: 3, tab: "Candidate" },
+      { id: 4, tab: "Position" },
+    ];
+
+    // Hide Position tab for mock interviews
+    if (effectiveInterviewType === "mockinterview") {
+      return allTabs.filter(tab => tab.tab !== "Position");
+    }
+
+    return allTabs;
+  };
+
+  const tabsList = getFilteredTabsList();
 
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {
@@ -111,9 +134,9 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
             mandatory: newMandatory,
             snapshot: q.snapshot
               ? {
-                  ...q.snapshot,
-                  mandatory: newMandatory,
-                }
+                ...q.snapshot,
+                mandatory: newMandatory,
+              }
               : undefined,
           };
         }
@@ -150,8 +173,8 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
             isViewMode={isViewMode}
             interviewerSectionData={interviewerSectionData}
             setInterviewerSectionData={setInterviewerSectionData}
-            interviewType={interviewType}
-            roundId={roundId}
+            interviewType={effectiveInterviewType}
+            roundId={effectiveRoundId}
             // interviewRoundId={decodedData?.interviewRoundId}
             // candidateId={selectedCandidate?.candidate?._id}
             // positionId={selectedCandidate?.position?._id}
@@ -171,8 +194,8 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
             closePopup={handleClose}
             isEditMode={isEditMode}
             isViewMode={isViewMode}
-            interviewType={interviewType}
-            roundId={roundId}
+            interviewType={effectiveInterviewType}
+            roundId={effectiveRoundId}
             // interviewData={selectedCandidate}
             interviewerSectionData={interviewerSectionData}
             setInterviewerSectionData={setInterviewerSectionData}
@@ -194,8 +217,8 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
         return (
           <CandidateMiniTab
             isViewMode={isViewMode}
-            roundId={roundId}
-            interviewType={interviewType}
+            roundId={effectiveRoundId}
+            interviewType={effectiveInterviewType}
           />
         );
       case 4:
@@ -220,14 +243,13 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
           className="flex items-center gap-8 cursor-pointer mb-4 border-b border-gray-200
              overflow-x-auto"
         >
-          {}
+          { }
           {tabsList.map((EachTab) => (
             <li
               key={EachTab.id}
               onClick={() => setActiveTab(EachTab.id)}
-              className={`pb-2 flex-shrink-0 ${
-                activeTab === EachTab.id ? "border-b-2 border-[#227a8a]" : ""
-              }`}
+              className={`pb-2 flex-shrink-0 ${activeTab === EachTab.id ? "border-b-2 border-[#227a8a]" : ""
+                }`}
             >
               {EachTab.tab}
             </li>

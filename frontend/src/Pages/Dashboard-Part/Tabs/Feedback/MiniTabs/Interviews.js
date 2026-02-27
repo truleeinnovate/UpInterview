@@ -149,7 +149,7 @@ const InterviewsMiniTabComponent = ({
 
   const interviewRoundData =
     interviewData || mockinterview || {};
-  console.log("interviewRoundDatafeedbackData", interviewRoundData)
+  // console.log("interviewRoundDatafeedbackData", interviewRoundData)
 
   const feedbackData = useMemo(() => {
     const raw = locationFeedback || feedbackDatas || {};
@@ -628,10 +628,10 @@ const InterviewsMiniTabComponent = ({
     });
   };
 
-  console.log(
-    "preselectedQuestionsResponses preselectedQuestionsResponses",
-    preselectedQuestionsResponses,
-  );
+  // console.log(
+  //   "preselectedQuestionsResponses preselectedQuestionsResponses",
+  //   preselectedQuestionsResponses,
+  // );
 
   const meetingId = interviewData?.interviewRound?.meetingId;
 

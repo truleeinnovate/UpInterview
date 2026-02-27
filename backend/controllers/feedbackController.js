@@ -1035,12 +1035,12 @@ const getFeedbackByRoundId = async (req, res) => {
     const { roundId } = req.params;
     const { interviewerId, interviewType } = req.query;
     const isMockInterview = interviewType === "mockinterview";
-    console.log("req.query", req.query);
+    // console.log("req.query", req.query);
 
-    console.log("roundId", roundId);
+    // console.log("roundId", roundId);
 
-    console.log("interviewerIdroundId", interviewerId);
-    console.log("interviewType", interviewType);
+    // console.log("interviewerIdroundId", interviewerId);
+    // console.log("interviewType", interviewType);
 
     // Validate roundId
     if (!mongoose.Types.ObjectId.isValid(roundId)) {
@@ -1124,7 +1124,7 @@ const getFeedbackByRoundId = async (req, res) => {
       .populate("ownerId", "firstName lastName email")
       .lean();
 
-    console.log("feedbacks feedbacks", feedbacks);
+    // console.log("feedbacks feedbacks", feedbacks);
 
     // Fetch Resume data for candidate (skills, experience, etc. moved from Candidate)
     const candidateIds = [];

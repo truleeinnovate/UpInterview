@@ -76,7 +76,7 @@ const formatDateTime = (date, showDate = true) => {
   // Validate date
   const d = new Date(date);
   if (isNaN(d.getTime())) {
-    console.warn("Invalid date passed to formatDateTime:", date);
+    // console.warn("Invalid date passed to formatDateTime:", date);
     return "";
   }
 
@@ -451,7 +451,7 @@ const RoundFormInterviews = () => {
           // Validate scheduledDate before using it
           const date = new Date(scheduledDate);
           if (isNaN(date.getTime())) {
-            console.warn("Invalid scheduledDate:", scheduledDate);
+            // console.warn("Invalid scheduledDate:", scheduledDate);
             return; // Exit if date is invalid
           }
 
@@ -2053,9 +2053,9 @@ const RoundFormInterviews = () => {
         // console.log("safeFieldsChanged:", safeFieldsChanged);
 
         if (criticalFieldsUnchanged && safeFieldsChanged) {
-          console.log(
-            "Safe update detected: only instructions, sequence, or questions changed",
-          );
+          // console.log(
+          //   "Safe update detected: only instructions, sequence, or questions changed",
+          // );
           updateType = "SAFE_UPDATE";
           const safePayload = {
             interviewId,
@@ -2530,13 +2530,13 @@ const RoundFormInterviews = () => {
         }
       }
     } catch (err) {
-      console.error("=== Form Submission Error ===");
-      console.error("Error submitting the form:", err);
-      console.error("Error details:", {
-        message: err.message,
-        stack: err.stack,
-        response: err.response?.data,
-      });
+      // console.error("=== Form Submission Error ===");
+      // console.error("Error submitting the form:", err);
+      // console.error("Error details:", {
+      //   message: err.message,
+      //   stack: err.stack,
+      //   response: err.response?.data,
+      // });
 
       // if (err.response?.data?.message) {
       //   notify.error(err.response.data.message);

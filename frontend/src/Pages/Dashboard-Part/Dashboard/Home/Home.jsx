@@ -62,6 +62,8 @@ const Home = () => {
       type: "feedbackAnalytics",
     },
   );
+
+  console.log("feedbacksResponse", feedbacksResponse);
   const pendingDraftCount =
     feedbacksResponse?.feedbackTotalCount > 0
       ? feedbacksResponse.feedbackTotalCount
