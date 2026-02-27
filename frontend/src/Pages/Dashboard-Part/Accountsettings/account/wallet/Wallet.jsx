@@ -420,14 +420,6 @@ const Wallet = () => {
           <div className="flex sm:flex-col sm:justify-start justify-between sm:items-start items-center mb-4">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-medium">Transaction History</h3>
-              <button
-                onClick={handleRefetch}
-                disabled={isRefetching}
-                title="Refresh transactions"
-                className="p-1 text-gray-400 hover:text-custom-blue hover:bg-blue-50 rounded-full transition-colors duration-200 disabled:opacity-50"
-              >
-                <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
-              </button>
             </div>
             <button className="text-custom-blue hover:text-custom-blue/80">
               Export Transactions

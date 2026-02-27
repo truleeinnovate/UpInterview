@@ -552,9 +552,17 @@ const walletVerifyPayment = async (req, res) => {
       return res.status(400).json({ error: "Invalid amount provided" });
     }
 
-    // Check if this payment has already been processed
+    // Check if this payment/order has already been processed
+    // This prevents double-processing when both handler and payment.failed fire
     const existingTransaction = wallet.transactions.find(
-      (txn) => txn.metadata && txn.metadata.paymentId === razorpay_payment_id
+      (txn) =>
+        txn.metadata &&
+        (
+          // Match by payment ID (exact same payment)
+          (razorpay_payment_id && txn.metadata.paymentId === razorpay_payment_id) ||
+          // Match by order ID (same order, different handler calls)
+          (razorpay_order_id && txn.metadata.orderId === razorpay_order_id)
+        )
     );
 
     if (existingTransaction) {

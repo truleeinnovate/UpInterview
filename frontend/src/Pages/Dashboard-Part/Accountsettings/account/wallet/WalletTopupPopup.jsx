@@ -115,6 +115,11 @@ export function WalletTopupPopup({ onClose, onTopup }) {
         return;
       }
 
+      // Guard flag: if payment.failed fires, prevent handler from crediting
+      // On live Razorpay (dev/prod), BOTH handler and payment.failed can fire
+      // for the same payment. This flag prevents double-processing.
+      let paymentFailed = false;
+
       // Initialize Razorpay payment
       const options = {
         key: key_id,
@@ -129,6 +134,13 @@ export function WalletTopupPopup({ onClose, onTopup }) {
         description: "Wallet Top-up",
         order_id: orderId,
         handler: async function (response) {
+          // If payment.failed already fired for this payment, do NOT credit
+          if (paymentFailed) {
+            console.warn("[WALLET] handler fired after payment.failed — skipping credit");
+            setIsProcessing(false);
+            return;
+          }
+
           try {
 
             // Verify payment with backend via TanStack Query mutation
@@ -213,6 +225,9 @@ export function WalletTopupPopup({ onClose, onTopup }) {
 
       const razorpay = new window.Razorpay(options);
       razorpay.on("payment.failed", async function (response) {
+        // Set flag FIRST to prevent handler from crediting
+        paymentFailed = true;
+
         console.error("Razorpay payment failed:", response);
         const description =
           response?.error?.description || response?.error?.reason;
