@@ -527,27 +527,28 @@ const Feedback = () => {
   };
 
   const handleSummarize = (feedback) => {
-    setSummaryData({
-      candidate_name: feedback.candidateId
-        ? `${feedback.candidateId.FirstName || ""} ${feedback.candidateId.LastName || ""
-        }`
-        : "Unknown",
-      candidate_job_title: feedback.positionId?.title || "Unknown Position",
-      overall_impression:
-        feedback.overallImpression?.note || "No overall impression provided",
-      recommendation:
-        feedback.overallImpression?.recommendation || "Not specified",
-      skills: feedback.skills || [],
-      status: feedback.status || "Not specified",
-      interview_mode:
-        feedback.interviewRoundId?.interviewMode || "Not specified",
-      scheduled_datetime:
-        feedback.interviewRoundId?.dateTime || "Not specified",
-      interviewer: feedback.interviewerId
-        ? `${feedback.interviewerId.firstName || ""} ${feedback.interviewerId.lastName || ""
-        }`
-        : "Not specified",
-    });
+    // setSummaryData({
+    //   candidate_name: feedback.candidateId
+    //     ? `${feedback.candidateId.FirstName || ""} ${feedback.candidateId.LastName || ""
+    //     }`
+    //     : "Unknown",
+    //   candidate_job_title: feedback.positionId?.title || "Unknown Position",
+    //   overall_impression:
+    //     feedback.overallImpression?.note || "No overall impression provided",
+    //   recommendation:
+    //     feedback.overallImpression?.recommendation || "Not specified",
+    //   skills: feedback.skills || [],
+    //   status: feedback.status || "Not specified",
+    //   interview_mode:
+    //     feedback.interviewRoundId?.interviewMode || "Not specified",
+    //   scheduled_datetime:
+    //     feedback.interviewRoundId?.dateTime || "Not specified",
+    //   interviewer: feedback.interviewerId
+    //     ? `${feedback.interviewerId.firstName || ""} ${feedback.interviewerId.lastName || ""
+    //     }`
+    //     : "Not specified",
+    // });
+    setSummaryData(feedback);
     setShowSummaryModal(true);
   };
 
