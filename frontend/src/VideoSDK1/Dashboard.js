@@ -58,6 +58,7 @@ const Dashboard = () => {
 
   const isMockInterview = urlData?.interviewType === "mockinterview";
 
+
   // ✅ ALWAYS call hooks
   const {
     mockInterview: mockinterview,
@@ -714,6 +715,7 @@ const Dashboard = () => {
                   candidateData={candidateData}
                   positionData={positionData}
                   interviewRoundData={interviewRoundData}
+                  isMockInterview={isMockInterview}
                 />
               </MeetingProvider>
             </>

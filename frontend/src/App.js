@@ -1252,7 +1252,7 @@ const MainAppRoutes = ({
                   path="/feedback/new"
                   element={
                     <>
-                      <AddFeedbackForm /> <FeedbackTab />
+                      <AddFeedbackForm />
                     </>
                   }
                 />
@@ -1260,7 +1260,7 @@ const MainAppRoutes = ({
                   path="/feedback/:id"
                   element={
                     <>
-                      <AddFeedbackForm mode="feedback" /> <FeedbackTab />
+                      <AddFeedbackForm mode="feedback" />
                     </>
                   }
                 />
@@ -1268,7 +1268,7 @@ const MainAppRoutes = ({
                   path="/feedback-candidate/:id"
                   element={
                     <>
-                      <AddFeedbackForm mode="candidate" /> <FeedbackTab />
+                      <AddFeedbackForm mode="candidate" />
                     </>
                   }
                 />
@@ -1276,7 +1276,7 @@ const MainAppRoutes = ({
                   path="/interviews-questions/:id"
                   element={
                     <>
-                      <AddFeedbackForm mode="interviews" /> <FeedbackTab />
+                      <AddFeedbackForm mode="interviews" />
                     </>
                   }
                 />
