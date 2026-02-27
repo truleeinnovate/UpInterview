@@ -242,7 +242,7 @@ export function WalletTopupPopup({ onClose, onTopup }) {
             ownerId: ownerId,
             tenantId: tenantId || "default",
             amount: parseFloat(amount),
-            description: `Wallet Top-up failed – ${description || "Payment failed"}`,
+            description: description || "Payment failed",
           });
         } catch (err) {
           // Don't block UI — the user already sees the error
