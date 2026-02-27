@@ -34,9 +34,9 @@ const processFreePlanRenewal = async (subscription) => {
     const now = new Date();
     const billingCycle = subscription.selectedBillingCycle;
 
-    // Calculate new dates
+    // Calculate new dates — use endDate as the start reference to prevent date drift
     const newStartDate = new Date(subscription.endDate || now);
-    const newEndDate = calculateEndDate(billingCycle);
+    const newEndDate = calculateEndDate(billingCycle, newStartDate);
     const newNextBillingDate = new Date(newEndDate);
 
     // Update subscription dates
@@ -117,10 +117,10 @@ const processFreePlanRenewal = async (subscription) => {
             f?.name === "Internal_Interviews"
               ? "Internal Interviews"
               : f?.name === "Question_Bank_Access"
-              ? "Question Bank Access"
-              : f?.name === "Bandwidth"
-              ? "User Bandwidth"
-              : f?.name,
+                ? "Question Bank Access"
+                : f?.name === "Bandwidth"
+                  ? "User Bandwidth"
+                  : f?.name,
           utilized: 0,
           remaining: Number(f?.limit) || 0,
         }));

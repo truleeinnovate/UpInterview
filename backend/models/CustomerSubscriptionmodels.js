@@ -7,7 +7,7 @@ const CustomerSubscriptionSchema = new mongoose.Schema({
     selectedBillingCycle: { type: String, enum: ['monthly', 'quarterly', 'annual'], required: true },
     startDate: { type: Date, default: Date.now },
     nextBillingDate: { type: Date, required: false },
-    status: { type: String, enum: ['active', 'inactive', 'paused', 'cancelled','pending', 'failed', 'expired', 'created'], default: 'pending' },
+    status: { type: String, enum: ['active', 'inactive', 'paused', 'cancelled', 'pending', 'failed', 'expired', 'created', 'halted'], default: 'pending' },
     endDate: { type: Date, default: null },
     endReason: { type: String, enum: ['upgrade', 'downgrade', 'cancelled', 'renewal_failed'], default: null },
     price: { type: Number, required: true },
@@ -28,11 +28,11 @@ const CustomerSubscriptionSchema = new mongoose.Schema({
     razorpaySubscriptionId: { type: String, required: false },
     razorpayPaymentId: { type: String, required: false },
     lastPaymentId: { type: String, required: false },
-    lastPaymentDate:{type: Date},
+    lastPaymentDate: { type: Date },
     lastRenewalCheck: { type: Date },
     // razorpaySubscriptionStatus: { type: String, enum: ['active', 'inactive', 'paused', 'cancelled','pending'], default: 'pending' },
     razorpayPlanId: { type: String, required: false }
-    
+
 }, { timestamps: true });
 
 

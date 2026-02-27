@@ -52,9 +52,7 @@ const generateTransactionId = () => {
 // We've moved the import of helper functions to the global scope
 // so we don't need to redefine or create fallbacks here
 
-// Default test keys for development - replace with your actual keys in production
-const RAZORPAY_TEST_KEY_ID = "rzp_test_YourTestKeyHere"; // Replace with your actual test key
-const RAZORPAY_TEST_SECRET = "YourTestSecretHere"; // Replace with your actual test secret
+
 
 // Razorpay instance creation - initialize with your API keys
 // Make sure to use valid test keys for development
@@ -632,27 +630,12 @@ const verifyPayment = async (req, res) => {
                 const fromMoment = moment(usage.fromDate);
                 const toMoment = moment(usage.toDate);
 
-                // Check if current date is within the existing usage period
+                // Primary check: is current date within the existing usage period?
                 if (nowMoment.isBetween(fromMoment, toMoment, null, "[]")) {
                   return true;
                 }
 
-                // For monthly: check if we're in the same month and year
-                if (usageBillingCycle.includes("month")) {
-                  return (
-                    nowMoment.year() === fromMoment.year() &&
-                    nowMoment.month() === fromMoment.month()
-                  );
-                }
-
-                // For annual: check if we're in the same year cycle
-                if (
-                  usageBillingCycle.includes("year") ||
-                  usageBillingCycle.includes("annual")
-                ) {
-                  return nowMoment.year() === fromMoment.year();
-                }
-
+                // If usage period has ended, it's a new billing period
                 return false;
               };
 
@@ -804,59 +787,6 @@ const verifyPayment = async (req, res) => {
         }
       }
 
-      // Update wallet if plan has credits
-      if (plan && plan.walletCredits > 0) {
-        // Safely resolve related invoice id if available
-        const relatedInvoiceId =
-          invoice && invoice._id ? invoice._id.toString() : undefined;
-
-        const wallet = await WalletTopup.findOne({ ownerId });
-
-        if (wallet) {
-          // Update wallet status from pending to completed
-          let updatedTransaction = false;
-
-          const txns = Array.isArray(wallet.transactions)
-            ? wallet.transactions
-            : [];
-          for (let i = 0; i < txns.length; i++) {
-            if (
-              txns[i].status === "pending" &&
-              relatedInvoiceId &&
-              txns[i].relatedInvoiceId === relatedInvoiceId
-            ) {
-              txns[i].status = "completed";
-              updatedTransaction = true;
-              break;
-            }
-          }
-
-          if (!updatedTransaction) {
-            // If no pending transaction found, add subscription credits using common function
-            try {
-              await createWalletTransaction({
-                ownerId,
-                businessType: WALLET_BUSINESS_TYPES.SUBSCRIBE_CREDITED,
-                amount: plan.walletCredits,
-                description: `Credited from ${plan.name} subscription`,
-                relatedInvoiceId: relatedInvoiceId,
-                status: "completed",
-                reason: "SUBSCRIPTION_CREDITED",
-                metadata: {
-                  planId: plan._id,
-                  planName: plan.name,
-                  source: "subscription_credits",
-                },
-              });
-            } catch (walletError) {
-              console.error("Error adding subscription credits:", walletError);
-            }
-          }
-
-          await wallet.save();
-        }
-      }
-
       //update organization subscription status
     } catch (error) {
       console.error("Error updating subscription records:", error);
@@ -943,6 +873,11 @@ const verifyPayment = async (req, res) => {
   }
 };
 
+// In-memory set to track processed webhook events (prevents duplicate processing)
+// In production, consider using Redis or a database collection for persistence across restarts
+const processedWebhookEvents = new Set();
+const MAX_PROCESSED_EVENTS = 10000; // Limit memory usage
+
 // Full webhook handler for processing Razorpay events
 const handleWebhook = async (req, res) => {
   // Set up logging context
@@ -982,19 +917,11 @@ const handleWebhook = async (req, res) => {
       webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
     }
 
-    // Webhook signature verification approach
-    // For easier development and testing, we'll accept all webhooks in development mode
+    // Webhook signature verification
     const isDevelopment = process.env.NODE_ENV !== "production";
 
-    // Log verification attempt
-
-    // IMPORTANT: For simplicity, we'll accept ALL webhook types in both development and production
-    // This is because Razorpay uses different signing methods for different event types
-    // and we need to process all subscription and payment events
-
     if (!isDevelopment && webhookSecret && signature) {
-      // In production mode, we'll log the signature mismatch but still process the webhook
-      // This is to ensure critical payment and subscription events are not missed
+      // In production mode, verify webhook signature and REJECT invalid ones
       try {
         const bodyStr =
           typeof req.body === "string" ? req.body : JSON.stringify(req.body);
@@ -1003,19 +930,34 @@ const handleWebhook = async (req, res) => {
         const digest = shasum.digest("hex");
         const isValid = digest === signature;
 
-        // Even if signature doesn't match, we'll continue processing
-        // But we'll log this as a warning for monitoring
         if (!isValid) {
-          console.warn(
-            `⚠️ Webhook signature mismatch for ${event} - processing anyway`
+          console.error(
+            `🚫 Webhook signature verification FAILED for ${event} - rejecting request`
           );
+          return res.status(400).json({ error: "Invalid webhook signature" });
         }
       } catch (error) {
         console.error("Error during signature verification:", error);
+        return res.status(400).json({ error: "Signature verification error" });
       }
     }
 
-    // We'll process all webhooks, regardless of signature verification
+    // Idempotency check: Prevent duplicate processing of the same webhook event
+    // Razorpay can send the same webhook multiple times
+    const eventId = req.body.account_id + "_" + event + "_" +
+      (req.body.payload?.payment?.entity?.id || req.body.payload?.subscription?.entity?.id || Date.now());
+
+    if (processedWebhookEvents.has(eventId)) {
+      // Already processed this event, return success without reprocessing
+      return res.status(200).json({ received: true, duplicate: true });
+    }
+
+    // Mark as processed (evict oldest entries if memory limit reached)
+    if (processedWebhookEvents.size >= MAX_PROCESSED_EVENTS) {
+      const firstEntry = processedWebhookEvents.values().next().value;
+      processedWebhookEvents.delete(firstEntry);
+    }
+    processedWebhookEvents.add(eventId);
 
     // Extract payment entity - handle different event types
     let payload;
@@ -2355,7 +2297,7 @@ const handleSubscriptionCharged = async (subscription, res) => {
           return handleSubscriptionCharged({
             ...subscription,
             id: subscriptionId,
-          });
+          }, res);
         }
       }
       console.error(
@@ -2480,9 +2422,13 @@ const handleSubscriptionCharged = async (subscription, res) => {
       "Subscription Plan";
 
     // Calculate the next billing date to use as end date
-    // Using existing variables instead of redeclaring them
+    // Use the subscription's current start as the base to prevent date drift
+    const periodStartForCalc = subscription.current_start
+      ? new Date(subscription.current_start * 1000)
+      : new Date();
     let billingEndDate = calculateEndDate(
-      customerSubscription.selectedBillingCycle
+      customerSubscription.selectedBillingCycle,
+      periodStartForCalc
     );
 
     let invoice = await Invoicemodels.findOne({
@@ -2709,9 +2655,26 @@ const handleSubscriptionCharged = async (subscription, res) => {
 
     // create usage
 
-    const features = subscriptionPlan.features;
+    // Null safety: ensure subscriptionPlan exists before accessing features
+    if (!subscriptionPlan) {
+      console.error(
+        `[WEBHOOK subscription.charged] Subscription plan not found for planId: ${planId}`
+      );
+      return;
+    }
+
+    const features = subscriptionPlan.features || [];
 
     const tenant = await Tenant.findById(customerSubscription.tenantId);
+
+    // Null safety: ensure tenant exists before updating
+    if (!tenant) {
+      console.error(
+        `[WEBHOOK subscription.charged] Tenant not found: ${customerSubscription.tenantId}`
+      );
+      return;
+    }
+
     tenant.status = "active";
 
     // Handle bandwidth limit - convert "unlimited" to 0 (which represents unlimited in the system)
@@ -2757,24 +2720,12 @@ const handleSubscriptionCharged = async (subscription, res) => {
       const fromMoment = moment(usage.fromDate);
       const toMoment = moment(usage.toDate);
 
-      // Check if current date is within the existing usage period
+      // Primary check: is current date within the existing usage period?
       if (nowMoment.isBetween(fromMoment, toMoment, null, "[]")) {
         return true;
       }
 
-      // For monthly: check if we're in the same month and year
-      if (billingCycle === "monthly") {
-        return (
-          nowMoment.year() === fromMoment.year() &&
-          nowMoment.month() === fromMoment.month()
-        );
-      }
-
-      // For annual: check if we're in the same year cycle
-      if (billingCycle === "annual" || billingCycle === "yearly") {
-        return nowMoment.year() === fromMoment.year();
-      }
-
+      // If usage period has ended, it's a new billing period
       return false;
     };
 

@@ -214,6 +214,24 @@ dbConnection
     console.error("Failed to set up interview status cron job:", err);
   });
 
+// Start Automatic Free Plan Renewal System
+// This runs automatically every hour to renew expired free plans
+// No manual intervention needed - completely automatic
+const {
+  startFreePlanRenewalCron,
+} = require("./controllers/FreePlanRenewalController");
+dbConnection
+  .then(() => {
+    if (process.env.NODE_ENV !== "test") {
+      startFreePlanRenewalCron();
+    }
+  })
+  .catch((err) => {
+    //   console.error('[FREE PLAN RENEWAL] Failed to initialize automatic renewal system:', err);
+  });
+
+
+
 // Export the MongoDB connection promise for other modules to use
 app.locals.dbConnection = dbConnection;
 
@@ -1125,22 +1143,6 @@ require("./controllers/PushNotificationControllers/pushNotificationAssessmentCon
 
 // Start Subscription Renewal system and cron jobs
 require("./controllers/SubscriptionRenewalController");
-
-// Start Automatic Free Plan Renewal System
-// This runs automatically every hour to renew expired free plans
-// No manual intervention needed - completely automatic
-const {
-  startFreePlanRenewalCron,
-} = require("./controllers/FreePlanRenewalController");
-dbConnection
-  .then(() => {
-    if (process.env.NODE_ENV !== "test") {
-      startFreePlanRenewalCron();
-    }
-  })
-  .catch((err) => {
-    //   console.error('[FREE PLAN RENEWAL] Failed to initialize automatic renewal system:', err);
-  });
 
 // in contextfetch for fetchUserProfile
 // app.get("/auth/users/:id", async (req, res) => {
