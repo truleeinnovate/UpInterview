@@ -171,7 +171,7 @@ const FeedbackForm = ({
     // interviewType: urlData?.interviewType,
   });
 
-  // console.log("feedbackDatas", feedbackDatas)
+
   // <---------------------------- NEW UI FIELDS -------------------------------------------
   const [formData, setFormData] = useState({
     candidateName: '',
@@ -250,7 +250,7 @@ const FeedbackForm = ({
 
   // console.log("candidateData", candidateData)
 
-  // console.log("positionData", positionData)
+  console.log("positionData", positionData)
 
   // console.log("interviewRoundData", interviewRoundData)
 
@@ -268,7 +268,7 @@ const FeedbackForm = ({
     return interviewRoundData;
   }, [interviewRoundData, urlData?.interviewRoundId, roundId]);
 
-  console.log("currentRound", currentRound);
+  // console.log("currentRound", currentRound);
 
   const feedbackData = useMemo(() => {
     const raw = locationFeedback || feedbackDatas || {};
@@ -305,7 +305,7 @@ const FeedbackForm = ({
       };
     }
     return raw;
-  }, [locationFeedback, feedbackDatas, urlData?.interviewerId]);
+  }, [locationFeedback, feedbackDatas, urlData?.interviewerId, roundId]);
   // console.log("feedbackData", feedbackData);
 
   // Derived state for submission status
@@ -1166,6 +1166,10 @@ const FeedbackForm = ({
           ? `${interviewRoundData.interviewCode}-00${interviewRoundData?.rounds?.[0]?.sequence || ""}`
           : "") || "",
     isLoaded: !feedbackLoading && !isMockLoading && !isInterviewLoading,
+    onFeedbackCreated: (newId) => {
+      console.log("Auto-save created new feedback with ID:", newId);
+      setAutoSaveFeedbackId(newId);
+    },
   });
 
   // Watch for changes to feedback data and trigger auto-save
@@ -1950,7 +1954,7 @@ const FeedbackForm = ({
 
       // navigate("/feedback");
     } catch (error) {
-      console.error("💥 Error submitting feedback:", error);
+      // console.error("💥 Error submitting feedback:", error);
       alert("Failed to submit feedback. Please try again.");
     }
   };
@@ -2059,7 +2063,7 @@ const FeedbackForm = ({
         });
       }
     } catch (error) {
-      console.error("💥 Error saving draft:", error);
+      // console.error("💥 Error saving draft:", error);
       alert("Failed to save draft. Please try again.");
     }
   };
@@ -2140,7 +2144,7 @@ const FeedbackForm = ({
 
       {/* v1.0.3 <--------------------------------------------------------- */}
       <div
-        className="bg-white p-4 pb-20"
+        className="bg-white p-4"
       // className="bg-white rounded-lg sm:px-3 px-6 py-6 shadow-sm pb-20 mb-8"
       >
         {/* v1.0.3 ---------------------------------------------------------> */}
@@ -2692,7 +2696,7 @@ const FeedbackForm = ({
                   <option value="Hire">Hire</option>
                   <option value="Maybe">Maybe</option>
                   <option value="No Hire">No Hire</option>
-                  <option value="Strong No Hire">Strong No Hire</option>
+                  {/* <option value="Strong No Hire">Strong No Hire</option> */}
                 </select>
               </div>
             </div>

@@ -9,12 +9,10 @@ import CandidateMiniTab from "./MiniTabs/Candidate";
 import InterviewsMiniTabComponent from "./MiniTabs/Interviews";
 import FeedbackForm from "../../../videoCall/FeedbackForm";
 import { usePendingFeedbacks } from "../../../../apiHooks/useFeedbacks";
+import { getFilteredTabsList } from "../../../../VideoSDK1/utils/feedbackcommon";
+import PositionDetails from "../../../videoCall/PositionDetails";
 
-const tabsList = [
-  { id: 1, tab: "Feedback" },
-  { id: 2, tab: "Interview Questions" },
-  { id: 3, tab: "Candidate" },
-];
+
 
 const AddFeedbackForm = ({
   isModal = false,
@@ -27,13 +25,15 @@ const AddFeedbackForm = ({
   const { id: paramId } = useParams();
   const formRef = useRef(null);
 
-  // console.log("interviewType", interviewType);
+
 
   const { data, isLoading, isError, error } = usePendingFeedbacks();
   // console.log(
   //   "PENDING FEEDBACKS DATA ================================> ",
   //   data,
   // );
+
+
 
   // General Form Step State
   const [currentFormStep, setCurrentFormStep] = useState(paramId ? 2 : 1);
@@ -70,6 +70,8 @@ const AddFeedbackForm = ({
         return 3; // Candidate tab
       case "interviews":
         return 2; // Interview Questions tab
+      case "position":
+        return 4; // Position tab
       case "feedback":
       default:
         return 1; // Feedback Form tab
@@ -113,6 +115,7 @@ const AddFeedbackForm = ({
     }));
   }, [data]);
 
+  const tabsList = getFilteredTabsList(selectedRoundDetails?.isMock);
   // useEffect(() => {
   //   if (paramId && roundOptions.length > 0) {
   //     const selectedOption = roundOptions.find(opt => opt.value === paramId);
@@ -331,7 +334,7 @@ const AddFeedbackForm = ({
 
   const renderTabContent = () => {
     const effectiveRoundId = roundId || formData.selectedRoundId;
-    const effectiveInterviewType = selectedRoundDetails?.isMock;
+    const effectiveInterviewType = selectedRoundDetails?.isMock ? "mockinterview" : "interview";
     // console.log("selectedRoundDetails", selectedRoundDetails);
     // console.log("effectiveInterviewType", effectiveInterviewType);
 
@@ -383,6 +386,11 @@ const AddFeedbackForm = ({
             isAddMode={true}
           />
         );
+      case 4:
+        return <PositionDetails
+          roundId={effectiveRoundId}
+          interviewType={effectiveInterviewType}
+        />
       default:
         return null;
     }
@@ -392,7 +400,8 @@ const AddFeedbackForm = ({
     <div ref={formRef}>
       {currentFormStep === 1 && (
         <div className="space-y-6">
-          {roundOptions?.length > 0 && <h4 className="text-lg font-semibold text-gray-800">Feedback</h4>}
+          {/* {roundOptions?.length > 0 && 
+          <h4 className="text-lg font-semibold text-gray-800">Feedback</h4>} */}
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-6">
               {/* Round Selection Dropdown */}
@@ -401,7 +410,7 @@ const AddFeedbackForm = ({
                   <div className="flex flex-col justify-center items-center h-[400px]">
                     <div className="text-center">
                       <svg
-                        className="mx-auto h-24 w-24 text-gray-400 mb-4"
+                        className="mx-auto h-12 w-18 text-gray-40"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -413,13 +422,13 @@ const AddFeedbackForm = ({
                           d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.25 2.25v.104c0 .414-.336.75-.75.75h-4.5a.75.75 0 01-.75-.75v-.104c0-.208.028-.41.08-.603zm0 0c-.296.115-.57.277-.817.445a.75.75 0 01-.983-.277A2.25 2.25 0 0110.5 2.25h-1.5a2.25 2.25 0 00-2.25 2.25v6.75m12 0c0 .414-.336.75-.75.75h-6.75a.75.75 0 01-.75-.75v-6.75a.75.75 0 01.75-.75h6.75a.75.75 0 01.75.75v6.75z"
                         />
                       </svg>
-                      <h2 className="text-2xl font-semibold text-gray-700 mb-2">
-                        No Pending Feedbacks Found
+                      <h2 className="text-lg font-medium text-gray-700 mb-2">
+                        No pending feedback to submit...
                       </h2>
-                      <p className="text-gray-500 max-w-md mb-8">
+                      {/* <p className="text-gray-500 max-w-md mb-8">
                         There are no interviews pending for feedback at the moment.
                         Please check back later when interviews are completed.
-                      </p>
+                      </p> */}
                       <div className="flex justify-center">
                         {/* <Button
                           variant="outline"
@@ -454,7 +463,7 @@ const AddFeedbackForm = ({
 
               {/* Basic Information Section */}
               {selectedRoundDetails && (
-                <div className="mt-6">
+                <div className="mt-6  border-t-2 border-gray-200 pt-4">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Basic Information
                   </h3>
@@ -548,7 +557,7 @@ const AddFeedbackForm = ({
             </div>
           </div>
           {roundOptions?.length > 0 &&
-            <div className="flex justify-end gap-3 mt-8">
+            <div className="flex justify-end gap-3 mt-10">
               <Button
                 variant="outline"
                 className="border border-custom-blue text-custom-blue"
@@ -568,9 +577,9 @@ const AddFeedbackForm = ({
       )}
 
       {currentFormStep === 2 && (
-        <div className="space-y-4">
+        <div >
           {/* Dynamic Tab Content */}
-          <div className="min-h-[400px] py-4">{renderTabContent()}</div>
+          <div className="min-h-[400px] ">{renderTabContent()}</div>
         </div>
       )}
     </div>
@@ -603,12 +612,12 @@ const AddFeedbackForm = ({
           }
         </div>
         {currentFormStep === 2 && (
-          <ul className="flex self-start gap-6 cursor-pointer border-b mb-6 w-full">
+          <ul className="flex self-start gap-5 cursor-pointer border-b mb-6 w-full">
             {tabsList.map((tab) => (
               <li
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-2 px-1 flex-shrink-0 text-sm font-semibold transition-all duration-200 ${activeTab === tab.id
+                className={`pb-2  flex-shrink-0 text-sm font-semibold transition-all duration-200 ${activeTab === tab.id
                   ? "border-b-2 border-custom-blue text-custom-blue"
                   : "text-gray-600 hover:text-gray-700"
                   }`}

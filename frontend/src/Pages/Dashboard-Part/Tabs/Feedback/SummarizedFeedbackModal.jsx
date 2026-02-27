@@ -125,7 +125,7 @@ const SummarizedFeedbackModal = ({ open, onClose, data }) => {
 
       pdf.save(`Feedback_Summary_${candidate_name}.pdf`);
     } catch (err) {
-      console.error("Error exporting PDF:", err);
+      // console.error("Error exporting PDF:", err);
       alert("Failed to export PDF. Check console.");
     }
   };

@@ -10,6 +10,7 @@ import PositionDetails from "../../../videoCall/PositionDetails";
 // v1.0.0 <-----------------------------------------------------------
 import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopup";
 import { useFeedbackData } from "../../../../apiHooks/useFeedbacks";
+import { getFilteredTabsList } from "../../../../VideoSDK1/utils/feedbackcommon";
 // v1.0.0 ----------------------------------------------------------->
 
 // const tabsList = [
@@ -69,24 +70,7 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
     useState([]);
 
 
-  // Filter tabs based on interview type
-  const getFilteredTabsList = () => {
-    const allTabs = [
-      { id: 1, tab: "Feedback" },
-      { id: 2, tab: "Interview Questions" },
-      { id: 3, tab: "Candidate" },
-      { id: 4, tab: "Position" },
-    ];
-
-    // Hide Position tab for mock interviews
-    if (effectiveInterviewType === "mockinterview") {
-      return allTabs.filter(tab => tab.tab !== "Position");
-    }
-
-    return allTabs;
-  };
-
-  const tabsList = getFilteredTabsList();
+  const tabsList = getFilteredTabsList(interviewType);
 
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {

@@ -32,6 +32,7 @@ const useAutoSaveFeedback = ({
   isMockInterview,
   feedbackId,
   isLoaded = true,
+  onFeedbackCreated,
 }) => {
   const timeoutRef = useRef(null);
   const lastSavedDataRef = useRef(null);
@@ -302,6 +303,14 @@ const useAutoSaveFeedback = ({
           response = await updateFeedback({ feedbackId: currentFeedbackId, feedbackData: finalPayload });
         } else {
           response = await createFeedback(finalPayload);
+          // Propagate newly created feedback ID back to the parent component
+          const newId = response?.data?._id || response?._id;
+          if (newId) {
+            dataRef.current.feedbackId = newId;
+            if (typeof onFeedbackCreated === 'function') {
+              onFeedbackCreated(newId);
+            }
+          }
         }
 
         if (response && (response.data?.success || response.success)) {

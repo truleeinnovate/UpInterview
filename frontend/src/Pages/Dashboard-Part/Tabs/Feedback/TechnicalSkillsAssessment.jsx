@@ -90,7 +90,7 @@ export default function TechnicalSkillsAssessment({ formData, setFormData, onSki
         <p className="text-sm text-gray-600">Select proficiency level for each skill</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-1 xl:grid-cols-2  2xl:grid-cols-2 gap-2">
         {(formData.skillOrder || []).map((skill) => {
           const currentLevel = getSkillLevel(skill);
           const isPreset = isPresetSkill(skill);
@@ -113,8 +113,8 @@ export default function TechnicalSkillsAssessment({ formData, setFormData, onSki
                     onClick={() => handleSkillLevelChange(skill, level.id)}
                     disabled={isReadOnly}
                     className={`px-2 py-1 rounded text-xs font-medium transition-all ${currentLevel === level.id
-                        ? 'text-white shadow-sm'
-                        : 'text-gray-600 bg-white border border-gray-300 hover:border-gray-400'
+                      ? 'text-white shadow-sm'
+                      : 'text-gray-600 bg-white border border-gray-300 hover:border-gray-400'
                       } ${isReadOnly ? 'cursor-default' : ''}`}
                     style={currentLevel === level.id ? { backgroundColor: level.color } : {}}
                   >
@@ -165,8 +165,8 @@ export default function TechnicalSkillsAssessment({ formData, setFormData, onSki
                   type="button"
                   onClick={() => setCustomSkillLevel(level.id)}
                   className={`px-2 py-1 rounded text-xs font-medium transition-all ${customSkillLevel === level.id
-                      ? 'text-white shadow-sm'
-                      : 'text-gray-600 bg-white border border-gray-300 hover:border-gray-400'
+                    ? 'text-white shadow-sm'
+                    : 'text-gray-600 bg-white border border-gray-300 hover:border-gray-400'
                     }`}
                   style={customSkillLevel === level.id ? { backgroundColor: level.color } : {}}
                 >
