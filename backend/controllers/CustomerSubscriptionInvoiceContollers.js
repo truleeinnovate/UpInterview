@@ -61,8 +61,8 @@ const createSubscriptionRecord = async (
     subPlanStatus: false,
     features:
       userDetails.userType === "individual" &&
-      userDetails.membershipType === "monthly" &&
-      userDetails.membershipType === "annual"
+        (userDetails.membershipType === "monthly" ||
+          userDetails.membershipType === "annual")
         ? features
         : [],
   });
@@ -200,10 +200,11 @@ const createReceipt = async (
 //   return startDate;
 // };
 
-const calculateEndDate = (cycle) => {
-  const startDate = new Date();
+const calculateEndDate = (cycle, startFrom = null) => {
+  const startDate = startFrom ? new Date(startFrom) : new Date();
   if (cycle === "monthly") startDate.setMonth(startDate.getMonth() + 1);
-  if (cycle === "annual") startDate.setFullYear(startDate.getFullYear() + 1);
+  else if (cycle === "quarterly") startDate.setMonth(startDate.getMonth() + 3);
+  else if (cycle === "annual") startDate.setFullYear(startDate.getFullYear() + 1);
   return startDate;
 };
 
