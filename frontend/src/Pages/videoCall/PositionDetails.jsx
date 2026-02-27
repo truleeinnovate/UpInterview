@@ -20,7 +20,7 @@ import {
 } from "../../apiHooks/useVideoCall";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 
-const PositionDetails = ({ fromFeedbackTab }) => {
+const PositionDetails = ({ fromFeedbackTab, roundId, interviewType }) => {
   const location = useLocation();
   const feedback = location.state?.feedback || {};
 
@@ -31,20 +31,20 @@ const PositionDetails = ({ fromFeedbackTab }) => {
   );
 
   const isMockInterview =
-    urlData?.interviewType === "mockinterview" || feedback?.isMockInterview;
+    urlData?.interviewType === "mockinterview" || feedback?.isMockInterview || interviewType === "mockinterview";
 
   const { useInterviewDetails } = useInterviews();
 
-  const {
-    mockInterview,
-    isMockLoading,
-    isError: isMockError,
-  } = useMockInterviewById({
-    mockInterviewRoundId: isMockInterview
-      ? urlData.interviewRoundId || feedback?.interviewRoundId
-      : null,
-    enabled: isMockInterview,
-  });
+  // const {
+  //   mockInterview,
+  //   isMockLoading,
+  //   isError: isMockError,
+  // } = useMockInterviewById({
+  //   mockInterviewRoundId: isMockInterview
+  //     ? urlData.interviewRoundId || feedback?.interviewRoundId
+  //     : null,
+  //   enabled: isMockInterview,
+  // });
 
   const {
     data: interviewData,
@@ -52,7 +52,7 @@ const PositionDetails = ({ fromFeedbackTab }) => {
     isError: interviewError,
   } = useInterviewDetails({
     roundId: !isMockInterview
-      ? urlData.interviewRoundId || feedback?.interviewRoundId
+      ? urlData.interviewRoundId || feedback?.interviewRoundId || roundId
       : null,
     enabled: !isMockInterview,
   });
@@ -189,15 +189,14 @@ const PositionDetails = ({ fromFeedbackTab }) => {
 
                 {!isMockInterview && (
                   <span
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-tight ${
-                      skill.requirement_level === "REQUIRED"
-                        ? "bg-rose-50 text-rose-700 border border-rose-200"
-                        : skill.requirement_level === "PREFERRED"
-                          ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
-                          : skill.requirement_level === "NICE_TO_HAVE"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "bg-slate-50 text-slate-600 border border-slate-200"
-                    }`}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-tight ${skill.requirement_level === "REQUIRED"
+                      ? "bg-rose-50 text-rose-700 border border-rose-200"
+                      : skill.requirement_level === "PREFERRED"
+                        ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
+                        : skill.requirement_level === "NICE_TO_HAVE"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-slate-50 text-slate-600 border border-slate-200"
+                      }`}
                   >
                     {skill.requirement_level?.replace(/_/g, " ")}
                   </span>

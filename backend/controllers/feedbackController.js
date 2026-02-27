@@ -2348,6 +2348,7 @@ const getPendingFeedbacks = async (req, res) => {
       "InProgress",
       "Completed",
     ];
+    //1. for activeInterviewStatuses feedback pending means when user compeletd from scheduler point of view if clicked completed means feedback pending
 
     // 2. Fetch Standard Interview Rounds with complete population
     const standardRounds = await InterviewRounds.find({
