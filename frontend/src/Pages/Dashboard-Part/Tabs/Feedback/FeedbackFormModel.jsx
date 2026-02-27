@@ -57,8 +57,8 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
   const effectiveRoundId = roundId || feedback?.interviewRoundId?._id || feedback?.interviewRoundId || feedback?.mockInterviewRoundId;
   const effectiveInterviewType = interviewType || feedback?.interviewType || (feedback?.isMockInterview ? "mockinterview" : undefined) || (feedback?.mockInterviewRoundId ? "mockinterview" : undefined);
 
-  // console.log("feedback  useFeedbackData", feedback)
-  // console.log("feedback  isViewMode", isViewMode)
+  console.log("feedback  effectiveRoundId", effectiveRoundId)
+  console.log("feedback  effectiveInterviewType", effectiveInterviewType)
 
   // Question Bank State Management
   const [interviewerSectionData, setInterviewerSectionData] = useState([]);
@@ -207,7 +207,9 @@ const FeedbackFormModal = ({ onClose, roundId, interviewType, Viewmode }) => {
         );
       case 4:
         return (
-          <PositionDetails fromFeedbackTab={true} />
+          <PositionDetails fromFeedbackTab={true} roundId={effectiveRoundId}
+            interviewType={effectiveInterviewType}
+          />
         );
 
       default:

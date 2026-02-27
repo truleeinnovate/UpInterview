@@ -50,7 +50,7 @@ const StarRating = ({ rating, onChange, size = "md", isReadOnly = false }) => {
   );
 };
 
-export const SchedulerViewMode = ({ feedbackData, isViewMode, }) => {
+export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview }) => {
   // Handle multiple feedbacks if they exist
   const feedbacks = Array.isArray(feedbackData?.feedbacks)
     ? feedbackData.feedbacks
@@ -60,17 +60,21 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, }) => {
   const location = useLocation();
   const [activeFeedbackIndex, setActiveFeedbackIndex] = useState(0);
   const activeFeedback = feedbacks[activeFeedbackIndex];
+  console.log("activeFeedback", feedbackData)
 
+  console.log("activeFeedback activeFeedback", activeFeedback)
   // Extract URL data once
   const urlData = useMemo(
     () => extractUrlData(location.search),
     [location.search],
   );
 
+
   // Mock interview flag
   const isMockInterview = urlData?.interviewType
     ? urlData?.interviewType === "mockinterview"
-    : feedbackData?.isMockInterview;
+    : MockInterview === true ? true : feedbackData?.isMockInterview;
+
 
   // Initial form state (matching FeedbackForm structure)
   const [formData, setFormData] = useState({
@@ -97,33 +101,34 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, }) => {
     additionalComments: "",
     cultureFit: 0,
     willingnessToLearn: 0,
+    submittedAt: ""
   });
 
-  // Data normalization logic (similar to FeedbackForm load logic)
+  // Replace your current useEffect with this corrected version
   useEffect(() => {
     if (!activeFeedback) return;
 
-    // const candidate = feedbackData?.candidate || {};
-    const candidate = feedbackData?.candidateId || {};
-    const candidateName =
-      `${candidate.FirstName || ""} ${candidate.LastName || ""}`.trim() ||
-      activeFeedback.candidateName ||
-      "";
+    // Get candidate data from feedbackData.candidate (not from activeFeedback)
+    const candidate = feedbackData?.candidate || feedbackData?.candidateId || {};
+    const candidateName = candidate.FirstName && candidate.LastName
+      ? `${candidate.FirstName} ${candidate.LastName}`.trim()
+      : candidate.name || activeFeedback.candidateName || candidate?.FirstName || "N/A";
 
-    // const position = feedbackData?.position || {};
-    const position = feedbackData?.positionId || {};
-    const positionTitle = position.title || activeFeedback.position || "";
+    // Get position data from feedbackData.position
+    const position = feedbackData?.position || feedbackData?.positionId || {};
+    const positionTitle = position.title || activeFeedback.position || "N/A";
 
-    const interviewer = feedbackData?.interviewerId || {};
-    const interviewerName =
-      `${interviewer.firstName || ""} ${interviewer.lastName || ""}`.trim() ||
-      activeFeedback.interviewerId?.name ||
-      "";
+    // Get interviewer data
+    const interviewer = activeFeedback.interviewerId || {};
+    const interviewerName = interviewer.firstName && interviewer.lastName
+      ? `${interviewer.firstName} ${interviewer.lastName}`.trim()
+      : interviewer.name || activeFeedback.interviewerName || "N/A";
 
+    // Get round title
     const round = feedbackData?.interviewRound || {};
-    const roundTitle = round.roundTitle || activeFeedback.roundTitle || "";
+    const roundTitle = round.roundTitle || activeFeedback.roundTitle || "Technical Interview";
 
-    // Normalize technicalSkills from backend array to UI object if needed
+    // Normalize technicalSkills
     const rawTS = activeFeedback.technicalSkills || [];
     const technicalSkills = {
       strong: [],
@@ -150,8 +155,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, }) => {
       candidateName,
       position: positionTitle,
       roundTitle,
-      // interviewerName: activeFeedback.interviewerId?.name || "",
-      interviewerName: interviewerName || "",
+      interviewerName,
       interviewDate: activeFeedback.createdAt
         ? new Date(activeFeedback.createdAt).toISOString().split("T")[0]
         : "",
@@ -160,22 +164,102 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, }) => {
       communicationRating: impression.communicationRating || 0,
       recommendation: impression.recommendation || "Maybe",
       skillRatings: (activeFeedback.technicalCompetency || []).map((s) => ({
-        skillName: s.skillName || s.skill,
+        skillName: s.skillName || s.skill || "",
         rating: s.rating || 0,
         notes: s.notes || s.note || "",
       })),
       technicalSkills,
       skillOrder,
-      strengths: activeFeedback.strengths || [""],
-      areasForImprovement: activeFeedback.areasForImprovement || [""],
+      strengths: activeFeedback.strengths?.length ? activeFeedback.strengths : [""],
+      areasForImprovement: activeFeedback.areasForImprovement?.length ? activeFeedback.areasForImprovement : [""],
       additionalComments:
         activeFeedback.additionalComments ||
         activeFeedback.generalComments ||
         "",
       cultureFit: impression.cultureFit || 0,
       willingnessToLearn: impression.willingnessToLearn || 0,
+      submittedAt: activeFeedback.createdAt,
     });
-  }, [activeFeedback, feedbackData, isMockInterview]);
+  }, [activeFeedback, feedbackData, isMockInterview]); // Keep all dependencies
+
+  // Data normalization logic (similar to FeedbackForm load logic)
+  // useEffect(() => {
+  //   if (!activeFeedback) return;
+
+
+
+  //   // Fix: Access candidate data correctly from activeFeedback
+  //   const candidate = activeFeedback.candidateId || {};
+  //   const candidateName = candidate.FirstName && candidate.LastName
+  //     ? `${candidate.FirstName} ${candidate.LastName}`.trim()
+  //     : candidate.name || activeFeedback.candidateName || "N/A";
+
+  //   // Fix: Access position data correctly from activeFeedback
+  //   const position = activeFeedback.positionId || {};
+  //   const positionTitle = position.title || activeFeedback.position || "N/A";
+
+  //   // Fix: Access interviewer data correctly from activeFeedback
+  //   const interviewer = activeFeedback.interviewerId || {};
+  //   const interviewerName = interviewer.firstName && interviewer.lastName
+  //     ? `${interviewer.firstName} ${interviewer.lastName}`.trim()
+  //     : interviewer.name || activeFeedback.interviewerName || "N/A";
+
+  //   // Get round title if available
+  //   const roundTitle = activeFeedback.roundTitle || "Technical Interview – Round 2";
+
+  //   // Normalize technicalSkills from backend array to UI object if needed
+  //   const rawTS = activeFeedback.technicalSkills || [];
+  //   const technicalSkills = {
+  //     strong: [],
+  //     good: [],
+  //     basic: [],
+  //     noExperience: [],
+  //   };
+  //   const skillOrder = activeFeedback.skillOrder || [];
+
+  //   if (Array.isArray(rawTS)) {
+  //     rawTS.forEach((s) => {
+  //       if (s.level && technicalSkills[s.level]) {
+  //         technicalSkills[s.level].push(s.skillName);
+  //         if (!skillOrder.includes(s.skillName)) skillOrder.push(s.skillName);
+  //       }
+  //     });
+  //   } else if (typeof rawTS === "object" && rawTS !== null) {
+  //     Object.assign(technicalSkills, rawTS);
+  //   }
+
+  //   const impression = activeFeedback.overallImpression || {};
+
+  //   setFormData({
+  //     candidateName,
+  //     position: positionTitle,
+  //     roundTitle,
+  //     interviewerName: interviewerName,
+  //     interviewDate: activeFeedback.createdAt
+  //       ? new Date(activeFeedback.createdAt).toISOString().split("T")[0]
+  //       : "",
+  //     isMockInterview: !!isMockInterview,
+  //     overallRating: impression.overallRating || 0,
+  //     communicationRating: impression.communicationRating || 0,
+  //     recommendation: impression.recommendation || "Maybe",
+  //     skillRatings: (activeFeedback.technicalCompetency || []).map((s) => ({
+  //       skillName: s.skillName || s.skill || "",
+  //       rating: s.rating || 0,
+  //       notes: s.notes || s.note || "",
+  //     })),
+  //     technicalSkills,
+  //     skillOrder,
+  //     strengths: activeFeedback.strengths?.length ? activeFeedback.strengths : [""],
+  //     areasForImprovement: activeFeedback.areasForImprovement?.length ? activeFeedback.areasForImprovement : [""],
+  //     additionalComments:
+  //       activeFeedback.additionalComments ||
+  //       activeFeedback.generalComments ||
+  //       "",
+  //     cultureFit: impression.cultureFit || 0,
+  //     willingnessToLearn: impression.willingnessToLearn || 0,
+  //     submittedAt: activeFeedback.createdAt,
+  //   });
+  // }, [activeFeedback, isMockInterview]); // Remove feedbackData from dependencies since we're using activeFeedback
 
   const isReadOnly = true;
 
@@ -219,17 +303,19 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, }) => {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <User className="w-5 h-5 text-gray-500" />
+            {!isViewMode &&
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-custom-bg rounded-lg">
+                  <User className="w-5 h-5 text-gray-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Interviewer</p>
+                  <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
+                    {formData?.interviewerName || "N/A"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Interviewer</p>
-                <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
-                  {formData?.interviewerName || "N/A"}
-                </p>
-              </div>
-            </div>
+            }
 
             {/* <div className="grid grid-cols-2 sm:grid-cols-1 gap-6"> */}
 
@@ -310,7 +396,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, }) => {
             </p>
             <p className="text-gray-800 text-sm font-medium">
               {formData.submittedAt
-                ? new Date(formData.submittedAt).toLocaleString()
+                ? new Date(formData.submittedAt).toISOString().split('T')[0]
                 : "N/A"}
             </p>
           </div>

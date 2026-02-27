@@ -206,10 +206,10 @@ const FeedbackForm = ({
     mockInterviewNotes: ''
   });
 
-  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType === true || interviewType === "mockinterview" || interviewType === true || locationFeedback?.isMockInterview;
+  const isMockInterview = urlData?.interviewType ? urlData?.interviewType === "mockinterview" : interviewType === "mockinterview" ? true : interviewType === true || locationFeedback?.isMockInterview;
 
   // const isMockInterview = urlData?.interviewType === "mockinterview" || interviewType === "mockinterview";
-  // console.log("isMockInterview", isMockInterview);
+  console.log("isMockInterview", isMockInterview);
   // const { data, isLoading } = useInterviewDetails({
   //   roundId: urlData.interviewRoundId,
   // });
@@ -250,9 +250,9 @@ const FeedbackForm = ({
 
   // console.log("candidateData", candidateData)
 
-  console.log("positionData", positionData)
+  // console.log("positionData", positionData)
 
-  // console.log("interviewRoundData", interviewRoundData)
+  // console.log("interviewType", interviewType)
 
   const currentRound = useMemo(() => {
     if (interviewRoundData?.rounds && Array.isArray(interviewRoundData.rounds)) {
@@ -822,7 +822,7 @@ const FeedbackForm = ({
   };
 
   // StarRating is defined at module level — see above.
-
+  // console.log("isMockInterview", isMockInterview)
 
   // Sync formData with secondary data
   useEffect(() => {
@@ -969,6 +969,8 @@ const FeedbackForm = ({
     currentRound,
     isMockInterview,
     feedbackData, // Depend on full feedbackData for correct population
+    interviewType,
+    roundId
   ]);
 
   // ---------------------------- NEW UI FIELDS ------------------------------------------->
@@ -2073,7 +2075,7 @@ const FeedbackForm = ({
   //<---v1.0.2-----Ranjith----solved feedback issues
 
   if (urlData?.isSchedule || isViewMode) {
-    return <SchedulerViewMode feedbackData={schedulerFeedbackData || feedbackDatas} isMockInterview={isMockInterview} />;
+    return <SchedulerViewMode feedbackData={schedulerFeedbackData || feedbackDatas} isViewMode={isViewMode} MockInterview={isMockInterview} />;
   }
 
   //<---v1.0.2-----Ranjith----solved feedback issues
