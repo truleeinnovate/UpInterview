@@ -431,31 +431,32 @@ const walletVerifyPayment = async (req, res) => {
 
     // console.log("Signature validated successfully");
 
-    // Get payment details from Razorpay - Make this optional
-    // If we can't get payment details, we'll trust the signature verification
+    // Get payment details from Razorpay to verify actual payment status
     let paymentVerified = false;
+    let razorpayPaymentStatus = null;
+    let razorpayFailureReason = null;
     try {
       const payment = await razorpay.payments.fetch(razorpay_payment_id);
       if (payment && payment.status) {
-        // console.log("Payment details fetched:", payment.status);
+        razorpayPaymentStatus = payment.status;
+        razorpayFailureReason = payment.error_description || payment.error_reason || null;
 
         if (payment.status === "captured" || payment.status === "authorized") {
           paymentVerified = true;
         } else {
-          // console.log(
-          //   `Payment status is ${payment.status}, continuing with signature verification only`
-          // );
+          console.warn(
+            `[WALLET] Payment ${razorpay_payment_id} status is '${payment.status}', NOT crediting wallet.`
+          );
         }
       } else {
-        // console.log(
-        //   "Payment details incomplete, continuing with signature verification only"
-        // );
+        console.warn(
+          `[WALLET] Payment ${razorpay_payment_id} details incomplete, NOT crediting wallet.`
+        );
       }
     } catch (razorpayError) {
       console.error("Error fetching payment from Razorpay:", razorpayError);
-      // console.log("Continuing with signature verification only");
-      // Instead of returning an error, we'll continue with signature verification
-      // This makes our process more robust in case Razorpay API has issues
+      // If we can't verify payment status, do NOT credit the wallet to be safe
+      // The user can retry or contact support
     }
 
     // Since the signature is valid, we'll proceed with the payment processing
@@ -541,9 +542,8 @@ const walletVerifyPayment = async (req, res) => {
     );
 
     if (existingTransaction) {
-      // console.log("Payment already processed, returning success");
       return res.status(200).json({
-        success: true,
+        success: existingTransaction.status === "completed",
         wallet,
         transaction: existingTransaction,
         message: "Payment already processed",
@@ -557,7 +557,131 @@ const walletVerifyPayment = async (req, res) => {
     let recordCreationError = null;
     let transaction = null;
 
-    // Update wallet balance and add transaction using common function
+    // ──────────────────────────────────────────────────────────────────
+    // FAILED / UNVERIFIED PAYMENT: Record transaction but do NOT credit
+    // ──────────────────────────────────────────────────────────────────
+    if (!paymentVerified) {
+      try {
+        const failureDescription =
+          razorpayFailureReason ||
+          `Wallet Top-up failed – Your payment could not be completed` +
+          (razorpayPaymentStatus
+            ? ` (status: ${razorpayPaymentStatus})`
+            : "") +
+          ". Try another payment method.";
+
+        // Record failed transaction in wallet (NO balance change)
+        const prevBalance = Number(wallet.balance || 0);
+        const prevHoldAmount = Number(wallet.holdAmount || 0);
+
+        const failedTransaction = {
+          type: "topup",
+          bucket: "AVAILABLE",
+          effect: "CREDITED",
+          walletId: ownerId,
+          amount: parsedAmount,
+          gstAmount: 0,
+          serviceCharge: 0,
+          totalAmount: parsedAmount,
+          description: failureDescription,
+          relatedInvoiceId: razorpay_order_id,
+          status: "failed",
+          reason: "WALLET_TOPUP",
+          metadata: {
+            paymentId: razorpay_payment_id,
+            orderId: razorpay_order_id,
+            source: "razorpay_topup",
+            razorpayPaymentStatus: razorpayPaymentStatus || "unknown",
+            failureReason: razorpayFailureReason || "Payment not captured",
+          },
+          balanceBefore: prevBalance,
+          balanceAfter: prevBalance, // NO change
+          holdBalanceBefore: prevHoldAmount,
+          holdBalanceAfter: prevHoldAmount, // NO change
+          createdDate: new Date(),
+          createdAt: new Date(),
+        };
+
+        // Push failed transaction to wallet without changing balance
+        wallet = await WalletTopup.findOneAndUpdate(
+          { ownerId },
+          { $push: { transactions: failedTransaction } },
+          { new: true, runValidators: true }
+        );
+
+        transaction =
+          wallet.transactions[wallet.transactions.length - 1];
+
+        // Create a Payment record with "failed" status for audit trail
+        try {
+          const paymentCode = await generateUniqueId(
+            "PMT",
+            Payment,
+            "paymentCode"
+          );
+
+          payment = await Payment.create({
+            paymentCode: paymentCode,
+            tenantId: tenantId || "",
+            ownerId,
+            amount: parsedAmount,
+            currency: currency || "INR",
+            status: "failed",
+            paidAt: new Date(),
+            paymentMethod: "wallet",
+            paymentGateway: "razorpay",
+            razorpayPaymentId: razorpay_payment_id,
+            razorpayOrderId: razorpay_order_id,
+            razorpaySignature: razorpay_signature,
+            transactionId: razorpay_payment_id,
+          });
+        } catch (paymentRecordErr) {
+          console.error(
+            "[WALLET] Error creating failed payment record:",
+            paymentRecordErr
+          );
+          // Non-critical — wallet was not credited, so no financial impact
+        }
+
+        res.locals.logData = {
+          tenantId: req?.body?.tenantId || "",
+          ownerId: req?.body?.ownerId,
+          processName: "Wallet Payment Verification",
+          status: "failed",
+          message: `Payment not captured (status: ${razorpayPaymentStatus || "unknown"})`,
+          requestBody: req.body,
+          responseBody: {
+            success: false,
+            wallet,
+            transaction,
+            payment,
+          },
+        };
+
+        return res.status(200).json({
+          success: false,
+          message:
+            razorpayFailureReason ||
+            "Payment was not captured. Your wallet has not been credited.",
+          wallet,
+          transaction,
+          payment,
+        });
+      } catch (failedSaveError) {
+        console.error(
+          "[WALLET] Error recording failed transaction:",
+          failedSaveError
+        );
+        return res.status(500).json({
+          error: "Failed to record transaction",
+          details: failedSaveError.message,
+        });
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────────
+    // SUCCESSFUL PAYMENT: Credit wallet and create Invoice/Receipt/Payment
+    // ──────────────────────────────────────────────────────────────────
     try {
       // Use common createWalletTransaction function for consistent wallet updates
       const transactionResult = await createWalletTransaction({
@@ -577,7 +701,6 @@ const walletVerifyPayment = async (req, res) => {
 
       wallet = transactionResult.wallet;
       transaction = transactionResult.transaction;
-      // console.log("Wallet updated successfully", { balance: wallet.balance });
 
       /* ------------------------------------------------------------------
          Create simple Invoice, Receipt and Payment records for this top-up
@@ -692,7 +815,6 @@ const walletVerifyPayment = async (req, res) => {
         newBalance: wallet.balance,
         invoiceCode: invoice?.code || "N/A",
       });
-      // console.log('[WALLET] Top-up notification created');
     } catch (notificationError) {
       console.error(
         "[WALLET] Error creating top-up notification:",

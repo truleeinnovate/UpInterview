@@ -602,11 +602,13 @@ const Wallet = () => {
                             <p
                               className={`text-base font-bold ${getTransactionTypeStyle(transaction.type)}`}
                             >
-                              {transaction.effect === "CREDITED" || transaction.type === "credited" || transaction.type === "credit" || transaction.type === "hold_release"
-                                ? "+"
-                                : transaction.effect === "DEBITED" || transaction.type === "debited" || transaction.type === "hold"
-                                  ? "-"
-                                  : ""}
+                              {transaction.status === "failed"
+                                ? ""
+                                : transaction.effect === "CREDITED" || transaction.type === "credited" || transaction.type === "credit" || transaction.type === "hold_release"
+                                  ? "+"
+                                  : transaction.effect === "DEBITED" || transaction.type === "debited" || transaction.type === "hold"
+                                    ? "-"
+                                    : ""}
                               ₹{transaction.totalAmount ? transaction.totalAmount.toFixed(2) : "0.00"}
                             </p>
                           </div>
@@ -616,7 +618,9 @@ const Wallet = () => {
                           <span
                             className={`text-xs px-2 py-1 rounded-full font-medium ${transaction.status === "completed"
                               ? "bg-green-50 text-green-700 border border-green-200"
-                              : "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                              : transaction.status === "failed"
+                                ? "bg-red-50 text-red-700 border border-red-200"
+                                : "bg-yellow-50 text-yellow-700 border border-yellow-200"
                               }`}
                           >
                             {transaction.status
@@ -814,17 +818,21 @@ const Wallet = () => {
                       {/* Amount & Status */}
                       <div className="flex items-center justify-between">
                         <p className={`text-sm font-bold ${getTransactionTypeStyle(transaction.type)}`}>
-                          {transaction.effect === "CREDITED" || transaction.type === "credited" || transaction.type === "credit" || transaction.type === "hold_release"
-                            ? "+"
-                            : transaction.effect === "DEBITED" || transaction.type === "debited" || transaction.type === "hold"
-                              ? "-"
-                              : ""}
+                          {transaction.status === "failed"
+                            ? ""
+                            : transaction.effect === "CREDITED" || transaction.type === "credited" || transaction.type === "credit" || transaction.type === "hold_release"
+                              ? "+"
+                              : transaction.effect === "DEBITED" || transaction.type === "debited" || transaction.type === "hold"
+                                ? "-"
+                                : ""}
                           ₹{transaction.totalAmount ? transaction.totalAmount.toFixed(2) : (transaction.amount || 0).toFixed(2)}
                         </p>
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full font-medium ${transaction.status === "completed"
                             ? "bg-green-50 text-green-700 border border-green-200"
-                            : "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                            : transaction.status === "failed"
+                              ? "bg-red-50 text-red-700 border border-red-200"
+                              : "bg-yellow-50 text-yellow-700 border border-yellow-200"
                             }`}
                         >
                           {transaction.status
