@@ -361,11 +361,12 @@ const walletVerifyPayment = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
-      console.error("Missing required Razorpay fields", {
-        razorpay_payment_id,
+    // Note: razorpay_signature can be empty for failed payment recording
+    // (when called from payment.failed handler to record the failed transaction)
+    if (!razorpay_order_id || !ownerId) {
+      console.error("Missing required fields", {
         razorpay_order_id,
-        razorpay_signature,
+        ownerId,
       });
       res.locals.logData = {
         tenantId: req?.body?.tenantId || "",
@@ -375,58 +376,53 @@ const walletVerifyPayment = async (req, res) => {
         message: "Missing required Razorpay verification fields",
         requestBody: req.body,
         responseBody: {
-          error: "Missing required Razorpay verification fields",
+          error: "Missing required fields",
         },
       };
       return res
         .status(400)
-        .json({ error: "Missing required Razorpay verification fields" });
+        .json({ error: "Order ID and Owner ID are required" });
     }
 
-    if (!ownerId) {
-      console.error("Missing ownerId");
-      res.locals.logData = {
-        tenantId: req?.body?.tenantId || "",
-        ownerId: req?.body?.ownerId,
-        processName: "Wallet Payment Verification",
-        status: "error",
-        message: "Missing required Razorpay verification fields",
-        requestBody: req.body,
-        responseBody: {
-          error: "Owner ID is required",
-        },
-      };
-      return res.status(400).json({ error: "Owner ID is required" });
-    }
+    // Determine if this is a failed payment recording (no signature provided)
+    const isFailedPaymentRecording = !razorpay_signature;
 
-    // Verify signature
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(body.toString())
-      .digest("hex");
+    // Verify signature only for normal (non-failed) payment flows
+    if (!isFailedPaymentRecording) {
+      if (!razorpay_payment_id) {
+        return res
+          .status(400)
+          .json({ error: "Missing payment ID for verification" });
+      }
 
-    const isSignatureValid = expectedSignature === razorpay_signature;
+      const body = razorpay_order_id + "|" + razorpay_payment_id;
+      const expectedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+        .update(body.toString())
+        .digest("hex");
 
-    if (!isSignatureValid) {
-      console.error("Invalid signature", {
-        expected: expectedSignature,
-        received: razorpay_signature,
-      });
-      res.locals.logData = {
-        tenantId: req?.body?.tenantId || "",
-        ownerId: req?.body?.ownerId,
-        processName: "Wallet Payment Verification",
-        status: "error",
-        message: "Invalid signature",
-        requestBody: req.body,
-        responseBody: {
-          expectedSignature,
-          receivedSignature,
-          error: "Invalid payment signature",
-        },
-      };
-      return res.status(400).json({ error: "Invalid payment signature" });
+      const isSignatureValid = expectedSignature === razorpay_signature;
+
+      if (!isSignatureValid) {
+        console.error("Invalid signature", {
+          expected: expectedSignature,
+          received: razorpay_signature,
+        });
+        res.locals.logData = {
+          tenantId: req?.body?.tenantId || "",
+          ownerId: req?.body?.ownerId,
+          processName: "Wallet Payment Verification",
+          status: "error",
+          message: "Invalid signature",
+          requestBody: req.body,
+          responseBody: {
+            expectedSignature,
+            receivedSignature: razorpay_signature,
+            error: "Invalid payment signature",
+          },
+        };
+        return res.status(400).json({ error: "Invalid payment signature" });
+      }
     }
 
     // console.log("Signature validated successfully");
@@ -435,33 +431,53 @@ const walletVerifyPayment = async (req, res) => {
     let paymentVerified = false;
     let razorpayPaymentStatus = null;
     let razorpayFailureReason = null;
-    try {
-      const payment = await razorpay.payments.fetch(razorpay_payment_id);
-      if (payment && payment.status) {
-        razorpayPaymentStatus = payment.status;
-        razorpayFailureReason = payment.error_description || payment.error_reason || null;
 
-        if (payment.status === "captured" || payment.status === "authorized") {
-          paymentVerified = true;
+    // For failed payment recording, force paymentVerified to false
+    // and use the description from the frontend as failure reason
+    if (isFailedPaymentRecording) {
+      razorpayPaymentStatus = "failed";
+      razorpayFailureReason = description || "Payment failed at Razorpay checkout";
+
+      // Try to fetch actual payment details if payment_id is available
+      if (razorpay_payment_id) {
+        try {
+          const payment = await razorpay.payments.fetch(razorpay_payment_id);
+          if (payment && payment.status) {
+            razorpayPaymentStatus = payment.status;
+            razorpayFailureReason = payment.error_description || payment.error_reason || razorpayFailureReason;
+          }
+        } catch (err) {
+          // Not critical — we already know it failed
+          console.warn("[WALLET] Could not fetch failed payment details:", err.message);
+        }
+      }
+    } else {
+      // Normal flow — fetch payment to verify it's captured/authorized
+      try {
+        const payment = await razorpay.payments.fetch(razorpay_payment_id);
+        if (payment && payment.status) {
+          razorpayPaymentStatus = payment.status;
+          razorpayFailureReason = payment.error_description || payment.error_reason || null;
+
+          if (payment.status === "captured" || payment.status === "authorized") {
+            paymentVerified = true;
+          } else {
+            console.warn(
+              `[WALLET] Payment ${razorpay_payment_id} status is '${payment.status}', NOT crediting wallet.`
+            );
+          }
         } else {
           console.warn(
-            `[WALLET] Payment ${razorpay_payment_id} status is '${payment.status}', NOT crediting wallet.`
+            `[WALLET] Payment ${razorpay_payment_id} details incomplete, NOT crediting wallet.`
           );
         }
-      } else {
-        console.warn(
-          `[WALLET] Payment ${razorpay_payment_id} details incomplete, NOT crediting wallet.`
-        );
+      } catch (razorpayError) {
+        console.error("Error fetching payment from Razorpay:", razorpayError);
+        // If we can't verify payment status, do NOT credit the wallet to be safe
       }
-    } catch (razorpayError) {
-      console.error("Error fetching payment from Razorpay:", razorpayError);
-      // If we can't verify payment status, do NOT credit the wallet to be safe
-      // The user can retry or contact support
     }
 
-    // Since the signature is valid, we'll proceed with the payment processing
-    // The signature verification is our primary method of validating payments
-    // console.log("Proceeding based on valid signature verification");
+    // Proceeding with payment processing based on paymentVerified flag
 
     // Try to retrieve walletCode from the Razorpay order notes if available
     let walletCodeFromNotes = null;
@@ -647,7 +663,7 @@ const walletVerifyPayment = async (req, res) => {
           tenantId: req?.body?.tenantId || "",
           ownerId: req?.body?.ownerId,
           processName: "Wallet Payment Verification",
-          status: "failed",
+          status: "error",
           message: `Payment not captured (status: ${razorpayPaymentStatus || "unknown"})`,
           requestBody: req.body,
           responseBody: {
