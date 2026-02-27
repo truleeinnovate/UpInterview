@@ -668,7 +668,7 @@ const EditInterviewDetails = ({
       return;
     }
 
-    const validationErrors = validateInterviewForm(formData, isReady);
+    const validationErrors = validateInterviewForm(formData, isReady, organization);
 
     // Custom Rate Validation
     if (!organization) {
@@ -1343,69 +1343,71 @@ const EditInterviewDetails = ({
 
             <div className="space-y-4">
               {/* Previous Experience */}
-              <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
-                <p>
-                  Do you have any previous experience conducting interviews ?{" "}
-                  <span className="text-red-500">*</span>
-                </p>
-                <div className="mt-3 mb-3 flex space-x-6">
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      name="PreviousExperienceConductingInterviews"
-                      value="yes"
-                      checked={
-                        formData.PreviousExperienceConductingInterviews ===
-                        "yes"
-                      }
-                      onChange={(e) => {
-                        handleRadioChange(e.target.value);
-                      }}
-                      className="h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
-                    />
-                    <span className="ml-2">Yes</span>
-                  </label>
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      name="PreviousExperienceConductingInterviews"
-                      value="no"
-                      checked={
-                        formData.PreviousExperienceConductingInterviews === "no"
-                      }
-                      onChange={(e) => {
-                        handleRadioChange(e.target.value);
-                      }}
-                      className="h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
-                    />
-                    <span className="ml-2">No</span>
-                  </label>
-                </div>
-                {errors.PreviousExperienceConductingInterviews && (
-                  <p className="text-red-500 text-xs">
-                    {errors.PreviousExperienceConductingInterviews}
-                  </p>
-                )}
-              </div>
+              {!organization && (
+                <>
+                  <div className="text-gray-900 text-sm font-medium leading-6 rounded-lg">
+                    <p>
+                      Do you have any previous experience conducting interviews ?{" "}
+                      <span className="text-red-500">*</span>
+                    </p>
+                    <div className="mt-3 mb-3 flex space-x-6">
+                      <label className="inline-flex items-center">
+                        <input
+                          type="radio"
+                          name="PreviousExperienceConductingInterviews"
+                          value="yes"
+                          checked={
+                            formData.PreviousExperienceConductingInterviews ===
+                            "yes"
+                          }
+                          onChange={(e) => {
+                            handleRadioChange(e.target.value);
+                          }}
+                          className="h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                        />
+                        <span className="ml-2">Yes</span>
+                      </label>
+                      <label className="inline-flex items-center">
+                        <input
+                          type="radio"
+                          name="PreviousExperienceConductingInterviews"
+                          value="no"
+                          checked={
+                            formData.PreviousExperienceConductingInterviews === "no"
+                          }
+                          onChange={(e) => {
+                            handleRadioChange(e.target.value);
+                          }}
+                          className="h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                        />
+                        <span className="ml-2">No</span>
+                      </label>
+                    </div>
+                    {errors.PreviousExperienceConductingInterviews && (
+                      <p className="text-red-500 text-xs">
+                        {errors.PreviousExperienceConductingInterviews}
+                      </p>
+                    )}
+                  </div>
 
-              {/* Conditional Experience Years */}
-
-              {formData.PreviousExperienceConductingInterviews === "yes" && (
-                <div className="w-1/2">
-                  <InputField
-                    label="How many years of experience do you have in conducting interviews?"
-                    type="number"
-                    id="PreviousExperienceConductingInterviewsYears"
-                    name="PreviousExperienceConductingInterviewsYears"
-                    min={1}
-                    max={15}
-                    placeholder={0}
-                    required
-                    value={formData.PreviousExperienceConductingInterviewsYears}
-                    onChange={handleYearsOfExperienceChange}
-                    errors={errors.PreviousExperienceConductingInterviewsYears}
-                  />
-                </div>
+                  {formData.PreviousExperienceConductingInterviews === "yes" && (
+                    <div className="w-1/2">
+                      <InputField
+                        label="How many years of experience do you have in conducting interviews?"
+                        type="number"
+                        id="PreviousExperienceConductingInterviewsYears"
+                        name="PreviousExperienceConductingInterviewsYears"
+                        min={1}
+                        max={15}
+                        placeholder={0}
+                        required
+                        value={formData.PreviousExperienceConductingInterviewerYears}
+                        onChange={handleYearsOfExperienceChange}
+                        errors={errors.PreviousExperienceConductingInterviewerYears}
+                      />
+                    </div>
+                  )}
+                </>
               )}
 
 
@@ -1526,79 +1528,81 @@ const EditInterviewDetails = ({
               )}
 
               {/* Interview Formats You Offer */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Interview Formats You Offer{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
-                  {[
-                    {
-                      id: "format_technical",
-                      value: "technical",
-                      label: "Technical Coding",
-                      description:
-                        "Algorithmic problem-solving and coding challenges",
-                    },
-                    {
-                      id: "format_system_design",
-                      value: "system_design",
-                      label: "System Design",
-                      description: "Architecture and scalability discussions",
-                    },
-                    {
-                      id: "format_behavioral",
-                      value: "behavioral",
-                      label: "Behavioral",
-                      description: "Soft skills and situational questions",
-                    },
-                    {
-                      id: "format_mock",
-                      value: "mock",
-                      label: "Mock Interviews",
-                      description: "Full interview simulation with feedback",
-                    },
-                  ].map(({ id, value, label, description }) => (
-                    <div
-                      key={id}
-                      className="relative flex items-start p-4 rounded-lg border border-gray-200  transition-colors"
-                    >
-                      <div className="flex items-center h-5">
-                        <input
-                          id={id}
-                          type="checkbox"
-                          value={value}
-                          // Changed: Use includes() to check if value is in interviewFormatWeOffer
-                          // checked={formData.interviewFormatWeOffer.includes(value)}
-                          checked={
-                            formData.interviewFormatWeOffer?.includes(value) ||
-                            false
-                          }
-                          onChange={handleInterviewFormatChange}
-                          className="h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
-                        />
+              {!organization && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Interview Formats You Offer{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+                    {[
+                      {
+                        id: "format_technical",
+                        value: "technical",
+                        label: "Technical Coding",
+                        description:
+                          "Algorithmic problem-solving and coding challenges",
+                      },
+                      {
+                        id: "format_system_design",
+                        value: "system_design",
+                        label: "System Design",
+                        description: "Architecture and scalability discussions",
+                      },
+                      {
+                        id: "format_behavioral",
+                        value: "behavioral",
+                        label: "Behavioral",
+                        description: "Soft skills and situational questions",
+                      },
+                      {
+                        id: "format_mock",
+                        value: "mock",
+                        label: "Mock Interviews",
+                        description: "Full interview simulation with feedback",
+                      },
+                    ].map(({ id, value, label, description }) => (
+                      <div
+                        key={id}
+                        className="relative flex items-start p-4 rounded-lg border border-gray-200  transition-colors"
+                      >
+                        <div className="flex items-center h-5">
+                          <input
+                            id={id}
+                            type="checkbox"
+                            value={value}
+                            // Changed: Use includes() to check if value is in interviewFormatWeOffer
+                            // checked={formData.interviewFormatWeOffer.includes(value)}
+                            checked={
+                              formData.interviewFormatWeOffer?.includes(value) ||
+                              false
+                            }
+                            onChange={handleInterviewFormatChange}
+                            className="h-4 w-4 accent-custom-blue text-custom-blue focus:ring-custom-blue border-gray-300 rounded"
+                          />
+                        </div>
+                        <div className="ml-3">
+                          <label
+                            htmlFor={id}
+                            className="font-medium text-gray-700"
+                          >
+                            {label}
+                          </label>
+                          <p className="text-sm text-gray-500">{description}</p>
+                        </div>
                       </div>
-                      <div className="ml-3">
-                        <label
-                          htmlFor={id}
-                          className="font-medium text-gray-700"
-                        >
-                          {label}
-                        </label>
-                        <p className="text-sm text-gray-500">{description}</p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  {/* Changed: Added error display for interviewFormatWeOffer */}
+                  {errors.interviewFormatWeOffer && (
+                    <p className="text-red-500 text-xs mt-2">
+                      {errors.interviewFormatWeOffer}
+                    </p>
+                  )}
                 </div>
-                {/* Changed: Added error display for interviewFormatWeOffer */}
-                {errors.interviewFormatWeOffer && (
-                  <p className="text-red-500 text-xs mt-2">
-                    {errors.interviewFormatWeOffer}
-                  </p>
-                )}
-              </div>
+              )}
 
-              {formData.interviewFormatWeOffer?.includes("mock") && (
+              {!organization && formData.interviewFormatWeOffer?.includes("mock") && (
                 <div>
                   <div className="p-4 rounded-lg border border-gray-200">
                     <label
@@ -1769,55 +1773,58 @@ const EditInterviewDetails = ({
                 </div>
               )}
 
-              {/* Professional Title */}
-              <div className="sm:col-span-6 col-span-2">
-                <InputField
-                  value={formData.professionalTitle || ""}
-                  onChange={(e) => {
-                    const newValue = e.target.value;
-                    if (newValue.length <= 100) {
-                      setFormData((prev) => ({
-                        ...prev,
-                        professionalTitle: newValue,
-                      }));
+              {/* Professional Title and Bio */}
+              {!organization && (
+                <>
+                  <div className="sm:col-span-6 col-span-2">
+                    <InputField
+                      value={formData.professionalTitle || ""}
+                      onChange={(e) => {
+                        const newValue = e.target.value;
+                        if (newValue.length <= 100) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            professionalTitle: newValue,
+                          }));
 
-                      if (errors.professionalTitle) {
-                        setErrors((prev) => ({
-                          ...prev,
-                          professionalTitle: "",
-                        }));
-                      }
-                    }
-                  }}
-                  name="professionalTitle"
-                  error={errors.professionalTitle}
-                  label="Professional Title"
-                  required
-                  min={30}
-                  max={100}
-                  showCounter={true}
-                  placeholder="Senior Software Engineer With 5+ Years Of Experience In FullStack Development"
-                />
-              </div>
+                          if (errors.professionalTitle) {
+                            setErrors((prev) => ({
+                              ...prev,
+                              professionalTitle: "",
+                            }));
+                          }
+                        }
+                      }}
+                      name="professionalTitle"
+                      error={errors.professionalTitle}
+                      label="Professional Title"
+                      required
+                      min={30}
+                      max={100}
+                      showCounter={true}
+                      placeholder="Senior Software Engineer With 5+ Years Of Experience In FullStack Development"
+                    />
+                  </div>
 
-              {/* Professional Bio */}
-              <div className="sm:col-span-6 col-span-2">
-                <DescriptionField
-                  label="Professional Bio"
-                  id="bio"
-                  rows="5"
-                  value={formData.bio}
-                  // onChange={handleBioChange}
-                  onChange={(e) => {
-                    handleBioChange(e);
-                  }}
-                  required
-                  placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
-                  minLength={150}
-                  maxLength={500}
-                  error={errors.bio}
-                />
-              </div>
+                  <div className="sm:col-span-6 col-span-2">
+                    <DescriptionField
+                      label="Professional Bio"
+                      id="bio"
+                      rows="5"
+                      value={formData.bio}
+                      // onChange={handleBioChange}
+                      onChange={(e) => {
+                        handleBioChange(e);
+                      }}
+                      required
+                      placeholder="Tell us about your professional background, expertise, and what makes you a great interviewer..."
+                      minLength={150}
+                      maxLength={500}
+                      error={errors.bio}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </form>

@@ -671,6 +671,10 @@ const MainAppRoutes = ({
     return combined;
   }, [effectivePermissions, superAdminPermissions]);
 
+  if (!isInitialized) {
+    return <Loading />;
+  }
+
   const showLogo = showLogoPaths.includes(location.pathname);
 
   const shouldRenderNavbar = !noNavbarPaths.includes(location.pathname);

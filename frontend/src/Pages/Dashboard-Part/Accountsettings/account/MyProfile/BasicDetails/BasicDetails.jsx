@@ -142,7 +142,31 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
       </div>
 
       {/* Pending Verification Banner */}
-
+      {contactData.newEmail && (
+        <div className="mb-4 bg-custom-blue border border-blue-200 rounded-lg p-4 flex items-start gap-3 shadow-sm transition-all duration-300 ease-in-out hover:shadow-md">
+          <div className="mt-0.5">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-white">
+              {mode === "users" ? (
+                <>Email change pending verification by user: <span className="font-bold underline cursor-help" title={`Verification link has been sent to ${contactData.newEmail}`}>{contactData.newEmail}</span></>
+              ) : (
+                <>An administrator has updated your email to: <span className="font-bold underline cursor-help" title={`Verification link has been sent to ${contactData.newEmail}`}>{contactData.newEmail}</span></>
+              )}
+            </p>
+            <p className="mt-1 text-xs text-white leading-relaxed">
+              {mode === "users" ? (
+                <>The user has been sent a verification link. Once they verify, this will become their primary email.</>
+              ) : (
+                <>Please check your inbox (and spam folder) and click on the verification link to authorize this change.</>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* v1.0.1 <------------------------------------------------------------------------------ */}
       <div
@@ -150,10 +174,13 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <p className="text-sm text-gray-500">Email</p>
+            <p className="text-sm text-gray-500 mb-0.5">Email</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium sm:text-sm whitespace-pre-line break-words">
+                {contactData.email || "Not Provided"}
+              </p>
               {contactData.isEmailVerified ? (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700 border border-green-200" title="Email is verified">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[6px] font-medium bg-green-100 text-green-700 border border-green-200" title="Email is verified">
                   <svg
                     className="w-3 h-3 mr-0.5"
                     fill="currentColor"
@@ -168,7 +195,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
                   Verified
                 </span>
               ) : !contactData.isEmailVerified && !contactData.newEmail && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-700 border border-red-200" title="Email is not verified">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[6px] font-medium bg-red-100 text-red-700 border border-red-200" title="Email is not verified">
                   <svg
                     className="w-3 h-3 mr-0.5"
                     fill="none"
@@ -185,29 +212,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
                   Not Verified
                 </span>
               )}
-              {contactData.newEmail && (
-                <span
-                  className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-yellow-100 text-yellow-700 border border-yellow-200 cursor-help"
-                  title={`Verification pending for: ${contactData.newEmail}`}
-                >
-                  <svg
-                    className="w-3 h-3 mr-0.5 animate-pulse"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Pending
-                </span>
-              )}
             </div>
-            <p className="font-medium sm:text-sm whitespace-pre-line break-words">
-              {contactData.email || "Not Provided"}
-            </p>
           </div>
 
           <div>

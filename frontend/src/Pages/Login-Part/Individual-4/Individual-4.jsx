@@ -606,19 +606,21 @@ const MultiStepForm = () => {
 
         // if (!interviewDetailsData.technologies?.length)
         //   currentErrors.technologies = "Technologies are required";
-        if (!interviewDetailsData.previousInterviewExperience) {
-          currentErrors.previousInterviewExperience =
-            "Previous Interview Experience is required";
-        } else if (
-          interviewDetailsData.previousInterviewExperience === "yes" &&
-          !interviewDetailsData.previousInterviewExperienceYears
-        ) {
-          currentErrors.previousInterviewExperienceYears =
-            "Please Specify Years of Experience";
+        if (!isProfileCompleteStateOrg) {
+          if (!interviewDetailsData.previousInterviewExperience) {
+            currentErrors.previousInterviewExperience =
+              "Previous Interview Experience is required";
+          } else if (
+            interviewDetailsData.previousInterviewExperience === "yes" &&
+            !interviewDetailsData.previousInterviewExperienceYears
+          ) {
+            currentErrors.previousInterviewExperienceYears =
+              "Please Specify Years of Experience";
+          }
         }
 
         // Validate interview formats
-        if (!interviewDetailsData.interviewFormatWeOffer?.length) {
+        if (!isProfileCompleteStateOrg && !interviewDetailsData.interviewFormatWeOffer?.length) {
           currentErrors.interviewFormatWeOffer = "Interview Format is required";
         }
 
@@ -689,20 +691,22 @@ const MultiStepForm = () => {
           };
         }
 
-        if (!interviewDetailsData.professionalTitle?.trim()) {
-          currentErrors.professionalTitle = "Professional Title is required";
-        } else if (interviewDetailsData.professionalTitle.length < 30) {
-          currentErrors.professionalTitle =
-            "Professional Title must be at least 30 characters";
-        } else if (interviewDetailsData.professionalTitle.length > 100) {
-          currentErrors.professionalTitle =
-            "Professional Title cannot exceed 100 characters";
-        }
-        if (!interviewDetailsData.bio?.trim()) {
-          currentErrors.bio = "Professional Bio is required";
-        } else if (interviewDetailsData.bio.length < 150) {
-          currentErrors.bio =
-            "Professional Bio must be at least 150 characters";
+        if (!isProfileCompleteStateOrg) {
+          if (!interviewDetailsData.professionalTitle?.trim()) {
+            currentErrors.professionalTitle = "Professional Title is required";
+          } else if (interviewDetailsData.professionalTitle.length < 30) {
+            currentErrors.professionalTitle =
+              "Professional Title must be at least 30 characters";
+          } else if (interviewDetailsData.professionalTitle.length > 100) {
+            currentErrors.professionalTitle =
+              "Professional Title cannot exceed 100 characters";
+          }
+          if (!interviewDetailsData.bio?.trim()) {
+            currentErrors.bio = "Professional Bio is required";
+          } else if (interviewDetailsData.bio.length < 150) {
+            currentErrors.bio =
+              "Professional Bio must be at least 150 characters";
+          }
         }
 
         // Check if there are any errors in the nested rates object
