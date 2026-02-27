@@ -586,7 +586,7 @@ const AddFeedbackForm = ({
   );
 
   return (
-    <div className="fixed sm:px-[4%] px-[8%] top-[62px] inset-x-0 bottom-0 z-40 overflow-y-auto bg-white">
+    <div className="fixed sm:px-[4%] pl-[8%] pr-[7%] top-[62px] inset-x-0 bottom-0 z-40 overflow-y-auto bg-white">
       <div className="relative flex flex-col min-h-full items-center justify-start pb-10 pt-4">
         <div className="w-full mb-4">
           <button
