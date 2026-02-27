@@ -452,18 +452,25 @@ const walletVerifyPayment = async (req, res) => {
         }
       }
     } else {
-      // Normal flow — fetch payment to verify it's captured/authorized
+      // Normal flow — fetch payment to verify it's CAPTURED (not just authorized)
       try {
         const payment = await razorpay.payments.fetch(razorpay_payment_id);
+        console.log(
+          `[WALLET] Razorpay payment ${razorpay_payment_id} status: '${payment?.status}', method: '${payment?.method}'`
+        );
+
         if (payment && payment.status) {
           razorpayPaymentStatus = payment.status;
           razorpayFailureReason = payment.error_description || payment.error_reason || null;
 
-          if (payment.status === "captured" || payment.status === "authorized") {
+          // ONLY credit on 'captured' — NOT 'authorized'
+          // On live Razorpay, 'authorized' means the bank approved but hasn't finalized.
+          // The bank can still decline during capture, triggering payment.failed.
+          if (payment.status === "captured") {
             paymentVerified = true;
           } else {
             console.warn(
-              `[WALLET] Payment ${razorpay_payment_id} status is '${payment.status}', NOT crediting wallet.`
+              `[WALLET] Payment ${razorpay_payment_id} status is '${payment.status}', NOT crediting wallet. Only 'captured' payments are credited.`
             );
           }
         } else {
@@ -480,15 +487,35 @@ const walletVerifyPayment = async (req, res) => {
     // Proceeding with payment processing based on paymentVerified flag
 
     // Try to retrieve walletCode from the Razorpay order notes if available
+    // AND verify the order is actually paid (double-check against payment status)
     let walletCodeFromNotes = null;
     try {
       const orderDetails = await razorpay.orders.fetch(razorpay_order_id);
       walletCodeFromNotes = orderDetails?.notes?.walletCode || null;
-      if (walletCodeFromNotes) {
-        // console.log("walletCode from Razorpay order notes:", walletCodeFromNotes);
+
+      console.log(
+        `[WALLET] Razorpay order ${razorpay_order_id} status: '${orderDetails?.status}', amount_paid: ${orderDetails?.amount_paid}`
+      );
+
+      // CRITICAL: Even if payment status was 'captured', verify the ORDER is 'paid'
+      // On live Razorpay, the handler can fire before the order is fully settled
+      if (paymentVerified && orderDetails?.status !== "paid") {
+        console.warn(
+          `[WALLET] Payment was '${razorpayPaymentStatus}' but ORDER status is '${orderDetails?.status}', NOT crediting wallet.`
+        );
+        paymentVerified = false;
+        razorpayFailureReason =
+          razorpayFailureReason || `Order not paid (status: ${orderDetails?.status})`;
       }
     } catch (orderFetchErr) {
-      // console.log("Could not fetch Razorpay order details; proceeding without notes");
+      console.warn("[WALLET] Could not fetch Razorpay order details:", orderFetchErr.message);
+      // If we can't verify order status and payment seemed verified,
+      // still do NOT credit to be safe
+      if (paymentVerified) {
+        console.warn("[WALLET] Cannot verify order status — NOT crediting wallet to be safe.");
+        paymentVerified = false;
+        razorpayFailureReason = "Could not verify order status";
+      }
     }
 
     // Find or create wallet and ensure it has a walletCode

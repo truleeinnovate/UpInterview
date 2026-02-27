@@ -3,54 +3,134 @@ const InterviewRequest = require('../../models/InterviewRequest');
 const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
 const { MockInterviewRound } = require("../../models/Mockinterview/mockinterviewRound");
 const { processAutoSettlement, processWithdrawnRefund } = require("../../utils/interviewWalletUtil");
+const { DateTime } = require('luxon');
+
+// ────────────────────────────────────────────────
+// Helper: parse "27-02-2026 03:44 PM - 04:44 PM" → Date
+// ────────────────────────────────────────────────
+function parseInterviewDateTime(dateTimeStr) {
+  if (!dateTimeStr || typeof dateTimeStr !== "string") return null;
+
+  const [startPart] = dateTimeStr.split(" - ");
+  if (!startPart) return null;
+
+  const [date, time, meridian] = startPart.split(" ");
+  if (!date || !time || !meridian) return null;
+
+  const [dd, mm, yyyy] = date.split("-").map(Number);
+  let [hours, minutes] = time.split(":").map(Number);
+
+  if (meridian.toUpperCase() === "PM" && hours !== 12) hours += 12;
+  if (meridian.toUpperCase() === "AM" && hours === 12) hours = 0;
+
+  const dt = DateTime.fromObject(
+    { year: yyyy, month: mm, day: dd, hour: hours, minute: minutes, second: 0 },
+    { zone: "Asia/Kolkata" }
+  );
+
+  return dt.isValid ? dt.toJSDate() : null;
+}
 
 async function expireInterviewRequests() {
   const now = new Date();
   console.log('[Cron] Interview request expiry started at', now.toISOString());
 
-  // 1. Find expired in-progress requests
+  // ================================================================
+  // PASS 1: Expire requests where expiryDateTime has passed (original)
+  // ================================================================
   const expiredRequests = await InterviewRequest.find({
     status: "inprogress",
     expiryDateTime: { $lte: now }
   }).select("roundId isMockInterview");
 
-  if (!expiredRequests.length) {
-    console.log('[Cron] No expired requests found');
-    return;
-  }
+  if (expiredRequests.length) {
+    await InterviewRequest.updateMany(
+      {
+        status: "inprogress",
+        expiryDateTime: { $lte: now }
+      },
+      {
+        $set: {
+          status: "expired",
+          respondedAt: now
+        }
+      }
+    );
 
-  // 2. Expire them (same for mock & non-mock)
-  await InterviewRequest.updateMany(
-    {
-      status: "inprogress",
-      expiryDateTime: { $lte: now }
-    },
-    {
-      $set: {
-        status: "expired",
-        respondedAt: now
+    console.log(`[Cron] Expired ${expiredRequests.length} requests (by expiryDateTime)`);
+
+    // Process affected rounds
+    const roundIds = [...new Set(expiredRequests.map(r => r.roundId?.toString()).filter(Boolean))];
+
+    for (const roundId of roundIds) {
+      const sampleRequest = expiredRequests.find(r => r.roundId?.toString() === roundId);
+      const isMock = sampleRequest?.isMockInterview === true;
+
+      if (isMock) {
+        await evaluateMockRoundAfterExpiry(roundId, now);
+      } else {
+        await evaluateRoundAfterExpiry(roundId, now);
       }
     }
-  );
-
-  console.log(`[Cron] Expired ${expiredRequests.length} requests`);
-
-  // 3. Process affected rounds
-  const roundIds = [...new Set(expiredRequests.map(r => r.roundId?.toString()).filter(Boolean))];
-
-  for (const roundId of roundIds) {
-    // Find one request to know if it's mock or real (we only need one per round)
-    const sampleRequest = expiredRequests.find(r => r.roundId?.toString() === roundId);
-    const isMock = sampleRequest?.isMockInterview === true;
-
-    if (isMock) {
-      await evaluateMockRoundAfterExpiry(roundId, now);
-    } else {
-      await evaluateRoundAfterExpiry(roundId, now);
-    }
+  } else {
+    console.log('[Cron] No expired requests found (by expiryDateTime)');
   }
 
+  // ================================================================
+  // PASS 2: Find RequestSent rounds where interview dateTime has passed
+  // These still have inprogress requests but expiryDateTime hasn't reached
+  // ================================================================
+  await expireByInterviewTime(InterviewRounds, false, now);
+  await expireByInterviewTime(MockInterviewRound, true, now);
+
   console.log('[Cron] Interview request expiry completed');
+}
+
+// ────────────────────────────────────────────────
+// PASS 2 helper: find RequestSent rounds where interview time has passed
+// ────────────────────────────────────────────────
+async function expireByInterviewTime(Model, isMock, now) {
+  const label = isMock ? "Mock" : "Real";
+
+  // Find all rounds still in RequestSent status
+  const requestSentRounds = await Model.find({ status: "RequestSent" }).select("_id dateTime").lean();
+
+  if (!requestSentRounds.length) return;
+
+  for (const round of requestSentRounds) {
+    const interviewStart = parseInterviewDateTime(round.dateTime);
+    if (!interviewStart) continue;
+
+    // Check if interview time has passed
+    if (interviewStart > now) continue;
+
+    console.log(`[Cron] ${label} round ${round._id} interview time (${round.dateTime}) has passed → processing`);
+
+    // Check if there are still inprogress requests for this round
+    const inprogressCount = await InterviewRequest.countDocuments({
+      roundId: round._id,
+      status: "inprogress"
+    });
+
+    if (inprogressCount === 0) {
+      // All requests already expired/declined/withdrawn — just evaluate
+      console.log(`[Cron] ${label} round ${round._id} has no inprogress requests, just evaluating`);
+    } else {
+      // Withdraw remaining inprogress requests (interview time passed, no point waiting)
+      await InterviewRequest.updateMany(
+        { roundId: round._id, status: "inprogress" },
+        { $set: { status: "withdrawn", respondedAt: now } }
+      );
+      console.log(`[Cron] ${label} round ${round._id}: withdrew ${inprogressCount} inprogress requests`);
+    }
+
+    // Now evaluate the round
+    if (isMock) {
+      await evaluateMockRoundAfterExpiry(round._id.toString(), now);
+    } else {
+      await evaluateRoundAfterExpiry(round._id.toString(), now);
+    }
+  }
 }
 
 // ────────────────────────────────────────────────
@@ -114,7 +194,9 @@ async function evaluateRoundAfterExpiry(roundId, now) {
       { roundId: new mongoose.Types.ObjectId(roundId), status: "inprogress" },
       { $set: { status: "withdrawn", respondedAt: now } }
     );
-    console.log(`[Cron] Withdrew ${withdrawResult.modifiedCount} remaining requests for round ${roundId}`);
+    if (withdrawResult.modifiedCount > 0) {
+      console.log(`[Cron] Withdrew ${withdrawResult.modifiedCount} remaining requests for round ${roundId}`);
+    }
   } catch (withdrawErr) {
     console.error(`[Cron] Error withdrawing requests for round ${roundId}:`, withdrawErr.message);
   }
@@ -189,7 +271,9 @@ async function evaluateMockRoundAfterExpiry(roundId, now) {
       { roundId: new mongoose.Types.ObjectId(roundId), status: "inprogress" },
       { $set: { status: "withdrawn", respondedAt: now } }
     );
-    console.log(`[Cron] Withdrew ${withdrawResult.modifiedCount} remaining requests for mock round ${roundId}`);
+    if (withdrawResult.modifiedCount > 0) {
+      console.log(`[Cron] Withdrew ${withdrawResult.modifiedCount} remaining requests for mock round ${roundId}`);
+    }
   } catch (withdrawErr) {
     console.error(`[Cron] Error withdrawing requests for mock round ${roundId}:`, withdrawErr.message);
   }

@@ -1,6 +1,6 @@
 const agenda = require("../../agenda");
 const { DateTime } = require('luxon');
-const NO_SHOW_DELAY_MINUTES = 20;
+const NO_SHOW_DELAY_MINUTES = 5;
 //agenda not working in dev becuase azure not active every time so i wont load correctly
 
 function extractStartDate(dateTimeStr) {
