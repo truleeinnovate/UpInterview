@@ -167,8 +167,11 @@ export function WalletTopupPopup({ onClose, onTopup }) {
                 navigate("/wallet");
               }
             } else {
-              //console.error('Backend did not confirm success:', verification);//----v1.0.0----->
-              setError("Payment verification failed. Please try again.");
+              // Payment was not captured — backend recorded failed transaction without crediting wallet
+              setError(
+                verification?.message ||
+                "Payment was not captured. Your wallet has not been credited. Please try again."
+              );
               setIsProcessing(false);
             }
           } catch (error) {
@@ -213,6 +216,9 @@ export function WalletTopupPopup({ onClose, onTopup }) {
         console.error("Razorpay payment failed:", response);
         const description =
           response?.error?.description || response?.error?.reason;
+        // Note: Failed payments are recorded when the success handler fires
+        // and the backend checks the actual payment status from Razorpay
+
         setError(
           description ||
           "Payment failed. Please try again or use a different payment method."

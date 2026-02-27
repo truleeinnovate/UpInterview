@@ -167,8 +167,8 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Total Amount</p>
-                  <p className={`text-3xl font-bold ${txnStyle.amountColor}`}>
-                    {txnStyle.prefix}₹{(transaction?.totalAmount || transaction?.amount || 0).toFixed(2)}
+                  <p className={`text-3xl font-bold ${transaction?.status === "failed" ? "text-gray-500" : txnStyle.amountColor}`}>
+                    {transaction?.status === "failed" ? "" : txnStyle.prefix}₹{(transaction?.totalAmount || transaction?.amount || 0).toFixed(2)}
                   </p>
                 </div>
                 {transaction?.bucket && (
