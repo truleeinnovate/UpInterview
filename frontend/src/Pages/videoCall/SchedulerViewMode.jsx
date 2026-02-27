@@ -39,11 +39,10 @@ const StarRating = ({ rating, onChange, size = "md", isReadOnly = false }) => {
           className={`transition-colors ${isReadOnly ? "cursor-default" : "cursor-pointer"}`}
         >
           <Star
-            className={`${sizeClasses[size]} ${
-              star <= rating
-                ? "fill-yellow-400 text-yellow-400"
-                : "text-gray-300"
-            }`}
+            className={`${sizeClasses[size]} ${star <= rating
+              ? "fill-yellow-400 text-yellow-400"
+              : "text-gray-300"
+              }`}
           />
         </button>
       ))}
@@ -51,7 +50,7 @@ const StarRating = ({ rating, onChange, size = "md", isReadOnly = false }) => {
   );
 };
 
-export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
+export const SchedulerViewMode = ({ feedbackData, isViewMode, }) => {
   // Handle multiple feedbacks if they exist
   const feedbacks = Array.isArray(feedbackData?.feedbacks)
     ? feedbackData.feedbacks
@@ -231,19 +230,26 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
                 </p>
               </div>
             </div>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-            <div className="flex items-center gap-3">
+
+            {/* <div className="grid grid-cols-2 sm:grid-cols-1 gap-6"> */}
+
+            {!isMockInterview && <div className="flex items-center gap-3">
+
+
               <div className="p-2 bg-custom-bg rounded-lg">
                 <Briefcase className="w-5 h-5 text-gray-500" />
               </div>
+
               <div>
                 <p className="text-sm text-gray-500">Position</p>
                 <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
                   {formData?.position || "N/A"}
                 </p>
               </div>
+
+
             </div>
+            }
             <div className="flex items-center gap-3">
               <div className="p-2 bg-custom-bg rounded-lg">
                 <Calendar className="w-5 h-5 text-gray-500" />
@@ -254,6 +260,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
                   {formData?.interviewDate || "N/A"}
                 </p>
               </div>
+              {/* </div> */}
             </div>
           </div>
         </div>
@@ -317,11 +324,10 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode }) => {
             <button
               key={fb._id || idx}
               onClick={() => setActiveFeedbackIndex(idx)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeFeedbackIndex === idx
-                  ? "bg-white text-[rgb(33,121,137)] shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeFeedbackIndex === idx
+                ? "bg-white text-[rgb(33,121,137)] shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+                }`}
             >
               Feedback from {fb.interviewerId?.name || `Interviewer ${idx + 1}`}
             </button>
