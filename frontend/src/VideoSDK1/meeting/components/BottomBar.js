@@ -363,7 +363,7 @@ const WebCamBTN = () => {
   );
 };
 
-export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = false }) {
+export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = false, isMockInterview = false, isCandidate = false }) {
 
   const RaiseHandBTN = ({ isMobile, isTab }) => {
     const { publish } = usePubSub("RAISE_HAND");
@@ -716,7 +716,7 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = fals
         <div className="flex items-center">
           {/* First group */}
           <div className="flex items-center space-x-4">
-            {isSchedule && (
+            {(isSchedule || (isMockInterview && isCandidate)) && (
               <RecordingBTN {...buttonProps} />
             )}
             <ControlButton><RaiseHandBTN isMobile={false} isTab={false} {...buttonProps} /></ControlButton>
