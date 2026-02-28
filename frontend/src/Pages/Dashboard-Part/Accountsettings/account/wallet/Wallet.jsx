@@ -592,7 +592,7 @@ const Wallet = () => {
                           <div className="border-l pl-4 ml-2">
                             <p className="text-xs text-gray-500">Total</p>
                             <p
-                              className={`text-base font-bold ${getTransactionTypeStyle(transaction.type)}`}
+                              className={`text-base font-bold ${transaction.status === "failed" ? "text-red-600" : getTransactionTypeStyle(transaction.type)}`}
                             >
                               {transaction.status === "failed"
                                 ? ""
@@ -809,7 +809,7 @@ const Wallet = () => {
 
                       {/* Amount & Status */}
                       <div className="flex items-center justify-between">
-                        <p className={`text-sm font-bold ${getTransactionTypeStyle(transaction.type)}`}>
+                        <p className={`text-sm font-bold ${transaction.status === "failed" ? "text-red-600" : getTransactionTypeStyle(transaction.type)}`}>
                           {transaction.status === "failed"
                             ? ""
                             : transaction.effect === "CREDITED" || transaction.type === "credited" || transaction.type === "credit" || transaction.type === "hold_release"

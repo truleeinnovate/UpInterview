@@ -156,6 +156,8 @@ export const OutsourcedInterviewerCard = ({
   const durationBasedAmount = numericRate > 0 ? Math.round((numericRate * durationMin) / 60) : 0;
   const discountPercent = navigatedfrom === "mock-interview" ? parseFloat(interviewer?.contact?.mock_interview_discount || 0) : 0;
   const discountedRate = discountPercent > 0 && durationBasedAmount > 0 ? Math.round(durationBasedAmount * (1 - discountPercent / 100)) : 0;
+  const durationLabel = durationMin === 60 ? "/hr" : `/${durationMin} min`;
+  const formatAmount = (amt) => amt.toLocaleString("en-IN");
 
   const getAvailableSlotsInfo = () => {
     const availability =
@@ -293,23 +295,25 @@ export const OutsourcedInterviewerCard = ({
                     <span className="text-xs font-medium text-gray-700">{rating}</span>
                   </div>
 
+
+
+                  {/* Rate - show duration-based amount */}
+                  {navigatedfrom === "mock-interview" && discountPercent > 0 && discountedRate > 0 ? (
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs text-gray-400 line-through">₹{formatAmount(durationBasedAmount)}{durationLabel}</span>
+                      <span className="text-sm font-semibold text-green-600">₹{formatAmount(discountedRate)}{durationLabel}</span>
+                    </div>
+                  ) : durationBasedAmount > 0 ? (
+                    <span className="text-sm font-semibold text-custom-blue">₹{formatAmount(durationBasedAmount)}{durationLabel}</span>
+                  ) : (
+                    <span className="text-sm font-semibold text-custom-blue">{hourlyRate}</span>
+                  )}
+
                   {/* Mock Interview Discount */}
                   {navigatedfrom === "mock-interview" && interviewer?.contact?.mock_interview_discount && (
                     <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded">
                       {interviewer.contact.mock_interview_discount}% off
                     </span>
-                  )}
-
-                  {/* Rate - show duration-based amount */}
-                  {navigatedfrom === "mock-interview" && discountPercent > 0 && discountedRate > 0 ? (
-                    <div className="flex flex-col items-end">
-                      <span className="text-xs text-gray-400 line-through">₹{durationBasedAmount}/{durationMin}min</span>
-                      <span className="text-sm font-semibold text-green-600">₹{discountedRate}/{durationMin}min</span>
-                    </div>
-                  ) : durationBasedAmount > 0 ? (
-                    <span className="text-sm font-semibold text-custom-blue">₹{durationBasedAmount}/{durationMin}min</span>
-                  ) : (
-                    <span className="text-sm font-semibold text-custom-blue">{hourlyRate}</span>
                   )}
                 </div>
               )}
@@ -3103,7 +3107,7 @@ function OutsourcedInterviewerModal({
                     </div>
 
                     {/* Date & Time Chip */}
-                    {localDate && localStartTime && (
+                    {/* {localDate && localStartTime && (
                       <div className="flex mt-4 flex-wrap items-center gap-1.5">
                         <span className="text-xs text-gray-500 mr-1">
                           Date & Time:
@@ -3120,7 +3124,7 @@ function OutsourcedInterviewerModal({
                           {localEndTime ? ` - ${localEndTime}` : ""}
                         </span>
                       </div>
-                    )}
+                    )} */}
 
                     {/* Selected Skills */}
                     {/* {tempSelectedSkills.length > 0 && (
