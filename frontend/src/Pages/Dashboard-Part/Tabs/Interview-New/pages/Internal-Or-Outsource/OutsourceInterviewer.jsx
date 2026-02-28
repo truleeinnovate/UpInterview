@@ -2708,102 +2708,103 @@ function OutsourcedInterviewerModal({
 
 
                       {/* Date & Time Selection */}
-                      {interviewType !== "instant" &&
+                      {/* {interviewType !== "instant" && */}
 
-                        < div className="md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3">
-                          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                            Scheduled Date & Time
-                          </label>
-                          <input
-                            // disabled={interviewType === "instant"}
-                            type="datetime-local"
-                            min={twoHoursFromNowLocal()} // Browser will prevent selection of earlier times
-                            value={(() => {
-                              if (!localDate || !localStartTime) return "";
+                      < div className="md:col-span-3 lg:col-span-3 xl:col-span-3 2xl:col-span-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Scheduled Date & Time
+                        </label>
+                        <input
+                          // disabled={interviewType === "instant"}
+                          type="datetime-local"
+                          min={twoHoursFromNowLocal()} // Browser will prevent selection of earlier times
+                          disabled={interviewType === "instant"}
+                          value={(() => {
+                            if (!localDate || !localStartTime) return "";
+                            try {
+                              const [d, m, y] = localDate.split("-");
+                              const [time, period] = localStartTime.split(" ");
+                              let [h, min] = time.split(":").map(Number);
+                              if (period === "PM" && h !== 12) h += 12;
+                              if (period === "AM" && h === 12) h = 0;
+                              return `${y}-${m}-${d}T${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+                            } catch { return ""; }
+                          })()}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val) {
                               try {
-                                const [d, m, y] = localDate.split("-");
-                                const [time, period] = localStartTime.split(" ");
-                                let [h, min] = time.split(":").map(Number);
-                                if (period === "PM" && h !== 12) h += 12;
-                                if (period === "AM" && h === 12) h = 0;
-                                return `${y}-${m}-${d}T${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
-                              } catch { return ""; }
-                            })()}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (val) {
-                                try {
-                                  const selectedDate = new Date(val);
-                                  const minAllowedDate = new Date(twoHoursFromNowLocal());
+                                const selectedDate = new Date(val);
+                                const minAllowedDate = new Date(twoHoursFromNowLocal());
 
-                                  // If selected date is less than 2 hours from now, reset to minimum allowed
-                                  if (selectedDate < minAllowedDate) {
-                                    // Reset to minimum allowed time using twoHoursFromNowLocal
-                                    const minDate = new Date(twoHoursFromNowLocal());
-                                    const d = String(minDate.getDate()).padStart(2, "0");
-                                    const m = String(minDate.getMonth() + 1).padStart(2, "0");
-                                    const y = minDate.getFullYear();
-                                    setLocalDate(`${d}-${m}-${y}`);
-
-                                    let h = minDate.getHours();
-                                    const minMinutes = minDate.getMinutes();
-                                    const period = h >= 12 ? "PM" : "AM";
-                                    h = h % 12 || 12;
-                                    setLocalStartTime(`${h}:${String(minMinutes).padStart(2, "0")} ${period}`);
-
-                                    // Calculate end time (default 60 minutes)
-                                    const endObj = new Date(minDate.getTime() + 60 * 60000);
-                                    let eh = endObj.getHours();
-                                    const emin = endObj.getMinutes();
-                                    const ePeriod = eh >= 12 ? "PM" : "AM";
-                                    eh = eh % 12 || 12;
-                                    setLocalEndTime(`${eh}:${String(emin).padStart(2, "0")} ${ePeriod}`);
-
-                                    return;
-                                  }
-
-                                  // If validation passes, proceed with normal date update
-                                  const d = String(selectedDate.getDate()).padStart(2, "0");
-                                  const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
-                                  const y = selectedDate.getFullYear();
+                                // If selected date is less than 2 hours from now, reset to minimum allowed
+                                if (selectedDate < minAllowedDate) {
+                                  // Reset to minimum allowed time using twoHoursFromNowLocal
+                                  const minDate = new Date(twoHoursFromNowLocal());
+                                  const d = String(minDate.getDate()).padStart(2, "0");
+                                  const m = String(minDate.getMonth() + 1).padStart(2, "0");
+                                  const y = minDate.getFullYear();
                                   setLocalDate(`${d}-${m}-${y}`);
 
-                                  let h = selectedDate.getHours();
-                                  const min = selectedDate.getMinutes();
+                                  let h = minDate.getHours();
+                                  const minMinutes = minDate.getMinutes();
                                   const period = h >= 12 ? "PM" : "AM";
                                   h = h % 12 || 12;
-                                  setLocalStartTime(`${h}:${String(min).padStart(2, "0")} ${period}`);
+                                  setLocalStartTime(`${h}:${String(minMinutes).padStart(2, "0")} ${period}`);
 
-                                  // Preserve the existing duration (gap between start & end)
-                                  let durationMs = 60 * 60000; // default 60 min
-                                  if (localStartTime && localEndTime) {
-                                    try {
-                                      const parseT = (t) => {
-                                        const [tp, pr] = t.split(" ");
-                                        let [th, tm] = tp.split(":").map(Number);
-                                        if (pr === "PM" && th !== 12) th += 12;
-                                        if (pr === "AM" && th === 12) th = 0;
-                                        return th * 60 + tm;
-                                      };
-                                      const diff = (parseT(localEndTime) - parseT(localStartTime)) * 60000;
-                                      if (diff > 0) durationMs = diff;
-                                    } catch { }
-                                  }
-                                  const endObj = new Date(selectedDate.getTime() + durationMs);
+                                  // Calculate end time (default 60 minutes)
+                                  const endObj = new Date(minDate.getTime() + 60 * 60000);
                                   let eh = endObj.getHours();
                                   const emin = endObj.getMinutes();
                                   const ePeriod = eh >= 12 ? "PM" : "AM";
                                   eh = eh % 12 || 12;
                                   setLocalEndTime(`${eh}:${String(emin).padStart(2, "0")} ${ePeriod}`);
-                                } catch (err) {
-                                  console.error("Error parsing datetime-local:", err);
-                                }
-                              }
-                            }}
-                            className="w-full h-[38px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          />
 
-                          {/* <input
+                                  return;
+                                }
+
+                                // If validation passes, proceed with normal date update
+                                const d = String(selectedDate.getDate()).padStart(2, "0");
+                                const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
+                                const y = selectedDate.getFullYear();
+                                setLocalDate(`${d}-${m}-${y}`);
+
+                                let h = selectedDate.getHours();
+                                const min = selectedDate.getMinutes();
+                                const period = h >= 12 ? "PM" : "AM";
+                                h = h % 12 || 12;
+                                setLocalStartTime(`${h}:${String(min).padStart(2, "0")} ${period}`);
+
+                                // Preserve the existing duration (gap between start & end)
+                                let durationMs = 60 * 60000; // default 60 min
+                                if (localStartTime && localEndTime) {
+                                  try {
+                                    const parseT = (t) => {
+                                      const [tp, pr] = t.split(" ");
+                                      let [th, tm] = tp.split(":").map(Number);
+                                      if (pr === "PM" && th !== 12) th += 12;
+                                      if (pr === "AM" && th === 12) th = 0;
+                                      return th * 60 + tm;
+                                    };
+                                    const diff = (parseT(localEndTime) - parseT(localStartTime)) * 60000;
+                                    if (diff > 0) durationMs = diff;
+                                  } catch { }
+                                }
+                                const endObj = new Date(selectedDate.getTime() + durationMs);
+                                let eh = endObj.getHours();
+                                const emin = endObj.getMinutes();
+                                const ePeriod = eh >= 12 ? "PM" : "AM";
+                                eh = eh % 12 || 12;
+                                setLocalEndTime(`${eh}:${String(emin).padStart(2, "0")} ${ePeriod}`);
+                              } catch (err) {
+                                console.error("Error parsing datetime-local:", err);
+                              }
+                            }
+                          }}
+                          className="w-full h-[38px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+
+                        {/* <input
                           type="datetime-local"
                           min={twoHoursFromNowLocal()} // Add this line
                           value={(() => {
@@ -2861,8 +2862,8 @@ function OutsourcedInterviewerModal({
                           }}
                           className="w-full h-[38px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         /> */}
-                        </div>
-                      }
+                      </div>
+                      {/* // } */}
 
 
                       {/* Parent Skills Reset Button */}
