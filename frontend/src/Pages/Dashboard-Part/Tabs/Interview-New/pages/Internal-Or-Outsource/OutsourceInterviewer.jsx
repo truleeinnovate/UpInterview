@@ -54,6 +54,7 @@ export const OutsourcedInterviewerCard = ({
   source,
   navigatedfrom,
   candidateExperience,
+  roundDuration,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -134,6 +135,27 @@ export const OutsourcedInterviewerCard = ({
   };
 
   const hourlyRate = getExperienceBasedRate();
+
+  // Get numeric rate value for discount calculation
+  const getNumericRate = () => {
+    const rates = interviewer?.contact?.rates;
+    if (!rates) return 0;
+    let selectedLevel = null;
+    if (candidateExperience >= 1 && candidateExperience <= 3) selectedLevel = "junior";
+    else if (candidateExperience > 3 && candidateExperience <= 6) selectedLevel = "mid";
+    else if (candidateExperience > 6) selectedLevel = "senior";
+    let rate = selectedLevel && rates[selectedLevel]?.inr > 0 ? rates[selectedLevel].inr : 0;
+    if (!rate) {
+      if (selectedLevel === "senior") rate = rates?.mid?.inr || rates?.junior?.inr || 0;
+      else if (selectedLevel === "mid") rate = rates?.junior?.inr || 0;
+    }
+    return rate;
+  };
+  const numericRate = getNumericRate();
+  const durationMin = Number(roundDuration) || 60;
+  const durationBasedAmount = numericRate > 0 ? Math.round((numericRate * durationMin) / 60) : 0;
+  const discountPercent = navigatedfrom === "mock-interview" ? parseFloat(interviewer?.contact?.mock_interview_discount || 0) : 0;
+  const discountedRate = discountPercent > 0 && durationBasedAmount > 0 ? Math.round(durationBasedAmount * (1 - discountPercent / 100)) : 0;
 
   const getAvailableSlotsInfo = () => {
     const availability =
@@ -259,12 +281,39 @@ export const OutsourcedInterviewerCard = ({
               </div>
 
               {/* Rating and hourly rate moved to bottom with Select button */}
-              {/* Mock Interview Discount */}
-              {navigatedfrom === "mock-interview" && interviewer?.contact?.mock_interview_discount && (
-                <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded">
-                  {interviewer.contact.mock_interview_discount}% off
-                </span>
+
+
+
+              {/* Rating, Hourly Rate & Mock Discount - left side */}
+              {source === "internal-interview" ? <div /> : (
+                <div className="flex items-center gap-3">
+                  {/* Rating */}
+                  <div className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded">
+                    <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+                    <span className="text-xs font-medium text-gray-700">{rating}</span>
+                  </div>
+
+                  {/* Mock Interview Discount */}
+                  {navigatedfrom === "mock-interview" && interviewer?.contact?.mock_interview_discount && (
+                    <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded">
+                      {interviewer.contact.mock_interview_discount}% off
+                    </span>
+                  )}
+
+                  {/* Rate - show duration-based amount */}
+                  {navigatedfrom === "mock-interview" && discountPercent > 0 && discountedRate > 0 ? (
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs text-gray-400 line-through">₹{durationBasedAmount}/{durationMin}min</span>
+                      <span className="text-sm font-semibold text-green-600">₹{discountedRate}/{durationMin}min</span>
+                    </div>
+                  ) : durationBasedAmount > 0 ? (
+                    <span className="text-sm font-semibold text-custom-blue">₹{durationBasedAmount}/{durationMin}min</span>
+                  ) : (
+                    <span className="text-sm font-semibold text-custom-blue">{hourlyRate}</span>
+                  )}
+                </div>
               )}
+
             </div>
           </div>
         </div>
@@ -463,21 +512,7 @@ export const OutsourcedInterviewerCard = ({
       {/* Buttons section - with side gaps like internal UI */}
       {navigatedfrom !== "dashboard" && (
         <div className="border-t border-gray-100 mt-4 mx-4">
-          <div className="py-3 flex justify-between items-center gap-2">
-            {/* Rating, Hourly Rate & Mock Discount - left side */}
-            {source === "internal-interview" ? <div /> : (
-              <div className="flex items-center gap-3">
-                {/* Rating */}
-                <div className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded">
-                  <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
-                  <span className="text-xs font-medium text-gray-700">{rating}</span>
-                </div>
-                {/* Hourly Rate */}
-                <span className="text-sm font-semibold text-custom-blue">{hourlyRate}</span>
-
-              </div>
-            )}
-
+          <div className="py-3 flex justify-end items-center gap-2">
             <Button
               variant={isSelected ? "destructive" : "customblue"}
               size="sm"
@@ -504,6 +539,7 @@ function OutsourcedInterviewerModal({
   previousSelectedInterviewers,
   interviewType,
   onDateTimeChange,
+  roundDuration,
 
   // positionData,
   // candidateData,
@@ -2049,8 +2085,39 @@ function OutsourcedInterviewerModal({
 
       // Use the highest rate among selected interviewers ONLY
       baseRequiredAmount = Math.max(...selectedRates, 0);
+
+      // Pro-rate based on interview duration (rates are per hour)
+      const durationMin = Number(roundDuration) || 60;
+      if (durationMin !== 60) {
+        baseRequiredAmount = Math.round((baseRequiredAmount * durationMin) / 60);
+      }
       // console.log("Selected Rates:", selectedRates);
       // console.log("Max Rate from Selected Interviewers:", baseRequiredAmount);
+
+      // For mock interviews, apply the discount of the highest-rate interviewer
+      // at selection time so the wallet hold uses the discounted amount
+      if (navigatedfrom === "mock-interview" && selectedInterviewersLocal.length > 0) {
+        // Find the interviewer with the highest rate
+        let maxRate = 0;
+        let maxRateInterviewerDiscount = 0;
+        selectedInterviewersLocal.forEach((i, idx) => {
+          const rate = selectedRates[idx] || 0;
+          if (rate > maxRate) {
+            maxRate = rate;
+            maxRateInterviewerDiscount = parseFloat(i?.contact?.mock_interview_discount || 0);
+          }
+        });
+        if (maxRateInterviewerDiscount > 0 && maxRateInterviewerDiscount <= 100) {
+          // Apply discount on the duration-prorated amount (baseRequiredAmount already pro-rated above)
+          baseRequiredAmount = Math.round(baseRequiredAmount * (1 - maxRateInterviewerDiscount / 100));
+          console.log(
+            "Mock interview discount applied at selection:",
+            maxRateInterviewerDiscount + "% (from highest rate interviewer)",
+            "Discounted hold amount:",
+            baseRequiredAmount
+          );
+        }
+      }
     }
 
     // console.log("Base Required Amount (without GST):", baseRequiredAmount);
@@ -3273,6 +3340,7 @@ function OutsourcedInterviewerModal({
                   onViewDetails={() => setSelectedInterviewer(interviewer)}
                   navigatedfrom={navigatedfrom}
                   candidateExperience={candidateExperience}
+                  roundDuration={roundDuration}
                 />
               ))}
             </div>

@@ -510,8 +510,7 @@ async function applySelectionTimeWalletHoldForOutsourcedRound({
         interviewId: String(interview._id),
         roundId: String(savedRound._id),
         source: "selection_hold",
-        // selectionGstRate: gstRate,
-        // selectionGstAmount: selectionGstAmount,
+        isMockInterview: Boolean(round?.isMockInterview || savedRound?.isMockInterview),
       },
     });
 
@@ -1282,6 +1281,10 @@ async function processAutoSettlement({ roundId, action, reasonCode, currentActio
         ownerId: interviewerOwnerId,
         type: "payout",
         planName: `Interview Payment - ${roundTitle}`,
+        price: isMockInterview && originalAmountBeforeDiscount > 0
+          ? originalAmountBeforeDiscount
+          : grossSettlementAmount,
+        discount: mockDiscountAmount || 0,
         totalAmount: settlementAmount,
         amountPaid: settlementAmount,
         status: "credited",
@@ -1295,17 +1298,36 @@ async function processAutoSettlement({ roundId, action, reasonCode, currentActio
           companyName: companyName,
           roundTitle: roundTitle,
           positionTitle: positionTitle,
+          interviewerName: contactDoc?.Name || `${contactDoc?.firstName || ""} ${contactDoc?.lastName || ""}`.trim() || "",
+          duration: roundDoc?.duration || "",
+          hourlyRate: baseAmount,
           settlementScenario: settlementScenario,
           serviceCharge: serviceCharge,
+          serviceChargePercent: scPercent,
           grossSettlementAmount: grossSettlementAmount,
+          gstAmount: gstFromHold,
+          gstForSettlement: gstForSettlement,
+          totalHoldAmount: totalHoldAmount,
+          isMockInterview: isMockInterview,
+          mockDiscountPercentage: mockDiscountPercentage,
+          mockDiscountAmount: mockDiscountAmount,
+          originalAmountBeforeDiscount: originalAmountBeforeDiscount,
+          policyName: appliedPolicyName,
+          payPercent: payPercent,
         },
         lineItems: [
           {
             description: `Interview conducted for ${companyName} - ${positionTitle} (${roundTitle})`,
-            amount: settlementAmount,
+            amount: grossSettlementAmount,
             quantity: 1,
             tax: 0,
           },
+          ...(serviceCharge > 0 ? [{
+            description: `Platform Service Charge (${scPercent}%)`,
+            amount: -serviceCharge,
+            quantity: 1,
+            tax: 0,
+          }] : []),
         ],
         createdAt: new Date(),
       });
