@@ -447,7 +447,7 @@ const dbConnectionMiddleware = (req, res, next) => {
 //all cron paths
 
 require("./cron/Interviews/interviewRequests/expireInterviewRequests.js");
-require("./cron/Interviews/roundNoShow/roundNoShowCron.js"); // DEV: cron-based NoShow (replaces Agenda)
+// require("./cron/Interviews/roundNoShow/roundNoShowCron.js"); // DEV: cron-based NoShow (commented out — using Agenda instead)
 require("./cron/assessments/assessment.cron.js");
 require("./cron/subscriptions/subscriptionEmail.cron.js");
 require("./cron/organizations/organizationStatusReminder.cron");
