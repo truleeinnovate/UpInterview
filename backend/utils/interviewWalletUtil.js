@@ -401,14 +401,20 @@ async function computeInterviewPricingForAccept({
     };
   }
 
+  // NOTE: The frontend already applies the mock interview discount at selection
+  // time and sends the discounted amount as maxHourlyRate for the wallet hold.
+  // We must NOT apply the discount again here, otherwise the amount would be
+  // double-discounted. We only track the discount metadata for audit/reporting.
   let appliedDiscountPercentage = 0;
   let discountAmount = 0;
   if (request.isMockInterview && contact.mock_interview_discount) {
     appliedDiscountPercentage =
       parseFloat(contact.mock_interview_discount) || 0;
     if (appliedDiscountPercentage > 0 && appliedDiscountPercentage <= 100) {
+      // Calculate discount amount for metadata only — do NOT subtract from totalAmount
       discountAmount = (totalAmount * appliedDiscountPercentage) / 100;
-      totalAmount -= discountAmount;
+      // totalAmount is NOT reduced here because frontend already applied the discount
+      // at selection time when computing the hold amount.
     }
   }
 
@@ -419,7 +425,7 @@ async function computeInterviewPricingForAccept({
     totalAmount,
     appliedDiscountPercentage,
     discountAmount,
-    originalAmount: totalAmount + discountAmount,
+    originalAmount: totalAmount, // same as totalAmount since discount is applied at frontend selection time
   };
 }
 
