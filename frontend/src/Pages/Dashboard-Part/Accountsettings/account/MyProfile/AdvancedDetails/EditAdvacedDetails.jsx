@@ -35,6 +35,8 @@ import { useOutsourceInterviewers } from "../../../../../../apiHooks/superAdmin/
 import LoadingButton from "../../../../../../Components/LoadingButton.jsx";
 import { Button } from "../../../../../../Components/Buttons/Button.jsx";
 // Skills.svg
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode.js";
 
 Modal.setAppElement("#root");
 
@@ -150,16 +152,16 @@ const EditAdvacedDetails = ({
     [colleges],
   );
 
-    const locationOptionsRS = useMemo(
-      () =>
-        (locations || [])
-          .map((l) => ({
-            value: l?.LocationName,
-            label: l?.LocationName,
-          }))
-          .concat([{ value: "__other__", label: "+ Others" }]),
-      [locations],
-    );
+  const locationOptionsRS = useMemo(
+    () =>
+      (locations || [])
+        .map((l) => ({
+          value: l?.LocationName,
+          label: l?.LocationName,
+        }))
+        .concat([{ value: "__other__", label: "+ Others" }]),
+    [locations],
+  );
 
   useEffect(() => {
     const saved = (formData.location || "").trim();
@@ -279,7 +281,7 @@ const EditAdvacedDetails = ({
   const handleSave = async (e) => {
     e.preventDefault(); // Added to prevent form submission issues
 
-    const validationErrors = validateAdvancedForm(formData); // Validate form
+    const validationErrors = validateAdvancedForm(formData, organization); // Validate form
     setErrors(validationErrors);
 
     if (!isEmptyObject(validationErrors)) {
@@ -436,7 +438,8 @@ const EditAdvacedDetails = ({
   //   // setErrors((prev) => ({ ...prev, [name]: '' }));
   // };
 
-  // console.log("from", from);
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const organization = tokenPayload?.organization;
 
   return (
     // v1.0.1 <----------------------------------------------------------------
@@ -506,10 +509,10 @@ const EditAdvacedDetails = ({
                 //   from !== "outsource-interviewer" ||
                 //   profileData?.roleLabel !== "Admin"
                 // }
-                disabled={
-                  profileData?.roleLabel !== "Admin" &&
-                  from !== "outsource-interviewer"
-                }
+                // disabled={
+                //   profileData?.roleLabel !== "Admin" &&
+                //   from !== "outsource-interviewer"
+                // }
                 name="currentRole"
                 onChange={handleInputChange}
                 error={errors.currentRole}
@@ -541,32 +544,36 @@ const EditAdvacedDetails = ({
               />
             </div>
 
-            <div className="flex flex-col">
-              <InputField
-                label="Current Company"
-                name="company"
-                value={formData.company}
-                onChange={handleInputChange}
-                error={errors.company}
-                placeholder="Enter Company Name"
-                required
-              />
-            </div>
+            {!organization && (
+              <div className="flex flex-col">
+                <InputField
+                  label="Current Company"
+                  name="company"
+                  value={formData.company}
+                  onChange={handleInputChange}
+                  error={errors.company}
+                  placeholder="Enter Company Name"
+                  required
+                />
+              </div>
+            )}
 
-            <div className="flex flex-col">
-              <DropdownWithSearchField
-                value={formData.industry}
-                options={industryOptionsWithCurrent}
-                name="industry"
-                onChange={handleInputChange}
-                error={errors.industry}
-                containerRef={fieldRefs.industry}
-                label="Industry"
-                // required
-                onMenuOpen={loadIndustries}
-                loading={isIndustriesFetching}
-              />
-            </div>
+            {!organization && (
+              <div className="flex flex-col">
+                <DropdownWithSearchField
+                  value={formData.industry}
+                  options={industryOptionsWithCurrent}
+                  name="industry"
+                  onChange={handleInputChange}
+                  error={errors.industry}
+                  containerRef={fieldRefs.industry}
+                  label="Industry"
+                  // required
+                  onMenuOpen={loadIndustries}
+                  loading={isIndustriesFetching}
+                />
+              </div>
+            )}
 
 
 

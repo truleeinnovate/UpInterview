@@ -5,8 +5,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 import AuthCookieManager from "../../../../../../utils/AuthCookieManager/AuthCookieManager";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode.js";
 
 const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const organization = tokenPayload?.organization;
   const navigate = useNavigate();
 
   const [contactData, setContactData] = useState({});
@@ -97,11 +101,13 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
                 : "Not Provided"}
             </p>
           </div>
-          <div>
-            <p className="text-sm text-gray-500">Current Company</p>
-            <p className="font-medium sm:text-sm">
-              {contactData?.company || "Not Provided"}
-            </p>
+          {!organization && (
+            <>
+            <div>
+              <p className="text-sm text-gray-500">Current Company</p>
+              <p className="font-medium sm:text-sm">
+                {contactData?.company || "Not Provided"}
+              </p>
           </div>
 
 
@@ -111,6 +117,8 @@ const AdvancedDetails = ({ mode, usersId, setAdvacedEditOpen, type }) => {
               {contactData?.industry || "Not Provided"}
             </p>
           </div>
+          </>
+          )}
 
           <div>
             <p className="text-sm text-gray-500">Current Location</p>

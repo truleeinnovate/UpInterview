@@ -193,8 +193,13 @@ const MultiStepForm = () => {
     token,
     linkedIn_email,
   } = location.state || {};
-  const { isProfileCompleteStateOrg, roleName, contactEmailFromOrg } =
-    location.state || {};
+
+  // v1.0.6 <-----------------------------------------------------------------------
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const organization = tokenPayload?.organization;
+  const isProfileCompleteStateOrg = organization || location.state?.isProfileCompleteStateOrg;
+  const { roleName, contactEmailFromOrg } = location.state || {};
+  // v1.0.6 ----------------------------------------------------------------------->
   const type = "individual";
   const { matchedContact, loading: contactLoading } = useIndividualLogin({
     type,
@@ -372,8 +377,7 @@ const MultiStepForm = () => {
       setFilePreview(linkedInData.pictureUrl || filePreview);
     }
   }, [matchedContact, linkedInData]);
-  const tokenPayload = decodeJwt(Cookies.get("authToken"));
-  const organization = tokenPayload?.organization;
+  // tokenPayload and organization are now defined at the top of the component
 
   const showLimitedSteps =
     isProfileCompleteStateOrg && roleName !== "Internal_Interviewer";
@@ -560,7 +564,7 @@ const MultiStepForm = () => {
           currentErrors.yearsOfExperience = "Years of Experience is required";
         // if (!additionalDetailsData.location)
         //   currentErrors.location = "Location is required";
-        if (!additionalDetailsData.company)
+        if (!isProfileCompleteStateOrg && !additionalDetailsData.company)
           currentErrors.company = "Current Company is required";
         // v1.0.0 <----------------------------------------------------------------------------------------------
         // v1.0.1 <----------------------------------------------------------------------------------------------
@@ -599,7 +603,7 @@ const MultiStepForm = () => {
 
         const validSkills =
           interviewDetailsData.skills?.filter((skill) => skill !== null) || [];
-        if (validSkills.length < 3)
+        if (!isProfileCompleteStateOrg && validSkills.length < 3)
           currentErrors.skills = "At least three skills are required";
         if (!interviewDetailsData.currentRole)
           currentErrors.currentRole = "Current Role is required";
@@ -1062,23 +1066,23 @@ const MultiStepForm = () => {
         contactData: {
           ...contactData,
           // Map frontend field names to backend field names
-          skills: interviewDetails.skills,
-          // currentRole: interviewDetails.currentRole,
-          // technologies: interviewDetails.technologies,
+          skills: interviewDetailsData.skills,
+          // currentRole: interviewDetailsData.currentRole,
+          // technologies: interviewDetailsData.technologies,
           PreviousExperienceConductingInterviews:
-            interviewDetails.previousInterviewExperience,
+            interviewDetailsData.previousInterviewExperience,
           PreviousExperienceConductingInterviewsYears:
-            interviewDetails.previousInterviewExperienceYears,
-          InterviewFormatWeOffer: interviewDetails.interviewFormatWeOffer,
+            interviewDetailsData.previousInterviewExperienceYears,
+          InterviewFormatWeOffer: interviewDetailsData.interviewFormatWeOffer,
           // New nested rates structure
-          rates: interviewDetails.rates,
+          rates: interviewDetailsData.rates,
           // Mock interview data
-          mock_interview_discount: interviewDetails.mock_interview_discount,
-          isMockInterviewSelected: interviewDetails.isMockInterviewSelected,
+          mock_interview_discount: interviewDetailsData.mock_interview_discount,
+          isMockInterviewSelected: interviewDetailsData.isMockInterviewSelected,
           // Add yearsOfExperience for backend calculation
-          yearsOfExperience: interviewDetails.yearsOfExperience,
-          bio: interviewDetails.bio,
-          professionalTitle: interviewDetails.professionalTitle,
+          yearsOfExperience: additionalDetailsData.yearsOfExperience,
+          bio: interviewDetailsData.bio,
+          professionalTitle: interviewDetailsData.professionalTitle,
         },
         ...(availabilityData.length > 0 && { availabilityData }),
         currentStep,
