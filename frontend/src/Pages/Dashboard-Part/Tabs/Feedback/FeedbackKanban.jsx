@@ -36,9 +36,8 @@ const FeedbackCard = ({ item, onView, onEdit, tokenPayload }) => {
       stars.push(
         <Star
           key={i}
-          className={`w-2.5 h-2.5 ${
-            i <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
-          }`}
+          className={`w-2.5 h-2.5 ${i <= rating ? "text-yellow-400 fill-current" : "text-gray-300"
+            }`}
         />,
       );
     }
@@ -69,66 +68,90 @@ const FeedbackCard = ({ item, onView, onEdit, tokenPayload }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg p-3 mb-4 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer">
-      {/* Header with Avatar */}
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-center min-w-0 flex-1">
-          <div className="w-6 h-6 bg-[#217989] rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-            {capitalizeFirstLetter(item.candidateId?.FirstName?.[0] || "U")}
-          </div>
-          <div className="ml-2 min-w-0">
-            <p className="font-medium text-xs text-gray-900 truncate">
-              {capitalizeFirstLetter(item.candidateId?.FirstName || "")}{" "}
-              {capitalizeFirstLetter(item.candidateId?.LastName || "")}
-            </p>
+    <div className="bg-white rounded-lg p-3 m-2 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer w-[280px] min-h-[280px] max-h-[320px] flex-shrink-0 flex flex-col overflow-hidden"> <div className="flex items-start justify-between mb-2">
+      <div className="flex items-center min-w-0 flex-1">
+        <div className="w-6 h-6 bg-[#217989] rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+          {capitalizeFirstLetter(item.candidateId?.FirstName?.[0] || "U")}
+        </div>
+        <div className="ml-2 min-w-0">
+          <p className="font-medium text-xs text-gray-900 truncate">
+            {capitalizeFirstLetter(item.candidateId?.FirstName || "")}{" "}
+            {capitalizeFirstLetter(item.candidateId?.LastName || "")}
+          </p>
+          {!item.isMockInterview && (
             <p className="text-xs text-gray-500 truncate">
               {item.positionId?.title || "No Position"}
             </p>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div
-          className="flex items-center gap-2 flex-shrink-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            className="text-custom-blue hover:bg-custom-blue/10 p-2 rounded-md transition-colors"
-            onClick={() => onView(item)}
-            title="View Details"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-
-          {item.status === "draft" &&
-            item?.ownerId?._id === tokenPayload?.userId && (
-              <button
-                className="text-green-600 hover:bg-green-50 p-2 rounded-md transition-colors"
-                onClick={() => onEdit(item)}
-                title="Edit Feedback"
-              >
-                <Pencil className="w-4 h-4" />
-              </button>
-            )}
+          )}
         </div>
       </div>
 
+      {/* Action Buttons */}
+      <div
+        className="flex items-center gap-2 flex-shrink-0"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className="text-custom-blue hover:bg-custom-blue/10 p-2 rounded-md transition-colors"
+          onClick={() => onView(item)}
+          title="View Details"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+
+        {item.status === "draft" &&
+          item?.ownerId?._id === tokenPayload?.userId && (
+            <button
+              className="text-green-600 hover:bg-green-50 p-2 rounded-md transition-colors"
+              onClick={() => onEdit(item)}
+              title="Edit Feedback"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+          )}
+      </div>
+    </div>
+
       {/* Interviewer and Date */}
       <div className="space-y-3">
-        <div className="grid grid-cols-2">
-          <p className="text-xs text-gray-500">Interviewer</p>
-          <p className="text-xs text-gray-800 font-medium truncate max-w-[140px]">
-            <span className="truncate">
+        {/* Interview Type (for Mock Interview) */}
+        {item.isMockInterview && (
+          <div className="grid grid-cols-2">
+            <p className="text-xs text-gray-500">Interview Type</p>
+            <p className="text-xs text-gray-800 font-medium truncate">
+              {item.roundDetails?.roundTitle || "Mock Interview"}
+            </p>
+          </div>
+        )}
+
+        {/* Show Interviewer only if NOT mock */}
+        {!item.isMockInterview && (
+          <div className="grid grid-cols-2">
+            <p className="text-xs text-gray-500">Interviewer</p>
+            <p className="text-xs text-gray-800 font-medium truncate">
               {capitalizeFirstLetter(item.interviewerId?.firstName || "N/A")}
-            </span>
-          </p>
-        </div>
+            </p>
+          </div>
+        )}
+
+        {/* Proper Date */}
         <div className="grid grid-cols-2">
           <p className="text-xs text-gray-500">Date</p>
-          <p className="text-xs text-gray-800 font-medium truncate max-w-[140px]">
-            <span className="truncate">
-              {formatDate(item.interviewRoundId?.dateTime)}
-            </span>
+          <p className="text-xs text-gray-800 font-medium truncate">
+            <p className="text-xs text-gray-800 font-medium truncate">
+              {item.roundDetails?.dateTime
+                ? item.roundDetails.dateTime.split(" ")[0]
+                : "Not Available"}
+            </p>
+            {/* {formatDate(item.roundDetails?.dateTime || item.createdAt)} */}
+          </p>
+        </div>
+
+        {/* Mode */}
+        <div className="grid grid-cols-2">
+          <p className="text-xs text-gray-500">Mode</p>
+          <p className="text-xs text-gray-800 font-medium truncate">
+            {item.roundDetails?.interviewMode || "N/A"}
           </p>
         </div>
 
@@ -245,22 +268,22 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
     },
   ];
 
+
   const getColumnItems = (column) => {
     return filteredData.filter((item) => {
-      // Check by status first (for draft)
-      if (column.status) {
-        return item.status === column.status;
+
+
+      // 1️⃣ Draft column → show ALL draft items
+      if (column.status === "draft") {
+        return item.status === "draft";
       }
 
-      // Check by recommendation from overallImpression
+      // 2️⃣ Recommendation columns → show ONLY submitted items
       if (column.recommendation) {
-        const recommendation = item.overallImpression?.recommendation;
-
-        if (!recommendation) return false;
-
-        // Case-insensitive comparison
         return (
-          recommendation.toLowerCase() === column.recommendation.toLowerCase()
+          item.status === "submitted" && // ✅ important condition
+          item.overallImpression?.recommendation?.toLowerCase() ===
+          column.recommendation.toLowerCase()
         );
       }
 
@@ -311,20 +334,20 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
       </div>
 
       {/* Horizontal Scroll Container */}
-      <div className="flex gap-4 overflow-x-auto pb-4 max-h-[calc(100vh-260px)]">
+      <div className="flex flex-col gap-4 overflow-x-auto pb-4 max-h-[calc(100vh-260px)]">
         {columns.map((column, index) => (
           <div
             key={column.id}
-            className="min-w-[350px] max-w-[350px] flex-shrink-0"
+            className="w-full flex "
           >
             <div
-              className={`h-full flex flex-col rounded-lg border ${column.borderColor} ${column.bgColor}`}
+              className={`h-full w-full flex flex-col  rounded-lg border ${column.borderColor} ${column.bgColor}`}
             >
               {/* Column Header */}
               <div
                 className={`rounded-t-lg p-3 border-b ${column.headerColor} ${column.borderColor}`}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex  items-center justify-between">
                   <h3 className={`font-semibold ${column.textColor}`}>
                     {column.title}
                   </h3>
@@ -337,26 +360,26 @@ const FeedbackKanban = ({ feedbacks, loading, onView, onEdit }) => {
               </div>
 
               {/* Column Content */}
-              <div className="flex-1 p-3 overflow-y-auto">
-                <div className="space-y-3">
-                  {getColumnItems(column).map((item) => (
-                    <FeedbackCard
-                      key={item._id}
-                      item={item}
-                      onView={onView}
-                      onEdit={onEdit}
-                      tokenPayload={tokenPayload}
-                    />
-                  ))}
+              <div className="flex gap-3 overflow-x-auto p-3 min-h-0">
+                {/* <div className="space-y-3"> */}
+                {getColumnItems(column).map((item) => (
+                  <FeedbackCard
+                    key={item._id}
+                    item={item}
+                    onView={onView}
+                    onEdit={onEdit}
+                    tokenPayload={tokenPayload}
+                  />
+                ))}
 
-                  {getColumnItems(column).length === 0 && (
-                    <div
-                      className={`bg-white/50 rounded-lg p-4 text-center border border-dashed ${column.borderColor}`}
-                    >
-                      <p className="text-sm text-gray-500">No feedback items</p>
-                    </div>
-                  )}
-                </div>
+                {getColumnItems(column).length === 0 && (
+                  <div
+                    className={`flex items-center justify-center w-full min-h-[200px] bg-white/50 rounded-lg border border-dashed ${column.borderColor}`}
+                  >
+                    <p className="text-sm text-gray-500">No feedback items</p>
+                  </div>
+                )}
+                {/* </div> */}
               </div>
             </div>
           </div>

@@ -1,3 +1,5 @@
+import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+
 export const json_verify = (s) => {
   try {
     JSON.parse(s);
@@ -5,6 +7,20 @@ export const json_verify = (s) => {
   } catch (e) {
     return false;
   }
+};
+
+
+export const getInterviewStatusLabel = (status) => {
+  const statusMap = {
+    RequestSent: "Request Sent",
+    InProgress: "In Progress",
+    FeedbackPending: "Feedback Pending",
+    FeedbackSubmitted: "Feedback Submitted",
+    NoShow: "No Show",
+    InComplete: "In Complete",
+  };
+
+  return statusMap[status] || capitalizeFirstLetter(status);
 };
 
 export function getQualityScore(stats) {

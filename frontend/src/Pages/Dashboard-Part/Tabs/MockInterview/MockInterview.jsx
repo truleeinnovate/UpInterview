@@ -40,6 +40,7 @@ import {
   getMockInterviewActions,
 } from "../../../../utils/tableColumnAndActionData.jsx";
 import { getStatusBadgeColor } from "../CommonCode-AllTabs/StatusBadge.jsx";
+import { getInterviewStatusLabel } from "../../../../VideoSDK1/utils/common.js";
 
 // v1.0.5 <----------------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -369,7 +370,8 @@ const MockInterview = () => {
               row?.rounds?.[0]?.status,
             )}`}
           >
-            {row?.rounds?.[0]?.status === "RequestSent"
+            {getInterviewStatusLabel(row?.rounds?.[0]?.status)}
+            {/* {row?.rounds?.[0]?.status === "RequestSent"
               ? "Request Sent"
               : row?.rounds?.[0]?.status === "InProgress"
                 ? "In Progress"
@@ -377,12 +379,15 @@ const MockInterview = () => {
                   ? "Feedback Pending"
                   : row?.rounds?.[0]?.status === "FeedbackSubmitted"
                     ? "Feedback Submitted"
-                    :
-                    // : round?.status,
-                    capitalizeFirstLetter(row?.rounds?.[0]?.status)}
+                    : row?.rounds?.[0]?.status === "NoShow"
+                      ? "No Show" :
+                      row?.rounds?.[0]?.status === "InComplete" ?
+                        "In Complete" :
+                        // : round?.status,
+                        capitalizeFirstLetter(row?.rounds?.[0]?.status)} */}
           </span>
         ) : (
-          <span className="mx-2 text-xs px-2 py-0.5">Not Provided</span>
+          <span className="mx-2 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-800 border-gray-300">Draft</span>
         );
       },
       // v1.0.0 -------------------------------------------------------------------->
@@ -520,12 +525,14 @@ const MockInterview = () => {
       key: "status",
       header: "Status",
       render: (value, row) => (
-        <span
-          className={`mx-2 text-xs px-2 py-0.5 rounded-full ${getStatusBadgeColor(
-            row?.rounds?.[0]?.status,
-          )}`}
-        >
-          {row?.rounds?.[0]?.status === "RequestSent"
+        row?.rounds?.[0]?.status ?
+          <span
+            className={`mx-2 text-xs px-2 py-0.5 rounded-full ${getStatusBadgeColor(
+              row?.rounds?.[0]?.status,
+            )}`}
+          >
+            {getInterviewStatusLabel(row?.rounds?.[0]?.status)}
+            {/* {row?.rounds?.[0]?.status === "RequestSent"
             ? "Request Sent"
             : row?.rounds?.[0]?.status === "InProgress"
               ? "In Progress"
@@ -535,8 +542,8 @@ const MockInterview = () => {
                   ? "Feedback Submitted"
                   :
                   // : round?.status,
-                  capitalizeFirstLetter(row?.rounds?.[0]?.status)}
-        </span>
+                  capitalizeFirstLetter(row?.rounds?.[0]?.status)} */}
+          </span> : <span className="mx-2 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-800 border-gray-300">Draft</span>
         // <span className="text-gray-800 font-medium truncate">
         //   {row?.rounds?.[0]?.status === "RequestSent"
         //     ? "Request Sent"

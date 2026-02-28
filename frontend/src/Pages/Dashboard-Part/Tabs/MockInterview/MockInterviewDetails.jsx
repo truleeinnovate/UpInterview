@@ -48,6 +48,7 @@ import { createJoinMeetingUrl } from "../Interview-New/components/joinMeeting";
 import Loading from "../../../../Components/Loading.js";
 import { useInterviews } from "../../../../apiHooks/useInterviews.js";
 import { useQueryClient } from "@tanstack/react-query";
+import { getInterviewStatusLabel } from "../../../../VideoSDK1/utils/common.js";
 
 
 
@@ -912,7 +913,8 @@ const MockInterviewDetails = () => {
                             mockinterview?.rounds[0]?.status,
                           )}`}
                         >
-                          {mockinterview?.rounds[0]?.status === "RequestSent"
+                          {getInterviewStatusLabel(mockinterview?.rounds[0]?.status)}
+                          {/* {mockinterview?.rounds[0]?.status === "RequestSent"
                             ? "Request Sent"
                             : mockinterview?.rounds[0]?.status === "InProgress"
                               ? "In Progress"
@@ -925,7 +927,7 @@ const MockInterviewDetails = () => {
                                   : // : round?.status,
                                   capitalizeFirstLetter(
                                     mockinterview?.rounds[0]?.status,
-                                  )}
+                                  )} */}
                         </span>
                       )}
 

@@ -15,6 +15,7 @@ import { notify } from "../../../../../services/toastService.js";
 import { config } from "../../../../../config.js";
 import axios from "axios";
 import { getStatusBadgeColor } from "../../CommonCode-AllTabs/StatusBadge.jsx";
+import { getInterviewStatusLabel } from "../../../../../VideoSDK1/utils/common.js";
 
 
 const VerticalRoundsView = ({
@@ -142,7 +143,7 @@ const VerticalRoundsView = ({
 
 
   const handleJoinMeeting = (round) => {
-    const url = createJoinMeetingUrl(round, interviewData, singleContact.contactId,"interview"
+    const url = createJoinMeetingUrl(round, interviewData, singleContact.contactId, "interview"
     );
 
     if (!url) {
@@ -223,17 +224,7 @@ const VerticalRoundsView = ({
                         round?.status,
                       )}`}
                     >
-                      {round?.status === "RequestSent"
-                        ? "Request Sent"
-                        : round?.status === "InProgress"
-                          ? "In Progress"
-                          : round?.status === "FeedbackPending"
-                            ? "Feedback Pending"
-                            : round?.status === "FeedbackSubmitted"
-                              ? "Feedback Submitted"
-                              :
-                              // : round?.status,
-                              capitalizeFirstLetter(round?.status)}
+                      {getInterviewStatusLabel(round?.status)}
                     </span>
                   </div>
                   <div className="flex items-center mt-1 text-sm text-gray-600">
