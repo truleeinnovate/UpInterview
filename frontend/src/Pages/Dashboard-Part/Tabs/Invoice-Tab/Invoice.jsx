@@ -79,8 +79,8 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
           action.key === "view"
             ? "text-custom-blue hover:bg-custom-blue/10"
             : action.key === "edit"
-            ? "text-green-600 hover:bg-green-600/10"
-            : "text-blue-600 bg-green-600/10";
+              ? "text-green-600 hover:bg-green-600/10"
+              : "text-blue-600 bg-green-600/10";
 
         return (
           <button
@@ -292,22 +292,27 @@ const InvoiceTab = () => {
             invoiceNumber: invoice.invoiceCode,
             customer: invoice.ownerId
               ? {
-                  id: invoice.ownerId._id,
-                  name:
-                    invoice.ownerId.Name ||
-                    `${invoice.ownerId.Firstname} ${
-                      invoice.ownerId.Lastname || ""
+                id: invoice.ownerId._id,
+                name:
+                  invoice.ownerId.Name ||
+                  `${invoice.ownerId.Firstname} ${invoice.ownerId.Lastname || ""
                     }`.trim(),
-                  userId: invoice.ownerId.UserId,
-                }
+                userId: invoice.ownerId.UserId,
+              }
               : null,
             plan: invoice.planName,
+            planName: invoice.planName,
+            lastName: invoice.lastName || invoice.ownerId?.Lastname || "",
             amount: {
               total: invoice.totalAmount,
               paid: invoice.amountPaid,
               outstanding: invoice.outstandingAmount,
               discount: invoice.discount,
             },
+            totalAmount: invoice.totalAmount,
+            amountPaid: invoice.amountPaid,
+            price: invoice.price,
+            discount: invoice.discount,
             dates: {
               createdAt: new Date(invoice.updatedAt),
               startDate: invoice.startDate ? new Date(invoice.startDate) : null,
@@ -318,6 +323,7 @@ const InvoiceTab = () => {
             type: invoice.type || "N/A",
             comments: invoice.comments || "",
             lineItems: invoice.lineItems || [],
+            metadata: invoice.metadata || null,
             tenantId: invoice.tenantId,
           };
         });
@@ -415,9 +421,9 @@ const InvoiceTab = () => {
     setSelectedFilters(filters);
     setIsFilterActive(
       filters.status.length > 0 ||
-        filters.type.length > 0 ||
-        filters.amount.min ||
-        filters.amount.max
+      filters.type.length > 0 ||
+      filters.amount.min ||
+      filters.amount.max
     );
     setFilterPopupOpen(false);
 
@@ -797,7 +803,7 @@ const InvoiceTab = () => {
                           onChange={() => handleStatusToggle(status)}
                           // v1.0.5 <--------------------------------------------------------------
                           className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                          // v1.0.5 -------------------------------------------------------------->
+                        // v1.0.5 -------------------------------------------------------------->
                         />
                         <span className="text-sm capitalize">{status}</span>
                       </label>
@@ -829,7 +835,7 @@ const InvoiceTab = () => {
                           onChange={() => handleTypeToggle(type)}
                           // v1.0.5 <-----------------------------------------------------------------
                           className="h-4 w-4 rounded accent-custom-blue focus:ring-custom-blue"
-                          // v1.0.5 ----------------------------------------------------------------->
+                        // v1.0.5 ----------------------------------------------------------------->
                         />
                         <span className="text-sm capitalize">{type}</span>
                       </label>

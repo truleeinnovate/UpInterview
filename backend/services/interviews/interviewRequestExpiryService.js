@@ -137,6 +137,16 @@ async function expireByInterviewTime(Model, isMock, now) {
 //  Original logic - for normal (non-mock) rounds
 // ────────────────────────────────────────────────
 async function evaluateRoundAfterExpiry(roundId, now) {
+  // SAFETY: Check if interview time has actually passed before marking round
+  const round = await InterviewRounds.findById(roundId).select("dateTime").lean();
+  if (round?.dateTime) {
+    const interviewStart = parseInterviewDateTime(round.dateTime);
+    if (interviewStart && interviewStart > now) {
+      console.log(`[Cron] Round ${roundId} interview time (${round.dateTime}) hasn't passed yet → skipping evaluation (PASS 2 will handle)`);
+      return;
+    }
+  }
+
   const stats = await InterviewRequest.aggregate([
     { $match: { roundId: new mongoose.Types.ObjectId(roundId) } },
     {
@@ -214,6 +224,16 @@ async function evaluateRoundAfterExpiry(roundId, now) {
 //  Almost identical logic - but for MockInterviewRound
 // ────────────────────────────────────────────────
 async function evaluateMockRoundAfterExpiry(roundId, now) {
+  // SAFETY: Check if interview time has actually passed before marking mock round
+  const mockRound = await MockInterviewRound.findById(roundId).select("dateTime").lean();
+  if (mockRound?.dateTime) {
+    const interviewStart = parseInterviewDateTime(mockRound.dateTime);
+    if (interviewStart && interviewStart > now) {
+      console.log(`[Cron] Mock round ${roundId} interview time (${mockRound.dateTime}) hasn't passed yet → skipping evaluation (PASS 2 will handle)`);
+      return;
+    }
+  }
+
   const stats = await InterviewRequest.aggregate([
     { $match: { roundId: new mongoose.Types.ObjectId(roundId) } },
     {

@@ -4643,6 +4643,7 @@ const RoundFormInterviews = () => {
           previousSelectedInterviewers={externalInterviewers}
           interviewType={interviewType}
           source="outsource-interview"
+          roundDuration={duration}
           onDateTimeChange={(newCombinedDateTime) => {
             // Sync date/time from outsource modal back to RoundForm
             setCombinedDateTime(newCombinedDateTime);

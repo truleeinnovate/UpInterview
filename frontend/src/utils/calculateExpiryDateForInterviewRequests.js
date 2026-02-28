@@ -28,14 +28,22 @@ function calculateExpiryDate(interviewDateTime) {
   if (isInstant) {
     return new Date(
       interviewDateTime.getTime() -
-        (SLA_CONFIG?.INSTANT_EXPIRE_BEFORE_MINUTES ?? 10) * 60 * 1000
+      (SLA_CONFIG?.INSTANT_EXPIRE_BEFORE_MINUTES ?? 10) * 60 * 1000
     );
   }
 
   const slaHours = getSlaHours(timeLeftHours);
 
   // ✅ Final expiry calculation
-  return new Date(now.getTime() + slaHours * 60 * 60 * 1000);
+  const calculatedExpiry = new Date(now.getTime() + slaHours * 60 * 60 * 1000);
+
+  // ✅ SAFETY: expiry must never exceed the interview start time
+  // If the SLA accept window goes past the interview time, cap it
+  if (calculatedExpiry >= interviewDateTime) {
+    return new Date(interviewDateTime.getTime());
+  }
+
+  return calculatedExpiry;
 }
 
 module.exports = { calculateExpiryDate };
