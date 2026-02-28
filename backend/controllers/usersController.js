@@ -1242,7 +1242,7 @@ const getUniqueUserByOwnerId = async (req, res) => {
       .lean();
 
     const role = await RoleMaster.findOne({
-      roleName: contact.currentRole,
+      roleName: contact?.currentRole,
     }).lean();
     // console.log("role", role);
 

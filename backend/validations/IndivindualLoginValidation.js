@@ -9,7 +9,7 @@ const basicDetailsSchema = Joi.object({
     "string.empty": "Email is required",
     "string.email": "Invalid email format",
   }),
-  
+
   lastName: Joi.string().required().messages({
     "string.empty": "Last Name is required",
   }),
@@ -35,14 +35,14 @@ const additionalDetailsSchema = Joi.object({
   currentRole: Joi.string().required().messages({
     "string.empty": "Current Role is required",
   }),
-  industry:Joi.string().allow("", null),
+  industry: Joi.string().allow("", null),
   company: Joi.string().required().messages({
     "string.empty": "Current Company is required",
   }),
   yearsOfExperience: Joi.string().required().messages({
     "any.required": "Years of Experience is required",
   }),
-  location:Joi.string().allow("", null),
+  location: Joi.string().allow("", null),
   resume: Joi.string().allow("", null),
   higherQualification: Joi.string().allow("", null),
   universityCollege: Joi.string().allow("", null),
@@ -106,7 +106,7 @@ const availabilitySchema = Joi.object({
 });
 
 // --- Wrapper validation by step ---
-function validateIndividualSignup(step, data) {
+function validateIndividualSignup(step, data, isProfileCompleteStateOrg = false) {
   let schema;
   let stepData = {};
 
@@ -125,11 +125,25 @@ function validateIndividualSignup(step, data) {
       gender: data.gender,
     };
   } else if (step === 1) {
-    schema = additionalDetailsSchema;
+    // Make fields optional for Step 1 if isProfileCompleteStateOrg is true
+    if (isProfileCompleteStateOrg) {
+      schema = Joi.object({
+        currentRole: Joi.string().allow("", null),
+        company: Joi.string().allow("", null),
+        yearsOfExperience: Joi.string().allow("", null),
+        industry: Joi.string().allow("", null),
+        location: Joi.string().allow("", null),
+        resume: Joi.string().allow("", null),
+        higherQualification: Joi.string().allow("", null),
+        universityCollege: Joi.string().allow("", null),
+      });
+    } else {
+      schema = additionalDetailsSchema;
+    }
     stepData = {
       currentRole: data.currentRole,
       industry: data.industry,
-      company:data.company,
+      company: data.company,
       yearsOfExperience: data.yearsOfExperience,
       location: data.location,
       resume: data.resume?.filename,
@@ -138,7 +152,22 @@ function validateIndividualSignup(step, data) {
       // coverLetter: data.coverLetter.filename,
     };
   } else if (step === 2) {
-    schema = interviewDetailsSchema;
+    // Make fields optional for Step 2 if isProfileCompleteStateOrg is true
+    if (isProfileCompleteStateOrg) {
+      schema = Joi.object({
+        skills: Joi.array().items(Joi.string().allow("", null)).optional(),
+        currentRole: Joi.string().allow("", null),
+        PreviousExperienceConductingInterviews: Joi.alternatives()
+          .try(Joi.boolean(), Joi.string().valid("yes", "no"), Joi.string().allow("", null))
+          .optional(),
+        PreviousExperienceConductingInterviewsYears: Joi.optional().allow("", null),
+        interviewFormatWeOffer: Joi.array().items(Joi.string().allow("", null)).optional(),
+        professionalTitle: Joi.string().trim().allow("", null),
+        bio: Joi.string().trim().allow("", null),
+      });
+    } else {
+      schema = interviewDetailsSchema;
+    }
     stepData = {
       skills: data.skills,
       currentRole: data.currentRole,

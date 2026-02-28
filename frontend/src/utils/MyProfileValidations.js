@@ -49,7 +49,7 @@ export const validateFormMyProfile = (formData) => {
 };
 
 // validations.js
-export const validateAdvancedForm = (formData) => {
+export const validateAdvancedForm = (formData, organization = false) => {
   const errors = {};
 
   // Current Role validation
@@ -67,7 +67,8 @@ export const validateAdvancedForm = (formData) => {
     errors.yearsOfExperience = "Years of Experience is required";
   }
 
-  if (!formData.company?.trim()) {
+
+  if (!organization && !formData.company?.trim()) {
     errors.company = "Current Company is required";
   }
 

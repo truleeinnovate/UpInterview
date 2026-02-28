@@ -589,7 +589,7 @@ const UsersAccountTab = () => {
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
               dataLength={dataSource?.length}
-              searchPlaceholder="Search by Firstname, Email, Phone..."
+              searchPlaceholder="Search by Name, Email, Phone..."
               filterIconRef={filterIconRef}
             />
           </div>

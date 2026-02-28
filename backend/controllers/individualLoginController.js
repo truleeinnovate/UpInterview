@@ -28,7 +28,7 @@ exports.individualLogin = async (req, res) => {
 
     // ---------------- STEP VALIDATION ----------------
     if (!isSkip) {
-      const { error } = validateIndividualSignup(currentStep, contactData);
+      const { error } = validateIndividualSignup(currentStep, contactData, isProfileCompleteStateOrg);
       if (error) {
         return res.status(400).json({
           success: false,

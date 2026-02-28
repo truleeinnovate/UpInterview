@@ -61,7 +61,7 @@ const AdditionalDetails = ({
   const [isCustomUniversity, setIsCustomUniversity] = useState(false);
   const [isCustomQualification, setIsCustomQualification] = useState(false);
   const [isCustomLocation, setIsCustomLocation] = useState(false);
-  
+
 
   // Load all dropdown data when component mounts
   useEffect(() => {
@@ -69,7 +69,7 @@ const AdditionalDetails = ({
     loadIndustries();
     loadLocations();
   }, [loadCurrentRoles, loadIndustries, loadLocations]);
-  
+
 
   const qualificationOptionsRS = useMemo(
     () =>
@@ -93,16 +93,16 @@ const AdditionalDetails = ({
     [colleges],
   );
 
-      const locationOptionsRS = useMemo(
-        () =>
-          (locations || [])
-            .map((l) => ({
-              value: l?.LocationName,
-              label: l?.LocationName,
-            }))
-            .concat([{ value: "__other__", label: "+ Others" }]),
-        [locations],
-      );
+  const locationOptionsRS = useMemo(
+    () =>
+      (locations || [])
+        .map((l) => ({
+          value: l?.LocationName,
+          label: l?.LocationName,
+        }))
+        .concat([{ value: "__other__", label: "+ Others" }]),
+    [locations],
+  );
 
   useEffect(() => {
     if (hasDetectedCustomUniversity.current) return; // Only detect once
@@ -122,26 +122,26 @@ const AdditionalDetails = ({
     setIsCustomUniversity(!existsInList);
     hasDetectedCustomUniversity.current = true; // Mark as done
   }, [colleges, additionalDetailsData.universityCollege]);
-    // Effect to handle custom qualification display in Edit mode only (runs once)
-    useEffect(() => {
-      if (hasDetectedCustomQualification.current) return; // Only detect once
-      const saved = (additionalDetailsData?.higherQualification || "").trim();
-      if (!saved) return;
-  
-      // Trigger loading qualifications if not loaded yet
-      if (!Array.isArray(qualifications) || qualifications.length === 0) {
-        loadQualifications();
-        return;
-      }
-  
-      const list = qualifications.map((q) =>
-        (q?.QualificationName || "").trim().toLowerCase(),
-      );
-      const existsInList = list.includes(saved.toLowerCase());
-      setIsCustomQualification(!existsInList);
-      hasDetectedCustomQualification.current = true; // Mark as done
-    }, [qualifications, additionalDetailsData.higherQualification]);
-  
+  // Effect to handle custom qualification display in Edit mode only (runs once)
+  useEffect(() => {
+    if (hasDetectedCustomQualification.current) return; // Only detect once
+    const saved = (additionalDetailsData?.higherQualification || "").trim();
+    if (!saved) return;
+
+    // Trigger loading qualifications if not loaded yet
+    if (!Array.isArray(qualifications) || qualifications.length === 0) {
+      loadQualifications();
+      return;
+    }
+
+    const list = qualifications.map((q) =>
+      (q?.QualificationName || "").trim().toLowerCase(),
+    );
+    const existsInList = list.includes(saved.toLowerCase());
+    setIsCustomQualification(!existsInList);
+    hasDetectedCustomQualification.current = true; // Mark as done
+  }, [qualifications, additionalDetailsData.higherQualification]);
+
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -405,18 +405,19 @@ const AdditionalDetails = ({
         </div>
 
 
-        <div className="sm:col-span-2 col-span-1">
+        {!isProfileCompleteStateOrg && (
+          <div className="sm:col-span-2 col-span-1">
+            <InputField
+              value={additionalDetailsData.company || ""}
+              onChange={handleChange}
+              label="Current Company"
+              name="company"
+              required
+              error={errors.company}
+            />
+          </div>
+        )}
 
-          <InputField
-            value={additionalDetailsData.company || ""}
-            onChange={handleChange}
-            label="Current Company"
-            name="company"
-            required
-            error={errors.company}
-          />
-        </div>
-        
 
         {/* Location */}
         <div className="sm:col-span-2 col-span-1">

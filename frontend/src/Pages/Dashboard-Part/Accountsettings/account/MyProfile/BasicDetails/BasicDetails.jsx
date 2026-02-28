@@ -12,6 +12,7 @@ import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 // import { toast } from "react-hot-toast";
 import { notify } from "../../../../../../services/toastService";
 import AuthCookieManager from "../../../../../../utils/AuthCookieManager/AuthCookieManager";
+import LoadingButton from "../../../../../../Components/LoadingButton";
 
 export const formatDateOfBirth = (dateString) => {
   if (!dateString) return "Not Provided";
@@ -26,6 +27,8 @@ export const formatDateOfBirth = (dateString) => {
 
 const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
   const [contactData, setContactData] = useState({});
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
+  const [isResendingPassword, setIsResendingPassword] = useState(false);
 
   const navigate = useNavigate();
   //   const location = useLocation();
@@ -43,6 +46,7 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
   }, [userProfile, usersId, mode]);
 
   const handleResendEmailVerification = async () => {
+    setIsResendingEmail(true);
     try {
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/emails/auth/request-email-change`,
@@ -56,15 +60,18 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
       if (response.data.success) {
         notify.success("Verification email resent successfully!");
       } else {
-        notify.error(response.data.message);
+        notify.error(response.data.message || "Failed to resend verification email");
       }
     } catch (error) {
       console.error("Error resending verification email:", error);
-      notify.error("Failed to resend verification email");
+      notify.error(error.response?.data?.message || "Failed to resend verification email");
+    } finally {
+      setIsResendingEmail(false);
     }
   };
 
   const handleResendPasswordChange = async () => {
+    setIsResendingPassword(true);
     try {
       const response = await axios.post(
         `${config.REACT_APP_API_URL}/emails/forgot-password`,
@@ -80,7 +87,9 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
       }
     } catch (error) {
       console.error("Error sending password reset email:", error);
-      notify.error("Failed to send password reset email");
+      notify.error(error.response?.data?.message || "Failed to send password reset email");
+    } finally {
+      setIsResendingPassword(false);
     }
   };
 
@@ -95,20 +104,24 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
         {mode === "users" && (
           <div className="flex gap-2">
             {contactData.newEmail && (
-              <button
+              <LoadingButton
                 onClick={handleResendEmailVerification}
-                className="px-4 py-2 text-sm bg-custom-blue text-white rounded-md  transition-colors"
+                isLoading={isResendingEmail}
+                loadingText="Resending..."
+                className="text-sm rounded-md"
               >
                 Resend Email Verification
-              </button>
+              </LoadingButton>
             )}
             {!contactData.isEmailVerified && !contactData.newEmail && (
-              <button
+              <LoadingButton
                 onClick={handleResendPasswordChange}
-                className="px-4 py-2 text-sm bg-custom-blue text-white rounded-md  transition-colors"
+                isLoading={isResendingPassword}
+                loadingText="Resending..."
+                className="text-sm rounded-md"
               >
                 Resend Password Change
-              </button>
+              </LoadingButton>
             )}
           </div>
         )}
@@ -145,24 +158,34 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
       {contactData.newEmail && (
         <div className="mb-4 bg-custom-blue border border-blue-200 rounded-lg p-4 flex items-start gap-3 shadow-sm transition-all duration-300 ease-in-out hover:shadow-md">
           <div className="mt-0.5">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-5 h-5 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           </div>
+
           <div className="flex-1">
             <p className="text-sm font-medium text-white">
-              {mode === "users" ? (
-                <>Email change pending verification by user: <span className="font-bold underline cursor-help" title={`Verification link has been sent to ${contactData.newEmail}`}>{contactData.newEmail}</span></>
-              ) : (
-                <>An administrator has updated your email to: <span className="font-bold underline cursor-help" title={`Verification link has been sent to ${contactData.newEmail}`}>{contactData.newEmail}</span></>
-              )}
+              Email verification pending for{" "}
+              <span
+                className="font-bold underline"
+                title={`Verification link sent to ${contactData.newEmail}`}
+              >
+                {contactData.newEmail}
+              </span>
             </p>
+
             <p className="mt-1 text-xs text-white leading-relaxed">
-              {mode === "users" ? (
-                <>The user has been sent a verification link. Once they verify, this will become their primary email.</>
-              ) : (
-                <>Please check your inbox (and spam folder) and click on the verification link to authorize this change.</>
-              )}
+              This email will be updated after verification.
             </p>
           </div>
         </div>
@@ -306,14 +329,14 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
             </p>
           </div>
 
-          {contactData.roleName === "Internal_Interviewer" && mode === "users" && (
+          {/* {contactData.roleName === "Internal_Interviewer" && mode === "users" && (
             <div>
               <p className="text-sm text-gray-500">Profile Completed</p>
               <p className="font-medium truncate sm:text-sm">
                 {contactData.isProfileCompleted ? "Yes" : "No"}
               </p>
             </div>
-          )}
+          )} */}
         </div>
       </div>
       {/* v1.0.1 ------------------------------------------------------------------------------> */}
