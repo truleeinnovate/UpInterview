@@ -167,7 +167,7 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Total Amount</p>
-                  <p className={`text-3xl font-bold ${transaction?.status === "failed" ? "text-gray-500" : txnStyle.amountColor}`}>
+                  <p className={`text-3xl font-bold ${transaction?.status === "failed" ? "text-red-600" : txnStyle.amountColor}`}>
                     {transaction?.status === "failed" ? "" : txnStyle.prefix}₹{(transaction?.totalAmount || transaction?.amount || 0).toFixed(2)}
                   </p>
                 </div>
@@ -222,7 +222,7 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
 
                 <div className="flex items-center justify-between pt-2">
                   <span className="text-sm font-semibold text-gray-800">Total</span>
-                  <span className={`text-base font-bold ${txnStyle.amountColor}`}>
+                  <span className={`text-base font-bold ${transaction?.status === "failed" ? "text-red-600" : txnStyle.amountColor}`}>
                     ₹{(transaction?.totalAmount || 0).toFixed(2)}
                   </span>
                 </div>
