@@ -4094,7 +4094,7 @@ const MockSchedulelater = () => {
           candidateExperience={formData?.currentExperience}
           previousSelectedInterviewers={externalInterviewers}
           roundDuration={Number(formData?.rounds?.duration) || 60}
-
+          interviewType={formData?.rounds?.interviewType}
         // isMockInterview={true} // Correctly passes true for mock interviews
         />
       )}

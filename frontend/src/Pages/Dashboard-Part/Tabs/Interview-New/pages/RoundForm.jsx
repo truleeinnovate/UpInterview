@@ -4703,7 +4703,7 @@ const RoundFormInterviews = () => {
       {showDateChangeConfirmation &&
         !isReschedule &&
         !isRequestSent &&
-        externalInterviewers && (
+        externalInterviewers?.length > 0 && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
               <h3 className="text-lg font-semibold mb-4">Confirmation</h3>
