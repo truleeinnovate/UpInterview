@@ -36,6 +36,9 @@ const {
 const {
   scheduleOrRescheduleNoShow,
 } = require("../services/interviews/roundNoShowScheduler");
+const {
+  updateSchedulingStatus,
+} = require("../services/interviewerSchedulingService");
 // const {
 // handleInterviewerRequestFlow
 // } = require("../utils/Interviews/handleInterviewerRequestFlow.js");
@@ -173,8 +176,27 @@ const saveInterviewRound = async (req, res) => {
     }
 
     const oldStatusForWebhook = undefined;
+
+    // ==================== PRE-SAVE WALLET BALANCE CHECK FOR OUTSOURCED ====================
+    const maxHourlyRate = Number(round?.maxHourlyRate || 0);
+    if (
+      round.interviewerType !== "Internal" &&
+      req.body.round?.selectedInterviewers?.length > 0 &&
+      maxHourlyRate > 0
+    ) {
+      const orgWallet = await Wallet.findOne({ ownerId: interview.ownerId });
+      const walletBalance = Number(orgWallet?.balance || 0);
+      if (walletBalance < maxHourlyRate) {
+        return res.status(400).json({
+          status: "error",
+          message: `Insufficient wallet balance. The highest interviewer rate is ₹${maxHourlyRate}/hr but your wallet balance is ₹${walletBalance.toFixed(2)}. Please add funds to proceed.`,
+        });
+      }
+    }
+
     // ==================== SAVE THE ROUND ====================
     const savedRound = await newInterviewRound.save();
+
 
     // =================== WALLET HOLD FOR OUTSOURCED INTERVIEWERS (NOW THAT savedRound EXISTS) ========================
     if (
@@ -1179,6 +1201,9 @@ const updateInterviewRound = async (req, res) => {
     runValidators: true,
   });
 
+
+
+
   // ==================================================================
   // SEND INTERNAL EMAIL ONLY WHEN STATUS BECOMES Scheduled/Rescheduled
   // ==================================================================
@@ -1914,6 +1939,18 @@ const updateInterviewRoundStatus = async (req, res) => {
     )
       .populate("interviewId", "title candidateName")
       .populate("interviewers", "firstName lastName email");
+
+    // v1.0.1 - Update InterviewerScheduling status for terminal actions
+    try {
+      const terminalStatuses = ["Completed", "Cancelled", "NoShow", "InCompleted", "Incomplete"];
+      if (terminalStatuses.includes(action)) {
+        const schedReason = cancellationReason || reasonCode || comment || "";
+        await updateSchedulingStatus(roundId, action, schedReason);
+        console.log(`[updateInterviewRoundStatus] InterviewerScheduling updated to ${action} for round ${roundId}, reason: "${schedReason}"`);
+      }
+    } catch (schedError) {
+      console.error("[updateInterviewRoundStatus] Error updating InterviewerScheduling:", schedError);
+    }
 
     // Send cancellation email
     if (shouldSendCancellationEmail) {

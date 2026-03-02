@@ -63,6 +63,7 @@ import MeetPlatformBadge from "../../../../../utils/MeetPlatformBadge/meetPlatfo
 // import { useInterviewerTags } from "../../../../../apiHooks/useInterviewers.js";
 import AddressesPopup from "../../../../../Components/Shared/AddressPopup/AddressPopup.jsx";
 import { useOrganizationDetails } from "../../../../../apiHooks/useOrganization.js";
+import { useWallet } from "../../../../../apiHooks/useWallet.js";
 const {
   calculateExpiryDate,
 } = require("../../../../../utils/calculateExpiryDateForInterviewRequests.js");
@@ -210,6 +211,9 @@ const RoundFormInterviews = () => {
     // refetch,
     // isOrganization,
   } = useVideoSettingsQuery();
+
+  // v1.0.7 - Wallet balance for safety check on Create & Schedule
+  const { data: walletData } = useWallet();
 
   // State for meeting creation loading
   const [isMeetingCreationLoading, setIsMeetingCreationLoading] =
@@ -1999,6 +2003,19 @@ const RoundFormInterviews = () => {
     }
 
     setIsSubmitting(true);
+
+    // v1.0.7 - Safety wallet balance check for outsource interviewers
+    if (externalInterviewers.length > 0 && externalMaxHourlyRate > 0) {
+      const availableBalance = Number(walletData?.balance || 0);
+      if (availableBalance < externalMaxHourlyRate) {
+        notify.error(
+          `Insufficient wallet balance. The highest interviewer rate is ₹${externalMaxHourlyRate}/hr but your wallet balance is ₹${availableBalance.toFixed(2)}.\nPlease add funds to proceed.`,
+          { autoClose: 10000 },
+        );
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
     let finalDateTime = combinedDateTime; // Default
 
