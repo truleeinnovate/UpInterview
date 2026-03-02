@@ -3461,7 +3461,7 @@ function OutsourcedInterviewerModal({
               `}
             >
 
-              {isLoadingInterviewers || isInterviewersLoading || isIndividualLoginLoading ? (
+              {isLoadingInterviewers ? (
                 // Show 3 skeleton cards while loading
                 Array.from({ length: 3 }).map((_, index) => (
                   <OutsourcedInterviewerCardSkeleton
