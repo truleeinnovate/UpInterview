@@ -142,9 +142,8 @@ export const useUsers = (filters = {}) => {
     queryFn: async () => {
       if (!tenantId) return []; // Skip fetch if tenantId missing
       const queryString = buildQueryString(filters);
-      const url = `${config.REACT_APP_API_URL}/users/${tenantId}${
-        queryString ? `?${queryString}` : ""
-      }`;
+      const url = `${config.REACT_APP_API_URL}/users/${tenantId}${queryString ? `?${queryString}` : ""
+        }`;
 
       const response = await axios.get(url);
       return response.data;
@@ -214,12 +213,12 @@ export const useUsers = (filters = {}) => {
       }
 
       // Send welcome email only for new user creation
-      if (!editMode) {
-        await axios.post(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
-          email: userData.email,
-          type: "usercreatepass",
-        });
-      }
+      // if (!editMode) {
+      //   await axios.post(`${config.REACT_APP_API_URL}/emails/forgot-password`, {
+      //     email: userData.email,
+      //     type: "usercreatepass",
+      //   });
+      // }
 
       return response.data;
     },

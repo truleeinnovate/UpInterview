@@ -33,6 +33,7 @@ const saltRounds = 10;
 const mongoose = require("mongoose");
 const {
   sendVerificationEmail,
+  handlePasswordEmail,
 } = require("../controllers/EmailsController/signUpEmailController.js");
 const InterviewAvailability = require("../models/InterviewAvailability.js");
 
@@ -164,7 +165,7 @@ const organizationUserCreation = async (req, res) => {
         roleId: new mongoose.Types.ObjectId(roleId), // Ensure ObjectId
         countryCode,
         //   status: status || "active",
-        status: isSuperAdmin ? "active" : "inactive",
+        status: isSuperAdmin ? "active" : "pending",
         // isEmailVerified: isEmailVerified || false,
         // <-------------------------------v1.0.3
         ...(isSuperAdmin
@@ -187,6 +188,11 @@ const organizationUserCreation = async (req, res) => {
       });
 
       const savedContact = await newContact.save();
+
+      // Trigger password creation email from backend (Queued)
+      if (!isSuperAdmin) {
+        handlePasswordEmail({ email, type: "usercreatepass" });
+      }
 
       res.locals.logData = {
         tenantId: savedUser.tenantId || contactData.tenantId || "",

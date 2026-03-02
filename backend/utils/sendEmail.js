@@ -73,4 +73,28 @@ const sendEmail = async (toEmail, subject, messageBody, ccEmail) => {
   }
 };
 
+
+const queueEmail = async (toEmail, subject, messageBody, ccEmail) => {
+  try {
+    const agenda = require("../agenda");
+
+    // Create the job
+    await agenda.now("send-email", {
+      toEmail,
+      subject,
+      messageBody,
+      ccEmail
+    });
+
+    console.log(`[QueueEmail] 📥 Job queued for ${toEmail}`);
+    return { success: true, message: "Email queued successfully" };
+  } catch (error) {
+    console.error(`[QueueEmail] ❌ Failed to queue email for ${toEmail}:`, error);
+    // Fallback to synchronous sending if queue fails
+    return await sendEmail(toEmail, subject, messageBody, ccEmail);
+  }
+};
+
 module.exports = sendEmail;
+module.exports.sendEmail = sendEmail;
+module.exports.queueEmail = queueEmail;

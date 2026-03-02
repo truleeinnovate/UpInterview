@@ -14,7 +14,7 @@ const {
 const { Candidate } = require("../../models/candidate.js");
 const { Contacts } = require("../../models/Contacts");
 const emailTemplateModel = require("../../models/EmailTemplatemodel");
-const sendEmail = require("../../utils/sendEmail");
+const { sendEmail, queueEmail } = require("../../utils/sendEmail");
 const Notification = require("../../models/notification");
 const mongoose = require("mongoose");
 const config = require("../../config");
@@ -312,7 +312,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{position}}/g, position); //we can add postion because face face dont have mock
 
         emailPromises.push(
-          sendEmail(candidateEmail, emailSubject, emailBody)
+          queueEmail(candidateEmail, emailSubject, emailBody)
             .then((response) => ({
               email: candidateEmail,
               recipient: "candidate",
@@ -334,7 +334,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             objectName: "interview_round",
             objectId: roundId,
           },
-          status: "Pending",
+          status: "Queued",
           tenantId: interview.tenantId,
           ownerId: interview.ownerId,
           recipientId: candidate._id,
@@ -369,7 +369,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             .replace(/{{position}}/g, position); //we can add postion because face face dont have mock
 
           emailPromises.push(
-            sendEmail(interviewer.email, emailSubject, emailBody)
+            queueEmail(interviewer.email, emailSubject, emailBody)
               .then((response) => ({
                 email: interviewer.email,
                 recipient: "interviewer",
@@ -426,7 +426,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           .replace(/{{position}}/g, position); //we can add postion because face face dont have mock
 
         emailPromises.push(
-          sendEmail(schedulerEmail, emailSubject, emailBody)
+          queueEmail(schedulerEmail, emailSubject, emailBody)
             .then((response) => ({
               email: schedulerEmail,
               recipient: "scheduler",
@@ -543,7 +543,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         // }
 
         emailPromises.push(
-          sendEmail(candidateEmail, emailSubject, emailBody)
+          queueEmail(candidateEmail, emailSubject, emailBody)
             .then((response) => ({
               email: candidateEmail,
               recipient: "candidate",
@@ -565,7 +565,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             objectName: "interview_round",
             objectId: roundId,
           },
-          status: "Pending",
+          status: "Queued",
           tenantId: interview.tenantId,
           ownerId: interview.ownerId,
           recipientId: candidate._id,
@@ -628,7 +628,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
           // }
 
           emailPromises.push(
-            sendEmail(interviewer.email, emailSubject, emailBody)
+            queueEmail(interviewer.email, emailSubject, emailBody)
               .then((response) => ({
                 email: interviewer.email,
                 recipient: "interviewer",
@@ -650,7 +650,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
               objectName: "interview_round",
               objectId: roundId,
             },
-            status: "Pending",
+            status: "Queued",
             tenantId: interview.tenantId,
             ownerId: interview.ownerId,
             recipientId: interviewer.email,
@@ -714,7 +714,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
         // }
 
         emailPromises.push(
-          sendEmail(schedulerEmail, emailSubject, emailBody)
+          queueEmail(schedulerEmail, emailSubject, emailBody)
             .then((response) => ({
               email: schedulerEmail,
               recipient: "scheduler",
@@ -736,7 +736,7 @@ exports.sendInterviewRoundEmails = async (req, res = null) => {
             objectName: "interview_round",
             objectId: roundId,
           },
-          status: "Pending",
+          status: "Queued",
           tenantId: interview.tenantId,
           ownerId: interview.ownerId,
           recipientId: schedulerEmail,

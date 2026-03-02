@@ -2,7 +2,7 @@
 
 const Tenant = require("../models/Tenant");
 const emailTemplateModel = require("../models/EmailTemplatemodel");
-const sendEmail = require("./sendEmail");
+const { sendEmail, queueEmail } = require("./sendEmail");
 
 
 /**
@@ -133,9 +133,9 @@ const sendAssessmentInvitationEmails = async ({
         .replace(/{{supportEmail}}/g, supportEmail)
         .replace(/{{title}}/g, assessment.AssessmentTitle || assessment.title);
 
-      // Send to all emails
+      // Send to all emails (Queued)
       const sendResponses = await Promise.all(
-        emails.map((email) => sendEmail(email, emailSubject, emailBody))
+        emails.map((email) => queueEmail(email, emailSubject, emailBody))
       );
 
       const allSuccess = sendResponses.every((res) => res.success);

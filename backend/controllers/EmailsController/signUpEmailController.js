@@ -1,4 +1,4 @@
-const sendEmail = require("../../utils/sendEmail");
+const { sendEmail, queueEmail } = require("../../utils/sendEmail");
 const notificationMiddleware = require("../../middleware/notificationMiddleware");
 const { Users } = require("../../models/Users");
 const { Contacts } = require("../../models/Contacts");
@@ -55,8 +55,8 @@ exports.sendSignUpEmail = async (req, res) => {
       .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
       .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
 
-    // Send email
-    const emailResponse = await sendEmail(email, emailSubject, emailBody);
+    // Send email (Queued)
+    await queueEmail(email, emailSubject, emailBody);
 
     // Save notification
     // req.notificationData = [{
@@ -82,7 +82,7 @@ exports.sendSignUpEmail = async (req, res) => {
         body: emailBody,
         notificationType: "email",
         object: { objectName: "login", objectId: ownerId },
-        status: emailResponse.success ? "Success" : "Failed",
+        status: "Queued",
         tenantId,
         ownerId,
         recipientId: ownerId,
@@ -113,20 +113,15 @@ exports.sendSignUpEmail = async (req, res) => {
   }
 };
 
-exports.forgotPasswordSendEmail = async (req, res) => {
+const handlePasswordEmail = async ({ email, type }) => {
   try {
-    const { email, type } = req.body;
     if (!email) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Email is required" });
+      return { success: false, message: "Email is required" };
     }
 
     const user = await Users.findOne({ email });
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return { success: false, message: "User not found" };
     }
 
     // Generate token
@@ -139,15 +134,14 @@ exports.forgotPasswordSendEmail = async (req, res) => {
       }/resetPassword?token=${encodeURIComponent(resetToken)}&type=${type}`;
 
     // Get email template
+    const { emailTemplateModel } = require("../../models/EmailTemplatemodel");
     const emailTemplate = await emailTemplateModel.findOne({
       category: "reset_or_create_password",
       isActive: true,
       isSystemTemplate: true,
     });
     if (!emailTemplate) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Email template not found" });
+      return { success: false, message: "Email template not found" };
     }
 
     // Set dynamic values based on type
@@ -178,19 +172,31 @@ exports.forgotPasswordSendEmail = async (req, res) => {
       .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
       .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
 
-    await sendEmail(email, emailSubject, emailBody);
+    // Use queueEmail for background processing
+    await queueEmail(email, emailSubject, emailBody);
 
-    return res.json({
+    return {
       success: true,
-      message: `${actionTitle} email sent`,
-      data: { actionLink }, // For testing purposes only
-    });
+      message: `${actionTitle} email queued`,
+      data: { actionLink },
+    };
   } catch (error) {
     console.error("Password Email Error:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Failed to send password email" });
+    return { success: false, message: "Failed to send password email", error: error.message };
   }
+};
+
+exports.handlePasswordEmail = handlePasswordEmail;
+
+exports.forgotPasswordSendEmail = async (req, res) => {
+  const { email, type } = req.body;
+  const result = await handlePasswordEmail({ email, type });
+
+  if (!result.success) {
+    return res.status(result.message === "User not found" ? 404 : 400).json(result);
+  }
+
+  return res.json(result);
 };
 
 // cron.schedule("0 0 * * *", async () => {
@@ -493,8 +499,8 @@ exports.requestEmailChangeVerification = async (req, res) => {
       .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
       .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
 
-    // Send email
-    await sendEmail(newEmail, emailSubject, emailBody);
+    // Send email (Queued)
+    await queueEmail(newEmail, emailSubject, emailBody);
 
     return res.json({
       success: true,
@@ -668,8 +674,8 @@ exports.sendApprovalEmail = async ({ to, data }) => {
       .replace(/{{orgCompanyName}}/g, orgCompanyName)
       .replace(/{{companyName}}/g, process.env.COMPANY_NAME);
 
-    // Send email
-    const emailResult = await sendEmail(email, emailSubject, emailBody);
+    // Send email (Queued)
+    const emailResult = await queueEmail(email, emailSubject, emailBody);
 
     return emailResult;
   } catch (error) {
@@ -717,7 +723,7 @@ exports.sendOutsourceApprovalEmail = async ({ to, data }) => {
       .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL)
       .replace(/{{companyName}}/g, companyName);
 
-    const emailResult = await sendEmail(email, emailSubject, emailBody);
+    const emailResult = await queueEmail(email, emailSubject, emailBody);
 
     return emailResult;
   } catch (error) {
@@ -768,8 +774,8 @@ exports.sendEmailNotification = async ({ to, category, data }) => {
       );
     }
 
-    // Send email
-    const emailResult = await sendEmail(
+    // Send email (Queued)
+    const emailResult = await queueEmail(
       to,
       emailSubject,
       emailBody,
