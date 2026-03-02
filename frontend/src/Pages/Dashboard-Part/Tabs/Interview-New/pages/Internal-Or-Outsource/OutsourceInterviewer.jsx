@@ -549,7 +549,7 @@ function OutsourcedInterviewerModal({
   // candidateData,
 }) {
   const type = "outsourced";
-  const { interviewers } = useInterviewers();
+  const { interviewers } = useInterviewers(dateTime);
   const { matchedContact, loading: contactLoading } = useIndividualLogin({
     type,
   });

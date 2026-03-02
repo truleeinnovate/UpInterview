@@ -4,7 +4,7 @@ import { config } from '../config';
 import Cookies from 'js-cookie';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
 
-const useInterviewers = () => {
+const useInterviewers = (scheduledDateTime) => {
     const [interviewers, setInterviewers] = useState({
         data: [],
         loading: true,
@@ -15,10 +15,16 @@ const useInterviewers = () => {
     const tokenPayload = decodeJwt(authToken);
     const tenantId = tokenPayload?.tenantId;
 
-    const fetchInterviewers = useCallback(async () => {
+    const fetchInterviewers = useCallback(async (dateTime) => {
         try {
+            const params = {};
+            if (dateTime) {
+                params.scheduledDateTime = dateTime;
+            }
+
             const response = await axios.get(`${config.REACT_APP_API_URL}/users/interviewers/${tenantId}`, {
-                headers: { Authorization: `Bearer ${authToken}` }
+                headers: { Authorization: `Bearer ${authToken}` },
+                params,
             });
 
             setInterviewers({
@@ -37,12 +43,12 @@ const useInterviewers = () => {
     }, []);
 
     useEffect(() => {
-        fetchInterviewers();
-    }, [fetchInterviewers]);
+        fetchInterviewers(scheduledDateTime);
+    }, [fetchInterviewers, scheduledDateTime]);
 
-    const refetch = () => {
+    const refetch = (dateTime) => {
         setInterviewers(prev => ({ ...prev, loading: true }));
-        fetchInterviewers();
+        fetchInterviewers(dateTime || scheduledDateTime);
     };
 
     return {

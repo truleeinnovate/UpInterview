@@ -8,6 +8,7 @@ const { format, parse, parseISO } = require("date-fns");
 const RolesPermissionObject = require("../models/rolesPermissionObject");
 const { RoleMaster } = require("../models/MasterSchemas/RoleMaster");
 const { handleApiError } = require("../utils/errorHandler");
+const { getBookedInterviewerIds } = require("../services/interviewerSchedulingService");
 
 // // Controller to fetch all users with populated tenantId
 // const getUsers = async (req, res) => {
@@ -287,25 +288,25 @@ const getInterviewers = async (req, res) => {
     // console.log('✅ [getInterviewers] External users fetched:', externalUsers.length);
 
     // <------------------------------- v1.0.0
-    const internalRoles = await RolesPermissionObject.find({
-      roleType: "organization",
-      // tenantId,
-    })
-      .select("_id label")
-      .lean();
+    // const internalRoles = await RolesPermissionObject.find({
+    //   roleType: "organization",
+    //   // tenantId,
+    // })
+    //   .select("_id label")
+    //   .lean();
     // ------------------------------ v1.0.0 >
 
-    const internalRoleIds = internalRoles.map((role) => role._id.toString());
+    // const internalRoleIds = internalRoles.map((role) => role._id.toString());
 
     // Fetch internal interviewers
-    const internalUsers = await Users.find({
-      roleId: internalRoleIds,
-      // <------------------------------- v1.0.0
-      tenantId,
-      // ------------------------------ v1.0.0 >
-    })
-      .populate({ path: "roleId", select: "label roleName" })
-      .lean();
+    // const internalUsers = await Users.find({
+    //   roleId: internalRoleIds,
+    //   // <------------------------------- v1.0.0
+    //   tenantId,
+    //   // ------------------------------ v1.0.0 >
+    // })
+    //   .populate({ path: "roleId", select: "label roleName" })
+    //   .lean();
     // console.log('✅ [getInterviewers] Internal users fetched:', internalUsers.length); //internal
 
     // Function to process users - modified to skip availability for internal users
@@ -320,33 +321,33 @@ const getInterviewers = async (req, res) => {
       }).lean();
       // console.log(`✅ [getInterviewers] ${type} contacts fetched:`, contacts.length);
 
-      if (type === "internal") {
-        // For internal users, just return the contact info without availability
-        return contacts.map((contact) => {
-          const user =
-            users.find(
-              (u) => u._id.toString() === contact.ownerId?.toString()
-            ) || {};
-          return {
-            _id: contact._id,
-            contact: {
-              ...contact,
-              ownerId: user._id,
-              email: user.email,
-              isFreelancer: "false",
-            },
+      // if (type === "internal") {
+      //   // For internal users, just return the contact info without availability
+      //   return contacts.map((contact) => {
+      //     const user =
+      //       users.find(
+      //         (u) => u._id.toString() === contact.ownerId?.toString()
+      //       ) || {};
+      //     return {
+      //       _id: contact._id,
+      //       contact: {
+      //         ...contact,
+      //         ownerId: user._id,
+      //         email: user.email,
+      //         isFreelancer: "false",
+      //       },
 
-            roleLabel: user?.roleId?.label || "",
-            roleName: user?.roleId?.roleName || "",
+      //       roleLabel: user?.roleId?.label || "",
+      //       roleName: user?.roleId?.roleName || "",
 
-            type: "internal",
+      //       type: "internal",
 
-            days: [],
-            nextAvailable: null,
-            __v: 0,
-          };
-        });
-      }
+      //       days: [],
+      //       nextAvailable: null,
+      //       __v: 0,
+      //     };
+      //   });
+      // }
 
       // For external users, include availability
       const contactIds = contacts.map((contact) => contact._id);
@@ -434,13 +435,26 @@ const getInterviewers = async (req, res) => {
     };
 
     // Process both internal and external users in parallel
-    const [internalResults, externalResults] = await Promise.all([
-      processUsers(internalUsers, "internal"),
+    const [externalResults] = await Promise.all([
+      //processUsers(internalUsers, "internal"),
       processUsers(externalUsers, "external"),
     ]);
 
     // Combine results
-    const allResults = [...internalResults, ...externalResults];
+    // const allResults = [...internalResults, ...externalResults];
+    let allResults = [...externalResults];
+
+    // v1.0.1 - Filter out interviewers who are already booked at the requested time
+    const { scheduledDateTime } = req.query;
+    if (scheduledDateTime) {
+      const bookedIds = await getBookedInterviewerIds(scheduledDateTime);
+      if (bookedIds.size > 0) {
+        console.log(`[getInterviewers] Filtering out ${bookedIds.size} booked interviewers for time: ${scheduledDateTime}`);
+        allResults = allResults.filter(
+          (interviewer) => !bookedIds.has(interviewer.contact?._id?.toString())
+        );
+      }
+    }
 
     return res.json({
       success: true,

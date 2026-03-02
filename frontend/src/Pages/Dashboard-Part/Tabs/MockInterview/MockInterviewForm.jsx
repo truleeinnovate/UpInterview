@@ -48,6 +48,7 @@ import { notify } from "../../../../services/toastService.js";
 // import { config } from "../../../../config.js";
 // import { createMeeting } from "../../../../utils/meetingPlatforms.js";
 import { useVideoSettingsQuery } from "../../../../apiHooks/VideoDetail.js";
+import { useWallet } from "../../../../apiHooks/useWallet.js";
 import DateChangeConfirmationModal from "../Interview-New/components/DateChangeConfirmationModal.jsx";
 const {
   calculateExpiryDate,
@@ -140,6 +141,9 @@ const MockSchedulelater = () => {
     // refetch,
     // isOrganization,
   } = useVideoSettingsQuery();
+
+  // v1.0.7 - Wallet balance for safety check on Create & Schedule
+  const { data: walletData } = useWallet();
 
   const [formData, setFormData] = useState({
     skills: [],
@@ -1804,6 +1808,19 @@ const MockSchedulelater = () => {
 
     if (isSubmitting) return;
     setIsSubmitting(true);
+
+    // v1.0.7 - Safety wallet balance check for outsource interviewers
+    if (externalInterviewers.length > 0 && externalMaxHourlyRate > 0) {
+      const availableBalance = Number(walletData?.balance || 0);
+      if (availableBalance < externalMaxHourlyRate) {
+        notify.error(
+          `Insufficient wallet balance. The highest interviewer rate is ₹${externalMaxHourlyRate}/hr but your wallet balance is ₹${availableBalance.toFixed(2)}.\nPlease add funds to proceed.`,
+          { autoClose: 10000 },
+        );
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
     let finalDateTime = combinedDateTime; // default
 
