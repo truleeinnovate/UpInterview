@@ -1,7 +1,11 @@
 // MeetingTimer.js - Auto-end call after grace period with countdown notifications
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useMeeting } from "@videosdk.live/react-sdk";
 import { notify } from "../../../services/toastService";
+import { useInterviews } from "../../../apiHooks/useInterviews";
+import { extractUrlData } from "../../../apiHooks/useVideoCall";
+import { useLocation } from "react-router-dom";
+import { useMockInterviewById, useUpdateRoundStatus } from "../../../apiHooks/useMockInterviews";
 
 /**
  * MeetingTimer Component
@@ -14,7 +18,8 @@ import { notify } from "../../../services/toastService";
  */
 export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
     const { end } = useMeeting();
-
+    const { updateRoundStatus, useInterviewDetails } = useInterviews();
+    const updateMockRoundStatus = useUpdateRoundStatus();
     // Countdown state for last 5 min visual overlay
     const [countdown, setCountdown] = useState(null); // remaining seconds
 
@@ -23,6 +28,39 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
     const countdownIntervalRef = useRef(null);
     const hasEndedRef = useRef(false);
     const shownNotificationsRef = useRef({});
+    const location = useLocation();
+
+
+
+    // Extract URL data once
+    const urlData = useMemo(
+        () => extractUrlData(location.search),
+        [location.search],
+    );
+    const isMockInterview = urlData?.interviewType === "mockinterview";
+
+    // ✅ ALWAYS call hooks
+    const {
+        mockInterview: mockinterview,
+        isMockLoading,
+        isError: isMockError,
+    } = useMockInterviewById({
+        mockInterviewRoundId: isMockInterview ? urlData.interviewRoundId : null,
+        enabled: isMockInterview, // ✅ THIS LINE
+        // mockInterviewId: null,
+    });
+
+    const {
+        data: interviewData,
+        isLoading: isInterviewLoading,
+        isError: interviewError,
+    } = useInterviewDetails({
+        roundId: !isMockInterview ? urlData.interviewRoundId : null,
+        enabled: !isMockInterview,
+    });
+
+    const interviewRound =
+        interviewData?.rounds[0] || mockinterview?.rounds[0] || {};
 
     // Robust date parser that handles:
     // 1. "24-02-2026 11:37 AM - 11:57 AM" (combined range format from RoundForm)
@@ -151,14 +189,39 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
     };
 
     // End the meeting
-    const endMeeting = useCallback(() => {
+    const endMeeting = useCallback(async () => {
         if (hasEndedRef.current) return;
         hasEndedRef.current = true;
 
         notify.critical("⏰ Meeting ended. Closing call...");
 
+        // Build the payload based on status
+        const payload = {
+            roundId: interviewRound?._id,
+            // interviewId: interviewRoundData?.interviewId,
+            action: "Completed",
+            reasonCode: "Automatic Call Ended"
+        };
+        let response;
         try {
             end();
+            if (isMockInterview) {
+                const mockId =
+                    mockinterview?._id ||
+                    (typeof interviewRound?.mockInterviewId === "object"
+                        ? interviewRound?.mockInterviewId?._id
+                        : interviewRound?.mockInterviewId);
+
+                response = await updateRoundStatus.mutateAsync({
+                    mockInterviewId: mockId,
+                    roundId: interviewRound?._id,
+                    payload,
+                });
+
+            } else {
+                response = await updateRoundStatus(payload);
+            }
+            console.log("response for End call ==========>", response)
         } catch (error) {
             console.error("Error ending meeting:", error);
             // Fallback: just set meeting left

@@ -26,7 +26,7 @@ import DropdownWithSearchField from "../../../../../../Components/FormFields/Dro
 // import { Button } from "../../../CommonCode-AllTabs/ui/button.jsx";
 import { ReactComponent as LuFilterX } from "../../../../../../icons/LuFilterX.svg";
 import { ReactComponent as LuFilter } from "../../../../../../icons/LuFilter.svg";
-import { OutsourcedInterviewerCard } from "./OutsourceInterviewer.jsx";
+import { OutsourcedInterviewerCard, OutsourcedInterviewerCardSkeleton } from "./OutsourceInterviewer.jsx";
 
 const InternalInterviews = ({
   onClose,
@@ -43,7 +43,7 @@ const InternalInterviews = ({
 }) => {
   // const { data: groups = [] } = useGroupsQuery();
   // const { interviewers } = useInterviewers();
-  const { data: interviewers = [] } = useAllInterviewers({ active_only: true });
+  const { data: interviewers = [], isLoading: isInterviewersLoading } = useAllInterviewers({ active_only: true });
 
   const [searchQuery, setSearchQuery] = useState("");
   // const [filteredData, setFilteredData] = useState([]);
@@ -871,8 +871,15 @@ const InternalInterviews = ({
               }
             `}
           >
-            {/* v1.0.2 --------------------------------------------------------------------------> */}
-            {(navigatedfrom === "dashboard"
+            {isInterviewersLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <OutsourcedInterviewerCardSkeleton
+                  key={index}
+                  source={source}
+                  navigatedfrom={navigatedfrom}
+                />
+              ))
+            ) : (navigatedfrom === "dashboard"
               ? interviewers
               : filteredAndPrioritizedInterviewers
             )?.map((item) => (
@@ -904,7 +911,7 @@ const InternalInterviews = ({
           </div>
 
           {/* v1.0.2 <------------------------------------------------------------------ */}
-          {filteredAndPrioritizedInterviewers?.length === 0 && (
+          {!isInterviewersLoading && filteredAndPrioritizedInterviewers?.length === 0 && (
             <div className="text-gray-500 flex items-center justify-center h-full mb-8">
               <p>No interviewers found for the selected criteria.</p>
             </div>
