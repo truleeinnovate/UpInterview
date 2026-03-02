@@ -1749,34 +1749,34 @@ const updateInterviewRoundStatus = async (req, res) => {
     let extraUpdate = { $set: {} };
     let shouldSendCancellationEmail = false;
 
-    // if (action === "Completed") {
-    //   // Auto-settlement for completed interviews ONLY if feedback is submitted
-    //   if (existingRound.interviewerType === "External") {
-    //     try {
-    //       await processAutoSettlement({
-    //         roundId: existingRound._id.toString(),
-    //         action: "Completed",
-    //         //reasonCode: reasonCode || comment || null,
-    //       });
-    //       console.log(
-    //         "[updateInterviewRoundStatus] Auto-settlement completed for round:",
-    //         existingRound._id,
-    //       );
-    //     } catch (settlementError) {
-    //       console.error(
-    //         "[updateInterviewRoundStatus] Auto-settlement error:",
-    //         settlementError,
-    //       );
-    //       // Continue with status update even if settlement fails
-    //     }
-    //   }
-    //   // //  else {
-    //   // //   console.log(
-    //   // //     "[updateInterviewRoundStatus] Skipping auto-settlement: Feedback not submitted or not found for round:",
-    //   // //     existingRound._id,
-    //   // //   );
-    //   // }
-    // }
+    if (allInterviewerssubmittedCount && action === "Completed") {
+      // Auto-settlement for completed interviews ONLY if feedback is submitted
+      if (existingRound.interviewerType === "External") {
+        try {
+          await processAutoSettlement({
+            roundId: existingRound._id.toString(),
+            action: "Completed",
+            //reasonCode: reasonCode || comment || null,
+          });
+          console.log(
+            "[updateInterviewRoundStatus] Auto-settlement completed for round:",
+            existingRound._id,
+          );
+        } catch (settlementError) {
+          console.error(
+            "[updateInterviewRoundStatus] Auto-settlement error:",
+            settlementError,
+          );
+          // Continue with status update even if settlement fails
+        }
+      }
+      // //  else {
+      // //   console.log(
+      // //     "[updateInterviewRoundStatus] Skipping auto-settlement: Feedback not submitted or not found for round:",
+      // //     existingRound._id,
+      // //   );
+      // }
+    }
 
     if (action === "Cancelled") {
       if (existingRound.interviewerType === "External") {

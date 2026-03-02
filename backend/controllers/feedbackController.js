@@ -352,15 +352,15 @@ const createFeedback = async (req, res) => {
     const finalStatus = feedbackInstance.status || feedbackInstance.status;
 
     //  Update interview round status
-    if (finalStatus === "submitted") {
-      //  Update interview round status
-      let res = await updateInterviewRoundFeedbackStatus({
-        interviewRoundId: feedbackInstance.interviewRoundId,
-        isMock: feedbackInstance?.isMockInterview,
-        actingAsUserId: authContext?.ownerId,
-      });
-      // console.log("finalStatus finalStatus", res)
-    }
+    // if (finalStatus === "submitted") {
+    //  Update interview round status
+    let res = await updateInterviewRoundFeedbackStatus({
+      interviewRoundId: feedbackInstance.interviewRoundId,
+      isMock: feedbackInstance?.isMockInterview,
+      actingAsUserId: authContext?.ownerId,
+    });
+    // console.log("finalStatus finalStatus", res)
+    // }
 
     // Trigger webhook for feedback submission only (not for drafts)
     // webhooks creation part of feed back this is used in account settings hrms sidebar tab in webhooks tab
@@ -847,15 +847,15 @@ const updateFeedback = async (req, res) => {
 
     // console.log("finalStatus", finalStatus)
 
-    if (finalStatus === "submitted") {
-      //  Update interview round status
-      let res = await updateInterviewRoundFeedbackStatus({
-        interviewRoundId: updatedFeedback.interviewRoundId,
-        isMock: updatedFeedback?.isMockInterview,
-        actingAsUserId: authContext?.ownerId,
-      });
-      // console.log("finalStatus finalStatus", res)
-    }
+    // if (finalStatus === "submitted") {
+    //  Update interview round status
+    let res = await updateInterviewRoundFeedbackStatus({
+      interviewRoundId: updatedFeedback.interviewRoundId,
+      isMock: updatedFeedback?.isMockInterview,
+      actingAsUserId: authContext?.ownerId,
+    });
+    console.log("finalStatus finalStatus", res)
+    // }
 
     // Trigger webhook for feedback status update if status changed to submitted
     if (updatedFeedback.status === "submitted") {

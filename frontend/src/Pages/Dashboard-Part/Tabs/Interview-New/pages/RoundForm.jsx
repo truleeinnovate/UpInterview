@@ -243,8 +243,14 @@ const RoundFormInterviews = () => {
   const [candidate, setCandidate] = useState(null);
   const [position, setPosition] = useState(null);
   const [rounds, setRounds] = useState(null);
-  const [showOutsourcePopup, setShowOutsourcePopup] = useState(false);
-  const [isInternalInterviews, setInternalInterviews] = useState(false);
+  const [showOutsourcePopup, setShowOutsourcePopup] = useState(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    return searchParams.get('interviewerType') === 'outsourced';
+  });
+  const [isInternalInterviews, setInternalInterviews] = useState(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    return searchParams.get('interviewerType') === 'internal';
+  });
   const [sectionQuestions, setSectionQuestions] = useState({});
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [ownerData, setOwnerData] = useState(null);
@@ -1833,17 +1839,48 @@ const RoundFormInterviews = () => {
     setInternalInterviews(true);
   };
 
+  // const openExternalModal = () => {
+  //   if (internalInterviewers.length > 0) {
+  //     setInternalInterviewers([]);
+  //     // setInterviewerGroupName("");
+  //     // setInterviewerGroupId("");
+  //     setInterviewerViewType("individuals");
+  //     setSelectedInterviewType(null);
+  //     setHasManuallyClearedInterviewers(true); // Important: prevent edit data from reloading old internal
+  //   }
+  //   setShowOutsourcePopup(true);
+  // };
+
   const openExternalModal = () => {
     if (internalInterviewers.length > 0) {
       setInternalInterviewers([]);
-      // setInterviewerGroupName("");
-      // setInterviewerGroupId("");
       setInterviewerViewType("individuals");
       setSelectedInterviewType(null);
-      setHasManuallyClearedInterviewers(true); // Important: prevent edit data from reloading old internal
+      setHasManuallyClearedInterviewers(true);
     }
     setShowOutsourcePopup(true);
   };
+
+  // Handle modal close
+  const handleCloseOutsourcePopup = () => {
+    setShowOutsourcePopup(false);
+  };
+
+  // Sync URL with interviewer popup state - updates URL AFTER state is committed
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (showOutsourcePopup) {
+      searchParams.set('interviewerType', 'outsourced');
+    } else if (isInternalInterviews) {
+      searchParams.set('interviewerType', 'internal');
+    } else {
+      searchParams.delete('interviewerType');
+    }
+    const newUrl = searchParams.toString()
+      ? `${window.location.pathname}?${searchParams.toString()}`
+      : window.location.pathname;
+    window.history.replaceState(null, '', newUrl);
+  }, [showOutsourcePopup, isInternalInterviews]);
 
   const handleExternalInterviewerSelect = (interviewers, maxHourlyRate) => {
     // Clear internal interviewers when selecting external
@@ -4635,7 +4672,8 @@ const RoundFormInterviews = () => {
         <OutsourcedInterviewerModal
           key={`outsource-modal-${modalResetKey}`}
           // key={`outsource-modal-${externalInterviewers.length}`}
-          onClose={() => setShowOutsourcePopup(false)}
+          // onClose={() => setShowOutsourcePopup(false)}
+          onClose={handleCloseOutsourcePopup}
           dateTime={combinedDateTime}
           skills={position?.skills}
           candidateExperience={candidate?.CurrentExperience}
@@ -4644,6 +4682,7 @@ const RoundFormInterviews = () => {
           previousSelectedInterviewers={externalInterviewers}
           interviewType={interviewType}
           source="outsource-interview"
+          navigatedfrom="interview"
           roundDuration={duration}
           onDateTimeChange={(newCombinedDateTime) => {
             // Sync date/time from outsource modal back to RoundForm
@@ -4688,9 +4727,7 @@ const RoundFormInterviews = () => {
           key={`internal-modal-${modalResetKey}`}
           // key={`internal-modal-${internalInterviewers.length}`}
           isOpen={isInternalInterviews}
-          onClose={() => {
-            setInternalInterviews(false);
-          }}
+          onClose={() => setInternalInterviews(false)}
           onSelectCandidates={handleInternalInterviewerSelect}
           selectedInterviewers={internalInterviewers}
           selectedTeamIds={selectedTeamIds}

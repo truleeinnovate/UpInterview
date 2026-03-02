@@ -46,6 +46,106 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { config } from "../../../../../../config";
 
+export const OutsourcedInterviewerCardSkeleton = ({
+  source,
+  navigatedfrom,
+}) => {
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+      <div className="p-4">
+
+        {/* Top row */}
+        <div className="flex items-start gap-3.5">
+
+          {/* Avatar */}
+          <div className="flex-shrink-0">
+            <div className="shimmer w-16 h-16 rounded-full" />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+
+              {/* Name + Role */}
+              <div className="min-w-0">
+                <div className="shimmer h-5 w-40 rounded mb-2" />
+                <div className="shimmer h-4 w-28 rounded" />
+              </div>
+
+              {/* Rating + Rate */}
+              {source !== "internal-interview" && (
+                <div className="flex items-center gap-3">
+                  <div className="shimmer h-6 w-14 rounded" />
+                  <div className="shimmer h-5 w-16 rounded" />
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+
+        {/* Email (internal only) */}
+        {source === "internal-interview" && (
+          <div className="mt-3">
+            <div className="shimmer h-4 w-52 rounded" />
+          </div>
+        )}
+
+        {/* Company */}
+        <div className="mt-3">
+          <div className="shimmer h-4 w-40 rounded" />
+        </div>
+
+        {/* Introduction */}
+        {source !== "internal-interview" && (
+          <div className="mt-3 space-y-2">
+            <div className="shimmer h-4 w-full rounded" />
+            <div className="shimmer h-4 w-full rounded" />
+            <div className="shimmer h-4 w-5/6 rounded" />
+          </div>
+        )}
+
+        {/* Skills */}
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <div className="shimmer h-[22px] w-16 rounded" />
+          <div className="shimmer h-[22px] w-20 rounded" />
+          <div className="shimmer h-[22px] w-14 rounded" />
+          <div className="shimmer h-[22px] w-12 rounded" />
+        </div>
+
+        {/* Availability (internal only) */}
+        {source === "internal-interview" && (
+          <div className="mt-4">
+            <div className="rounded-lg border-2 border-gray-200 p-3">
+              <div className="flex items-start gap-2.5">
+                <div className="shimmer w-6 h-6 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <div className="shimmer h-4 w-24 rounded" />
+                  <div className="shimmer h-3 w-32 rounded" />
+                  <div className="flex gap-1 mt-2">
+                    <div className="shimmer h-4 w-10 rounded" />
+                    <div className="shimmer h-4 w-12 rounded" />
+                    <div className="shimmer h-4 w-14 rounded" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* Button Section */}
+      {navigatedfrom !== "dashboard" && (
+        <div className="border-t border-gray-100 mt-4 mx-4">
+          <div className="py-3 flex justify-end">
+            <div className="shimmer h-8 w-20 rounded-md" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const OutsourcedInterviewerCard = ({
   interviewer,
   isSelected,
@@ -549,8 +649,8 @@ function OutsourcedInterviewerModal({
   // candidateData,
 }) {
   const type = "outsourced";
-  const { interviewers } = useInterviewers();
-  const { matchedContact, loading: contactLoading } = useIndividualLogin({
+  const { interviewers, loading: isInterviewersLoading } = useInterviewers();
+  const { matchedContact, loading: isIndividualLoginLoading } = useIndividualLogin({
     type,
   });
   const { data: walletBalance, refetch, isFetching: isWalletFetching } = useWallet();
@@ -575,8 +675,8 @@ function OutsourcedInterviewerModal({
   const [localDate, setLocalDate] = useState("");
   const [localStartTime, setLocalStartTime] = useState("");
   const [localEndTime, setLocalEndTime] = useState("");
-
-  console.log("interviewType", interviewType)
+  const [isLoadingInterviewers, setIsLoadingInterviewers] = useState(true);
+  // console.log("interviewType", interviewType)
 
 
 
@@ -839,6 +939,7 @@ function OutsourcedInterviewerModal({
 
   // Fetch and filter interviewers based on skills and availability added by Ranjith
   useEffect(() => {
+    setIsLoadingInterviewers(true);
     const fetchInterviewers = async (
       skills,
       candidateExperience,
@@ -1231,10 +1332,11 @@ function OutsourcedInterviewerModal({
 
         setBaseInterviewers(uniqueExperienceFiltered);
         setFilteredInterviewers(uniqueExperienceFiltered);
-
+        setIsLoadingInterviewers(false);
         // ========== REGULAR FLOW (with positionData) ========== }}
       } catch (error) {
         console.error("❌ Error processing interviewers:", error);
+        setIsLoadingInterviewers(false);
       }
     };
 
@@ -2327,6 +2429,7 @@ function OutsourcedInterviewerModal({
       <Toaster />
       {/* v1.0.2 <-------------------------------------------------------------------------- */}
       <SidebarPopup
+
         // title="Outsourced Interviewers"
         title={
           <div>
@@ -2870,7 +2973,7 @@ function OutsourcedInterviewerModal({
                       {skills && skills.length > 0 && (
                         <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 2xl:col-span-2 flex items-end mt-6">
                           <button
-                            onClick={() => {
+                            onClick={async () => {
                               // Clear current selections
                               setTempSelectedSkills([]);
 
@@ -2888,6 +2991,42 @@ function OutsourcedInterviewerModal({
 
                               // Reset initialization ref to prevent duplicate
                               hasInitializedSkillsRef.current = true;
+
+                              // Reset selectedRoles back to parent currentRole + related roles
+                              if (currentRole && currentRole.trim() !== "") {
+                                const matchedRole = currentRoles?.find((item) => item.roleName === currentRole);
+                                const parentRole = matchedRole
+                                  ? { roleName: matchedRole.roleName, roleLabel: matchedRole.roleLabel || matchedRole.roleName, fromParent: true }
+                                  : { roleName: currentRole, roleLabel: temRole || currentRole, fromParent: true };
+                                setSelectedRoles([parentRole]);
+
+                                // Re-fetch related roles and add them back
+                                try {
+                                  const res = await axios.get(
+                                    `${config.REACT_APP_API_URL}/master-data/roles/related`,
+                                    { params: { roleName: currentRole } }
+                                  );
+                                  const data = res?.data;
+                                  if (data?.relatedRoles && data.relatedRoles.length > 0) {
+                                    setSelectedRoles((prev) => {
+                                      const newRoles = data.relatedRoles
+                                        .filter((rr) => !prev.some((p) => p.roleName === rr.roleName))
+                                        .map((rr) => ({
+                                          roleName: rr.roleName,
+                                          roleLabel: rr.roleLabel || rr.roleName,
+                                          fromParent: false,
+                                          fromRelated: true,
+                                        }));
+                                      if (newRoles.length === 0) return prev;
+                                      return [...prev, ...newRoles];
+                                    });
+                                  }
+                                } catch (error) {
+                                  console.error("Error re-fetching related roles on reset:", error);
+                                }
+                              } else {
+                                setSelectedRoles([]);
+                              }
                             }}
                             className="w-full h-10 px-4 text-sm rounded-md bg-custom-blue hover:bg-custom-blue/90 text-white duration-200 flex items-center justify-center whitespace-nowrap gap-2"
                           >
@@ -3030,38 +3169,39 @@ function OutsourcedInterviewerModal({
                       </div>
                     )}
                     {/* Role Filter Dropdown + Chips */}
-                    <div className="flex mt-4 flex-wrap items-center gap-1.5">
-                      <span className="text-xs text-gray-500 mr-1">
-                        Applied Roles:
-                      </span>
-                      {selectedRoles.map((role) => (
-                        <span
-                          key={role.roleName}
-                          className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${role.fromParent
-                            ? "bg-blue-100 border-blue-200 text-blue-800"
-                            : role.fromRelated
-                              ? "bg-green-100 border-green-200 text-green-800"
-                              : "bg-gray-100 border-gray-200 text-gray-800"
-                            }`}
-                        >
-                          {role.roleLabel || role.roleName}
-                          {/* <button
-                            onClick={() => {
-                              setSelectedRoles((prev) =>
-                                prev.filter((r) => r.roleName !== role.roleName)
-                              );
-                            }}
-                            className={`ml-1 ${role.fromParent
-                              ? "text-blue-500 hover:text-red-500"
-                              : "text-gray-500 hover:text-red-500"
+                    {selectedRoles?.length > 0 &&
+                      <div className="flex mt-4 flex-wrap items-center gap-1.5">
+                        <span className="text-xs text-gray-500 mr-1">
+                          Applied Roles:
+                        </span>
+                        {selectedRoles.map((role) => (
+                          <span
+                            key={role.roleName}
+                            className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${role.fromParent
+                              ? "bg-blue-100 border-blue-200 text-blue-800"
+                              : role.fromRelated
+                                ? "bg-green-100 border-green-200 text-green-800"
+                                : "bg-gray-100 border-gray-200 text-gray-800"
                               }`}
                           >
-                            <X className="h-3 w-3" />
-                          </button> */}
-                        </span>
-                      ))}
-                      {/* Add Role Dropdown */}
-                      {/* <div className="inline-block min-w-[140px]">
+                            {role.roleLabel || role.roleName}
+                            <button
+                              onClick={() => {
+                                setSelectedRoles((prev) =>
+                                  prev.filter((r) => r.roleName !== role.roleName)
+                                );
+                              }}
+                              className={`ml-1 ${role.fromParent
+                                ? "text-blue-500 hover:text-red-500"
+                                : "text-gray-500 hover:text-red-500"
+                                }`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                        {/* Add Role Dropdown */}
+                        {/* <div className="inline-block min-w-[140px]">
                         <DropdownWithSearchField
                           value={null}
                           options={
@@ -3105,7 +3245,8 @@ function OutsourcedInterviewerModal({
                           placeholder="+ Add role"
                         />
                       </div> */}
-                    </div>
+                      </div>
+                    }
 
                     {/* Date & Time Chip */}
                     {/* {localDate && localStartTime && (
@@ -3319,44 +3460,47 @@ function OutsourcedInterviewerModal({
                 }
               `}
             >
-              {filteredInterviewers.map((interviewer) => (
-                <OutsourcedInterviewerCard
-                  key={interviewer._id}
-                  interviewer={interviewer}
-                  // isSelected={selectedInterviewersLocal.some(
-                  //   (sel) => String(sel?._id) === String(interviewer?._id)
-                  // )}
-                  // isSelected={selectedInterviewersLocal.some((sel) => {
-                  //   const selectedId = sel?._id ? sel?._id : sel?.[0]?._id;
-                  //   return selectedId === interviewer?._id;
-                  // })}
-                  // isSelected={selectedInterviewersLocal.some(
-                  //   (sel) => sel?._id || sel[0]?._id === interviewer?._id
-                  // )}
-                  isSelected={selectedInterviewersLocal.some((sel) => {
-                    // Handle both cases: sel could be an object or an array
-                    if (Array.isArray(sel)) {
-                      return sel[0]?._id === interviewer._id;
-                    } else {
-                      return sel?._id === interviewer._id;
-                    }
-                  })}
-                  onSelect={() => handleSelectClick(interviewer)}
-                  onViewDetails={() => setSelectedInterviewer(interviewer)}
-                  navigatedfrom={navigatedfrom}
-                  candidateExperience={candidateExperience}
-                  roundDuration={roundDuration}
-                />
-              ))}
+
+              {isLoadingInterviewers || isInterviewersLoading || isIndividualLoginLoading ? (
+                // Show 3 skeleton cards while loading
+                Array.from({ length: 3 }).map((_, index) => (
+                  <OutsourcedInterviewerCardSkeleton
+                    key={index}
+                    source={source}
+                    navigatedfrom={navigatedfrom}
+                  />
+                ))
+              ) : filteredInterviewers.length > 0 ? (
+                filteredInterviewers.map((interviewer) => (
+                  <OutsourcedInterviewerCard
+                    key={interviewer._id}
+                    interviewer={interviewer}
+                    isSelected={selectedInterviewersLocal.some((sel) => {
+                      if (Array.isArray(sel)) {
+                        return sel[0]?._id === interviewer._id;
+                      } else {
+                        return sel?._id === interviewer._id;
+                      }
+                    })}
+                    onSelect={() => handleSelectClick(interviewer)}
+                    onViewDetails={() => setSelectedInterviewer(interviewer)}
+                    navigatedfrom={navigatedfrom}
+                    candidateExperience={candidateExperience}
+                    roundDuration={roundDuration}
+                  />
+                ))
+              ) : (
+                <div className="flex justify-center items-center pt-6 sm:px-0 px-6 w-full min-h-[200px]">
+                  <p className="text-center text-gray-500 text-lg font-medium">
+                    No available interviewers found for the selected criteria.
+                  </p>
+                </div>
+              )}
             </div>
             {/* v1.0.3 ---------------------------------------------------------------------> */}
-            {filteredInterviewers.length === 0 && (
-              <div className="flex justify-center items-center pt-6 sm:px-0 px-6 w-full min-h-[200px]">
-                <p className="text-center text-gray-500 text-lg font-medium">
-                  No available interviewers found for the selected criteria.
-                </p>
-              </div>
-            )}
+            {/* // {filteredInterviewers.length === 0 && ( */}
+
+            {/* // )} */}
           </div>
 
           {navigatedfrom !== "dashboard" && (
