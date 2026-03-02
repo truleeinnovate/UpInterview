@@ -202,6 +202,7 @@ const dbConnection = connectWithRetry();
 const {
   setupInterviewStatusCronJob,
 } = require("./services/interviewStatusService");
+const startAgenda = require("./agenda/startAgenda");
 
 // Set up the cron job when database is connected
 dbConnection
@@ -537,8 +538,16 @@ const startServer = async () => {
     await dbConnection;
     console.log("MongoDB connected successfully");
 
-    const server = app.listen(port, () => {
+    const server = app.listen(port, async () => {
       console.log(`Server running on port ${port}`);
+
+      // Start Agenda background worker (Queued Emails, No-Show logic)
+      try {
+        await startAgenda();
+        console.log("✅ Agenda started in the same process as the server.");
+      } catch (err) {
+        console.error("❌ Failed to start Agenda:", err.message);
+      }
 
       // Initialize the daily exchange rate update
       if (process.env.NODE_ENV !== "test") {
@@ -1076,9 +1085,7 @@ app.get("/rolesdata/:id", async (req, res) => {
 //     res.status(500).json({ message: 'Error fetching roles', error: error.message });
 //   }
 // });
-//start agenda
-const startAgenda = require("./agenda/startAgenda");
-startAgenda();
+
 
 app.get("/api/rolesdata/:organizationId", async (req, res) => {
   const { organizationId } = req.params;

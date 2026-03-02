@@ -16,9 +16,12 @@ const { Candidate } = require("../../models/Candidate");
 const { Position } = require("../../models/Position/position");
 const { Interview } = require("../../models/Interview/Interview");
 const ScheduledAssessment = require("../../models/Assessment/assessmentsSchema");
-const {CandidateAssessment} = require("../../models/Assessment/candidateAssessment");
+const { CandidateAssessment } = require("../../models/Assessment/candidateAssessment");
 const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
 const RolesPermissionObject = require('../../models/rolesPermissionObject');
+const { MockInterview } = require("../../models/Mockinterview/mockinterview");
+const { MockInterviewRound } = require("../../models/Mockinterview/mockinterviewRound");
+const FeedbackModel = require("../../models/feedback");
 
 // const generateReport = async (req, res) => {
 //   try {
@@ -351,6 +354,7 @@ const generateReport = async (req, res) => {
       interviews: Interview,
       interviewrounds: InterviewRounds,
       scheduledassessments: ScheduledAssessment,
+      feedback: FeedbackModel,
     };
 
     const Model = ModelMap[collectionName];
@@ -383,9 +387,9 @@ const generateReport = async (req, res) => {
     // 3. SAVED COLUMN CONFIG
     const savedColumnConfig = actingAsTenantId
       ? await ColumnConfiguration.findOne({
-          templateId,
-          tenantId: actingAsTenantId,
-        }).lean()
+        templateId,
+        tenantId: actingAsTenantId,
+      }).lean()
       : null;
 
     // 4. BUILD COLUMNS
@@ -484,50 +488,50 @@ const generateReport = async (req, res) => {
     );
 
     // 8. FINAL QUERY
-   // 8. FINAL QUERY
-let finalQuery = {};
+    // 8. FINAL QUERY
+    let finalQuery = {};
 
-// VIEW SCOPE: "me" = only user's records, "all" = permission query
-if (activeFilters.viewScope === "me") {
-  finalQuery = {
-    $or: [
-      { createdBy: actingAsUserId },
-      { ownerId: actingAsUserId },
-      { updatedBy: actingAsUserId }
-    ]
-  };
-} else {
-  finalQuery = { ...permissionQuery }; // full access
-}
+    // VIEW SCOPE: "me" = only user's records, "all" = permission query
+    if (activeFilters.viewScope === "me") {
+      finalQuery = {
+        $or: [
+          { createdBy: actingAsUserId },
+          { ownerId: actingAsUserId },
+          { updatedBy: actingAsUserId }
+        ]
+      };
+    } else {
+      finalQuery = { ...permissionQuery }; // full access
+    }
 
-// DATE RANGE
-if (activeFilters.dateRange === "custom") {
-  if (activeFilters.customStartDate) {
-    const start = new Date(activeFilters.customStartDate);
-    start.setHours(0, 0, 0, 0);
-    finalQuery.createdAt = { ...finalQuery.createdAt, $gte: start };
-  }
-  if (activeFilters.customEndDate) {
-    const end = new Date(activeFilters.customEndDate);
-    end.setHours(23, 59, 59, 999);
-    finalQuery.createdAt = { ...finalQuery.createdAt, $lte: end };
-  }
-} else if (activeFilters.dateRange && activeFilters.dateRange !== "all") {
-  const daysMap = { last7days: 7, last30days: 30, last90days: 90 };
-  const days = daysMap[activeFilters.dateRange] || 30;
-  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  startDate.setHours(0, 0, 0, 0);
-  finalQuery.createdAt = { $gte: startDate };
-}
+    // DATE RANGE
+    if (activeFilters.dateRange === "custom") {
+      if (activeFilters.customStartDate) {
+        const start = new Date(activeFilters.customStartDate);
+        start.setHours(0, 0, 0, 0);
+        finalQuery.createdAt = { ...finalQuery.createdAt, $gte: start };
+      }
+      if (activeFilters.customEndDate) {
+        const end = new Date(activeFilters.customEndDate);
+        end.setHours(23, 59, 59, 999);
+        finalQuery.createdAt = { ...finalQuery.createdAt, $lte: end };
+      }
+    } else if (activeFilters.dateRange && activeFilters.dateRange !== "all") {
+      const daysMap = { last7days: 7, last30days: 30, last90days: 90 };
+      const days = daysMap[activeFilters.dateRange] || 30;
+      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      startDate.setHours(0, 0, 0, 0);
+      finalQuery.createdAt = { $gte: startDate };
+    }
 
-// Other filters
-Object.keys(activeFilters).forEach(key => {
-  if (["dateRange", "customStartDate", "customEndDate", "viewScope"].includes(key)) return;
-  const value = activeFilters[key];
-  if (value && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
-    finalQuery[key] = Array.isArray(value) ? { $in: value } : value;
-  }
-});
+    // Other filters
+    Object.keys(activeFilters).forEach(key => {
+      if (["dateRange", "customStartDate", "customEndDate", "viewScope", "roundType"].includes(key)) return;
+      const value = activeFilters[key];
+      if (value && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
+        finalQuery[key] = Array.isArray(value) ? { $in: value } : value;
+      }
+    });
 
     // 9. PROJECTION
     const projection = responseColumns.reduce(
@@ -539,14 +543,33 @@ Object.keys(activeFilters).forEach(key => {
     let rawData = [];
 
     if (collectionName === "interviewrounds") {
-      const interviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
+      const [interviews, mockInterviews] = await Promise.all([
+        Interview.find(permissionQuery, { _id: 1 }).lean(),
+        MockInterview.find(permissionQuery, { _id: 1 }).lean()
+      ]);
+
       const interviewIds = interviews.map(i => i._id);
-      if (interviewIds.length > 0) {
-        rawData = await InterviewRounds.find(
-          { interviewId: { $in: interviewIds }, ...finalQuery },
-          projection
-        ).lean();
-      }
+      const mockIds = mockInterviews.map(i => i._id);
+
+      const [rounds, mockRounds] = await Promise.all([
+        InterviewRounds.find({ interviewId: { $in: interviewIds }, ...finalQuery }, projection).lean(),
+        MockInterviewRound.find({ mockInterviewId: { $in: mockIds }, ...finalQuery }, projection).lean()
+      ]);
+
+      rawData = [
+        ...rounds.map(r => ({ ...r, roundType: 'real' })),
+        ...mockRounds.map(r => ({ ...r, roundType: 'mock' }))
+      ];
+    }
+    else if (collectionName === "interviews") {
+      const [regular, mock] = await Promise.all([
+        Interview.find({ ...permissionQuery, ...finalQuery }, projection).lean(),
+        MockInterview.find({ ...permissionQuery, ...finalQuery }, projection).lean()
+      ]);
+      rawData = [
+        ...regular.map(r => ({ ...r, roundType: 'real' })),
+        ...mock.map(m => ({ ...m, roundType: 'mock' }))
+      ];
     }
     else if (collectionName === "scheduledassessments") {
       const scheduled = await ScheduledAssessment.find(
@@ -592,6 +615,52 @@ Object.keys(activeFilters).forEach(key => {
         });
       }
     }
+    else if (collectionName === "feedback") {
+      // 1. Get regular and mock interviews based on permission query
+      const [regularInterviews, mockInterviews] = await Promise.all([
+        Interview.find(permissionQuery, { _id: 1 }).lean(),
+        MockInterview.find(permissionQuery, { _id: 1 }).lean()
+      ]);
+
+      const regularIds = regularInterviews.map(i => i._id);
+      const mockIds = mockInterviews.map(i => i._id);
+
+      // 2. Get all rounds for these interviews
+      const [regularRounds, mockRounds] = await Promise.all([
+        InterviewRounds.find({ interviewId: { $in: regularIds } }, { _id: 1 }).lean(),
+        MockInterviewRound.find({ mockInterviewId: { $in: mockIds } }, { _id: 1 }).lean()
+      ]);
+
+      const roundIds = [...regularRounds.map(r => r._id), ...mockRounds.map(r => r._id)];
+
+      // 3. Find feedback matching these rounds OR the general query
+      rawData = await FeedbackModel.find(
+        {
+          $or: [
+            { interviewRoundId: { $in: roundIds } },
+            finalQuery
+          ]
+        },
+        projection
+      )
+        .populate("candidateId", "FirstName LastName Email")
+        .populate("positionId", "title")
+        .populate("interviewRoundId", "roundTitle")
+        .populate("interviewerId", "firstName lastName")
+        .lean();
+
+      rawData = rawData.map(fb => ({
+        ...fb,
+        roundType: fb.isMockInterview ? 'mock' : 'real',
+        candidateName: fb.candidateId ? `${fb.candidateId.FirstName || ''} ${fb.candidateId.LastName || ''}`.trim() : 'Unknown',
+        positionTitle: fb.positionId?.title || 'Unknown',
+        roundTitle: fb.interviewRoundId?.roundTitle || 'Unknown',
+        interviewerName: fb.interviewerId ? `${fb.interviewerId.firstName || ''} ${fb.interviewerId.lastName || ''}`.trim() : 'Unknown',
+        overallRating: fb.overallImpression?.overallRating || 0,
+        recommendation: fb.overallImpression?.recommendation || 'Maybe',
+      }));
+
+    }
     else {
       rawData = await Model.find(
         { ...permissionQuery, ...finalQuery },
@@ -600,63 +669,108 @@ Object.keys(activeFilters).forEach(key => {
     }
 
     // ALWAYS SORT IN JAVASCRIPT — COSMOS DB SAFE
-    const sortedData = rawData
-      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-      .slice(0, 2000);
+    let sortedData = rawData
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
-    const mappedData = sortedData.map((d) => ({ id: d._id?.toString() || d.id, ...d }));
+    // IN-MEMORY FILTERING — e.g. Round Type
+    if (activeFilters.roundType && activeFilters.roundType !== "all") {
+      sortedData = sortedData.filter(d => d.roundType === activeFilters.roundType);
+    }
+
+    const slicedData = sortedData.slice(0, 2000);
+
+    const mappedData = slicedData.map((d) => ({ id: d._id?.toString() || d.id, ...d }));
     // console.log("mappedData", mappedData);
-    
+
 
     // 11. KPI + CHARTS
-    const aggregates = {
-      totalPositions: mappedData.length,
-      openPositions: mappedData.filter((d) =>
-        ["opened", "open", "active"].includes(d.status?.toLowerCase())
-      ).length,
-      closedPositions: mappedData.filter((d) =>
-        ["closed", "filled"].includes(d.status?.toLowerCase())
-      ).length,
-      onHoldPositions: mappedData.filter(
-        (d) => d.status?.toLowerCase() === "hold"
-      ).length,
-      avgSalary:
-        mappedData.reduce(
-          (sum, d) =>
-            sum + (Number(d.minSalary || 0) + Number(d.maxSalary || 0)) / 2,
-          0
-        ) / (mappedData.length || 1),
-    };
+    let aggregates = {};
+    let chartData = {};
 
-    const chartData = {
-      positionsByStatus: Object.entries(
-        mappedData.reduce((m, d) => {
-          m[d.status || "Unknown"] = (m[d.status || "Unknown"] || 0) + 1;
-          return m;
-        }, {})
-      ).map(([name, value]) => ({ name, value })),
+    if (collectionName === "feedback") {
+      const totalFeedback = mappedData.length;
+      const ratings = mappedData.map(d => Number(d.overallRating) || 0).filter(r => r > 0);
+      const avgRating = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
 
-      positionsByMonth: Object.entries(
-        mappedData.reduce((m, d) => {
-          const month = new Date(d.createdAt).toLocaleString("default", {
-            month: "short",
-            year: "numeric",
-          });
-          m[month] = (m[month] || 0) + 1;
-          return m;
-        }, {})
-      ).map(([name, value]) => ({ name, value })),
+      const hireRecords = mappedData.filter(d => ["Strong Hire", "Hire"].includes(d.recommendation));
+      const hireRate = totalFeedback > 0 ? (hireRecords.length / totalFeedback) * 100 : 0;
 
-      positionsByLocation: Object.entries(
-        mappedData.reduce((m, d) => {
-          m[d.Location || "Unknown"] = (m[d.Location || "Unknown"] || 0) + 1;
-          return m;
-        }, {})
-      )
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(([name, value]) => ({ name, value })),
-    };
+      aggregates = {
+        totalFeedback,
+        avgRating: avgRating.toFixed(1),
+        hireRate: `${hireRate.toFixed(1)}%`,
+      };
+
+      chartData = {
+        feedbackByRecommendation: Object.entries(
+          mappedData.reduce((m, d) => {
+            const rec = d.recommendation || "Maybe";
+            m[rec] = (m[rec] || 0) + 1;
+            return m;
+          }, {})
+        ).map(([name, value]) => ({ name, value })),
+
+        feedbackByMonth: Object.entries(
+          mappedData.reduce((m, d) => {
+            const month = new Date(d.createdAt).toLocaleString("default", {
+              month: "short",
+              year: "numeric",
+            });
+            m[month] = (m[month] || 0) + 1;
+            return m;
+          }, {})
+        ).map(([name, value]) => ({ name, value })),
+      };
+    } else {
+      aggregates = {
+        totalPositions: mappedData.length,
+        openPositions: mappedData.filter((d) =>
+          ["opened", "open", "active"].includes(d.status?.toLowerCase())
+        ).length,
+        closedPositions: mappedData.filter((d) =>
+          ["closed", "filled"].includes(d.status?.toLowerCase())
+        ).length,
+        onHoldPositions: mappedData.filter(
+          (d) => d.status?.toLowerCase() === "hold"
+        ).length,
+        avgSalary:
+          mappedData.reduce(
+            (sum, d) =>
+              sum + (Number(d.minSalary || 0) + Number(d.maxSalary || 0)) / 2,
+            0
+          ) / (mappedData.length || 1),
+      };
+
+      chartData = {
+        positionsByStatus: Object.entries(
+          mappedData.reduce((m, d) => {
+            m[d.status || "Unknown"] = (m[d.status || "Unknown"] || 0) + 1;
+            return m;
+          }, {})
+        ).map(([name, value]) => ({ name, value })),
+
+        positionsByMonth: Object.entries(
+          mappedData.reduce((m, d) => {
+            const month = new Date(d.createdAt).toLocaleString("default", {
+              month: "short",
+              year: "numeric",
+            });
+            m[month] = (m[month] || 0) + 1;
+            return m;
+          }, {})
+        ).map(([name, value]) => ({ name, value })),
+
+        positionsByLocation: Object.entries(
+          mappedData.reduce((m, d) => {
+            m[d.Location || "Unknown"] = (m[d.Location || "Unknown"] || 0) + 1;
+            return m;
+          }, {})
+        )
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([name, value]) => ({ name, value })),
+      };
+    }
 
     await ReportUsage.findOneAndUpdate(
       { tenantId: actingAsTenantId, templateId },

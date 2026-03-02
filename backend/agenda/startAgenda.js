@@ -2,6 +2,7 @@ const agenda = require("./index");
 
 // load jobs
 require("./jobs/roundNoShow.job")(agenda);
+require("./jobs/email.job")(agenda);
 
 module.exports = async function startAgenda() {
   try {

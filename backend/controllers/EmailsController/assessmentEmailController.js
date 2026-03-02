@@ -14,7 +14,7 @@ const { Candidate } = require("../../models/candidate.js");
 const CryptoJS = require("crypto-js");
 const crypto = require("crypto");
 const emailTemplateModel = require("../../models/EmailTemplatemodel");
-const sendEmail = require("../../utils/sendEmail");
+const { sendEmail, queueEmail } = require("../../utils/sendEmail");
 const notificationMiddleware = require("../../middleware/notificationMiddleware");
 const { generateOTP } = require("../../utils/generateOtp");
 const Otp = require("../../models/Otp");
@@ -90,10 +90,10 @@ exports.sendOtp = async (req, res) => {
     const emails = Array.isArray(candidate.emails)
       ? candidate.emails
       : candidate.emails
-      ? [candidate.emails]
-      : candidate.Email
-      ? [candidate.Email]
-      : [];
+        ? [candidate.emails]
+        : candidate.Email
+          ? [candidate.Email]
+          : [];
 
     if (emails.length === 0) {
       return res.status(400).json({
@@ -140,7 +140,7 @@ exports.sendOtp = async (req, res) => {
       .replace(
         "{{candidateName}}",
         (candidate.FirstName ? candidate.FirstName + " " : "") +
-          (candidate.LastName || "Candidate")
+        (candidate.LastName || "Candidate")
       )
       .replace("{{otp}}", otp);
 
@@ -1277,7 +1277,7 @@ exports.shareAssessment = async (req, res) => {
     // Save notifications via middleware
     if (notifications.length > 0) {
       req.notificationData = notifications;
-      await notificationMiddleware(req, res, () => {});
+      await notificationMiddleware(req, res, () => { });
     }
 
     // Recalculate usage

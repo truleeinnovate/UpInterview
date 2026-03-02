@@ -33,6 +33,7 @@ import {
 import SidebarPopup from "../../../../../Components/Shared/SidebarPopup/SidebarPopup.jsx";
 import LoadingButton from "../../../../../Components/LoadingButton.jsx";
 import { Button } from "../../../../../Components/Buttons/Button.jsx";
+import { notify } from "../../../../../services/toastService.js";
 
 const UserForm = ({ mode }) => {
   // Fetch all roles and filter based on user type
@@ -293,6 +294,12 @@ const UserForm = ({ mode }) => {
         editMode,
       });
       // console.log("is loading after submit", isLoading);
+
+      if (!editMode) {
+        notify.success("User created! An email has been sent to set up their password.");
+      } else {
+        notify.success("User updated successfully.");
+      }
 
       navigate("/account-settings/users");
     } catch (error) {
