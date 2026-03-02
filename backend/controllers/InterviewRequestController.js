@@ -22,6 +22,11 @@ const {
 const {
   scheduleOrRescheduleNoShow,
 } = require("../services/interviews/roundNoShowScheduler");
+const {
+  createSchedulingRecords,
+  getBookedInterviewerIds,
+  updateSchedulingStatus,
+} = require("../services/interviewerSchedulingService");
 
 // each interviwer send one request
 
@@ -672,6 +677,23 @@ exports.acceptInterviewRequest = async (req, res) => {
     // console.log("roundhasScheduledOnce", round);
     const scheduleAction = hasScheduledOnce ? "Rescheduled" : "Scheduled";
 
+    // v1.0.1 - Check if this interviewer is already booked at this time
+    if (round.dateTime) {
+      try {
+        const bookedIds = await getBookedInterviewerIds(round.dateTime);
+        if (bookedIds.has(contactId.toString())) {
+          return res.status(409).json({
+            success: false,
+            alreadyBooked: true,
+            message: `You cannot accept this round because you already have an interview scheduled at ${round.dateTime}. You are not available for this time slot.`,
+          });
+        }
+      } catch (schedError) {
+        console.error("[acceptInterviewRequest] Error checking interviewer availability:", schedError);
+        // Continue with accept even if check fails — don't block the flow
+      }
+    }
+
     if (!round.interviewers.includes(contactId)) {
       // 🔧 CHANGED: build minimal update body
 
@@ -739,6 +761,16 @@ exports.acceptInterviewRequest = async (req, res) => {
           console.log(`[Accept] ✅ NoShow scheduled for ${isMock ? 'mock' : 'regular'} round:`, roundId);
         } catch (noShowErr) {
           console.error("[Accept] ❌ NoShow scheduling error:", noShowErr);
+        }
+
+        // v1.0.1 - Create InterviewerScheduling record for accepted interviewer
+        try {
+          if (updatedRoundDoc.dateTime) {
+            await createSchedulingRecords(updatedRoundDoc._id, [contactId], updatedRoundDoc.dateTime, "");
+            console.log(`[Accept] ✅ InterviewerScheduling record created for interviewer ${contactId} round ${roundId}`);
+          }
+        } catch (schedError) {
+          console.error("[Accept] ❌ Error creating InterviewerScheduling record:", schedError);
         }
       }
 

@@ -649,8 +649,8 @@ function OutsourcedInterviewerModal({
   // candidateData,
 }) {
   const type = "outsourced";
-  const { interviewers, loading: isInterviewersLoading } = useInterviewers();
-  const { matchedContact, loading: isIndividualLoginLoading } = useIndividualLogin({
+  const { interviewers } = useInterviewers(dateTime);
+  const { matchedContact, loading: contactLoading } = useIndividualLogin({
     type,
   });
   const { data: walletBalance, refetch, isFetching: isWalletFetching } = useWallet();

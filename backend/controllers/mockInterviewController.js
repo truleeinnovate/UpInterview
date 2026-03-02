@@ -25,6 +25,7 @@ const {
   processAutoSettlement,
   processWithdrawnRefund,
 } = require("../utils/interviewWalletUtil");
+const WalletTopup = require("../models/WalletTopup");
 const {
   handleInterviewerRequestFlow,
 } = require("../utils/Interviews/handleInterviewerRequestFlow.js");
@@ -814,6 +815,19 @@ exports.createMockInterviewRound = async (req, res) => {
       status: finalStatus,
       ...round,
     });
+
+    // ==================== PRE-SAVE WALLET BALANCE CHECK ====================
+    const maxHourlyRate = Number(round?.maxHourlyRate || 0);
+    if (hasSelectedInterviewers && maxHourlyRate > 0) {
+      const orgWallet = await WalletTopup.findOne({ ownerId: mockInterview.ownerId });
+      const walletBalance = Number(orgWallet?.balance || 0);
+      if (walletBalance < maxHourlyRate) {
+        return res.status(400).json({
+          status: "error",
+          message: `Insufficient wallet balance. The highest interviewer rate is ₹${maxHourlyRate}/hr but your wallet balance is ₹${walletBalance.toFixed(2)}. Please add funds to proceed.`,
+        });
+      }
+    }
 
     const savedRound = await newRound.save();
 

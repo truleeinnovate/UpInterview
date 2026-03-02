@@ -44,6 +44,12 @@ const InterviewRequests = () => {
   const [error, setError] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [acceptingId, setAcceptingId] = useState(null);
+  // v1.0.6 - Auto-refresh timer so Accept→Expired transitions happen without page reload
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setTick((t) => t + 1), 30000); // every 30 seconds
+    return () => clearInterval(timer);
+  }, []);
 
   useScrollLock(!!selectedRequest || isSidebarOpen);
 
@@ -155,7 +161,13 @@ const InterviewRequests = () => {
     onError: async (err) => {
       console.error("Failed to accept interview request", err);
 
-      if (
+      if (err.response?.data?.alreadyBooked) {
+        // Interviewer has a scheduling conflict at this time
+        notify.warning(
+          err.response.data.message ||
+          "You already have an interview scheduled at this time. You are not available for this time slot.",
+        );
+      } else if (
         err.response?.status === 409 ||
         err.response?.data?.alreadyAccepted
       ) {
@@ -208,6 +220,25 @@ const InterviewRequests = () => {
   const capitalizeFirstLetter = (str) => {
     if (typeof str !== "string" || !str) return "";
     return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
+  // v1.0.6 - Check if scheduled time is within 5 minutes from now
+  const isWithin5MinutesOfSchedule = (dateTimeStr) => {
+    if (!dateTimeStr) return false;
+    try {
+      const startPart = dateTimeStr.split(" - ")[0].trim(); // "02-03-2026 12:53 PM"
+      const [datePart, timePart, ampm] = [startPart.split(" ")[0], startPart.split(" ")[1], startPart.split(" ")[2]];
+      const [dd, mm, yyyy] = datePart.split("-");
+      let [hh, min] = timePart.split(":").map(Number);
+      if (ampm?.toUpperCase() === "PM" && hh !== 12) hh += 12;
+      if (ampm?.toUpperCase() === "AM" && hh === 12) hh = 0;
+      const scheduledDate = new Date(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd), hh, min);
+      const now = new Date();
+      const diffMs = scheduledDate.getTime() - now.getTime();
+      return diffMs <= 5 * 60 * 1000; // within 5 minutes or already passed
+    } catch {
+      return false;
+    }
   };
 
 
@@ -346,13 +377,14 @@ const InterviewRequests = () => {
                           request.roundId,
                         )
                       }
-                      disabled={acceptingId === request.id}
-                      className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-md hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === request.id
-                        ? "opacity-60 cursor-wait"
+                      disabled={acceptingId === request.id || isWithin5MinutesOfSchedule(request.roundDetails?.dateTime)}
+                      title={isWithin5MinutesOfSchedule(request.roundDetails?.dateTime) ? "Cannot accept within 5 minutes of scheduled time" : ""}
+                      className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-md hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === request.id || isWithin5MinutesOfSchedule(request.roundDetails?.dateTime)
+                        ? "opacity-60 cursor-not-allowed"
                         : "cursor-pointer"
                         }`}
                     >
-                      {acceptingId === request.id ? "Accepting..." : "Accept"}
+                      {acceptingId === request.id ? "Accepting..." : isWithin5MinutesOfSchedule(request.roundDetails?.dateTime) ? "Expired" : "Accept"}
                     </button>
                   ) : (
                     <button
@@ -548,15 +580,16 @@ const InterviewRequests = () => {
                     selectedRequest.roundId,
                   )
                 }
-                disabled={acceptingId === selectedRequest.id}
-                className={`font-medium text-white bg-custom-blue hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === selectedRequest.id
-                  ? "opacity-60 cursor-wait"
+                disabled={acceptingId === selectedRequest.id || isWithin5MinutesOfSchedule(selectedRequest.roundDetails?.dateTime)}
+                title={isWithin5MinutesOfSchedule(selectedRequest.roundDetails?.dateTime) ? "Cannot accept within 5 minutes of scheduled time" : ""}
+                className={`font-medium text-white bg-custom-blue hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === selectedRequest.id || isWithin5MinutesOfSchedule(selectedRequest.roundDetails?.dateTime)
+                  ? "opacity-60 cursor-not-allowed"
                   : "cursor-pointer"
                   }`}
               >
                 {acceptingId === selectedRequest.id
                   ? "Accepting..."
-                  : "Accept"}
+                  : isWithin5MinutesOfSchedule(selectedRequest.roundDetails?.dateTime) ? "Expired" : "Accept"}
               </Button>
             ) : (
               <Button
@@ -688,13 +721,14 @@ const InterviewRequests = () => {
                         onClick={() =>
                           handleAccept(req.id, req.interviewerId, req.roundId)
                         }
-                        disabled={acceptingId === req.id}
-                        className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-md hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === req.id
-                          ? "opacity-60 cursor-wait"
+                        disabled={acceptingId === req.id || isWithin5MinutesOfSchedule(req.roundDetails?.dateTime)}
+                        title={isWithin5MinutesOfSchedule(req.roundDetails?.dateTime) ? "Cannot accept within 5 minutes of scheduled time" : ""}
+                        className={`px-2.5 py-1 text-xs font-medium text-white bg-custom-blue rounded-md hover:bg-custom-blue/80 transition-colors duration-300 ${acceptingId === req.id || isWithin5MinutesOfSchedule(req.roundDetails?.dateTime)
+                          ? "opacity-60 cursor-not-allowed"
                           : "cursor-pointer"
                           }`}
                       >
-                        {acceptingId === req.id ? "Accepting..." : "Accept"}
+                        {acceptingId === req.id ? "Accepting..." : isWithin5MinutesOfSchedule(req.roundDetails?.dateTime) ? "Expired" : "Accept"}
                       </button>
                     ) : (
                       <button

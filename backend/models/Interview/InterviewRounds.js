@@ -267,6 +267,9 @@ interviewRoundSchema.post("findOneAndUpdate", async function (doc) {
 const {
   scheduleOrRescheduleNoShow,
 } = require("../../services/interviews/roundNoShowScheduler");
+const {
+  updateSchedulingStatus,
+} = require("../../services/interviewerSchedulingService");
 
 // After create
 interviewRoundSchema.post("save", async function (doc) {
@@ -286,10 +289,6 @@ interviewRoundSchema.post("save", async function (doc) {
 
 // After update
 interviewRoundSchema.post("findOneAndUpdate", async function (doc) {
-  // if (doc) {
-  //   await scheduleOrRescheduleNoShow(doc);
-  // }
-
   if (!doc) return;
 
   // Check if the update was for scheduling-relevant fields
@@ -297,15 +296,28 @@ interviewRoundSchema.post("findOneAndUpdate", async function (doc) {
   const isSchedulingUpdate =
     update.$set?.dateTime ||
     update.$set?.status ||
+    update?.status ||
     update.$set?.interviewerType;
 
   // Skip if only noShowJobId was updated
-  if (!isSchedulingUpdate && update.$set?.noShowJobId) {
+  if (!isSchedulingUpdate && (update.$set?.noShowJobId || update?.noShowJobId)) {
     return;
   }
 
   if (isSchedulingUpdate) {
     await scheduleOrRescheduleNoShow(doc);
+  }
+
+  // v1.0.1 - Update InterviewerScheduling when round reaches terminal status
+  try {
+    const currentStatus = doc.status;
+    const cancelledStatuses = ["Completed", "Cancelled", "NoShow", "InCompleted", "Incomplete"];
+    if (cancelledStatuses.includes(currentStatus)) {
+      await updateSchedulingStatus(doc._id, currentStatus, doc.currentActionReason || "");
+      console.log(`[InterviewRounds hook] InterviewerScheduling updated to ${currentStatus} for round ${doc._id}`);
+    }
+  } catch (schedError) {
+    console.error("[InterviewRounds hook] Error updating InterviewerScheduling:", schedError);
   }
 });
 

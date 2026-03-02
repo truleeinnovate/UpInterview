@@ -29,6 +29,7 @@ import {
   getInterviewerColumns,
   getInterviewerActions,
 } from "../../../../utils/tableColumnAndActionData.jsx";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 // Card Component for Kanban View
 export const InterviewerCard = ({
@@ -309,6 +310,10 @@ const Interviewers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const ITEMS_PER_PAGE = 10;
+
+  // Title ----------------------------------------
+  useTitle("Interviewers");
+  // Title ----------------------------------------
 
   const [filters, setFilters] = useState({
     type: "",

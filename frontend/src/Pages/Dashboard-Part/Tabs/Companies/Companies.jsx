@@ -18,6 +18,7 @@ import {
   getCompanyColumns,
   getCompanyActions,
 } from "../../../../utils/tableColumnAndActionData.jsx";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -99,6 +100,10 @@ const Companies = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const filterIconRef = useRef(null);
+
+  // Title ----------------------------------------
+  useTitle("Companies");
+  // Title ----------------------------------------
 
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState(null);

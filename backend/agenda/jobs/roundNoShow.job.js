@@ -1,6 +1,7 @@
 const { InterviewRounds } = require("../../models/Interview/InterviewRounds");
 const { MockInterviewRound } = require("../../models/Mockinterview/mockinterviewRound");
 const { processAutoSettlement } = require("../../utils/interviewWalletUtil");
+const { updateSchedulingStatus } = require("../../services/interviewerSchedulingService");
 
 module.exports = (agenda) => {
   agenda.define(
@@ -119,6 +120,14 @@ async function processNoShow(isMock, Model, roundId) {
   }
 
   console.log("[NoShow-Job] ✅ Status updated to NoShow | reason:", reasonCode);
+
+  // Update InterviewerScheduling status to NoShow
+  try {
+    await updateSchedulingStatus(roundId, "NoShow", reasonCode);
+    console.log("[NoShow-Job] ✅ InterviewerScheduling updated to NoShow for round:", roundId);
+  } catch (schedError) {
+    console.error("[NoShow-Job] ❌ Error updating InterviewerScheduling:", schedError.message);
+  }
 
   // Auto-settlement for scheduler-triggered NoShow
   try {

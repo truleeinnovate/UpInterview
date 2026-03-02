@@ -35,6 +35,7 @@ import {
   getSupportTicketColumns,
   getSupportTicketActions,
 } from "../../../../utils/tableColumnAndActionData.jsx";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -195,6 +196,10 @@ function SupportDesk() {
 
   const totalPages = Math.ceil(tickets?.totalCount / itemsPerPage);
   const currentFilteredRows = tickets?.tickets || [];
+
+  // Title ----------------------------------------
+  useTitle("Support Desk");
+  // Title ----------------------------------------
 
   // v1.0.4 <-----------------------------------------------------------
   const isTablet = useMediaQuery({ maxWidth: 1024 });

@@ -41,6 +41,7 @@ import {
 } from "../../../../utils/tableColumnAndActionData.jsx";
 import { getStatusBadgeColor } from "../CommonCode-AllTabs/StatusBadge.jsx";
 import { getInterviewStatusLabel } from "../../../../VideoSDK1/utils/common.js";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 // v1.0.5 <----------------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -174,6 +175,10 @@ const MockInterview = () => {
   const filterIconRef = useRef(null);
   const updateRoundStatus = useUpdateRoundStatus();
 
+  // Title ----------------------------------------
+  useTitle("Mock Interviews");
+  // Title ----------------------------------------
+
   const { mockinterviewData, loading, totalCount, totalPages } =
     useMockInterviews({
       search: searchQuery,
@@ -185,7 +190,6 @@ const MockInterview = () => {
   useScrollLock(reschedule || cancelSchedule || viewMode === "kanban");
 
   useEffect(() => {
-    document.title = "Mockinterview Tab";
     const handleResize = () => {
       setViewMode(window.innerWidth < 1024 ? "kanban" : "table");
     };
