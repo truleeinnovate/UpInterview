@@ -6,6 +6,7 @@
 // v1.0.5  -  Ashraf - added the notification section for individual, individual freelancer and admin
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { TrendingUp, AlertCircle, UserCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import WelcomeSection from "./WelcomeSection";
@@ -31,8 +32,13 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js"
 import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import { useOutsourceStatus } from "../../../../apiHooks/superAdmin/useOutsourceInterviewers.js";
 import OutsourceInterviewerRequestStatus from "./OutsourceInterviewerRequestStatus";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
+import GlobalBanner from "../../../../Components/GlobalBanner/GlobalBanner.jsx";
+import { useBanner } from "../../../../Context/BannerProvider.js";
+
 const Home = () => {
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const navigate = useNavigate();
 
   const isOrganization = tokenPayload?.organization;
   const ownerId = tokenPayload?.userId;
@@ -49,10 +55,18 @@ const Home = () => {
   const isIndividualFreelancer =
     effectivePermissions_RoleName === "Individual_Freelancer";
   const isIndividual = effectivePermissions_RoleName === "Individual";
+
+  // Banner
+  const { bannerConfig, hideBanner, showBanner } = useBanner();
+
   // Disabled outer scrollbar when outsource and interviewers popup open
   // v1.0.2 <-----------------------------------------------
   useScrollLock(showOutsourcePopup || isInternalInterviews);
   // v1.0.2 ----------------------------------------------->
+
+  // Title --------------------------------------------
+  useTitle("Dashboard");
+  // --------------------------------------------------
 
   //<----v1.0.3--------
   // Dynamic Pending Feedback count (status === 'draft')
@@ -72,6 +86,18 @@ const Home = () => {
   //   (f) => String(f?.status || "").toLowerCase() === "draft"
   // ).length;
   //----v1.0.3-------->
+
+  useEffect(() => {
+  if (pendingDraftCount > 0) {
+    showBanner({
+      title: "Pending Feedback",
+      message: `You have ${pendingDraftCount} drafts to complete.`,
+      type: "warning",
+      actionLabel: "View Feedbacks",
+      onActionClick: () => navigate("/feedback")
+    });
+  }
+}, [pendingDraftCount]);
 
   const [stats, setStats] = useState({
     totalInterviews: 0,
@@ -101,6 +127,13 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-white">
+      {bannerConfig && (
+        <GlobalBanner
+          {...bannerConfig}
+          onClose={hideBanner}
+          isDismissible={true}
+        />
+      )}
       {/* <---------v1.0.0 */}
       {/* v1.0.3 <----------------------------------------------------------------------------------- */}
       {/* <main className="pb-8 px-4 lg:px-8 xl:px-12 2xl:px-16 mx-auto" style={{ maxWidth: '1400px' }}> */}
@@ -113,7 +146,7 @@ const Home = () => {
           transition={{ duration: 0.5 }}
           // <---------v1.0.0
           className="space-y-6 lg:space-y-8"
-        // v1.0.0 ----------->
+          // v1.0.0 ----------->
         >
           <WelcomeSection
             selectedFilter={selectedFilter}
@@ -130,7 +163,7 @@ const Home = () => {
         <div className="flex flex-col lg:flex-row xl:flex-row 2xl:flex-row gap-6 lg:gap-8">
           {/* Main Content Area */}
           {/* <---------v1.0.0 */}
-          <div className="flex-1 space-y-6 lg:space-y-8">
+          <div className="flex-1 space-y-6 lg:space-y-8 xl:space-y-8 2xl:space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 lg:gap-6">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -202,7 +235,7 @@ const Home = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             // <---------v1.0.0
             className="lg:w-96 xl:w-[420px] 2xl:w-[450px] flex-shrink-0 space-y-6 lg:space-y-8"
-          // v1.0.0 ----------->
+            // v1.0.0 ----------->
           >
             <TaskList />
             <InterviewerSchedule />

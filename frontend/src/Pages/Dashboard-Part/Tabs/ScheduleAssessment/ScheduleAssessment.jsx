@@ -62,6 +62,8 @@ import {
   getScheduleAssessmentColumns,
   getScheduleAssessmentActions,
 } from "../../../../utils/tableColumnAndActionData.jsx";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
+
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -181,6 +183,10 @@ const ScheduleAssessment = () => {
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
   const filterIconRef = useRef(null);
+
+  // Title ----------------------------------------
+  useTitle("Assessments");
+  // Title ----------------------------------------
 
   // Filter state
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);

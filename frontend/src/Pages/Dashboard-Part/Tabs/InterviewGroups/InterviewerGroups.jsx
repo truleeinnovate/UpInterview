@@ -653,6 +653,7 @@ import {
   getTeamColumns,
   getTeamActions,
 } from "../../../../utils/tableColumnAndActionData.jsx";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -731,6 +732,10 @@ const MyTeams = () => {
   const navigate = useNavigate();
   const { effectivePermissions } = usePermissions();
   const filterIconRef = useRef(null);
+
+  // Title ----------------------------------------
+  useTitle("My Teams");
+  // Title ----------------------------------------
 
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");

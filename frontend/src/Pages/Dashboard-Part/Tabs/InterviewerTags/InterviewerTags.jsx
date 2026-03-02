@@ -374,6 +374,7 @@ import {
   getTagColumns,
   getTagActions,
 } from "../../../../utils/tableColumnAndActionData.jsx";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -452,6 +453,10 @@ const InterviewerTags = () => {
   const navigate = useNavigate();
   const { effectivePermissions } = usePermissions();
   const filterIconRef = useRef(null);
+
+  // Title ----------------------------------------
+  useTitle("Interviewer Tags");
+  // Title ----------------------------------------
 
   // --- API DATA ---
   const { data: tags = [], isLoading, refetch } = useInterviewerTags();

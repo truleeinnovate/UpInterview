@@ -45,7 +45,7 @@ import {
   getFeedbackActions,
 } from "../../../../utils/tableColumnAndActionData.jsx";
 import { Button } from "../../../../Components/Buttons/Button.jsx";
-
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 const Feedback = () => {
   const navigate = useNavigate();
@@ -60,6 +60,10 @@ const Feedback = () => {
   //   feedbacksDataLength: feedbacksData?.length || 0,
   // });
   // ------------------------------v1.0.3 >
+
+  // Title ----------------------------------------
+  useTitle("Feedback");
+  // Title ----------------------------------------
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -163,7 +167,6 @@ const Feedback = () => {
   const endIndex = startIndex + rowsPerPage;
 
   useEffect(() => {
-    document.title = "Feedback";
     const handleResize = () => {
       setViewMode(window.innerWidth < 1024 ? "kanban" : "table");
     };

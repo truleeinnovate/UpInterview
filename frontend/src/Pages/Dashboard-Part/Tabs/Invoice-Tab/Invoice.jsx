@@ -33,6 +33,7 @@ import { formatDateTime } from "../../../../utils/dateFormatter";
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 // v1.0.6 <----------------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -147,6 +148,10 @@ const InvoiceTab = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [billingData, setBillingData] = useState([]);
+
+  // Title ----------------------------------------
+  useTitle("Invoices");
+  // Title ----------------------------------------
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -436,10 +441,6 @@ const InvoiceTab = () => {
       setFilterPopupOpen((prev) => !prev);
     }
   };
-
-  useEffect(() => {
-    document.title = "Invoice Tab";
-  }, []);
 
   const [viewMode, setViewMode] = useState("table");
 

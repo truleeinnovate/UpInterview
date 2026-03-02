@@ -8,6 +8,7 @@ import { Plus, XCircle } from "lucide-react";
 import { usePermissions } from "../../../../Context/PermissionsContext";
 import { usePermissionCheck } from "../../../../utils/permissionUtils";
 import { Button } from "../../../../Components/Buttons/Button.jsx";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 const QuestionBank = ({
   assessmentId,
@@ -35,6 +36,10 @@ const QuestionBank = ({
   const [activeTab, setActiveTab] = useState("SuggesstedQuestions");
   const [interviewQuestionsList, setInterviewQuestionsList] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Title ----------------------------------------
+  useTitle("Question Bank");
+  // Title ----------------------------------------
 
   // console.log("interviewQuestionsLists", interviewQuestionsLists);
 
