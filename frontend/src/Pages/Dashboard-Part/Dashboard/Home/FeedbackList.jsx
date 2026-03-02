@@ -14,6 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { useFeedbacks } from "../../../../apiHooks/useFeedbacks.js"; //<-------v1.0.0--------
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 
 const FeedbackList = () => {
   const navigate = useNavigate();
@@ -179,21 +180,20 @@ const FeedbackList = () => {
                   <div>
                     <div className="flex items-center space-x-3 mb-2">
                       <h4 className="text-sm font-semibold text-gray-900">
-                        {candidateName}
+                        {capitalizeFirstLetter(candidateName)}
                       </h4>
                       <div className="flex gap-2">
                         {recommendation && (
                           <span
                             className={`px-2.5 py-1 rounded-lg text-xs font-medium ${badgeClasses}`}
                           >
-                            {String(recommendation).charAt(0).toUpperCase() +
-                              String(recommendation).slice(1)}
+                            {capitalizeFirstLetter(recommendation)}
                           </span>
                         )}
                         <span
                           className={`px-2.5 py-1 rounded-lg text-xs font-medium ${statusBadge}`}
                         >
-                          {statusLabel}
+                          {capitalizeFirstLetter(statusLabel)}
                         </span>
                       </div>
                     </div>
@@ -214,7 +214,7 @@ const FeedbackList = () => {
                 <div className="space-y-4">
                   <div className="flex items-start space-x-3">
                     <MessageSquare size={18} className="text-gray-400 mt-1" />
-                    <p className="text-sm text-gray-700">{feedbackNote}</p>
+                    <p className="text-sm text-gray-700 break-all min-w-0">{capitalizeFirstLetter(feedbackNote)}</p>
                   </div>
 
                   {(strengths.length > 0 || improvements.length > 0) && (
@@ -233,7 +233,7 @@ const FeedbackList = () => {
                                 key={idx}
                                 className="text-xs bg-green-50 text-green-600 px-2.5 py-1 rounded-lg"
                               >
-                                {s}
+                                {capitalizeFirstLetter(s)}
                               </span>
                             ))}
                           </div>
@@ -253,7 +253,7 @@ const FeedbackList = () => {
                                 key={idx}
                                 className="text-xs bg-orange-50 text-orange-600 px-2.5 py-1 rounded-lg"
                               >
-                                {s}
+                                {capitalizeFirstLetter(s)}
                               </span>
                             ))}
                           </div>

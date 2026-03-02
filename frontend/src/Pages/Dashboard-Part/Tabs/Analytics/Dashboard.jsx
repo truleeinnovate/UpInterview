@@ -29,8 +29,14 @@ import {
 import { useInterviews } from "../../../../apiHooks/useInterviews";
 import { useOutsourceInterviewers } from "../../../../apiHooks/superAdmin/useOutsourceInterviewers";
 import { useScheduleAssessments } from "../../../../apiHooks/useScheduleAssessments";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 const Dashboard = () => {
+
+  // Title ----------------------------------------
+  useTitle("Analytics");
+  // Title ----------------------------------------
+
   // --------------------------------------------------------------------------------------------
   // Interviews
   const type = "analytics";

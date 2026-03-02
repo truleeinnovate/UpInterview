@@ -2,9 +2,9 @@ import React from "react";
 import {
   Info,
   AlertTriangle,
-  ExternalLink,
   CheckCircle,
   AlertCircle,
+  ArrowUpRight,
 } from "lucide-react";
 
 const GlobalBanner = ({
@@ -80,7 +80,7 @@ const GlobalBanner = ({
               onClick={onActionClick}
               className={`flex items-center gap-1.5 text-sm font-bold underline underline-offset-4 hover:opacity-70 whitespace-nowrap ${currentStyle.iconColor}`}
             >
-              {actionLabel} <ExternalLink className="w-4 h-4" />
+              {actionLabel} <ArrowUpRight className="w-4 h-4" />
             </button>
           )}
         </div>

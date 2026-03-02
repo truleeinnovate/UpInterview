@@ -58,6 +58,7 @@ import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/c
 import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyStateMessage.js";
 // v1.0.8 <-----------------------------------------------------------------------
 import { formatDateTime } from "../../../../utils/dateFormatter.js";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
   const [isKanbanMoreOpen, setIsKanbanMoreOpen] = useState(false);
@@ -210,6 +211,10 @@ const Task = () => {
   const [isAssignedDropdownOpen, setIsAssignedDropdownOpen] = useState(false);
   const [assignedSearch, setAssignedSearch] = useState("");
   const [selectedTaskId, setSelectedTaskId] = useState(null);
+
+  // Title --------------------------------------------
+  useTitle("Tasks");
+  // --------------------------------------------------
 
   // Server-side pagination & filters
   const {

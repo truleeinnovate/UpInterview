@@ -18,6 +18,7 @@ import "./topupAnimation.css";
 import { usePermissionCheck } from "../../../../../utils/permissionUtils";
 import { useWallet } from "../../../../../apiHooks/useWallet"; //<----v1.0.0-----
 import { useWalletTransactions } from "../../../../../apiHooks/useWalletTransactions";
+import { useTitle } from "../../../../../apiHooks/Title/useTitle.js";
 
 export const getTransactionTypeStyle = (type) => {
   const t = (type || "").toString().toLowerCase();
@@ -62,6 +63,10 @@ const Wallet = () => {
   const context = useOutletContext();
   const typeFrom = context?.typeFrom;
   // --------------------FOR PADDING-------------------------
+
+  // Title ----------------------------------------
+  useTitle("Wallet");
+  // Title ----------------------------------------
 
   const handleRefetch = useCallback(async () => {
     setIsRefetching(true);

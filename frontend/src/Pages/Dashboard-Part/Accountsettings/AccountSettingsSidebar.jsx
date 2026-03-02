@@ -28,6 +28,8 @@ import {
   VideoCameraIcon,
 } from "@heroicons/react/24/outline";
 import Loading from "../../../Components/Loading";
+import { useTitle } from "../../../apiHooks/Title/useTitle.js";
+
 
 const AccountSettingsSidebar = () => {
   const { checkPermission, isInitialized, loading } = usePermissionCheck();
@@ -123,6 +125,26 @@ const AccountSettingsSidebar = () => {
     "sub-domain": "Subdomain",
     "integration-hub": "Integration",
   };
+
+  const tabTitleMap = {
+    "profile": "Company Profile",
+    "my-profile": "My Profile",
+    "billing-details": "Billing",
+    "subscription": "Subscription",
+    "wallet": "Wallet",
+    "security": "Security",
+    "usage": "Usage",
+    "users": "Users",
+    "roles": "Roles",
+    "video-calling-settings": "Video Calling",
+    "sharing": "Sharing Settings",
+    "sub-domain": "Subdomain Management",
+    "email-settings": "Notifications",
+    "notifications": "Notification Settings",
+    "integration-hub": "HRMS/ATS Integration",
+  };
+
+  useTitle(tabTitleMap[activeTab] || "Account Settings");
 
   // Filter navigation based on user type and permissions using useCallback
   const filterNavigation = useCallback(() => {

@@ -13,7 +13,7 @@
 // v2.0.2  -  Ashok   -  added common kanban
 // v2.0.3  -  Ashok   -  added common code for empty state messages when fetch, search and filter etc.
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -60,6 +60,7 @@ import { getEmptyStateMessage } from "../../../../utils/EmptyStateMessage/emptyS
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import CandidateBulkUpload from "./CandidateBulkUpload.jsx";
 import { getCandidateColumns, getCandidateActions } from "../../../../utils/tableColumnAndActionData.jsx";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 // v2.0.1 <-----------------------------------------------------------------------
 const KanbanActionsMenu = ({ item, kanbanActions }) => {
@@ -264,6 +265,10 @@ function Candidate({
 
   // v1.0.7 -------------------------------------------------------->
   // v1.0.6 -------------------------------------------------------->
+
+  // Title -------------------------------------------------
+  useTitle("Candidates");
+  // Title -------------------------------------------------
 
   const isCandidateCancelled = (candidate) => {
     const status = candidate?.status;

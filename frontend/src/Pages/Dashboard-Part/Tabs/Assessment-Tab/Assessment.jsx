@@ -47,6 +47,7 @@ import {
   getAssessmentTemplateColumns,
   getAssessmentTemplateActions,
 } from "../../../../utils/tableColumnAndActionData.jsx";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 const ConfirmationDialog = ({ open, onClose, onConfirm, title, message }) => (
   <Dialog
@@ -100,6 +101,10 @@ const Assessment = () => {
   // All hooks at the top
   const { effectivePermissions, isInitialized } = usePermissions();
   // <---------------------- v1.0.2
+
+  // Title ----------------------------------------
+  useTitle("Assessment Templates");
+  // Title ----------------------------------------
 
   // <---------------------- v1.0.2 >
   const { positionData } = usePositions();
@@ -182,7 +187,6 @@ const Assessment = () => {
 
   // <---------------------- v1.0.0
   useEffect(() => {
-    document.title = "Assessment Template";
     const handleResize = () => {
       setViewMode(window.innerWidth < 1024 ? "kanban" : "table");
     };

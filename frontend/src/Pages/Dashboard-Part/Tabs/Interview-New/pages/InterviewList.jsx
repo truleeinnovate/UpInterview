@@ -37,6 +37,7 @@ import DeleteConfirmModal from "../../CommonCode-AllTabs/DeleteConfirmModal.jsx"
 import { notify } from "../../../../../services/toastService.js";
 import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter.js";
 import { getEmptyStateMessage } from "../../../../../utils/EmptyStateMessage/emptyStateMessage.js";
+import { useTitle } from "../../../../../apiHooks/Title/useTitle.js";
 
 const InterviewList = ({ interviews, isPositionView }) => {
   const isEmbedded = isPositionView;
@@ -50,6 +51,10 @@ const InterviewList = ({ interviews, isPositionView }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
+
+  // Title ----------------------------------------
+  useTitle("Interviews");
+  // Title ----------------------------------------
 
   const rowsPerPage = 10;
   const [selectedFilters, setSelectedFilters] = useState({

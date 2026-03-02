@@ -36,6 +36,7 @@ import SidebarPopup from "../../../../Components/Shared/SidebarPopup/SidebarPopu
 import StatusBadge from "../../../../Components/SuperAdminComponents/common/StatusBadge";
 // v1.0.3 ---------------------------------------------------------------------->
 import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 
 const UserInvoiceDetails = () => {
   const navigate = useNavigate();
@@ -51,9 +52,9 @@ const UserInvoiceDetails = () => {
   useScrollLock(true);
   // v1.0.0 ------------------------------------------------------>
 
-  useEffect(() => {
-    document.title = "Invoice Details";
-  }, []);
+  // Title ----------------------------------------
+  useTitle("Invoice Details");
+  // Title ----------------------------------------
 
   // const handleEditClick = () => {
   //   setUserToEdit(invoiceData);
@@ -81,7 +82,7 @@ const UserInvoiceDetails = () => {
   // v1.0.3 <---------------------------------------------------------------------
   return (
     <SidebarPopup title="Invoice Details" onClose={() => navigate(-1)}>
-      <div className="sm:p-0 p-6">
+      <div className="pb-6">
         <div className="text-left">
           {" "}
           {/* Added text-left here */}

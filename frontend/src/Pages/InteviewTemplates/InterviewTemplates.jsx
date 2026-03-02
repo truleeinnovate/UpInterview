@@ -29,10 +29,15 @@ import {
   getInterviewTemplateColumns,
   getInterviewTemplateActions,
 } from "../../utils/tableColumnAndActionData.jsx";
+import { useTitle } from "../../apiHooks/Title/useTitle.js";
 
 const InterviewTemplates = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // Title ----------------------------------------
+  useTitle("Interview Templates");
+  // Title ----------------------------------------
 
   const itemsPerPage = 10;
   const [activeTab, setActiveTab] = useState(
