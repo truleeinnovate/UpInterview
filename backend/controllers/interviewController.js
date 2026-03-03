@@ -1644,7 +1644,7 @@ const getInterviewDataforOrg = async (req, res) => {
     let interview = await Interview.findById(finalInterviewId)
       .populate({
         path: "candidateId",
-        select: "FirstName LastName Email",
+        select: "FirstName LastName Email ImageData",
       })
       .populate({
         path: "positionId",
@@ -1677,7 +1677,8 @@ const getInterviewDataforOrg = async (req, res) => {
           CurrentRole: activeResume.CurrentRole,
           skills: activeResume.skills,
           CurrentExperience: activeResume.CurrentExperience,
-          ImageData: activeResume.ImageData,
+          // Only override ImageData if Resume actually has one, otherwise keep candidate's own
+          ImageData: activeResume.ImageData || interview.candidateId.ImageData,
         };
       }
     }

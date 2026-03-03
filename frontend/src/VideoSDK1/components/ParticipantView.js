@@ -427,10 +427,22 @@ export function ParticipantView({ participantId }) {
   const videoRef = useRef(null);
   const [mouseOver, setMouseOver] = useState(false);
 
+  // Parse displayName for encoded profile image URL (format: "Name|||imageUrl")
+  const [actualName, profileImageUrl] = useMemo(() => {
+    const name = String(displayName || '');
+    if (name.includes('|||')) {
+      const parts = name.split('|||');
+      return [parts[0], parts[1]];
+    }
+    return [name, null];
+  }, [displayName]);
+
   // Check if this participant has raised hand
   const isHandRaised = raisedHandsParticipants?.some(
     (item) => item.participantId === participantId
   );
+
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     const isFirefox =
@@ -516,18 +528,27 @@ export function ParticipantView({ participantId }) {
       ) : (
         <div className="h-full w-full flex items-center justify-center">
           <div
-            className={`z-10 flex items-center justify-center rounded-full bg-gray-800 2xl:h-[92px] h-[52px] 2xl:w-[92px] w-[52px]`}
+            className={`z-10 flex items-center justify-center rounded-full bg-gray-800 2xl:h-[92px] h-[52px] 2xl:w-[92px] w-[52px] overflow-hidden`}
           >
-            <p className="text-2xl text-white">
-              {String(displayName).charAt(0).toUpperCase()}
-            </p>
+            {profileImageUrl && !imgError ? (
+              <img
+                src={profileImageUrl}
+                alt={actualName}
+                className="w-full h-full object-cover"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <p className="text-2xl text-white">
+                {String(actualName).charAt(0).toUpperCase()}
+              </p>
+            )}
           </div>
         </div>
       )}
       <CornerDisplayName
         {...{
           isLocal,
-          displayName,
+          displayName: actualName,
           micOn,
           webcamOn,
           isPresenting: false,
