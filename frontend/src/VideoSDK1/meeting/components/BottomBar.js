@@ -156,7 +156,7 @@ const MicBTN = () => {
                       leaveFrom="opacity-100 translate-y-0"
                       leaveTo="opacity-0 translate-y-1"
                     >
-                      <Popover.Panel className="absolute left-1/2 bottom-full z-10 mt-3 w-72 -translate-x-1/2 transform px-4 sm:px-0 pb-4">
+                      <Popover.Panel className="absolute left-1/2 bottom-full z-50 mt-3 w-72 -translate-x-1/2 transform px-4 sm:px-0 pb-4">
                         <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
                           <div className={" bg-white py-1"}>
                             <div>
@@ -343,7 +343,7 @@ const WebCamBTN = () => {
                       leaveFrom="opacity-100 translate-y-0"
                       leaveTo="opacity-0 translate-y-1"
                     >
-                      <Popover.Panel className="absolute left-1/2 bottom-full z-10 mt-3 w-72 -translate-x-1/2 transform px-4 sm:px-0 pb-4">
+                      <Popover.Panel className="absolute left-1/2 bottom-full z-50 mt-3 w-72 -translate-x-1/2 transform px-4 sm:px-0 pb-4">
                         <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
                           <div className={" bg-white py-1"}>
                             <div>
@@ -686,7 +686,7 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = fals
   };
 
   return (
-    <div className="relative flex items-center justify-between px-4 py-2 bg-gray-800 border-gray-600 h-16">
+    <div className="relative z-40 flex items-center justify-between px-4 py-2 bg-gray-800 border-gray-600 h-16">
       {/* Left side - Meeting ID */}
       <div className="flex items-center">
         {/* <MeetingIdCopyBTN /> */}

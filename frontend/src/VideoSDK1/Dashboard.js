@@ -135,12 +135,12 @@ const Dashboard = () => {
     const graceEnd = new Date(startTime.getTime() + (durationMin + 10) * 60 * 1000);
     const now = new Date();
 
-    console.log("[Dashboard] Meeting expiry check:", {
-      startTime: startTime.toLocaleString(),
-      graceEnd: graceEnd.toLocaleString(),
-      now: now.toLocaleString(),
-      expired: now > graceEnd,
-    });
+    // console.log("[Dashboard] Meeting expiry check:", {
+    //   startTime: startTime.toLocaleString(),
+    //   graceEnd: graceEnd.toLocaleString(),
+    //   now: now.toLocaleString(),
+    //   expired: now > graceEnd,
+    // });
 
     return now > graceEnd;
   }, [interviewRoundData?.dateTime, interviewRoundData?.duration]);
@@ -149,20 +149,23 @@ const Dashboard = () => {
     candidateData?.FirstName || candidateData?.LastName
     ? candidateData?.FirstName + " " + candidateData?.LastName
     : candidateData?.candidateName
-  // &&
-  // (candidateData?.FirstName || "") + " " + (candidateData?.LastName || "")
-  // : (interviewRoundData?.interviewers?.[0]?.FirstName || interviewRoundData?.interviewers?.[0]?.firstName || "") +
-  // " " +
-  // (interviewRoundData?.interviewers?.[0]?.LastName || interviewRoundData?.interviewers?.[0]?.lastName || "");
 
   const interviwerName = !urlData?.isCandidate &&
     (singleContact?.firstName || "") +
     " " +
     (singleContact?.lastName || "");
 
-  const FinalName = urlData?.isCandidate ? NameCandidate : interviwerName
+  const FinalName = urlData?.isCandidate ? NameCandidate : interviwerName;
 
-  // console.log("interviewRoundData1", interviewRoundData);
+  // Profile image URL — encode into name as "Name|||imageUrl" for ParticipantView
+  // Candidate model uses "ImageData" (capital), Contacts model uses "imageData" (lowercase)
+  const profileImageUrl = urlData?.isCandidate
+    ? candidateData?.ImageData?.path || candidateData?.imageData?.path || ''
+    : singleContact?.imageData?.path || '';
+
+  const nameWithImage = profileImageUrl
+    ? `${FinalName}|||${profileImageUrl}`
+    : FinalName;
 
   // const interviewRoundData = interviewData?.rounds[0] || {};
 
@@ -589,7 +592,11 @@ const Dashboard = () => {
               meetingId,
               micEnabled: micOn,
               webcamEnabled: webcamOn,
-              name: candidateData?.LastName || contactData?.name,
+              name: (() => {
+                const baseName = candidateData?.LastName || contactData?.name || '';
+                const imgPath = contactData?.imageData?.path || contactData?.ImageData?.path || '';
+                return imgPath ? `${baseName}|||${imgPath}` : baseName;
+              })(),
               multiStream: false,
               // High-quality audio with noise cancellation
               micMediaStreamConstraints: {
@@ -599,6 +606,14 @@ const Dashboard = () => {
                   autoGainControl: true,
                   sampleRate: 48000,
                   channelCount: 1,
+                }
+              },
+              // HD video quality
+              webcamMediaStreamConstraints: {
+                video: {
+                  width: { ideal: 1280 },
+                  height: { ideal: 720 },
+                  frameRate: { ideal: 30 },
                 }
               },
             }}
@@ -695,7 +710,7 @@ const Dashboard = () => {
                   webcamEnabled: false, // Start with webcam off
                   // name: candidateData?.LastName || contactData?.name,
                   // name: candidateData?.LastName,
-                  name: FinalName,
+                  name: nameWithImage,
                   multiStream: true,
                   defaultAudioDevice: {
                     deviceId: "default",
@@ -713,6 +728,14 @@ const Dashboard = () => {
                       autoGainControl: true,
                       sampleRate: 48000,
                       channelCount: 1,
+                    }
+                  },
+                  // HD video quality
+                  webcamMediaStreamConstraints: {
+                    video: {
+                      width: { ideal: 1280 },
+                      height: { ideal: 720 },
+                      frameRate: { ideal: 30 },
                     }
                   },
                 }}

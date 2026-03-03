@@ -97,17 +97,15 @@ export const OutlinedButton = ({
         }}
       >
         <div
-          className={`flex items-center justify-center  rounded-lg ${
-            bgColor ? `${bgColor}` : isFocused ? "bg-white" : "bg-gray-750"
-          } ${
-            mouseOver
+          className={`flex items-center justify-center  rounded-lg ${bgColor ? `${bgColor}` : isFocused ? "bg-white" : "bg-gray-750"
+            } ${mouseOver
               ? "border-2 border-transparent border-solid"
               : borderColor
-              ? `border-2 border-[${borderColor}] border-solid`
-              : bgColor
-              ? "border-2 border-transparent border-solid"
-              : "border-2 border-solid border-[#ffffff33]"
-          } md:m-2 m-1`}
+                ? `border-2 border-[${borderColor}] border-solid`
+                : bgColor
+                  ? "border-2 border-transparent border-solid"
+                  : "border-2 border-solid border-[#ffffff33]"
+            } md:m-2 m-1`}
           style={{
             transition: "all 200ms",
             transitionTimingFunction: "ease-in-out",
@@ -115,9 +113,8 @@ export const OutlinedButton = ({
           }}
         >
           <button
-            className={`${
-              disabled ? "cursor-default" : "cursor-pointer"
-            } flex items-center justify-center`}
+            className={`${disabled ? "cursor-default" : "cursor-pointer"
+              } flex items-center justify-center`}
             id={btnID}
             onMouseEnter={() => {
               setMouseOver(true);
@@ -173,8 +170,8 @@ export const OutlinedButton = ({
                         color: isFocused
                           ? focusIconColor || "#1C1F2E"
                           : color
-                          ? color
-                          : "#fff",
+                            ? color
+                            : "#fff",
                         height: iconSize,
                         width: iconSize,
                       }}
@@ -182,15 +179,14 @@ export const OutlinedButton = ({
                         isFocused
                           ? focusIconColor || "#1C1F2E"
                           : color
-                          ? color
-                          : "#fff"
+                            ? color
+                            : "#fff"
                       }
                     />
                     {badge && (
                       <p
-                        className={`${
-                          isFocused ? "text-black" : "text-white"
-                        } text-base ml-2`}
+                        className={`${isFocused ? "text-black" : "text-white"
+                          } text-base ml-2`}
                       >
                         {badge}
                       </p>
@@ -209,9 +205,8 @@ export const OutlinedButton = ({
       </div>
       <div
         style={{ zIndex: 999 }}
-        className={`${
-          tooltipShow && (mouseOver || mouseDown) ? "" : "hidden"
-        } overflow-hidden flex flex-col items-center justify-center whitespace-pre-line`}
+        className={`${tooltipShow && (mouseOver || mouseDown) ? "" : "hidden"
+          } overflow-hidden flex flex-col items-center justify-center whitespace-pre-line`}
         ref={tooltipRef}
       >
         <div className={"rounded-md p-1.5 bg-black "}>
