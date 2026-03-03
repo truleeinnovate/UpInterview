@@ -219,20 +219,20 @@ export const CornerDisplayName = ({
   return (
     <>
       <div
-        className="absolute bottom-2 left-2 rounded-md flex items-center justify-center p-2"
+        className="absolute bottom-2 right-2 rounded-md flex items-center justify-center px-2 py-1"
         style={{
-          backgroundColor: "#00000066",
+          backgroundColor: "#00000088",
           transition: "all 200ms",
           transitionTimingFunction: "linear",
-          transform: `scale(${show ? 1 : 0})`,
+          gap: 6,
         }}
       >
         {!micOn && !isPresenting ? (
-          <MicOffSmallIcon fillcolor="white" />
+          <MicOffSmallIcon fillcolor="#ef4444" />
         ) : micOn && isActiveSpeaker ? (
           <SpeakerIcon />
         ) : null}
-        <p className="text-sm text-white ml-0.5">
+        <p className="text-xs text-white" style={{ fontWeight: 500, letterSpacing: 0.3 }}>
           {isPresenting
             ? isLocal
               ? `You are presenting`
@@ -351,6 +351,7 @@ export const CornerDisplayName = ({
                                 {qualityStateArray.map((item, index) => {
                                   return (
                                     <div
+                                      key={index}
                                       className="flex"
                                       style={{
                                         borderBottom:
@@ -493,7 +494,13 @@ export function ParticipantView({ participantId }) {
       onMouseLeave={() => {
         setMouseOver(false);
       }}
-      className={`h-full w-full  bg-gray-750 relative overflow-hidden rounded-lg video-cover`}
+      className={`h-full w-full bg-gray-750 relative overflow-hidden rounded-lg video-cover`}
+      style={{
+        outline: isActiveSpeaker ? '2px solid #22c55e' : 'none',
+        outlineOffset: '-2px',
+        boxShadow: isActiveSpeaker ? '0 0 8px 1px rgba(34, 197, 94, 0.35)' : 'none',
+        transition: 'outline-color 0.3s ease, box-shadow 0.3s ease',
+      }}
     >
       <audio ref={micRef} muted={isLocal} />
       {webcamOn ? (
