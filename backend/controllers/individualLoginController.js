@@ -45,21 +45,15 @@ exports.individualLogin = async (req, res) => {
     if (isProfileCompleteStateOrg === true) {
       if (isSkip) {
         updatedUserData.isSkipped = true;
-        updatedUserData.status = 'active';
+        // updatedUserData.status = 'active';
       }
 
       // If NOT skipping, check if we should mark profile as completed
       if (!isSkip) {
         if (isInternalInterviewer) {
-          if (currentStep === 3) {
+          if (currentStep === 3 || currentStep === 1) {
             updatedUserData.isProfileCompleted = true;
-            updatedUserData.status = 'active';
-          }
-        } else {
-          // Others
-          if (currentStep === 1) {
-            updatedUserData.isProfileCompleted = true;
-            updatedUserData.status = 'active';
+            // updatedUserData.status = 'active';
           }
         }
       }

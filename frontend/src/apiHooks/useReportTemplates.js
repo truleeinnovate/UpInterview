@@ -48,7 +48,11 @@ export const useReportTemplates = () => {
 
 // 2. Generate Report
 const generateReport = async (templateId) => {
-  const { data } = await apiClient.get(`/analytics/generate/${templateId}`);
+  const { data } = await apiClient.get(`/analytics/generate/${templateId}`, {
+    headers: {
+      Authorization: `Bearer ${Cookies.get("authToken")}`,
+    },
+  });
   if (!data.success) throw new Error(data.message || "Failed to generate report");
   return data; // contains: report, columns, data
 };

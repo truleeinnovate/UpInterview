@@ -1,16 +1,18 @@
 // routes/analytics.js
 const express = require("express");
 const router = express.Router();
-const { getReportTemplates,generateReport,saveFilterPreset,getReportUsageStats,saveColumnConfig,getAllReportAccess,shareReport,createCategory,createTemplate } = require("../../controllers/AnalyticsController/analyticsController");
-router.get("/templates", getReportTemplates);
-router.get("/generate/:templateId", generateReport);
-router.post("/presets/filter/:templateId", saveFilterPreset);
-router.post("/presets/column/:templateId", saveColumnConfig);
+const { permissionMiddleware } = require("../../middleware/permissionMiddleware");
+const { authContextMiddleware } = require("../../middleware/authContext");
+const { getReportTemplates, generateReport, saveFilterPreset, getReportUsageStats, saveColumnConfig, getAllReportAccess, shareReport, createCategory, createTemplate } = require("../../controllers/AnalyticsController/analyticsController");
+router.get("/templates", authContextMiddleware, getReportTemplates);
+router.get("/generate/:templateId", permissionMiddleware, authContextMiddleware, generateReport);
+router.post("/presets/filter/:templateId", authContextMiddleware, saveFilterPreset);
+router.post("/presets/column/:templateId", authContextMiddleware, saveColumnConfig);
 // sharing report apis
-router.get("/reports/access", getAllReportAccess);
-router.post("/reports/:templateId/share", shareReport);
+router.get("/reports/access", authContextMiddleware, getAllReportAccess);
+router.post("/reports/:templateId/share", authContextMiddleware, shareReport);
 //report usage
-router.get('/reports/usage', getReportUsageStats);
+router.get('/reports/usage', authContextMiddleware, getReportUsageStats);
 
 // Create category
 router.post("/report-category", createCategory);
