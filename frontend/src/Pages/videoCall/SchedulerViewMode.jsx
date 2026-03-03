@@ -69,6 +69,10 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
     [location.search],
   );
 
+  const isSchedule = urlData?.isSchedule
+    ? true
+    : false;
+
 
   // Mock interview flag
   const isMockInterview = urlData?.interviewType
@@ -207,89 +211,93 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
   }, [activeFeedback, feedbackData?.interviewQuestions]);
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className={isSchedule ? "space-y-8 p-8" : "space-y-8 pb-20"}>
       {/* Header Info */}
       <div className="bg-white mt-4">
-        <div className="grid grid-cols-1 gap-6">
-          <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <User className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Candidate</p>
-                <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
-                  {formData?.candidateName || "N/A"}
-                </p>
-              </div>
-            </div>
-            {!isViewMode &&
+        {!isSchedule &&
+          <div className="grid grid-cols-1 gap-6">
+
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-custom-bg rounded-lg">
                   <User className="w-5 h-5 text-gray-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Interviewer</p>
+                  <p className="text-sm text-gray-500">Candidate</p>
                   <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
-                    {formData?.interviewerName || "N/A"}
+                    {formData?.candidateName || "N/A"}
                   </p>
                 </div>
               </div>
-            }
+              {!isViewMode &&
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-custom-bg rounded-lg">
+                    <User className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Interviewer</p>
+                    <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
+                      {formData?.interviewerName || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              }
 
-            {/* <div className="grid grid-cols-2 sm:grid-cols-1 gap-6"> */}
+              {/* <div className="grid grid-cols-2 sm:grid-cols-1 gap-6"> */}
 
-            {!isMockInterview && <div className="flex items-center gap-3">
+              {!isMockInterview && <div className="flex items-center gap-3">
 
 
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <Briefcase className="w-5 h-5 text-gray-500" />
+                <div className="p-2 bg-custom-bg rounded-lg">
+                  <Briefcase className="w-5 h-5 text-gray-500" />
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500">Position</p>
+                  <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
+                    {formData?.position || "N/A"}
+                  </p>
+                </div>
+
+
+              </div>
+              }
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-custom-bg rounded-lg">
+                  <Calendar className="w-5 h-5 text-gray-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Interview Date</p>
+                  <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
+                    {formData?.interviewDate || "N/A"}
+                  </p>
+                </div>
+                {/* </div> */}
               </div>
 
-              <div>
-                <p className="text-sm text-gray-500">Position</p>
-                <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
-                  {formData?.position || "N/A"}
-                </p>
-              </div>
-
-
+              {isMockInterview && (
+                <div className="flex items-center pt-6">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      disabled
+                      checked={formData.isMockInterview}
+                      onChange={(e) => setFormData({ ...formData, isMockInterview: e.target.checked })}
+                      className="w-4 h-4 accent-custom-blue text-[rgb(33,121,137)] border-gray-300 rounded focus:ring-[rgb(33,121,137)]"
+                    />
+                    <span className="ml-2 text-sm font-medium text-gray-700">
+                      This is a Mock Interview
+                    </span>
+                  </label>
+                </div>
+              )}
             </div>
-            }
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-custom-bg rounded-lg">
-                <Calendar className="w-5 h-5 text-gray-500" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Interview Date</p>
-                <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
-                  {formData?.interviewDate || "N/A"}
-                </p>
-              </div>
-              {/* </div> */}
-            </div>
 
-            {isMockInterview && (
-              <div className="flex items-center pt-6">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    disabled
-                    checked={formData.isMockInterview}
-                    onChange={(e) => setFormData({ ...formData, isMockInterview: e.target.checked })}
-                    className="w-4 h-4 accent-custom-blue text-[rgb(33,121,137)] border-gray-300 rounded focus:ring-[rgb(33,121,137)]"
-                  />
-                  <span className="ml-2 text-sm font-medium text-gray-700">
-                    This is a Mock Interview
-                  </span>
-                </label>
-              </div>
-            )}
           </div>
-        </div>
+        }
       </div>
       {/* Overall Assessment */}
-      <div className="border-t border-b border-gray-200 pt-6 pb-6">
+      <div className={`${isSchedule ? "" : "border-t  pt-6"} border-b border-gray-200 pb-6`}>
         <div className="grid grid-cols-3 sm:grid-cols-1 gap-4">
           <div className="bg-gray-50 p-3 rounded-md">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -341,22 +349,24 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
       </div>
 
       {/* Multiple Feedback Tabs */}
-      {feedbacks.length > 1 && (
-        <div className="flex flex-wrap gap-2 p-1 bg-gray-100 rounded-xl w-fit">
-          {feedbacks.map((fb, idx) => (
-            <button
-              key={fb._id || idx}
-              onClick={() => setActiveFeedbackIndex(idx)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeFeedbackIndex === idx
-                ? "bg-white text-[rgb(33,121,137)] shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-                }`}
-            >
-              Feedback from {fb.interviewerId?.name || `Interviewer ${idx + 1}`}
-            </button>
-          ))}
-        </div>
-      )}
+      {
+        feedbacks.length > 1 && (
+          <div className="flex flex-wrap gap-2 p-1 bg-gray-100 rounded-xl w-fit">
+            {feedbacks.map((fb, idx) => (
+              <button
+                key={fb._id || idx}
+                onClick={() => setActiveFeedbackIndex(idx)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeFeedbackIndex === idx
+                  ? "bg-white text-[rgb(33,121,137)] shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+                  }`}
+              >
+                Feedback from {fb.interviewerId?.name || `Interviewer ${idx + 1}`}
+              </button>
+            ))}
+          </div>
+        )
+      }
 
       {/* Main Form Content - Exact Replication of FeedbackForm.jsx */}
       <div className="bg-white">
@@ -610,6 +620,6 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
