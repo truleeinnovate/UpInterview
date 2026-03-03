@@ -35,6 +35,7 @@ const {
 } = require("./interviewRoundsController.js");
 const InterviewRequest = require("../models/InterviewRequest.js");
 const { scheduleOrRescheduleNoShow } = require("../services/interviews/roundNoShowScheduler.js");
+const { updateSchedulingStatus } = require("../services/interviewerSchedulingService");
 const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
 // Get single mock interview with rounds by id
 // GET /mockinterview/:id
@@ -1844,6 +1845,18 @@ exports.updateInterviewRoundStatus = async (req, res) => {
     )
       .populate("mockInterviewId", "title candidateName")
       .populate("interviewers", "firstName lastName email");
+
+    // v1.0.1 - Update InterviewerScheduling status for terminal actions (matching interviewRoundsController)
+    try {
+      const terminalStatuses = ["Completed", "Cancelled", "NoShow", "InCompleted", "Incomplete", "FeedbackPending", "FeedbackSubmitted"];
+      if (terminalStatuses.includes(updatedRound?.status || action)) {
+        const schedReason = cancellationReason || reasonCode || comment || "";
+        await updateSchedulingStatus(roundId, updatedRound?.status || action, schedReason);
+        console.log(`[MockInterview-updateRoundStatus] InterviewerScheduling updated to ${updatedRound?.status || action} for round ${roundId}, reason: "${schedReason}"`);
+      }
+    } catch (schedError) {
+      console.error("[MockInterview-updateRoundStatus] Error updating InterviewerScheduling:", schedError);
+    }
 
     // Send cancellation email
     if (shouldSendCancellationEmail) {

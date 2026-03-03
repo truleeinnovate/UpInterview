@@ -530,6 +530,7 @@ export function MeetingContainer({
                       <div
                         className="grid h-full w-full"
                         style={{
+                          gap: '4px',
                           gridTemplateColumns:
                             uniqueParticipants.size === 1
                               ? "1fr"
@@ -547,10 +548,7 @@ export function MeetingContainer({
                         {Array.from(uniqueParticipants).map((participantId) => (
                           <div
                             key={`participant-${participantId}`}
-                            className="relative"
-                            style={{
-                              height: containerHeight - bottomBarHeight - 10,
-                            }}
+                            className="relative h-full w-full overflow-hidden"
                           >
                             <ParticipantView participantId={participantId} />
                             <ParticipantMicStream
