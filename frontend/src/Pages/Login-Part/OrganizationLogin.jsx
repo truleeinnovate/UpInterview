@@ -274,12 +274,8 @@ const OrganizationLogin = () => {
                 case "submitted":
                     const requestResponse = await axios.get(`${config.REACT_APP_API_URL}/Organization/organization-request/${userData.tenantId}/${userData.ownerId}`);
                     const requestStatus = requestResponse.data.data.status;
-                    // console.log('requestStatus:- ', requestStatus);
-                    if (requestStatus === 'pending_review') {
-                        navigate("/pending-approval");
-                    } else if (requestStatus === 'in_contact' || requestStatus === 'rejected') {
-                        navigate("/pending-approval");
-                    } else if (requestStatus === 'approved') {
+
+                    if (requestStatus === 'approved') {
                         if (status === "payment_pending" || status === "submitted") {
                             // Check if user already has an active subscription
                             try {
@@ -296,11 +292,14 @@ const OrganizationLogin = () => {
                                 }
                             } catch (error) {
                                 console.error("Error checking subscription:", error);
-                                navigate("/subscription-plans"); // Fallback to subscription plans
+                                navigate("/subscription-plans");
                             }
                         } else {
                             navigate("/organization-login");
                         }
+                    } else {
+                        // Any other status (pending_review, in_contact, under_verification, rejected)
+                        navigate("/pending-approval");
                     }
                     break;
                 case "payment_pending":

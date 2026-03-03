@@ -603,7 +603,7 @@ const MultiStepForm = () => {
 
         const validSkills =
           interviewDetailsData.skills?.filter((skill) => skill !== null) || [];
-        if (!isProfileCompleteStateOrg && validSkills.length < 3)
+        if (validSkills.length < 3)
           currentErrors.skills = "At least three skills are required";
         if (!interviewDetailsData.currentRole)
           currentErrors.currentRole = "Current Role is required";

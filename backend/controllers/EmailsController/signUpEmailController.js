@@ -134,7 +134,6 @@ const handlePasswordEmail = async ({ email, type }) => {
       }/resetPassword?token=${encodeURIComponent(resetToken)}&type=${type}`;
 
     // Get email template
-    const { emailTemplateModel } = require("../../models/EmailTemplatemodel");
     const emailTemplate = await emailTemplateModel.findOne({
       category: "reset_or_create_password",
       isActive: true,
