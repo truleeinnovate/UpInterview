@@ -35,6 +35,7 @@ import OutsourceInterviewerRequestStatus from "./OutsourceInterviewerRequestStat
 import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
 import GlobalBanner from "../../../../Components/GlobalBanner/GlobalBanner.jsx";
 import { useBanner } from "../../../../Context/BannerProvider.js";
+import { ActionRequiredCards } from "./RequiredActionCards/RequiredActionCards.jsx";
 
 const Home = () => {
   const tokenPayload = decodeJwt(Cookies.get("authToken"));
@@ -127,13 +128,14 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-white">
-      {bannerConfig && (
+      {/* {bannerConfig && (
         <GlobalBanner
           {...bannerConfig}
           onClose={hideBanner}
           isDismissible={true}
         />
-      )}
+      )} */}
+      <ActionRequiredCards />
       {/* <---------v1.0.0 */}
       {/* v1.0.3 <----------------------------------------------------------------------------------- */}
       {/* <main className="pb-8 px-4 lg:px-8 xl:px-12 2xl:px-16 mx-auto" style={{ maxWidth: '1400px' }}> */}
