@@ -219,12 +219,14 @@ export const CornerDisplayName = ({
   return (
     <>
       <div
-        className="absolute bottom-2 right-2 rounded-md flex items-center justify-center px-2 py-1"
+        className="absolute bottom-2 left-2 z-10 rounded-md flex items-center px-2 py-1"
         style={{
           backgroundColor: "#00000088",
           transition: "all 200ms",
           transitionTimingFunction: "linear",
           gap: 6,
+          maxWidth: 'calc(100% - 16px)',
+          overflow: 'hidden',
         }}
       >
         {!micOn && !isPresenting ? (
@@ -232,14 +234,14 @@ export const CornerDisplayName = ({
         ) : micOn && isActiveSpeaker ? (
           <SpeakerIcon />
         ) : null}
-        <p className="text-xs text-white" style={{ fontWeight: 500, letterSpacing: 0.3 }}>
+        <p className="text-xs text-white truncate min-w-0" style={{ fontWeight: 500, letterSpacing: 0.3 }}>
           {isPresenting
             ? isLocal
               ? `You are presenting`
               : `${nameTructed(displayName, 15)} is presenting`
             : isLocal
               ? "You"
-              : nameTructed(displayName, 26)}
+              : nameTructed(displayName, 15)}
         </p>
       </div>
 
@@ -420,10 +422,15 @@ export function ParticipantView({ participantId }) {
     isActiveSpeaker,
   } = useParticipant(participantId);
 
-  const { selectedSpeaker } = useMeetingAppContext();
+  const { selectedSpeaker, raisedHandsParticipants } = useMeetingAppContext();
   const micRef = useRef(null);
   const videoRef = useRef(null);
   const [mouseOver, setMouseOver] = useState(false);
+
+  // Check if this participant has raised hand
+  const isHandRaised = raisedHandsParticipants?.some(
+    (item) => item.participantId === participantId
+  );
 
   useEffect(() => {
     const isFirefox =
@@ -447,9 +454,7 @@ export function ParticipantView({ participantId }) {
         micRef.current.srcObject = mediaStream;
         micRef.current
           .play()
-          .catch((error) =>
-            console.error("micRef.current.play() failed", error)
-          );
+          .catch(() => { }); // Autoplay policy - safe to ignore
       } else {
         micRef.current.srcObject = null;
       }
@@ -531,6 +536,15 @@ export function ParticipantView({ participantId }) {
           isActiveSpeaker,
         }}
       />
+      {/* Raised hand indicator */}
+      {isHandRaised && (
+        <div
+          className="absolute top-2 left-2 z-20 flex items-center justify-center rounded-full bg-yellow-400 shadow-lg"
+          style={{ width: 32, height: 32, animation: 'pulse 1.5s ease-in-out infinite' }}
+        >
+          <span className="text-lg">✋</span>
+        </div>
+      )}
     </div>
   ) : null;
 }

@@ -131,16 +131,17 @@ export const MeetingAppProvider = ({ children }) => {
     const participantRaisedHand = (participantId) => {
       const raisedHandsParticipants = [...raisedHandsParticipantsRef.current];
 
-      const newItem = { participantId, raisedHandOn: new Date().getTime() };
-
       const participantFound = raisedHandsParticipants.findIndex(
         ({ participantId: pID }) => pID === participantId
       );
 
       if (participantFound === -1) {
+        // Not raised yet — raise hand
+        const newItem = { participantId, raisedHandOn: new Date().getTime() };
         raisedHandsParticipants.push(newItem);
       } else {
-        raisedHandsParticipants[participantFound] = newItem;
+        // Already raised — lower hand (toggle off)
+        raisedHandsParticipants.splice(participantFound, 1);
       }
 
       setRaisedHandsParticipants(raisedHandsParticipants);

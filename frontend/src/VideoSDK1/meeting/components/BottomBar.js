@@ -94,8 +94,29 @@ const MicBTN = () => {
     <>
       <OutlinedButton
         Icon={localMicOn ? MicOnIcon : MicOffIcon}
-        onClick={() => {
-          mMeeting.toggleMic();
+        onClick={async () => {
+          if (localMicOn) {
+            // Turning off — just toggle
+            mMeeting.toggleMic();
+          } else {
+            // Turning on — create stream with noise cancellation
+            try {
+              const customStream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                  deviceId: selectedMic?.id ? { exact: selectedMic.id } : undefined,
+                  noiseSuppression: true,
+                  echoCancellation: true,
+                  autoGainControl: true,
+                  sampleRate: 48000,
+                  channelCount: 1,
+                },
+              });
+              mMeeting.toggleMic(customStream);
+            } catch (err) {
+              console.error('Failed to create audio stream:', err);
+              mMeeting.toggleMic();
+            }
+          }
         }}
         bgColor={localMicOn ? "bg-gray-750" : "bg-white"}
         borderColor={localMicOn && "#ffffff33"}
@@ -137,28 +158,44 @@ const MicBTN = () => {
                     >
                       <Popover.Panel className="absolute left-1/2 bottom-full z-10 mt-3 w-72 -translate-x-1/2 transform px-4 sm:px-0 pb-4">
                         <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
-                          <div className={" bg-gray-750 py-1"}>
+                          <div className={" bg-white py-1"}>
                             <div>
                               <div className="flex items-center p-3 pb-0">
-                                <p className="ml-3 text-sm text-gray-900">
+                                <p className="ml-3 text-sm font-semibold text-gray-700">
                                   {"MICROPHONE"}
                                 </p>
                               </div>
                               <div className="flex flex-col">
                                 {mics.map(({ deviceId, label }, index) => (
                                   <div
-                                    className={`px-3 py-1 my-1 pl-6 text-white text-left ${deviceId === selectedMic.id &&
-                                      "bg-gray-150"
+                                    className={`px-3 py-1 my-1 pl-6 text-gray-700 text-left rounded ${deviceId === selectedMic.id
+                                      ? "bg-blue-50 font-medium"
+                                      : "hover:bg-gray-100"
                                       }`}
                                   >
                                     <button
                                       className={`flex flex-1 w-full text-left ${deviceId === selectedMic.id &&
-                                        "bg-gray-150"
+                                        "text-blue-600"
                                         }`}
                                       key={`mics_${deviceId}`}
-                                      onClick={() => {
+                                      onClick={async () => {
                                         setSelectedMic({ id: deviceId });
-                                        changeMic(deviceId);
+                                        try {
+                                          const customStream = await navigator.mediaDevices.getUserMedia({
+                                            audio: {
+                                              deviceId: { exact: deviceId },
+                                              noiseSuppression: true,
+                                              echoCancellation: true,
+                                              autoGainControl: true,
+                                              sampleRate: 48000,
+                                              channelCount: 1,
+                                            },
+                                          });
+                                          changeMic(customStream);
+                                        } catch (err) {
+                                          console.error('Failed to create audio stream:', err);
+                                          changeMic(deviceId);
+                                        }
                                         close();
                                       }}
                                     >
@@ -168,23 +205,24 @@ const MicBTN = () => {
                                 ))}
                               </div>
                             </div>
-                            <hr className="border border-gray-50 mt-2 mb-1" />
+                            <hr className="border border-gray-200 mt-2 mb-1" />
                             <div>
                               <div className="flex p-3 pb-0">
-                                <p className="ml-3 text-sm text-gray-900  text-center">
+                                <p className="ml-3 text-sm font-semibold text-gray-700 text-center">
                                   {"SPEAKER"}
                                 </p>
                               </div>
                               <div className="flex flex-col ">
                                 {speakers.map(({ deviceId, label }, index) => (
                                   <div
-                                    className={`px-3 py-1 my-1 pl-6 text-white ${deviceId === selectedSpeaker.id &&
-                                      "bg-gray-150"
+                                    className={`px-3 py-1 my-1 pl-6 text-gray-700 rounded ${deviceId === selectedSpeaker.id
+                                      ? "bg-blue-50 font-medium"
+                                      : "hover:bg-gray-100"
                                       }`}
                                   >
                                     <button
                                       className={`flex flex-1 w-full text-left ${deviceId === selectedSpeaker.id &&
-                                        "bg-gray-150"
+                                        "text-blue-600"
                                         }`}
                                       key={`speakers_${deviceId}`}
                                       onClick={() => {
@@ -307,23 +345,24 @@ const WebCamBTN = () => {
                     >
                       <Popover.Panel className="absolute left-1/2 bottom-full z-10 mt-3 w-72 -translate-x-1/2 transform px-4 sm:px-0 pb-4">
                         <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5">
-                          <div className={" bg-gray-750 py-1"}>
+                          <div className={" bg-white py-1"}>
                             <div>
                               <div className="flex items-center p-3 pb-0">
-                                <p className="ml-3 text-sm text-gray-900">
+                                <p className="ml-3 text-sm font-semibold text-gray-700">
                                   {"WEBCAM"}
                                 </p>
                               </div>
                               <div className="flex flex-col">
                                 {webcams.map(({ deviceId, label }, index) => (
                                   <div
-                                    className={`px-3 py-1 my-1 pl-6 text-white ${deviceId === selectedWebcam.id &&
-                                      "bg-gray-150"
+                                    className={`px-3 py-1 my-1 pl-6 text-gray-700 rounded ${deviceId === selectedWebcam.id
+                                      ? "bg-blue-50 font-medium"
+                                      : "hover:bg-gray-100"
                                       }`}
                                   >
                                     <button
                                       className={`flex flex-1 w-full text-left ${deviceId === selectedWebcam.id &&
-                                        "bg-gray-150"
+                                        "text-blue-600"
                                         }`}
                                       key={`output_webcams_${deviceId}`}
                                       onClick={() => {
@@ -441,6 +480,16 @@ const RecordingBTN = () => {
   );
 };
 
+// Custom button component defined OUTSIDE BottomBar to prevent re-creation on re-renders
+// (which would unmount/remount children and close popovers)
+const ControlButton = ({ children, className = '' }) => (
+  <div className={`flex items-center justify-center w-12 h-12 hover:bg-gray-700 rounded-lg transition-all duration-200 ${className}`}>
+    <div className="flex items-center justify-center w-7 h-7">
+      {children}
+    </div>
+  </div>
+);
+
 export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = false, isMockInterview = false, isCandidate = false }) {
 
   const RaiseHandBTN = ({ isMobile, isTab }) => {
@@ -478,23 +527,22 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = fals
       try {
         setIsProcessing(true);
 
-        // If already sharing, stop sharing
+        // If already sharing locally, stop sharing
         if (localScreenShareOn) {
           await toggleScreenShare();
           setLocalScreenShareStream(null);
-          // if (screenShareStreamRef.current) {
-          //   screenShareStreamRef.current.getTracks().forEach(track => track.stop());
-          //   screenShareStreamRef.current = null;
-          // }
           return;
         }
 
-        console.log('Starting screen share...', {
-          isLocalPresenting: mMeeting?.localParticipant?.id === presenterId,
-          presenterId,
-          localScreenShareOn,
-          meetingState: mMeeting
-        });
+        // If someone ELSE is presenting, stop their screen share first
+        if (presenterId && presenterId !== mMeeting?.localParticipant?.id) {
+          console.log('[ScreenShare] Stopping existing presenter:', presenterId);
+          await toggleScreenShare(); // This stops the current presenter
+          // Wait for state to settle before starting new share
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        console.log('Starting screen share...');
 
         // Request screen share with system audio if available
         const stream = await navigator.mediaDevices.getDisplayMedia({
@@ -519,7 +567,6 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = fals
 
         console.log('Screen share stream obtained:', stream);
         setLocalScreenShareStream(stream);
-        // screenShareStreamRef.current = stream;
 
         // Handle stream ended (user stops sharing)
         stream.getVideoTracks().forEach(track => {
@@ -529,10 +576,6 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = fals
               toggleScreenShare();
             }
             setLocalScreenShareStream(null);
-            // if (screenShareStreamRef.current) {
-            //   screenShareStreamRef.current.getTracks().forEach(t => t.stop());
-            //   screenShareStreamRef.current = null;
-            // }
           };
         });
 
@@ -542,10 +585,6 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = fals
       } catch (error) {
         console.error('Screen share failed:', error);
         setLocalScreenShareStream(null);
-        // if (screenShareStreamRef.current) {
-        //   screenShareStreamRef.current.getTracks().forEach(track => track.stop());
-        //   screenShareStreamRef.current = null;
-        // }
       } finally {
         setIsProcessing(false);
       }
@@ -603,15 +642,6 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = fals
   const tollTipEl = useRef();
   const { meetingId } = useMeeting();
   const [isCopied, setIsCopied] = useState(false);
-
-  // Custom button component to ensure consistent styling and centering
-  const ControlButton = ({ children, className = '' }) => (
-    <div className={`flex items-center justify-center w-12 h-12 hover:bg-gray-700 rounded-lg transition-all duration-200 ${className}`}>
-      <div className="flex items-center justify-center w-7 h-7">
-        {children}
-      </div>
-    </div>
-  );
 
   const handleCopyClick = () => {
     if (meetingId) {
