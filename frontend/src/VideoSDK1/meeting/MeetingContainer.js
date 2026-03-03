@@ -111,6 +111,15 @@ export function MeetingContainer({
     useMeetingAppContext();
   const { participants } = useMeeting();
 
+  // Keep sideBarModeRef always in sync with sideBarMode
+  useEffect(() => {
+    sideBarModeRef.current = sideBarMode;
+    // Reset unread count whenever chat panel is opened
+    if (sideBarMode === "CHAT") {
+      setUnreadChatCount(0);
+    }
+  }, [sideBarMode]);
+
   // Function to get sidebar width based on mode
   const getSidebarWidth = (mode) => {
     switch (mode) {
