@@ -13,8 +13,18 @@ export const validateUserForm = async (userData) => {
       errors.email = 'Email already registered';
     }
   }
-  if (!userData.firstName) errors.firstName = "First Name is required";
-  if (!userData.lastName) errors.lastName = "Last Name is required";
+  // First Name
+  if (!userData.firstName?.trim()) {
+    errors.firstName = "First Name is required";
+  } else if (userData.firstName.trim().length < 2) {
+    errors.firstName = "First Name must be at least 2 characters";
+  }
+  // Last Name
+  if (!userData.lastName?.trim()) {
+    errors.lastName = "Last Name is required";
+  } else if (userData.lastName.trim().length < 2) {
+    errors.lastName = "Last Name must be at least 2 characters";
+  }
   if (!userData.phone) {
     errors.phone = "Phone Number is required";
   } else if (!/^[6-9]\d{9}$/.test(userData.phone)) {

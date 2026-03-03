@@ -738,7 +738,7 @@ const InterviewList = ({ interviews, isPositionView }) => {
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
               dataLength={Math.max(1, total)}
-              searchPlaceholder="Search by Id, Name, Position..."
+              searchPlaceholder="Search by ID, Name, Position..."
               filterIconRef={filterIconRef}
             />
           </div>

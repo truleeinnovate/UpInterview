@@ -757,7 +757,7 @@ const PositionTab = () => {
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
               dataLength={positionData?.length}
-              searchPlaceholder="Search by Id, Title, Location..."
+              searchPlaceholder="Search by ID, Title, Location..."
               filterIconRef={filterIconRef}
             />
           </div>

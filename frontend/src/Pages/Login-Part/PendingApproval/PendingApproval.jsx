@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, AlertCircle, MessageCircle, CheckCircle, Mail, X } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAllReqForPaymentPendingPage } from '../../../apiHooks/superAdmin/useOrganizationRequests.js';
 import Cookies from 'js-cookie';
 import { decodeJwt } from "../../../utils/AuthCookieManager/jwtDecode";
@@ -9,7 +9,9 @@ import SupportForm from '../../Dashboard-Part/Tabs/SupportDesk/SupportForm';
 
 const OrganizationSubmissionStatus = () => {
 
-    const { data: allRequests = [], isLoading } = useAllReqForPaymentPendingPage();
+    const { data: allRequests = [], isLoading } = useAllReqForPaymentPendingPage({
+        refetchInterval: 30000, // Poll every 30 seconds
+    });
     // console.log("allRequests", allRequests);
 
     const authToken = Cookies.get("authToken");
@@ -28,8 +30,16 @@ const OrganizationSubmissionStatus = () => {
     const location = useLocation();
     const { status: statusFromLocation, organizationName, rejectionReason } = location.state || {};
 
-    // Get status from user request or location, default to 'pending_review' if not found
-    const status = userRequest?.status === 'rejected' ? 'rejected' : 'pending_review';
+    // Get status from user request, default to 'pending_review' if not found
+    const status = userRequest?.status || 'pending_review';
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (userRequest?.status === 'approved') {
+            navigate('/organization-login');
+        }
+    }, [userRequest?.status, navigate]);
 
     const statusConfig = {
         'pending_review': {
@@ -38,6 +48,33 @@ const OrganizationSubmissionStatus = () => {
             bgColor: 'bg-white',
             title: 'Submission Under Review',
             description: 'Your organization registration has been successfully submitted and is currently under review.',
+            showSupport: false
+        },
+        'in_contact': {
+            icon: MessageCircle,
+            iconColor: 'text-blue-500',
+            bgColor: 'bg-blue-50',
+            title: 'Under Review - In Contact',
+            description: 'Our team is currently in contact with you regarding your registration.',
+            message: 'We may have reached out via email or phone for additional details. Please check your inbox.',
+            showSupport: true
+        },
+        'under_verification': {
+            icon: CheckCircle,
+            iconColor: 'text-orange-500',
+            bgColor: 'bg-orange-50',
+            title: 'Verification in Progress',
+            description: 'Your documents and details are currently being verified by our team.',
+            message: 'This process typically takes 24-48 hours. We will notify you once completed.',
+            showSupport: false
+        },
+        'approved': {
+            icon: CheckCircle,
+            iconColor: 'text-green-500',
+            bgColor: 'bg-green-50',
+            title: 'Registration Approved',
+            description: 'Congratulations! Your organization registration has been approved.',
+            message: 'You are being redirected to the login page...',
             showSupport: false
         },
         'rejected': {
@@ -193,7 +230,7 @@ const OrganizationSubmissionStatus = () => {
                         {/* Support Reference */}
                         <div className="mt-6 text-center">
                             <p className="text-xs text-gray-500">
-                                Reference ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}
+                                Reference ID: {userRequest?._id || 'N/A'}
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
                                 For questions, contact{" "}

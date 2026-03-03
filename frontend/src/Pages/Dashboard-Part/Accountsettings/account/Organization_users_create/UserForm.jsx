@@ -477,7 +477,7 @@ const UserForm = ({ mode }) => {
                 value={selectedCurrentRoleId}
                 options={organizationRoles.map((role) => ({
                   value: role._id,
-                  label: `${role.label} (Level ${role.level ?? 0})`,
+                  label: `${role.label}`,
                 }))}
                 placeholder="Select Role"
                 onChange={(e) => {

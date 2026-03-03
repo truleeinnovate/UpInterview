@@ -8,6 +8,7 @@ const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [userId, setUserId] = useState(null);
+  const [errors, setErrors] = useState({ password: "", confirmPassword: "" });
   const [message, setMessage] = useState({ text: "", type: "" }); // { text: string, type: 'error' | 'success' }
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -31,18 +32,31 @@ const ResetPassword = () => {
     setIsSubmitting(true);
     setMessage({ text: "", type: "" });
 
-    if (password !== confirmPassword) {
-      setMessage({ text: "Passwords do not match.", type: "error" });
-      setIsSubmitting(false);
-      return;
+    let hasError = false;
+    const newErrors = { password: "", confirmPassword: "" };
+
+    if (!password) {
+      newErrors.password = "Password is required.";
+      hasError = true;
+    } else {
+      const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      if (!strongPasswordRegex.test(password)) {
+        newErrors.password = "Password must be at least 8 characters long and include an uppercase letter, a number, and a special character.";
+        hasError = true;
+      }
     }
 
-    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!strongPasswordRegex.test(password)) {
-      setMessage({
-        text: "Password must be at least 8 characters long and include an uppercase letter, a number, and a special character.",
-        type: "error",
-      });
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Confirm password is required.";
+      hasError = true;
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match.";
+      hasError = true;
+    }
+
+    setErrors(newErrors);
+
+    if (hasError) {
       setIsSubmitting(false);
       return;
     }
@@ -149,7 +163,10 @@ const ResetPassword = () => {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-blue focus:border-custom-blue pr-10"
                   placeholder={type === "usercreatepass" ? "Create your password" : "Enter new password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value.replace(/\s/g, ""))}
+                  onChange={(e) => {
+                    setPassword(e.target.value.replace(/\s/g, ""));
+                    setErrors((prev) => ({ ...prev, password: "" }));
+                  }}
                   autoComplete="new-password"
                 />
                 <button
@@ -164,6 +181,7 @@ const ResetPassword = () => {
                     <Eye className="h-5 w-5 text-gray-500" />
                   )}
                 </button>
+                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
               </div>
 
               <div className="relative">
@@ -178,7 +196,10 @@ const ResetPassword = () => {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-custom-blue focus:border-custom-blue pr-10"
                   placeholder="Re-enter password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value.replace(/\s/g, ""))}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value.replace(/\s/g, ""));
+                    setErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                  }}
                   autoComplete="new-password"
                 />
                 <button
@@ -193,6 +214,7 @@ const ResetPassword = () => {
                     <Eye className="h-5 w-5 text-gray-500" />
                   )}
                 </button>
+                {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
               </div>
             </div>
 
@@ -200,6 +222,7 @@ const ResetPassword = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
+                onClick={handleResetPassword}
                 className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors ${isSubmitting ? 'bg-custom-blue cursor-not-allowed' : 'bg-custom-blue hover:bg-custom-blue'
                   }`}
               >

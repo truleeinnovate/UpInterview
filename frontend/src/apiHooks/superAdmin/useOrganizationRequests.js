@@ -213,11 +213,12 @@ const fetchAllReqForPaymentPendingPage = async () => {
 };
 
 // ✅ Export a dedicated hook for this page
-export const useAllReqForPaymentPendingPage = () => {
+export const useAllReqForPaymentPendingPage = (options = {}) => {
   return useQuery({
     queryKey: ["allOrganizationRequestsForPaymentPendingPage"],
     queryFn: fetchAllReqForPaymentPendingPage,
     refetchOnWindowFocus: false,
+    ...options,
   });
 };
 
