@@ -33,7 +33,7 @@ import { usePermissions } from "../../../../Context/PermissionsContext.js";
 import { useOutsourceStatus } from "../../../../apiHooks/superAdmin/useOutsourceInterviewers.js";
 import OutsourceInterviewerRequestStatus from "./OutsourceInterviewerRequestStatus";
 import { useTitle } from "../../../../apiHooks/Title/useTitle.js";
-import GlobalBanner from "../../../../Components/GlobalBanner/GlobalBanner.jsx";
+// import GlobalBanner from "../../../../Components/GlobalBanner/GlobalBanner.jsx";
 import { useBanner } from "../../../../Context/BannerProvider.js";
 import { ActionRequiredCards } from "./RequiredActionCards/RequiredActionCards.jsx";
 
@@ -88,17 +88,17 @@ const Home = () => {
   // ).length;
   //----v1.0.3-------->
 
-  useEffect(() => {
-  if (pendingDraftCount > 0) {
-    showBanner({
-      title: "Pending Feedback",
-      message: `You have ${pendingDraftCount} drafts to complete.`,
-      type: "warning",
-      actionLabel: "View Feedbacks",
-      onActionClick: () => navigate("/feedback")
-    });
-  }
-}, [pendingDraftCount]);
+//   useEffect(() => {
+//   if (pendingDraftCount > 0) {
+//     showBanner({
+//       title: "Pending Feedback",
+//       message: `You have ${pendingDraftCount} drafts to complete.`,
+//       type: "warning",
+//       actionLabel: "View Feedbacks",
+//       onActionClick: () => navigate("/feedback")
+//     });
+//   }
+// }, [pendingDraftCount]);
 
   const [stats, setStats] = useState({
     totalInterviews: 0,
@@ -135,7 +135,6 @@ const Home = () => {
           isDismissible={true}
         />
       )} */}
-      <ActionRequiredCards />
       {/* <---------v1.0.0 */}
       {/* v1.0.3 <----------------------------------------------------------------------------------- */}
       {/* <main className="pb-8 px-4 lg:px-8 xl:px-12 2xl:px-16 mx-auto" style={{ maxWidth: '1400px' }}> */}
@@ -155,6 +154,7 @@ const Home = () => {
             setSelectedFilter={setSelectedFilter}
           />
         </motion.div>
+        <ActionRequiredCards />
         <div className="w-full mb-6">
           {/* showding outsource request status for user when user is freelancer */}
           {!outsourceLoading && freelancer && (

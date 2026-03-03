@@ -281,7 +281,7 @@ export function ActionRequiredCards() {
   if (totalActions === 0) return null
 
   return (
-    <div className="border-border overflow-hidden mb-8">
+    <div className="border border-gray-300 rounded-lg overflow-hidden">
       <div
         className="flex items-center gap-3 px-5 py-3 border-b"
         style={{ backgroundColor: BRAND_LIGHT, borderColor: BRAND_BORDER }}
