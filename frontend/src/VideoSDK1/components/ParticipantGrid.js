@@ -20,24 +20,24 @@ function ParticipantGrid({ participantIds, isPresenting }) {
       ? participantIds.length < 4
         ? 1
         : participantIds.length < 9
-        ? 2
-        : 3
+          ? 2
+          : 3
       : participantIds.length < 5
-      ? 2
-      : participantIds.length < 7
-      ? 3
-      : participantIds.length < 9
-      ? 4
-      : participantIds.length < 10
-      ? 3
-      : participantIds.length < 11
-      ? 4
-      : 4;
+        ? 2
+        : participantIds.length < 7
+          ? 3
+          : participantIds.length < 9
+            ? 4
+            : participantIds.length < 10
+              ? 3
+              : participantIds.length < 11
+                ? 4
+                : 4;
 
   return (
-    <div className="w-full h-full p-2 flex items-center justify-center">
-      <div 
-        className="w-full h-full grid gap-2"
+    <div className="w-full h-full p-0.5 flex items-center justify-center">
+      <div
+        className="w-full h-full grid gap-1"
         style={{
           gridTemplateColumns: `repeat(${Math.min(participantIds.length, perRow)}, 1fr)`,
           gridAutoRows: '1fr',
@@ -47,7 +47,7 @@ function ParticipantGrid({ participantIds, isPresenting }) {
         }}
       >
         {participantIds.map((participantId) => (
-          <div 
+          <div
             key={`participant_${participantId}`}
             className="w-full h-full flex items-center justify-center relative"
             style={{
@@ -55,10 +55,10 @@ function ParticipantGrid({ participantIds, isPresenting }) {
               position: 'relative',
             }}
           >
-            <div className="absolute inset-0 flex items-center justify-center p-1">
+            <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-full h-full bg-gray-800 rounded-lg overflow-hidden">
-                <MemoizedParticipant 
-                  participantId={participantId} 
+                <MemoizedParticipant
+                  participantId={participantId}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -75,7 +75,7 @@ export const MemoizedParticipantGrid = React.memo(
   (prevProps, nextProps) => {
     return (
       JSON.stringify(prevProps.participantIds) ===
-        JSON.stringify(nextProps.participantIds) &&
+      JSON.stringify(nextProps.participantIds) &&
       prevProps.isPresenting === nextProps.isPresenting
     );
   }

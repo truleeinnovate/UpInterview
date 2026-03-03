@@ -363,144 +363,95 @@ const WebCamBTN = () => {
   );
 };
 
+// RecordingBTN: Defined OUTSIDE BottomBar to prevent remounting on parent re-renders.
+// When defined inside, audio/video events cause BottomBar to re-render, which recreates
+// RecordingBTN as a new function → React unmounts/remounts it → all state (timer) resets.
+const RecordingBTN = () => {
+  const { startRecording, stopRecording, recordingState } = useMeeting();
+  const isRecording = useIsRecording();
+  const isRecordingRef = useRef(isRecording);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const timerRef = useRef(null);
+  const wasRecordingRef = useRef(false);
+  const elapsedRef = useRef(0);
+
+  useEffect(() => { isRecordingRef.current = isRecording; }, [isRecording]);
+
+  useEffect(() => {
+    const wasRecording = wasRecordingRef.current;
+    if (isRecording && !wasRecording) {
+      elapsedRef.current = 0;
+      setElapsedSeconds(0);
+      timerRef.current = setInterval(() => {
+        elapsedRef.current += 1;
+        setElapsedSeconds(elapsedRef.current);
+      }, 1000);
+    } else if (!isRecording && wasRecording) {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    }
+    wasRecordingRef.current = isRecording;
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [isRecording]);
+
+  const formatTime = (totalSeconds) => {
+    const mins = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+    const secs = (totalSeconds % 60).toString().padStart(2, "0");
+    return `${mins}:${secs}`;
+  };
+
+  const isRequestProcessing = useMemo(
+    () => recordingState === Constants.recordingEvents.RECORDING_STARTING ||
+      recordingState === Constants.recordingEvents.RECORDING_STOPPING,
+    [recordingState]
+  );
+
+  const _handleClick = () => {
+    if (isRecordingRef.current) { stopRecording(); } else { startRecording(); }
+  };
+
+  const tooltipText = recordingState === Constants.recordingEvents.RECORDING_STARTED
+    ? "Stop Recording"
+    : recordingState === Constants.recordingEvents.RECORDING_STARTING
+      ? "Starting Recording"
+      : recordingState === Constants.recordingEvents.RECORDING_STOPPED
+        ? "Start Recording"
+        : recordingState === Constants.recordingEvents.RECORDING_STOPPING
+          ? "Stopping Recording"
+          : "Start Recording";
+
+  return (
+    <div
+      onClick={isRequestProcessing ? undefined : _handleClick}
+      title={tooltipText}
+      className={`flex items-center justify-center gap-1.5 rounded-lg cursor-pointer transition-all duration-200 select-none m-1 ${isRequestProcessing ? "opacity-60 cursor-not-allowed" : ""}`}
+      style={{
+        padding: isRecording ? "6px 12px" : "6px 10px",
+        background: isRecording ? "#dc2626" : "#2d3748",
+        border: isRecording ? "2px solid #f87171" : "2px solid rgba(255,255,255,0.2)",
+        height: 40,
+      }}
+    >
+      <span style={{ width: 8, height: 8, borderRadius: "50%", background: isRecording ? "#fff" : "#ef4444", animation: isRecording ? "pulse 1.5s ease-in-out infinite" : "none", display: "inline-block", flexShrink: 0 }} />
+      <span style={{ color: "#fff", fontSize: 13, fontWeight: 600, letterSpacing: 0.5, whiteSpace: "nowrap" }}>
+        {isRequestProcessing
+          ? recordingState === Constants.recordingEvents.RECORDING_STARTING ? "Starting..." : "Stopping..."
+          : isRecording ? formatTime(elapsedSeconds) : "REC"}
+      </span>
+    </div>
+  );
+};
+
 export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = false, isMockInterview = false, isCandidate = false }) {
 
   const RaiseHandBTN = ({ isMobile, isTab }) => {
     const { publish } = usePubSub("RAISE_HAND");
     const RaiseHand = () => {
-      try {
-        publish("Raise Hand");
-      } catch (e) {
-        console.log("Error in pubsub", e)
-      }
+      try { publish("Raise Hand"); } catch (e) { console.log("Error in pubsub", e) }
     };
-
     return isMobile || isTab ? (
-      <MobileIconButton
-        id="RaiseHandBTN"
-        tooltipTitle={"Raise hand"}
-        Icon={RaiseHandIcon}
-        onClick={RaiseHand}
-        buttonText={"Raise Hand"}
-      />
+      <MobileIconButton id="RaiseHandBTN" tooltipTitle={"Raise hand"} Icon={RaiseHandIcon} onClick={RaiseHand} buttonText={"Raise Hand"} />
     ) : (
-      <OutlinedButton
-        onClick={RaiseHand}
-        tooltip={"Raise Hand"}
-        Icon={RaiseHandIcon}
-      />
-    );
-  };
-
-  const RecordingBTN = () => {
-    const { startRecording, stopRecording, recordingState } = useMeeting();
-
-    const isRecording = useIsRecording();
-    const isRecordingRef = useRef(isRecording);
-
-    // Timer state
-    const [elapsedSeconds, setElapsedSeconds] = useState(0);
-    const timerRef = useRef(null);
-
-    useEffect(() => {
-      isRecordingRef.current = isRecording;
-    }, [isRecording]);
-
-    // Start/stop timer based on recording state
-    useEffect(() => {
-      if (isRecording) {
-        setElapsedSeconds(0);
-        timerRef.current = setInterval(() => {
-          setElapsedSeconds((prev) => prev + 1);
-        }, 1000);
-      } else {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-      }
-      return () => {
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-        }
-      };
-    }, [isRecording]);
-
-    const formatTime = (totalSeconds) => {
-      const mins = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
-      const secs = (totalSeconds % 60).toString().padStart(2, "0");
-      return `${mins}:${secs}`;
-    };
-
-    const isRequestProcessing = useMemo(
-      () =>
-        recordingState === Constants.recordingEvents.RECORDING_STARTING ||
-        recordingState === Constants.recordingEvents.RECORDING_STOPPING,
-      [recordingState]
-    );
-
-    const _handleClick = () => {
-      const isRec = isRecordingRef.current;
-      if (isRec) {
-        stopRecording();
-      } else {
-        startRecording();
-      }
-    };
-
-    const tooltipText = recordingState === Constants.recordingEvents.RECORDING_STARTED
-      ? "Stop Recording"
-      : recordingState === Constants.recordingEvents.RECORDING_STARTING
-        ? "Starting Recording"
-        : recordingState === Constants.recordingEvents.RECORDING_STOPPED
-          ? "Start Recording"
-          : recordingState === Constants.recordingEvents.RECORDING_STOPPING
-            ? "Stopping Recording"
-            : "Start Recording";
-
-    return (
-      <div
-        onClick={isRequestProcessing ? undefined : _handleClick}
-        title={tooltipText}
-        className={`flex items-center justify-center gap-1.5 rounded-lg cursor-pointer transition-all duration-200 select-none m-1 ${isRequestProcessing ? "opacity-60 cursor-not-allowed" : ""
-          }`}
-        style={{
-          padding: isRecording ? "6px 12px" : "6px 10px",
-          background: isRecording ? "#dc2626" : "#2d3748",
-          border: isRecording ? "2px solid #f87171" : "2px solid rgba(255,255,255,0.2)",
-          height: 40,
-        }}
-      >
-        {/* Red/white dot */}
-        <span
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: "50%",
-            background: isRecording ? "#fff" : "#ef4444",
-            animation: isRecording ? "pulse 1.5s ease-in-out infinite" : "none",
-            display: "inline-block",
-            flexShrink: 0,
-          }}
-        />
-        <span
-          style={{
-            color: "#fff",
-            fontSize: 13,
-            fontWeight: 600,
-            letterSpacing: 0.5,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {isRequestProcessing
-            ? recordingState === Constants.recordingEvents.RECORDING_STARTING
-              ? "Starting..."
-              : "Stopping..."
-            : isRecording
-              ? formatTime(elapsedSeconds)
-              : "REC"}
-        </span>
-      </div>
+      <OutlinedButton onClick={RaiseHand} tooltip={"Raise Hand"} Icon={RaiseHandIcon} />
     );
   };
 

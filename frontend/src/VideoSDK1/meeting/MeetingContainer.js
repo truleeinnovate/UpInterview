@@ -105,6 +105,8 @@ export function MeetingContainer({
 
   // State for active sidebar item
   const [activeItem, setActiveItem] = useState(null);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const sideBarModeRef = useRef(null);
   const { localScreenShareOn, toggleScreenShare, sideBarMode, setSideBarMode } =
     useMeetingAppContext();
   const { participants } = useMeeting();
@@ -133,7 +135,15 @@ export function MeetingContainer({
   // Handle sidebar item click
   const handleSidebarItemClick = (id) => {
     const upperId = id.toUpperCase();
-    setSideBarMode((prevMode) => (prevMode === upperId ? null : upperId));
+    setSideBarMode((prevMode) => {
+      const newMode = prevMode === upperId ? null : upperId;
+      sideBarModeRef.current = newMode;
+      return newMode;
+    });
+    // Reset unread count when opening the chat panel
+    if (upperId === "CHAT") {
+      setUnreadChatCount(0);
+    }
   };
 
   const [containerHeight, setContainerHeight] = useState(0);
@@ -314,6 +324,10 @@ export function MeetingContainer({
           chatNotifAudioRef.current.currentTime = 0;
           chatNotifAudioRef.current.play().catch(() => { });
         }
+        // Increment unread count only if chat panel is NOT currently open
+        if (sideBarModeRef.current !== "CHAT") {
+          setUnreadChatCount((prev) => prev + 1);
+        }
       }
     },
   });
@@ -429,13 +443,22 @@ export function MeetingContainer({
                 <div key={item.id} className="group relative">
                   <button
                     onClick={() => handleSidebarItemClick(item.id)}
-                    className={`p-2.5 rounded-md flex items-center justify-center transition-colors ${sideBarMode === item.id.toUpperCase()
+                    className={`p-2.5 rounded-md flex items-center justify-center transition-colors relative ${sideBarMode === item.id.toUpperCase()
                       ? "bg-blue-100 text-custom-blue border-2 border-custom-blue"
                       : "text-custom-blue hover:bg-gray-100 border border-custom-blue hover:border-custom-blue"
                       }`}
                     aria-label={item.label}
                   >
                     {item.icon}
+                    {/* Unread chat badge */}
+                    {item.id === "chat" && unreadChatCount > 0 && sideBarMode !== "CHAT" && (
+                      <span
+                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm"
+                        style={{ minWidth: 18, height: 18, padding: '0 4px' }}
+                      >
+                        {unreadChatCount > 99 ? "99+" : unreadChatCount}
+                      </span>
+                    )}
                   </button>
                   <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 bg-gray-800 text-white text-xs rounded py-1 px-2 absolute top-full left-1/2 transform -translate-x-1/2 mt-2 whitespace-nowrap transition-opacity duration-200 z-50 pointer-events-none">
                     {item.tooltip}

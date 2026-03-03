@@ -193,7 +193,7 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
         if (hasEndedRef.current) return;
         hasEndedRef.current = true;
 
-        notify.critical("⏰ Meeting ended. Closing call...");
+        notify.meetingAlert("⏰ Meeting ended. Closing call...");
 
         // Build the payload based on status
         const payload = {
@@ -229,6 +229,11 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
                 setIsMeetingLeft(true);
             }
         }
+
+        // Auto-reload the page after meeting ends
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
     }, [end, setIsMeetingLeft]);
 
     // Main timer logic
