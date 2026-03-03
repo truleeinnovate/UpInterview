@@ -41,27 +41,18 @@ function ParticipantGrid({ participantIds, isPresenting }) {
         style={{
           gridTemplateColumns: `repeat(${Math.min(participantIds.length, perRow)}, 1fr)`,
           gridAutoRows: '1fr',
-          aspectRatio: '16/9',
-          maxWidth: '100%',
-          maxHeight: '100%',
         }}
       >
         {participantIds.map((participantId) => (
           <div
             key={`participant_${participantId}`}
-            className="w-full h-full flex items-center justify-center relative"
-            style={{
-              paddingBottom: '56.25%', // 16:9 aspect ratio
-              position: 'relative',
-            }}
+            className="w-full h-full relative overflow-hidden"
           >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-full h-full bg-gray-800 rounded-lg overflow-hidden">
-                <MemoizedParticipant
-                  participantId={participantId}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+            <div className="w-full h-full bg-gray-800 rounded-lg overflow-hidden">
+              <MemoizedParticipant
+                participantId={participantId}
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
         ))}

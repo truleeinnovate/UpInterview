@@ -480,9 +480,6 @@ export function ParticipantView({ participantId }) {
       if (currentVideoRef) {
         currentVideoRef.srcObject = null;
       }
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-      }
     };
   }, [webcamOn, webcamStream]);
 
@@ -496,9 +493,9 @@ export function ParticipantView({ participantId }) {
       }}
       className={`h-full w-full bg-gray-750 relative overflow-hidden rounded-lg video-cover`}
       style={{
-        outline: isActiveSpeaker ? '2px solid #22c55e' : 'none',
+        outline: isActiveSpeaker ? '2px solid #217989' : 'none',
         outlineOffset: '-2px',
-        boxShadow: isActiveSpeaker ? '0 0 8px 1px rgba(34, 197, 94, 0.35)' : 'none',
+        boxShadow: isActiveSpeaker ? '0 0 8px 1px rgba(33, 121, 137, 0.35)' : 'none',
         transition: 'outline-color 0.3s ease, box-shadow 0.3s ease',
       }}
     >

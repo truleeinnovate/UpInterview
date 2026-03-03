@@ -317,40 +317,30 @@ export function PresenterView({ height }) {
 
       <div className="video-contain absolute h-full w-full">
         {isLocal ? (
-          // Local: Manual <video>
+          // Local: Show own screen share preview
           localScreenShareStream ? (
             <video
               ref={videoRef}
               autoPlay
               playsInline
-              className="h-full w-full object-cover"
+              muted
+              className="h-full w-full object-contain bg-black"
             />
           ) : (
-            <div className="h-full w-full bg-black flex items-center justify-center">
-              <p className="text-white">Screen share loading...</p>
+            <div className="h-full w-full bg-gray-900 flex flex-col items-center justify-center">
+              <ScreenShareIcon style={{ height: 48, width: 48, color: "#22c55e" }} />
+              <p className="text-white text-lg font-semibold mt-4">Screen share starting...</p>
             </div>
           )
         ) : (
-          // Remote: VideoPlayer + Fallback <video> if stream missing
-          <>
-            <VideoPlayer
-              participantId={presenterId}
-              type="share"
-              containerStyle={{ height: "100%", width: "100%" }}
-              className="h-full"
-              classNameVideo="h-full"
-            />
-            {screenShareOn && screenShareVideoTrack && !screenShareStream && (
-              // NEW: Fallback manual video (hides under VideoPlayer if both active)
-              <video
-                ref={remoteVideoRef}
-                autoPlay
-                playsInline
-                muted={false}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-            )}
-          </>
+          // Remote: VideoPlayer shows the presenter's screen share
+          <VideoPlayer
+            participantId={presenterId}
+            type="share"
+            containerStyle={{ height: "100%", width: "100%" }}
+            className="h-full"
+            classNameVideo="h-full"
+          />
         )}
 
         {/* Top banner overlay (unchanged) */}

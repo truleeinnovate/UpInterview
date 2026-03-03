@@ -198,13 +198,12 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
         // Build the payload based on status
         const payload = {
             roundId: interviewRound?._id,
-            // interviewId: interviewRoundData?.interviewId,
             action: "Completed",
             reasonCode: "Automatic Call Ended"
         };
-        let response;
+
         try {
-            end();
+            // Update round status FIRST (before ending the meeting)
             if (isMockInterview) {
                 const mockId =
                     mockinterview?._id ||
@@ -212,29 +211,31 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
                         ? interviewRound?.mockInterviewId?._id
                         : interviewRound?.mockInterviewId);
 
-                response = await updateRoundStatus.mutateAsync({
+                await updateMockRoundStatus.mutateAsync({
                     mockInterviewId: mockId,
                     roundId: interviewRound?._id,
                     payload,
                 });
-
             } else {
-                response = await updateRoundStatus(payload);
+                await updateRoundStatus(payload);
             }
-            console.log("response for End call ==========>", response)
+            console.log("[MeetingTimer] Round status updated successfully");
         } catch (error) {
-            console.error("Error ending meeting:", error);
-            // Fallback: just set meeting left
-            if (setIsMeetingLeft) {
-                setIsMeetingLeft(true);
-            }
+            console.error("[MeetingTimer] Error updating round status:", error);
         }
 
-        // Auto-reload the page after meeting ends
-        setTimeout(() => {
+        // End the VideoSDK meeting
+        try {
+            end();
+        } catch (e) {
+            console.error("[MeetingTimer] Error ending meeting:", e);
+        }
+
+        // Auto-reload the page — always runs regardless of success/failure above
+        window.setTimeout(() => {
             window.location.reload();
         }, 2000);
-    }, [end, setIsMeetingLeft]);
+    }, [end, setIsMeetingLeft, isMockInterview, updateMockRoundStatus, updateRoundStatus, interviewRound, mockinterview]);
 
     // Main timer logic
     useEffect(() => {
