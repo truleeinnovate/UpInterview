@@ -1363,7 +1363,7 @@ const updateInterviewRoundStatus = async (req, res) => {
 
     const existingRound = await InterviewRounds.findById(roundId)
       .populate("interviewId", "title candidateName")
-      .populate("interviewers", "firstName lastName email");
+    // .populate("interviewers", "firstName lastName email");
 
     if (!existingRound) {
       return res
@@ -1377,7 +1377,12 @@ const updateInterviewRoundStatus = async (req, res) => {
     // ===== STRICT CHECK: ALL INTERVIEWERS FEEDBACK STATUS = DRAFT =====
 
     // Interviewer IDs from round
-    const interviewerIds = (existingRound.interviewers || []).map((id) => id);
+    // const interviewerIds = (existingRound.interviewers || []).map((id) => id);
+    // const interviewerIds = (existingRound.interviewers || []).map(
+    //   (interviewer) => interviewer._id
+    // );
+    const interviewerIds = existingRound.interviewers || [];
+
 
 
     const submittedCount = await FeedbackModel.countDocuments({
@@ -1387,6 +1392,7 @@ const updateInterviewRoundStatus = async (req, res) => {
     });
 
     const allInterviewerssubmittedCount = submittedCount === interviewerIds.length
+
 
 
 
@@ -1404,6 +1410,8 @@ const updateInterviewRoundStatus = async (req, res) => {
         existingRound.interviewerType === "External" &&
         existingRound.status === "FeedbackPending" && !allInterviewerssubmittedCount
       ) {
+        console.log("allInterviewerssubmittedCount", allInterviewerssubmittedCount)
+        console.log("interviewerIds", interviewerIds)
         return res.status(400).json({
           success: false,
           code: "FEEDBACK_REQUIRED_FOR_EXTERNAL",
