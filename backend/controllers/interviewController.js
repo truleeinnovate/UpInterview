@@ -1689,7 +1689,7 @@ const getInterviewDataforOrg = async (req, res) => {
         select: "firstName lastName email",
       })
       .lean();
-    console.log("response rounds", rounds)
+    // console.log("response rounds", rounds)
     // const roundIds = rounds.map((r) => r._id);
 
     // added for feedback form fetch specific round

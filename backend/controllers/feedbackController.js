@@ -354,12 +354,12 @@ const createFeedback = async (req, res) => {
     //  Update interview round status
     // if (finalStatus === "submitted") {
     //  Update interview round status
-    let res = await updateInterviewRoundFeedbackStatus({
+    let res1 = await updateInterviewRoundFeedbackStatus({
       interviewRoundId: feedbackInstance.interviewRoundId,
       isMock: feedbackInstance?.isMockInterview,
       actingAsUserId: authContext?.ownerId,
     });
-    // console.log("finalStatus finalStatus", res)
+    console.log("finalStatus finalStatus", res1)
     // }
 
     // Trigger webhook for feedback submission only (not for drafts)
@@ -849,12 +849,12 @@ const updateFeedback = async (req, res) => {
 
     // if (finalStatus === "submitted") {
     //  Update interview round status
-    let res = await updateInterviewRoundFeedbackStatus({
+    let res1 = await updateInterviewRoundFeedbackStatus({
       interviewRoundId: updatedFeedback.interviewRoundId,
       isMock: updatedFeedback?.isMockInterview,
       actingAsUserId: authContext?.ownerId,
     });
-    console.log("finalStatus finalStatus", res)
+    console.log("finalStatus finalStatus", res1)
     // }
 
     // Trigger webhook for feedback status update if status changed to submitted
