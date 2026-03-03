@@ -165,7 +165,7 @@ const organizationUserCreation = async (req, res) => {
         roleId: new mongoose.Types.ObjectId(roleId), // Ensure ObjectId
         countryCode,
         //   status: status || "active",
-        status: isSuperAdmin ? "active" : "pending",
+        status: "active",
         // isEmailVerified: isEmailVerified || false,
         // <-------------------------------v1.0.3
         ...(isSuperAdmin

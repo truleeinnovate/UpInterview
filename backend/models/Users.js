@@ -32,7 +32,7 @@ const UsersSchema = new mongoose.Schema({
     //newly added for roles
     roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'RolesPermissionObject' },
     profileId: { type: String },
-    status: { type: String, enum: ['active', 'inactive', 'pending'], default: 'pending' },
+    status: { type: String, enum: ['active', 'inactive'], default: 'inactive' },
     isEmailVerified: { type: Boolean, default: false },
     isSkipped: { type: Boolean, default: false },
     createdBy: { type: String },
