@@ -84,7 +84,7 @@ const RoleSelector = ({ onRoleSelect, roleInfo, feedbackData }) => {
 
   // console.log("interviewRoundData", interviewRoundData);
 
-  console.log("interviewRoundData:", interviewRoundData);
+  // console.log("interviewRoundData:", interviewRoundData);
 
   const currentStatus = interviewRoundData?.status;
 
