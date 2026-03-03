@@ -1903,7 +1903,8 @@ const MockSchedulelater = () => {
         roundTitle: formData.rounds.roundTitle || "Technical Round",
         interviewMode: formData.rounds.interviewMode || "Virtual",
         interviewType: effectiveInterviewType,
-        duration: formData.rounds.duration || "60",
+        duration: 20,
+        //formData.rounds.duration || "60",
         instructions: formData.rounds.instructions || "",
         dateTime: effectiveCombinedDateTime,
         selectedInterviewers: effectiveInterviewers,
@@ -1962,7 +1963,8 @@ const MockSchedulelater = () => {
             roundTitle: savedRound.roundTitle,
             instructions: savedRound.instructions || "",
             combinedDateTime: savedRound.dateTime || effectiveCombinedDateTime,
-            duration: savedRound.duration || formData.rounds.duration,
+            duration: 20,
+            //savedRound.duration || formData.rounds.duration,
             selectedInterviewers: externalInterviewers,
           };
 
@@ -1981,7 +1983,8 @@ const MockSchedulelater = () => {
 
             const zoomPayload = {
               topic: savedRound.roundTitle || "Mock Interview Round",
-              duration: Number(savedRound.duration || "60"),
+              duration: 20,
+              //Number(savedRound.duration || "60"),
               type: 2,
               start_time: formattedStartTime,
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,

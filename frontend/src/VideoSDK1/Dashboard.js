@@ -591,6 +591,16 @@ const Dashboard = () => {
               webcamEnabled: webcamOn,
               name: candidateData?.LastName || contactData?.name,
               multiStream: false,
+              // High-quality audio with noise cancellation
+              micMediaStreamConstraints: {
+                audio: {
+                  noiseSuppression: true,
+                  echoCancellation: true,
+                  autoGainControl: true,
+                  sampleRate: 48000,
+                  channelCount: 1,
+                }
+              },
             }}
             token={token}
             reinitialiseMeetingOnConfigChange={true}
@@ -694,6 +704,16 @@ const Dashboard = () => {
                   defaultVideoDevice: {
                     deviceId: "default",
                     label: "Default Video Device",
+                  },
+                  // High-quality audio with noise cancellation
+                  micMediaStreamConstraints: {
+                    audio: {
+                      noiseSuppression: true,
+                      echoCancellation: true,
+                      autoGainControl: true,
+                      sampleRate: 48000,
+                      channelCount: 1,
+                    }
                   },
                 }}
                 token={token}

@@ -1,5 +1,6 @@
 // MeetingContainer.js (Updated PiP strip: Horizontal top strip during presentation)
 import React, { useState, useEffect, useRef, createRef, memo } from "react";
+import { notify } from "../../services/toastService";
 import {
   Constants,
   useMeeting,
@@ -91,16 +92,14 @@ export function MeetingContainer({
         const audioElement = new Audio();
         audioElement.srcObject = mediaStream;
         audioElement.muted = isLocal;
-        audioElement.play().catch((error) => {
-          console.error("Error playing audio:", error);
-        });
+        audioElement.play().catch(() => { }); // Autoplay policy - safe to ignore
       }
     }, [micStream, participantId, isLocal]);
 
     return null;
   });
 
-  const { useRaisedHandParticipants } = useMeetingAppContext();
+  const { useRaisedHandParticipants, raisedHandsParticipants } = useMeetingAppContext();
   const bottomBarHeight = 60;
 
   // State for active sidebar item
@@ -270,6 +269,15 @@ export function MeetingContainer({
     });
   };
 
+  const { localScreenShareStream, setLocalScreenShareStream } =
+    useMeetingAppContext();
+
+  // Ref to avoid stale closure in onPresenterChanged
+  const screenShareStreamRef = useRef(null);
+  useEffect(() => {
+    screenShareStreamRef.current = localScreenShareStream;
+  }, [localScreenShareStream]);
+
   const mMeeting = useMeeting({
     // Enable screen sharing with audio
     enableScreenShare: true,
@@ -286,6 +294,14 @@ export function MeetingContainer({
     onMeetingLeft,
     onError: _handleOnError,
     onRecordingStateChanged: _handleOnRecordingStateChanged,
+    onPresenterChanged: (presenterId) => {
+      // When presenting stops (presenterId becomes null), clean up the local stream
+      if (!presenterId && screenShareStreamRef.current) {
+        console.log('[MeetingContainer] Presenter cleared — stopping local screen share stream');
+        screenShareStreamRef.current.getTracks().forEach(track => track.stop());
+        setLocalScreenShareStream(null);
+      }
+    },
   });
 
   const isPresenting = mMeeting.presenterId ? true : false;
@@ -308,6 +324,12 @@ export function MeetingContainer({
     mMeetingRef.current = mMeeting;
   }, [mMeeting]);
 
+  // Ref to avoid stale closure in usePubSub callback
+  const raisedHandsRef = useRef(raisedHandsParticipants);
+  useEffect(() => {
+    raisedHandsRef.current = raisedHandsParticipants;
+  }, [raisedHandsParticipants]);
+
   usePubSub("RAISE_HAND", {
     onMessageReceived: (data) => {
       const localParticipantId = mMeeting?.localParticipant?.id;
@@ -316,9 +338,28 @@ export function MeetingContainer({
 
       const isLocal = senderId === localParticipantId;
 
-      // Hand raise notification handled silently
+      // Check if hand is currently raised (use ref for latest value)
+      const isCurrentlyRaised = raisedHandsRef.current?.some(
+        (item) => item.participantId === senderId
+      );
 
+      // Toggle the hand raise
       participantRaisedHand(senderId);
+
+      // Show appropriate notification
+      if (isCurrentlyRaised) {
+        notify.meetingAlert(
+          isLocal
+            ? "✋ You lowered your hand"
+            : `✋ ${senderName || 'Someone'} lowered hand`
+        );
+      } else {
+        notify.meetingAlert(
+          isLocal
+            ? "✋ You raised your hand"
+            : `✋ ${senderName || 'Someone'} raised hand`
+        );
+      }
     },
   });
 
