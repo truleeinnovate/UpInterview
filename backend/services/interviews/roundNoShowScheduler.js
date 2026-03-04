@@ -1,7 +1,23 @@
 const agenda = require("../../agenda");
 const { DateTime } = require('luxon');
 const NO_SHOW_DELAY_MINUTES = 5;
-//agenda not working in dev becuase azure not active every time so i wont load correctly
+
+/**
+ * Ensures Agenda is connected before scheduling.
+ * Returns true if ready, false if not (after waiting up to 10s).
+ */
+async function ensureAgendaReady() {
+  if (agenda.isReady()) return true;
+  console.log("[NoShow] ⏳ Agenda not ready, waiting up to 10s...");
+  try {
+    await agenda.waitForReady(10000);
+    console.log("[NoShow] ✅ Agenda is now ready");
+    return true;
+  } catch (err) {
+    console.error("[NoShow] ❌ Agenda still not ready after 10s:", err.message);
+    return false;
+  }
+}
 
 function extractStartDate(dateTimeStr) {
   console.log("[NoShow] extractStartDate called with:", dateTimeStr);
@@ -146,6 +162,13 @@ async function scheduleOrRescheduleNoShow(roundDoc, options = {}) {
     }
   } else {
     console.log("[NoShow] No existing job to cancel");
+  }
+
+  // ================ Ensure Agenda is connected ================
+  const agendaReady = await ensureAgendaReady();
+  if (!agendaReady) {
+    console.error("[NoShow] ❌ Cannot schedule job — Agenda is not connected to MongoDB");
+    return;
   }
 
   // ================ Schedule new job ================
