@@ -2,6 +2,7 @@
 
 const express = require("express");
 const router = express.Router();
+const loggingService = require("../middleware/loggingService.js");
 const {
     getApplicationsByCandidate,
     getApplicationsByPosition,
@@ -25,10 +26,10 @@ router.get("/position/:positionId", getApplicationsByPosition);
 router.get("/:id", getApplicationById);
 
 // Create new application
-router.post("/", createApplication);
+router.post("/", loggingService.internalLoggingMiddleware, createApplication);
 
 // Update application
-router.patch("/:id", updateApplication);
-router.put("/status/:id", updateApplicationStatus);
+router.patch("/:id", loggingService.internalLoggingMiddleware, updateApplication);
+router.put("/status/:id", loggingService.internalLoggingMiddleware, updateApplicationStatus);
 
 module.exports = router;

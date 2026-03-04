@@ -1,6 +1,8 @@
 const interviewQuestions = require("../models/Interview/selectedInterviewQuestion.js");
 
 const AddQuestion = async (req, res) => {
+  res.locals.loggedByController = true;
+  res.locals.processName = "Add Interview Question";
   try {
     const { tenantId, ownerId, questionId, source, snapshot, addedBy } =
       req.body;
@@ -13,6 +15,16 @@ const AddQuestion = async (req, res) => {
       addedBy,
     });
     await questionInstance.save();
+
+    res.locals.logData = {
+      tenantId: req.body.tenantId || "",
+      ownerId: req.body.ownerId || "",
+      processName: "Add Interview Question",
+      requestBody: req.body,
+      status: "success",
+      message: "Question added",
+      responseBody: { questionId: questionInstance._id },
+    };
 
     return res.status(201).send({
       success: true,

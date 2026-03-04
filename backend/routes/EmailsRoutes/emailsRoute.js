@@ -1,14 +1,14 @@
 
 const express = require('express')
-const {afterSubscribePlan,afterSubscribeFreePlan} = require('../../controllers/EmailsController/subscriptionEmailController')
-const { sendSignUpEmail,forgotPasswordSendEmail,resendVerification,requestEmailChangeVerification,verifyEmailChange} = require('../../controllers/EmailsController/signUpEmailController')
-const { shareAssessment, resendAssessmentLink,sendOtp } = require('../../controllers/EmailsController/assessmentEmailController')
+const { afterSubscribePlan, afterSubscribeFreePlan } = require('../../controllers/EmailsController/subscriptionEmailController')
+const { sendSignUpEmail, forgotPasswordSendEmail, resendVerification, requestEmailChangeVerification, verifyEmailChange } = require('../../controllers/EmailsController/signUpEmailController')
+const { shareAssessment, resendAssessmentLink, sendOtp } = require('../../controllers/EmailsController/assessmentEmailController')
 const { sendInterviewRoundEmails, sendOutsourceInterviewRequestEmails } = require('../../controllers/EmailsController/interviewEmailController')
 
 const router = express.Router()
 
-router.post('/subscription/paid',afterSubscribePlan)
-router.post('/subscription/free',afterSubscribeFreePlan)
+router.post('/subscription/paid', afterSubscribePlan)
+router.post('/subscription/free', afterSubscribeFreePlan)
 
 
 router.post('/send-signup-email', sendSignUpEmail);
