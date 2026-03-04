@@ -78,6 +78,12 @@ const queueEmail = async (toEmail, subject, messageBody, ccEmail) => {
   try {
     const agenda = require("../agenda");
 
+    // Check if Agenda is connected before trying to queue
+    if (!agenda.isReady()) {
+      console.warn(`[QueueEmail] ⚠️ Agenda not ready, falling back to direct send for ${toEmail}`);
+      return await sendEmail(toEmail, subject, messageBody, ccEmail);
+    }
+
     // Create the job
     await agenda.now("send-email", {
       toEmail,

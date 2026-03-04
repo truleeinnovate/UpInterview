@@ -6,7 +6,12 @@ require("./jobs/email.job")(agenda);
 
 module.exports = async function startAgenda() {
   try {
-    // Agenda v5 with db.address auto-connects; just need to start processing
+    // Wait for Agenda's MongoDB connection to be fully established
+    // This prevents "Cannot read properties of undefined (reading 'insertOne')" on Azure cold starts
+    console.log("[AGENDA] ⏳ Waiting for MongoDB connection...");
+    await agenda.waitForReady(30000); // 30 second timeout
+    console.log("[AGENDA] ✅ MongoDB connection confirmed");
+
     await agenda.start();
     console.log("[AGENDA] ✅ Started successfully — processing jobs every 30s");
 
