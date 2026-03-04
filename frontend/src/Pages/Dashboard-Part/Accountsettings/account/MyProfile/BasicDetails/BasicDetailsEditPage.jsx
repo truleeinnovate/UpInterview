@@ -16,7 +16,10 @@ import {
   validateWorkEmail,
   checkEmailExists,
 } from "../../../../../../utils/workEmailValidation.js";
-import { validateProfileId } from "../../../../../../utils/OrganizationSignUpValidation.js";
+import {
+  validateProfileId,
+  checkProfileIdExists,
+} from "../../../../../../utils/userIdentifierValidation.js";
 
 import {
   useRequestEmailChange,
@@ -43,7 +46,7 @@ import {
   ProfilePhotoUpload,
 } from "../../../../../../Components/FormFields";
 import LoadingButton from "../../../../../../Components/LoadingButton.jsx";
-import {Button} from "../../../../../../Components/Buttons/Button.jsx";
+import { Button } from "../../../../../../Components/Buttons/Button.jsx";
 import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode.js";
 Modal.setAppElement("#root");
 
@@ -298,18 +301,6 @@ const BasicDetailsEditPage = ({
     });
   };
 
-  const checkProfileIdExists = useCallback(async (profileId) => {
-    if (!profileId) return false;
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/check-profileId?profileId=${profileId}`
-      );
-      return response.data.exists;
-    } catch (error) {
-      console.error("ProfileId check error:", error);
-      return false;
-    }
-  }, []);
 
   const handleInputChange = async (e) => {
     const { name, value } = e.target;
@@ -330,7 +321,7 @@ const BasicDetailsEditPage = ({
     if (name === "profileId") {
       if (value !== originalProfileId) {
         const profileIdError = await validateProfileId(
-          value,
+          value.toLowerCase(),
           checkProfileIdExists
         );
         setErrors((prev) => ({
@@ -350,8 +341,9 @@ const BasicDetailsEditPage = ({
 
   const handleProfileIdValidation = async (profileId) => {
     // console.log("profileId", profileId);
-    if (profileId !== originalProfileId) {
-      const error = await validateProfileId(profileId, checkProfileIdExists);
+    const normalizedProfileId = profileId.toLowerCase();
+    if (normalizedProfileId !== originalProfileId) {
+      const error = await validateProfileId(normalizedProfileId, checkProfileIdExists);
       setErrors((prev) => ({
         ...prev,
         profileId: error || "", // This ensures the error is cleared when valid
@@ -418,7 +410,7 @@ const BasicDetailsEditPage = ({
     //   }
     // }
 
-    if (formData.profileId !== originalProfileId || formData.profileId === "") {
+    if (!tokenPayload?.organization && (formData.profileId !== originalProfileId || formData.profileId === "")) {
       const profileIdError = await validateProfileId(
         formData.profileId,
         checkProfileIdExists
@@ -447,7 +439,7 @@ const BasicDetailsEditPage = ({
     }
 
     // Step 2: Run full form validation
-    const validationErrors = validateFormMyProfile(formData);
+    const validationErrors = validateFormMyProfile(formData, tokenPayload?.organization);
 
     // Debug: always log to confirm
     // console.log("Validation Errors:", validationErrors);
@@ -466,7 +458,7 @@ const BasicDetailsEditPage = ({
       lastName: formData.lastName.trim() || "",
       countryCode: formData.countryCode || "",
       phone: formData.phone.trim() || "",
-      profileId: formData.profileId.trim() || "",
+      profileId: (formData.profileId || "").trim(),
       dateOfBirth: formData.dateOfBirth || "",
       gender: formData.gender || "",
       linkedinUrl: formData.linkedinUrl.trim() || "",
@@ -741,19 +733,21 @@ const BasicDetailsEditPage = ({
               label="Date of Birth"
             />
 
-            <InputField
-              value={formData.profileId || ""}
-              onChange={handleInputChange}
-              onBlur={() =>
-                formData.profileId !== originalProfileId &&
-                handleProfileIdValidation(formData.profileId)
-              }
-              inputRef={fieldRefs.profileId}
-              error={errors.profileId}
-              label="Profile ID"
-              name="profileId"
-              required
-            />
+            {!tokenPayload?.organization && (
+              <InputField
+                value={formData.profileId || ""}
+                onChange={handleInputChange}
+                onBlur={() =>
+                  formData.profileId !== originalProfileId &&
+                  handleProfileIdValidation(formData.profileId)
+                }
+                inputRef={fieldRefs.profileId}
+                error={errors.profileId}
+                label="Profile ID"
+                name="profileId"
+                required
+              />
+            )}
 
             <DropdownWithSearchField
               value={formData.gender || ""}

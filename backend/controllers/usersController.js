@@ -1369,6 +1369,64 @@ const getPlatformUsers = async (req, res) => {
 };
 // ------------------------------------------------------------->
 
+const checkProfileId = async (req, res) => {
+  try {
+    const { profileId } = req.query;
+    if (!profileId) {
+      return res.status(400).json({ message: "Profile ID is required" });
+    }
+    const normalizedProfileId = profileId.toLowerCase();
+    const user = await Users.findOne({ profileId: normalizedProfileId });
+    res.json({ exists: !!user });
+  } catch (error) {
+    return handleApiError(res, error, "Check Profile ID");
+  }
+};
+
+const checkUsername = async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+
+    // Work email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(username)) {
+      return res.json({ exists: false, message: "Invalid username format" });
+    }
+
+    const personalDomains = [
+      "gmail.com", "yahoo.com", "outlook.com", "hotmail.com",
+      "aol.com", "icloud.com", "protonmail.com", "mail.com"
+    ];
+    const domain = username.split("@")[1]?.toLowerCase();
+    if (personalDomains.includes(domain)) {
+      return res.json({ exists: false, message: "Personal email domains not allowed" });
+    }
+
+    const normalizedUsername = username.toLowerCase();
+    const user = await Users.findOne({ username: normalizedUsername });
+    res.json({ exists: !!user });
+  } catch (error) {
+    return handleApiError(res, error, "Check Username");
+  }
+};
+
+const checkEmail = async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    const normalizedEmail = email.toLowerCase();
+    const user = await Users.findOne({ email: normalizedEmail });
+    res.json({ exists: !!user });
+  } catch (error) {
+    return handleApiError(res, error, "Check Email");
+  }
+};
+
 module.exports = {
   // getUsers,
   UpdateUser,
@@ -1377,4 +1435,7 @@ module.exports = {
   getUniqueUserByOwnerId,
   getPlatformUsers,
   getSuperAdminUsers,
+  checkProfileId,
+  checkUsername,
+  checkEmail,
 };

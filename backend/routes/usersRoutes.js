@@ -9,6 +9,9 @@ const {
   getUniqueUserByOwnerId,
   getPlatformUsers, // SUPER ADMIN added by Ashok
   getSuperAdminUsers,
+  checkProfileId,
+  checkUsername,
+  checkEmail,
 } = require("../controllers/usersController.js");
 
 // routes/userRoutes.js
@@ -60,6 +63,11 @@ router.get("/platform-users", getPlatformUsers);
 // Get user by ownerId
 
 router.get("/owner/:ownerId", getUniqueUserByOwnerId);
+
+// Identity existence check routes - must be BEFORE /:tenantId wildcard
+router.get("/check-profileId", checkProfileId);
+router.get("/check-username", checkUsername);
+router.get("/check-email", checkEmail);
 
 router.get("/:tenantId", getUsersByTenant);
 

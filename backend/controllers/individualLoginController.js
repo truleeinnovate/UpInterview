@@ -4,7 +4,7 @@ const InterviewAvailability = require("../models/InterviewAvailability.js");
 const OutsourceInterviewer = require("../models/OutsourceInterviewerRequest.js");
 const { generateToken } = require("../utils/jwt");
 const Tenant = require("../models/Tenant");
-const RolesPermissionObject = require("../models/RolesPermissionObject");
+const RolesPermissionObject = require("../models/rolesPermissionObject");
 const { getAuthCookieOptions } = require("../utils/cookieUtils");
 const {
   validateIndividualSignup,
@@ -34,6 +34,20 @@ exports.individualLogin = async (req, res) => {
           success: false,
           message: "Validation failed",
           errors: error.details.map((err) => err.message),
+        });
+      }
+    }
+
+    // ---------------- UNIQUENESS CHECK ----------------
+    if (contactData && contactData.profileId) {
+      const existingProfileIdUser = await Users.findOne({
+        _id: { $ne: ownerId },
+        profileId: contactData.profileId,
+      });
+      if (existingProfileIdUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Profile ID already taken",
         });
       }
     }

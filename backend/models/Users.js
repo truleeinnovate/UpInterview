@@ -31,7 +31,8 @@ const UsersSchema = new mongoose.Schema({
     // roleId: { type: String },
     //newly added for roles
     roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'RolesPermissionObject' },
-    profileId: { type: String },
+    profileId: { type: String },//only for individuals
+    username: { type: String }, //only for organization
     status: { type: String, enum: ['active', 'inactive'], default: 'inactive' },
     isEmailVerified: { type: Boolean, default: false },
     isSkipped: { type: Boolean, default: false },
@@ -39,12 +40,20 @@ const UsersSchema = new mongoose.Schema({
     modifiedBy: { type: String },
     isProfileCompleted: { type: Boolean },
 }, { timestamps: true });
-
 // added by mansoor for indexes to fetch the data fast
 UsersSchema.index({ tenantId: 1 });
 UsersSchema.index({ email: 1 });
+UsersSchema.index({ username: 1 });
+UsersSchema.index({ profileId: 1 });
 UsersSchema.index({ roleId: 1 });
 UsersSchema.index({ tenantId: 1, createdAt: -1 });
+
+UsersSchema.pre('save', function (next) {
+    if (this.email) this.email = this.email.toLowerCase();
+    if (this.username) this.username = this.username.toLowerCase();
+    if (this.profileId) this.profileId = this.profileId.toLowerCase();
+    next();
+});
 
 const Users = mongoose.model('Users', UsersSchema);
 module.exports = { Users };
