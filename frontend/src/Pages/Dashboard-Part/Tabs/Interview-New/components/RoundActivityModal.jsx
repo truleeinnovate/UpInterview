@@ -1,8 +1,11 @@
 import React from "react";
 import { createPortal } from "react-dom";
 import { Activity, Clock, XCircle, Users, Calendar } from "lucide-react";
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
 
 const RoundActivityModal = ({ isOpen, onClose, round, interviewData }) => {
+  useScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   const historyEntries = Array.isArray(round?.history)
@@ -69,7 +72,7 @@ const RoundActivityModal = ({ isOpen, onClose, round, interviewData }) => {
         className="flex-1 bg-black bg-opacity-40"
         onClick={onClose}
       />
-      <div className="w-full max-w-xl h-full bg-white shadow-xl flex flex-col">
+      <div className="w-full max-w-2xl h-full bg-white shadow-xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4">
           <div>

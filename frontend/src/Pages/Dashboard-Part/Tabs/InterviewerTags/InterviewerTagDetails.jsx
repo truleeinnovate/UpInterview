@@ -54,9 +54,9 @@ const InterviewerTagDetails = () => {
       title={capitalizeFirstLetter(tag.name) || "Interviewer Tag Details"}
       onClose={() => navigate(-1)}
     >
-      <div className="space-y-4 mt-8 mb-8">
+      <div className="space-y-4 mb-8">
         {/* Tag Information */}
-        <div className="bg-white rounded-xl p-6 mx-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
             Tag Information
           </h4>
@@ -121,7 +121,7 @@ const InterviewerTagDetails = () => {
         </div>
 
         {/* Description */}
-        <div className="bg-white rounded-xl p-6 mx-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
             Description
           </h4>
@@ -140,7 +140,7 @@ const InterviewerTagDetails = () => {
         </div>
 
         {/* Metadata */}
-        <div className="bg-white rounded-xl p-6 mx-4 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h4 className="sm:text-sm text-lg font-semibold text-gray-800 mb-4">
             Metadata
           </h4>

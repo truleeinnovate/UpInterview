@@ -1488,8 +1488,8 @@ const QuestionBankForm = ({
               ${section === "interviewerSection" || section==="assessment" ? "w-1/2  fixed h-[95%] flex flex-col justify-between right-9 " : 'fixed right-0 top-0 bottom-0 w-1/2'}
             `}
             > */}
-        <div ref={formRef} className="sm:pb-20 pb-12">
-          <div className="sm:p-0 p-4 flex-1">
+        <div ref={formRef} className="pb-12">
+          <div className="flex-1">
             {/* Header */}
             {/* <div className="flex justify-between items-center mb-6">
                 <div className="flex  justify-between sm:justify-start items-center text-custom-blue p-4  w-full  ">

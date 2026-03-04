@@ -222,7 +222,7 @@ const TeamFormPopup = () => {
         </div>
       )}
 
-      <div className="sm:p-0 p-4 mb-10">
+      <div className="mb-10">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Team Name & Color Row */}
           <div className="grid grid-cols-2 sm:grid-cols-1 gap-4">

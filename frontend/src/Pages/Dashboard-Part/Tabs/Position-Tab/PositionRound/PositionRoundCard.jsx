@@ -858,7 +858,7 @@ const PositionRoundCard = ({
           onClose={toggleActivityPanel}
           icon={<BarChart3 />}
         >
-          <div className="sm:p-0 p-4">
+          <div className="pb-4">
             <Activity
               parentId={round?._id}
               parentId2={interview?._id}
