@@ -105,7 +105,7 @@ const InterviewerSchedule = () => {
     }
   };
 
-  const handleJoinClick = (round) => {
+  const handleJoinClick = async (round) => {
     if (!round) return;
 
     const isMock = round.type === "mockinterview";
@@ -115,7 +115,7 @@ const InterviewerSchedule = () => {
       _id: round.interviewId || round._id,
     };
 
-    const joinUrl = createJoinMeetingUrl(round, interviewData, singleContact?.contactId, type);
+    const joinUrl = await createJoinMeetingUrl(round, interviewData, singleContact?.contactId, type);
 
     if (joinUrl) {
       window.open(joinUrl, "_blank", "noopener,noreferrer");

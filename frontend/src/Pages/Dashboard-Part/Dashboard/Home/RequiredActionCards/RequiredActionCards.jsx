@@ -15,6 +15,11 @@ import {
 } from "lucide-react";
 import { useFeedbacks } from "../../../../../apiHooks/useFeedbacks";
 import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { useUpcomingRoundsForInterviewer } from "../../../../../apiHooks/useUpcomingRoundsForInterviews";
+
+import { parse, isValid, addMinutes, subMinutes, isAfter, isBefore } from "date-fns";
+import { createJoinMeetingUrl } from "../../../Tabs/Interview-New/components/joinMeeting";
+import { useSingleContact } from "../../../../../apiHooks/useUsers";
 
 // const BRAND = "rgb(33, 121, 137)";
 const BRAND_LIGHT = "rgba(33, 121, 137, 0.08)";
@@ -102,22 +107,19 @@ function SlaCountdown({ deadline }) {
   );
 }
 
-function JoinCountdown({ startsAt, onExpire }) {
+// Countdown component
+function JoinCountdown({ startsAt }) {
   const [minutesLeft, setMinutesLeft] = useState(null);
 
   useEffect(() => {
-    function calc() {
+    function update() {
       const ms = startsAt.getTime() - Date.now();
-      if (ms <= 0) {
-        onExpire?.();
-        return;
-      }
-      setMinutesLeft(Math.ceil(ms / (1000 * 60)));
+      setMinutesLeft(Math.max(Math.ceil(ms / (1000 * 60)), 0));
     }
-    calc();
-    const interval = setInterval(calc, 30000);
+    update();
+    const interval = setInterval(update, 30000);
     return () => clearInterval(interval);
-  }, [startsAt, onExpire]);
+  }, [startsAt]);
 
   if (minutesLeft === null || minutesLeft <= 0) return null;
 
@@ -222,7 +224,184 @@ function FeedbackCard({ item, onDismiss }) {
   );
 }
 
+// function UpcomingInterviewCard({ item, onExpire }) {
+//   return (
+//     <div
+//       className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow"
+//       style={{
+//         borderColor: "rgba(245, 158, 11, 0.3)",
+//         backgroundColor: "rgba(245, 158, 11, 0.03)",
+//       }}
+//     >
+//       <div className="h-10 w-10 rounded-full flex-shrink-0 flex items-center justify-center text-white text-sm font-semibold mt-0.5 bg-amber-500">
+//         <Video className="h-5 w-5" />
+//       </div>
+
+//       <div className="flex-1 min-w-0">
+//         <div className="flex items-start justify-between gap-2 flex-wrap">
+//           <div className="w-full">
+//             <div className="flex items-center justify-between">
+//               <p className="text-sm font-semibold text-foreground leading-tight">
+//                 Interview Starting Soon
+//               </p>
+//               <JoinCountdown startsAt={item.startsAt} onExpire={onExpire} />
+//             </div>
+//             <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
+//               <div className="flex items-center gap-1">
+//                 <User className="h-3 w-3" />
+//                 <p className="text-gray-800 truncate max-w-[160px]">
+//                   {item.candidate}
+//                 </p>
+//               </div>
+//               <span className="text-gray-800">|</span>
+//               <div className="flex items-center gap-1">
+//                 <Briefcase className="h-3 w-3" />
+//                 <p className="text-gray-800 truncate max-w-[160px]">
+//                   {item.role}
+//                 </p>
+//               </div>
+//               <span className="text-gray-800">|</span>
+//               <p className="text-gray-800 truncate max-w-[160px]">
+//                 {item.round}
+//               </p>
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="flex items-center gap-2 mt-3">
+//           <button
+//             size="sm"
+//             className="flex items-center gap-2 px-4 py-1 rounded-sm text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600"
+//           >
+//             <Video className="h-3 w-3" />
+//             Join Interview
+//           </button>
+//           <Link to={`/interviews/${item.interviewId}`}>
+//             <button className="flex items-center gap-2 px-4 py-1 rounded-sm font-semibold border border-gray-400 text-xs bg-transparent">
+//               View Details
+//               <ChevronRight className="h-3 w-3" />
+//             </button>
+//           </Link>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
 function UpcomingInterviewCard({ item, onExpire }) {
+  const { singleContact } = useSingleContact();
+
+  const isMock = item.type === "mockinterview";
+  const candidate = item.candidateName || item.mockCandidateName || "Candidate";
+  const role = item.positionTitle || item.mockCurrentRole || "Role";
+  const round = item.roundTitle || "Round";
+
+  // console.log("item", item);
+
+  // Parse start & end
+  let startDate = null;
+  let endDate = null;
+  if (item.dateTime) {
+    const parts = item.dateTime.split(" - ").map((s) => s.trim());
+    if (parts.length === 2) {
+      const [startFull, endTimeOnly] = parts;
+      const start = parse(startFull, "dd-MM-yyyy hh:mm a", new Date());
+      if (isValid(start)) startDate = start;
+
+      let end = parse(`${startFull.split(" ")[0]} ${endTimeOnly}`, "dd-MM-yyyy hh:mm a", new Date());
+      if (!isValid(end)) {
+        const period = startFull.split(" ").pop();
+        const fallbackEnd = `${startFull.split(" ")[0]} ${endTimeOnly} ${period}`;
+        end = parse(fallbackEnd, "dd-MM-yyyy hh:mm a", new Date());
+      }
+      if (isValid(end)) endDate = end;
+    }
+  }
+
+  // State to track whether this card should be visible
+  const [visible, setVisible] = useState(true);
+  // Join logic state
+  const [canJoin, setCanJoin] = useState(false);
+
+  useEffect(() => {
+    if (!startDate || !endDate || !item.meetPlatform) return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      const startMinus15 = subMinutes(startDate, 15);
+      const endPlus10 = addMinutes(endDate, 10);
+
+      // Update canJoin dynamically
+      setCanJoin(isAfter(now, startMinus15) && isBefore(now, endPlus10));
+
+      // Remove card after interview ends
+      if (isAfter(now, endPlus10)) {
+        setVisible(false);
+        onExpire?.();
+        clearInterval(interval);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [startDate, endDate, item.meetPlatform, onExpire]);
+
+  // Inside the map function where you render each round
+  // let canJoin = false;
+  // if (round?.dateTime && (round.status === "Scheduled" || round.status === "Rescheduled") && round.meetPlatform) {
+  //   const parts = round.dateTime.split(" - ").map(s => s.trim());
+  //   if (parts.length === 2) {
+  //     const [startFull, endTimeOnly] = parts;
+  //     const start = parse(startFull, 'dd-MM-yyyy hh:mm a', new Date());
+
+  //     if (isValid(start)) {
+  //       let end = parse(`${startFull.split(' ')[0]} ${endTimeOnly}`, 'dd-MM-yyyy hh:mm a', new Date());
+
+  //       if (!isValid(end)) {
+  //         const period = startFull.split(' ').pop();
+  //         const fallbackEnd = `${startFull.split(' ')[0]} ${endTimeOnly} ${period}`;
+  //         end = parse(fallbackEnd, 'dd-MM-yyyy hh:mm a', new Date());
+  //       }
+
+  //       if (isValid(end)) {
+  //         const now = new Date();
+  //         const startMinus15 = subMinutes(start, 15);
+  //         const endPlus10 = addMinutes(end, 10);
+
+  //         // Check if within time window
+  //         canJoin = isAfter(now, startMinus15) && isAfter(endPlus10, now);
+  //       }
+  //     }
+  //   }
+  // }
+
+
+
+  const handleJoinClick = async (round) => {
+    if (!round) return;
+
+    const isMock = round.type === "mockinterview";
+    const type = isMock ? "mockinterview" : "interview";
+
+    // console.log("round", round)
+
+    // console.log("isMock", isMock)
+    // console.log("type", type)
+
+    const interviewData = {
+      _id: round._id || round.interviewId,
+    };
+    // console.log("interviewData", interviewData)
+
+    const joinUrl = await createJoinMeetingUrl(round, interviewData, singleContact?.contactId, type);
+    console.log("joinUrl", joinUrl)
+    if (joinUrl) {
+      window.open(joinUrl, "_blank", "noopener,noreferrer");
+    } else {
+      alert("Unable to generate meeting link.");
+    }
+  };
+
+  if (!visible) return null; // Hide card after interview ends
+
   return (
     <div
       className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:shadow-sm transition-shadow"
@@ -236,50 +415,34 @@ function UpcomingInterviewCard({ item, onExpire }) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2 flex-wrap">
-          <div className="w-full">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-foreground leading-tight">
-                Interview Starting Soon
-              </p>
-              <JoinCountdown startsAt={item.startsAt} onExpire={onExpire} />
-            </div>
-            <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-              <div className="flex items-center gap-1">
-                <User className="h-3 w-3" />
-                <p className="text-gray-800 truncate max-w-[160px]">
-                  {item.candidate}
-                </p>
-              </div>
-              <span className="text-gray-800">|</span>
-              <div className="flex items-center gap-1">
-                <Briefcase className="h-3 w-3" />
-                <p className="text-gray-800 truncate max-w-[160px]">
-                  {item.role}
-                </p>
-              </div>
-              <span className="text-gray-800">|</span>
-              <p className="text-gray-800 truncate max-w-[160px]">
-                {item.round}
-              </p>
-            </div>
-          </div>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold">
+            {isMock ? "Mock Interview Starting Soon" : "Interview Starting Soon"}
+          </p>
+
+          {startDate && <JoinCountdown startsAt={startDate} />}
+        </div>
+
+        <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+          <span>{candidate}</span>
+          <span>|</span>
+          <span>{role}</span>
+          <span>|</span>
+          <span>{round}</span>
         </div>
 
         <div className="flex items-center gap-2 mt-3">
-          <button
-            size="sm"
-            className="flex items-center gap-2 px-4 py-1 rounded-sm text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600"
-          >
-            <Video className="h-3 w-3" />
-            Join Interview
-          </button>
-          <Link to={`/interviews/${item.interviewId}`}>
-            <button className="flex items-center gap-2 px-4 py-1 rounded-sm font-semibold border border-gray-400 text-xs bg-transparent">
-              View Details
-              <ChevronRight className="h-3 w-3" />
+          {(item.status === "Scheduled" || item.status === "Rescheduled") && item.meetPlatform && (
+            <button
+              disabled={!canJoin}
+              onClick={() => canJoin && handleJoinClick(item)}
+              className={`flex items-center gap-2 px-4 py-1 rounded-sm text-xs font-semibold text-white ${canJoin ? "bg-amber-500 hover:bg-amber-600" : "bg-gray-400 cursor-not-allowed"
+                }`}
+            >
+              <Video className="h-3 w-3" />
+              Join Interview
             </button>
-          </Link>
+          )}
         </div>
       </div>
     </div>
@@ -347,9 +510,10 @@ export function ActionRequiredCards() {
     status: ["draft"],
   });
 
-  const { data: feedbacksResponse, isLoading } = useFeedbacks(filters);
-
+  const { data: feedbacksResponse, isLoading: isFeedbacksLoading } = useFeedbacks(filters);
+  const { data: upcomingRounds = [], isLoading: isUpcomingRoundsLoading } = useUpcomingRoundsForInterviewer();
   const draftFeedbacks = feedbacksResponse?.feedbacks || [];
+  const upcomingInterviews = upcomingRounds || [];
 
   const [dismissedFeedback, setDismissedFeedback] = useState([]);
   const [expiredInterviews, setExpiredInterviews] = useState([]);
@@ -358,13 +522,48 @@ export function ActionRequiredCards() {
     (f) => !dismissedFeedback.includes(f._id),
   );
 
-  const visibleUpcoming = upcomingInterviews.filter(
-    (u) => !expiredInterviews.includes(u._id),
-  );
+  // const visibleUpcoming = upcomingInterviews.filter(
+  //   (u) => !expiredInterviews.includes(u._id),
+  // );
+  const visibleUpcoming = upcomingInterviews.filter((u) => {
+    if (expiredInterviews.includes(u._id)) return false;
+    if (!u.dateTime) return false;
+
+    const parts = u.dateTime.split(" - ").map((s) => s.trim());
+    if (parts.length !== 2) return false;
+
+    const [startFull, endTimeOnly] = parts;
+
+    const start = parse(startFull, "dd-MM-yyyy hh:mm a", new Date());
+    if (!isValid(start)) return false;
+
+    let end = parse(
+      `${startFull.split(" ")[0]} ${endTimeOnly}`,
+      "dd-MM-yyyy hh:mm a",
+      new Date()
+    );
+
+    if (!isValid(end)) {
+      const period = startFull.split(" ").pop();
+      const fallbackEnd = `${startFull.split(" ")[0]} ${endTimeOnly} ${period}`;
+      end = parse(fallbackEnd, "dd-MM-yyyy hh:mm a", new Date());
+    }
+
+    if (!isValid(end)) return false;
+
+    const now = new Date();
+    const twoHoursLater = addMinutes(now, 120);
+    const endPlus10 = addMinutes(end, 10);
+
+    // ✅ Show only if:
+    // 1. Start time is within next 2 hours
+    // 2. Not already finished (+10 min buffer)
+    return start >= now && start <= twoHoursLater && isAfter(endPlus10, now);
+  });
 
   const totalActions = visibleFeedback.length + visibleUpcoming.length;
 
-  if (isLoading) return <ActionRequiredSkeleton />;
+  if (isFeedbacksLoading || isUpcomingRoundsLoading) return <ActionRequiredSkeleton />;
   if (totalActions === 0) return null;
 
   return (
@@ -393,7 +592,7 @@ export function ActionRequiredCards() {
               <div className="flex items-center gap-2 mb-3">
                 <MessageSquarePlus
                   className="h-4 w-4 text-custom-blue"
-                  // style={{ color: BRAND }}
+                // style={{ color: BRAND }}
                 />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Feedback Pending

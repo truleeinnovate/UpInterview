@@ -80,6 +80,7 @@ const PositionDetails = ({ fromFeedbackTab, roundId, interviewType }) => {
     Basic: "bg-purple-100 text-purple-800",
     Beginner: "bg-slate-100 text-slate-800",
   };
+  console.log("interviewData?.positionId", interviewData?.positionId)
 
   return (
     <div className={`space-y-6 min-h-screen ${fromFeedbackTab ? "px-0" : "px-5 pb-6"}`}>
@@ -213,11 +214,14 @@ const PositionDetails = ({ fromFeedbackTab, roundId, interviewType }) => {
 
       {/* jobDescription */}
 
-      <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
+      <div className="bg-white rounded-2xl overflow-hidden p-6 border border-gray-200">
+        <h3 className="text-base md:text-lg lg:text-xl font-medium text-gray-900">
           Job Description
         </h3>
-        <p className="text-sm text-gray-600 mt-1">{interviewData?.jobDescription}</p>
+
+        <div className="w-full mt-2 text-sm md:text-base text-gray-700 break-words leading-relaxed">
+          {interviewData?.positionId?.jobDescription}
+        </div>
       </div>
 
 

@@ -468,6 +468,8 @@ export function MeetingContainer({
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
+  // console.log("interviewRoundData", interviewRoundData)
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       {/* Top Navigation */}
@@ -716,10 +718,10 @@ export function MeetingContainer({
                   {/* Sidebar Content */}
                   <div className="flex-1 overflow-y-auto">
                     {sideBarMode === "INSTRUCTIONS" ? (
-                      <div className="p-4 flex justify-center items-center  m-4">
-                        {/* <h4 className="font-semibold text-center mb-2">Interview Instructions</h4> */}
-                        <p className="text-sm text-gray-600">
-                          {interviewRoundData?.instructions || "No instructions available for this round."}
+                      <div className="p-4 md:p-6 m-4  bg-gray-50 rounded-lg">
+                        <p className="text-sm md:text-base text-gray-600 text-left break-words leading-relaxed">
+                          {interviewRoundData?.instructions ||
+                            "No instructions available for this round."}
                         </p>
                       </div>
                     ) :

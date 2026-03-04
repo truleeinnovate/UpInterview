@@ -466,9 +466,9 @@ const RoundCard = ({
       setEvaluatedReasonModalOpen(false);
       setActionInProgress(false);
     } catch (error) {
-      if (error.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
-        notify.error(error.message);
-      }
+      // if (error.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
+      //   notify.error(error.message);
+      // }
       setActionInProgress(false);
       // setActionInProgress(false);
     }
@@ -512,9 +512,9 @@ const RoundCard = ({
         setActionInProgress(false);
       }
     } catch (error) {
-      if (error.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
-        notify.error(error.message);
-      }
+      // if (error.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
+      //   notify.error(error.message);
+      // }
       setActionInProgress(false);
     }
   };
