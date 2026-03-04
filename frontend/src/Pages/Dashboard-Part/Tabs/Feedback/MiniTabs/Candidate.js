@@ -375,6 +375,20 @@ const CandidateMiniTab = ({
           </div>
         )}
       </div>
+
+
+      {/* jobDescription */}
+      {isMockInterview && (
+        <div className="bg-white rounded-lg p-6 border border-gray-200">
+          <h3 className="sm:text-md md:text-md lg:text-lg xl:text-lg 2xl:text-lg font-medium text-gray-900">
+            Professional Summary
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">{candidateData?.jobDescription}</p>
+        </div>
+
+      )
+
+      }
     </div>
   );
 };

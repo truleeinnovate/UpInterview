@@ -398,9 +398,10 @@ const RoundCard = ({
         }
       }
       // Handle other errors
-      else if (error.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
-        notify.error(error.message);
-      } else {
+      // else if (error.code === "FEEDBACK_REQUIRED_FOR_EXTERNAL") {
+      //   notify.error(error.message);
+      // } 
+      else {
         console.error("Error updating status:", error);
         notify.error("Failed to update round status");
       }
