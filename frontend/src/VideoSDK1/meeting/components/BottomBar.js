@@ -521,6 +521,18 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = fals
       };
     }, []);
 
+    // Auto-stop local screen share when another user takes over as presenter
+    // This stops the browser's getDisplayMedia tracks, dismissing the "Stop sharing" popup
+    useEffect(() => {
+      const localId = mMeeting?.localParticipant?.id;
+      if (presenterId && presenterId !== localId && screenShareStreamRef.current) {
+        console.log('[ScreenShare] Another user took over presenting, stopping local capture');
+        screenShareStreamRef.current.getTracks().forEach(track => track.stop());
+        screenShareStreamRef.current = null;
+        setLocalScreenShareStream(null);
+      }
+    }, [presenterId]);
+
     const handleScreenShare = async () => {
       if (isProcessing) return;
 
@@ -566,6 +578,7 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = fals
         });
 
         console.log('Screen share stream obtained:', stream);
+        screenShareStreamRef.current = stream;
         setLocalScreenShareStream(stream);
 
         // Handle stream ended (user stops sharing)
