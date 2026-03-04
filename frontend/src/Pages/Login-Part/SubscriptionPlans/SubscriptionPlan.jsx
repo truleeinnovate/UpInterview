@@ -766,7 +766,7 @@ const SubscriptionPlan = () => {
           title="Contact Sales"
           onClose={() => setIsContactSalesOpen(false)}
         >
-          <div className="p-4">
+          <div className="pb-4">
             <ContactSalesForm
               formData={formData}
               errors={errors}

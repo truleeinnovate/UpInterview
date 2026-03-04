@@ -13,6 +13,8 @@ import {
   COMPLETE_OPTIONS,
   WITHDRAW_OPTIONS, // Use consistent imports from roundHistoryOptions
 } from "../../../../../utils/roundHistoryOptions";
+import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock";
+import { Button } from "../../../../../Components/Buttons/Button";
 
 // Policy warning component - only for External interviews
 const SettlementPolicyWarning = ({
@@ -182,6 +184,8 @@ const DateChangeConfirmationModal = ({
   // console.log("status", status);
   // console.log("combinedDateTime", combinedDateTime);
   // console.log("actionType", actionType);
+
+  useScrollLock(isOpen);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -507,18 +511,19 @@ const DateChangeConfirmationModal = ({
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-          <button
+          <Button
+            variant="outline"
             onClick={handleClose}
             disabled={isLoading}
-            className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+            className="border border-custom-blue text-custom-blue transition disabled:opacity-50"
           >
             Cancel
-          </button>
+          </Button>
 
           <button
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
-            className={`px-6 py-2.5 rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isCancelAction ||
+            className={`px-6 h-9 rounded-md font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isCancelAction ||
               isNoShowAction ||
               isEvaluatedAction ||
               isRejectAction ||

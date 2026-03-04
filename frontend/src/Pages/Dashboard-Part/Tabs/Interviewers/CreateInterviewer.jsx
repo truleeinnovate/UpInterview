@@ -373,7 +373,7 @@ const CreateInterviewer = () => {
         ]}
       />
 
-      <div className="sm:p-0 p-4 mb-10">
+      <div className="mb-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="text-lg font-semibold text-gray-800">

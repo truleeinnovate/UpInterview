@@ -46,8 +46,8 @@ export const InterviewerDetailsContent = ({ interviewer }) => {
     }
 
     return (
-        <div className="p-1 pb-20">
-            <div className="space-y-6 pt-4 px-2">
+        <div className="pb-20">
+            <div className="space-y-6 pt-4">
                 {/* Contact Information Card */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                     <h3 className="text-base font-semibold text-gray-900 mb-6">Contact Information</h3>

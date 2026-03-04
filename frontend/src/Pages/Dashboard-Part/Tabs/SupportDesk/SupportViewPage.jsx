@@ -72,8 +72,8 @@ const SupportViewPage = () => {
   const content = (
     <div>
       {/* Sub tabs Navigation */}
-      <div className="flex items-center ">
-        <div className="flex border-b border-gray-200 ">
+      <div className="flex items-center">
+        <div className="flex border-b border-gray-200 w-full">
           <button
             className={`py-3 px-4 font-medium flex items-center gap-2 ${
               activeTab === "details"
@@ -103,7 +103,7 @@ const SupportViewPage = () => {
       {/* <-------v1.0.1--------------Ticket Code and Status */}
       {/* Tab Content */}
       {activeTab === "details" ? (
-        <div className="sm:px-0 p-6">
+        <div className="pb-6 mt-4">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="flex items-center p-3 justify-center bg-custom-blue/10 text-custom-blue rounded-full">
               <Ticket className="w-6 h-6" />
@@ -324,7 +324,7 @@ const SupportViewPage = () => {
           </div>
         </div>
       ) : (
-        <div className="sm:px-0 p-4">
+        <div className="mt-4">
           <Activity parentId={ticketData?._id} />
         </div>
       )}

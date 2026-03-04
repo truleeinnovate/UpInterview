@@ -70,7 +70,7 @@ const TeamDetails = () => {
       showEdit={true}
       editPath="/my-teams/team-edit"
     >
-      <div className="sm:p-0 p-6">
+      <div className="pb-6">
         {/* Header Card with Team Icon */}
         <div className="bg-gray-50 rounded-xl p-5 mb-6">
           <div className="flex items-center gap-4">

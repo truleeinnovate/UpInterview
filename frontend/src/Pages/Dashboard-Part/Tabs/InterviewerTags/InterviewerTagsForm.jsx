@@ -452,10 +452,10 @@ const InterviewerTagsForm = ({ mode }) => {
       title={isEditMode ? "Update tag details" : "Create Interviewer Tag"}
       onClose={() => navigate(-1)}
     >
-      <div className="mt-4 space-y-6 mb-12">
+      <div className="mb-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-white overflow-hidden">
-            <div className="p-6 space-y-6">
+            <div className="space-y-4">
               <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6">
                 {/* Tag Name */}
                 <InputField
@@ -589,7 +589,7 @@ const InterviewerTagsForm = ({ mode }) => {
             <Button
               variant="outline"
               onClick={() => navigate(-1)}
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium border border-custom-blue text-custom-blue"
             >
               Cancel
             </Button>

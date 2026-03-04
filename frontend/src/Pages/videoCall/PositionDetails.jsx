@@ -19,8 +19,11 @@ import {
   // useCandidateDetails,
 } from "../../apiHooks/useVideoCall";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { useScrollLock } from "../../apiHooks/scrollHook/useScrollLock"
 
 const PositionDetails = ({ fromFeedbackTab, roundId, interviewType }) => {
+  useScrollLock(true);
+
   const location = useLocation();
   const feedback = location.state?.feedback || {};
 

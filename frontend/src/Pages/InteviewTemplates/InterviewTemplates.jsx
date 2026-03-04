@@ -30,6 +30,7 @@ import {
   getInterviewTemplateActions,
 } from "../../utils/tableColumnAndActionData.jsx";
 import { useTitle } from "../../apiHooks/Title/useTitle.js";
+import { useScrollLock } from "../../apiHooks/scrollHook/useScrollLock.js";
 
 const InterviewTemplates = () => {
   const navigate = useNavigate();
@@ -58,6 +59,8 @@ const InterviewTemplates = () => {
   const [isModifiedDateOpen] = useState(false);
   const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
   const [isFormatOpen, setIsFormatOpen] = useState(false);
+
+  useScrollLock(view === "table" || view === "kanban");
 
   //  Ranjith added delete Candidate functionality
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);

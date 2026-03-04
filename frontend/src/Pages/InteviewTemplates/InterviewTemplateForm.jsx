@@ -467,15 +467,14 @@ const InterviewSlideover = ({ mode }) => {
             title={isCloneMode ? "Clone Template" : isEditMode ? "Edit Template" : "New Template"}
             onClose={onClose}
         >
-            <div className="sm:p-0 p-6">
+            <div className="pb-6">
                 <form
                     key={formKey}
                     id="new-template-form"
                     onSubmit={handleSubmit}
-                    className="flex-1 flex flex-col h-[calc(100vh-100px)]"
                 >
                     <div className="flex-1">
-                        <div className="space-y-5 pt-6 pb-5">
+                        <div className="space-y-5 pb-5">
                             <InputField
                                 label="Title"
                                 inputRef={fieldRefs.title}
@@ -582,7 +581,7 @@ const InterviewSlideover = ({ mode }) => {
                                 isLoading={isMutationLoading && activeButton === "add"}
                                 loadingText="Adding..."
                             >
-                                <FaPlus className="w-5 h-5 mr-1" /> Add Round
+                                <FaPlus className="w-5 h-5 mr-2" /> Add Round
                             </LoadingButton>
                         )}
                     </div>

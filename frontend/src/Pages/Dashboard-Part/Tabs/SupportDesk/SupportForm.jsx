@@ -524,7 +524,7 @@ const SupportForm = ({ onClose, FeedbackIssueType, roundId }) => {
           </div> */}
 
         {/* newly added SeriviceDesk Ticket Guidence By Ranjith */}
-        <div className="px-6">
+        <div className="mb-6">
           <InfoGuide
             title="Support Ticket Guidelines"
             items={[
@@ -580,10 +580,10 @@ const SupportForm = ({ onClose, FeedbackIssueType, roundId }) => {
 
         {/* Content */}
         <div className="flex flex-col">
-          <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="flex-1 overflow-y-auto">
             <form>
               {/* Form Fields */}
-              <div className="grid grid-cols-1 gap-x-6 gap-y-6">
+              <div className="grid grid-cols-1 gap-y-4">
                 {/* v1.0.3 <------------------------------------------------------------------------- */}
 
                 {/* Issue Type Section */}
@@ -739,7 +739,7 @@ const SupportForm = ({ onClose, FeedbackIssueType, roundId }) => {
 
           {/* Footer */}
           {/* <-----v1.0.0 ------ */}
-          <div className="flex justify-end gap-3 p-5 bg-white">
+          <div className="flex justify-end gap-3 bg-white my-8">
             {/* -----v1.0.0 ------> */}
             <button
               type="button"
