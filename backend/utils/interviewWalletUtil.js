@@ -392,7 +392,7 @@ async function computeInterviewPricingForAccept({
     }
   }
 
-  let totalAmount = (rate * durationInMinutes) / 60;
+  let totalAmount = Math.round((rate * durationInMinutes) / 60);
   if (isNaN(totalAmount) || totalAmount <= 0) {
     return {
       error:
@@ -401,22 +401,33 @@ async function computeInterviewPricingForAccept({
     };
   }
 
-  // NOTE: The frontend already applies the mock interview discount at selection
-  // time and sends the discounted amount as maxHourlyRate for the wallet hold.
-  // We must NOT apply the discount again here, otherwise the amount would be
-  // double-discounted. We only track the discount metadata for audit/reporting.
+  // NOTE: The frontend applies the discount at selection time for the
+  // selection-time hold (maxHourlyRate). However, at acceptance time the
+  // amount is recalculated from scratch using contact rates, so the
+  // discount MUST be applied here. This is NOT a double-discount because
+  // the selection-time hold is released and replaced by this acceptance hold.
   let appliedDiscountPercentage = 0;
   let discountAmount = 0;
+  const originalAmount = totalAmount; // preserve pre-discount amount for audit
   if (request.isMockInterview && contact.mock_interview_discount) {
     appliedDiscountPercentage =
       parseFloat(contact.mock_interview_discount) || 0;
     if (appliedDiscountPercentage > 0 && appliedDiscountPercentage <= 100) {
-      // Calculate discount amount for metadata only — do NOT subtract from totalAmount
       discountAmount = (totalAmount * appliedDiscountPercentage) / 100;
-      // totalAmount is NOT reduced here because frontend already applied the discount
-      // at selection time when computing the hold amount.
+      totalAmount = totalAmount - discountAmount;
     }
   }
+
+  console.log("[computeInterviewPricingForAccept] DEBUG:", {
+    isMockInterview: request.isMockInterview,
+    mock_interview_discount: contact.mock_interview_discount,
+    rate,
+    durationInMinutes,
+    originalAmount,
+    appliedDiscountPercentage,
+    discountAmount,
+    finalTotalAmount: totalAmount,
+  });
 
   return {
     durationInMinutes,
@@ -425,7 +436,7 @@ async function computeInterviewPricingForAccept({
     totalAmount,
     appliedDiscountPercentage,
     discountAmount,
-    originalAmount: totalAmount, // same as totalAmount since discount is applied at frontend selection time
+    originalAmount,
   };
 }
 
@@ -540,7 +551,7 @@ async function applySelectionTimeWalletHoldForOutsourcedRound({
 // - locating any existing selection-time HOLD for the round
 // - validating available balance (including that selection hold)
 // - releasing unused selection hold back to the org wallet
-// - creating the final HOLD_NOTE (or legacy HOLD_CREATE when no selection hold exists)
+// - creating a new HOLD_CREATE for the exact acceptance amount
 //
 // It is intentionally HTTP-agnostic: on success it returns
 //   { wallet, transaction }
@@ -636,66 +647,57 @@ async function applyAcceptInterviewWalletFlow({
   let savedTransaction = null;
 
   if (selectionHoldTx && selectionHoldGrossAmount > 0) {
-    // Simple adjustment logic (GROSS amounts):
-    // - selectionHoldAmount was reserved at selection time (e.g. 4000 + GST)
-    // - acceptGrossAmount is final interviewer amount (e.g. 1500 + GST)
-    // - we release only the difference back to org wallet and leave the
-    //   remaining gross amount effectively held for this round.
-    const releaseGrossAmount = Math.max(
-      selectionHoldGrossAmount - acceptGrossAmount,
-      0
-    );
+    // FIX: Release the FULL selection-time hold and create a new real
+    // HOLD_CREATE for the exact acceptance amount. Previously we used
+    // HOLD_NOTE (balanceDelta: 0, holdDelta: 0) which left no actual
+    // hold on the wallet after acceptance.
 
-    if (releaseGrossAmount > 0) {
-      // Split the GROSS release amount into base + GST using the same
-      // acceptance GST rate so that reporting fields (amount, gstAmount,
-      // totalAmount) remain consistent.
-      let releaseBaseAmount = releaseGrossAmount;
-      let releaseGstAmount = 0;
+    // Split the FULL selection hold gross into base + GST for the release
+    let releaseBaseAmount = selectionHoldGrossAmount;
+    let releaseGstAmount = 0;
 
-      if (acceptGstRate && acceptGstRate > 0) {
-        const rateFactor = 1 + acceptGstRate / 100;
-        releaseBaseAmount = Math.round(
-          (releaseGrossAmount / rateFactor) * 100
-        ) / 100;
-        releaseGstAmount = Math.round(
-          (releaseGrossAmount - releaseBaseAmount) * 100
-        ) / 100;
-      }
-
-      const releaseResult = await createWalletTransaction({
-        ownerId: request.ownerId,
-        businessType: WALLET_BUSINESS_TYPES.HOLD_RELEASE,
-        amount: releaseBaseAmount,
-        gstAmount: releaseGstAmount,
-        description: `Refund unused selection-time hold for interview round ${round?.roundTitle}`,
-        relatedInvoiceId: selectionHoldTx.relatedInvoiceId || holdID,
-        status: "completed",
-        reason: request.isMockInterview
-          ? "MOCK_INTERVIEW_ACCEPTED_REFUND"
-          : "INTERVIEW_ACCEPTED_REFUND",
-        metadata: {
-          interviewId: String(
-            request.isMockInterview
-              ? round?.mockInterviewId
-              : round?.interviewId || ""
-          ),
-          roundId: String(roundId),
-          requestId: String(requestId),
-          source: "selection_hold_refund_on_accept",
-        },
-      });
-
-      updatedWallet = releaseResult.wallet;
+    if (acceptGstRate && acceptGstRate > 0) {
+      const rateFactor = 1 + acceptGstRate / 100;
+      releaseBaseAmount = Math.round(
+        (selectionHoldGrossAmount / rateFactor) * 100
+      ) / 100;
+      releaseGstAmount = Math.round(
+        (selectionHoldGrossAmount - releaseBaseAmount) * 100
+      ) / 100;
     }
 
-    // Create a non-mutating hold record for the final interviewer amount so
-    // that transaction history clearly shows the final gross hold
-    // (e.g. 1500 + GST) without double-counting holdAmount.
-    // without double-counting holdAmount.
-    const noteResult = await createWalletTransaction({
+    // Step 1: Release the FULL selection-time hold back to available balance
+    const releaseResult = await createWalletTransaction({
       ownerId: request.ownerId,
-      businessType: WALLET_BUSINESS_TYPES.HOLD_NOTE,
+      businessType: WALLET_BUSINESS_TYPES.HOLD_RELEASE,
+      amount: releaseBaseAmount,
+      gstAmount: releaseGstAmount,
+      description: `Release selection-time hold for interview round ${round?.roundTitle} (accepted)`,
+      relatedInvoiceId: selectionHoldTx.relatedInvoiceId || holdID,
+      status: "completed",
+      reason: request.isMockInterview
+        ? "MOCK_INTERVIEW_ACCEPTED_REFUND"
+        : "INTERVIEW_ACCEPTED_REFUND",
+      metadata: {
+        interviewId: String(
+          request.isMockInterview
+            ? round?.mockInterviewId
+            : round?.interviewId || ""
+        ),
+        roundId: String(roundId),
+        requestId: String(requestId),
+        source: "selection_hold_refund_on_accept",
+      },
+    });
+
+    updatedWallet = releaseResult.wallet;
+
+    // Step 2: Create a REAL HOLD_CREATE for the exact acceptance amount
+    // This actually moves funds from balance → holdAmount so the hold
+    // is properly maintained and visible for settlement.
+    const holdResult = await createWalletTransaction({
+      ownerId: request.ownerId,
+      businessType: WALLET_BUSINESS_TYPES.HOLD_CREATE,
       amount: acceptBaseAmount,
       gstAmount: acceptGstAmount,
       description: holdDescription,
@@ -720,9 +722,10 @@ async function applyAcceptInterviewWalletFlow({
       },
     });
 
-    updatedWallet = noteResult.wallet;
-    savedTransaction = noteResult.transaction;
+    updatedWallet = holdResult.wallet;
+    savedTransaction = holdResult.transaction;
 
+    // Mark the original selection hold transaction as completed
     try {
       await WalletTopup.updateOne(
         { ownerId: request.ownerId, "transactions._id": selectionHoldTx._id },
