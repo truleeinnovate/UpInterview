@@ -154,13 +154,20 @@ const Home = () => {
             setSelectedFilter={setSelectedFilter}
           />
         </motion.div>
-        <ActionRequiredCards />
         <div className="w-full mb-6">
           {/* showding outsource request status for user when user is freelancer */}
           {!outsourceLoading && freelancer && (
             <OutsourceInterviewerRequestStatus status={outsourceStatus} />
           )}
         </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6"
+        >
+          <ActionRequiredCards />
+        </motion.div>
 
         <div className="flex flex-col lg:flex-row xl:flex-row 2xl:flex-row gap-6 lg:gap-8">
           {/* Main Content Area */}
