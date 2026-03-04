@@ -1427,12 +1427,12 @@ export const getFeedbackActions = (navigate, options = {}) => {
             icon: <Eye className="w-4 h-4 text-custom-blue" />,
             onClick: (row) => navigate(`/feedback/view/${row._id}`, { state: { feedback: { ...row }, mode: "view" } })
         },
-        ...(callbacks.onSummarize ? [{
-            key: "summarize",
-            label: "Summarize",
-            icon: <FileText className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => callbacks.onSummarize(row)
-        }] : []),
+        // ...(callbacks.onSummarize ? [{
+        //     key: "summarize",
+        //     label: "Summarize",
+        //     icon: <FileText className="w-4 h-4 text-custom-blue" />,
+        //     onClick: (row) => callbacks.onSummarize(row)
+        // }] : []),
         {
             key: "edit",
             label: "Edit",

@@ -11,7 +11,7 @@ import { BottomBar } from "./components/BottomBar";
 import { SidebarConatiner } from "../components/sidebar/SidebarContainer";
 import { ChatPanel } from "../components/sidebar/ChatPanel";
 import { ParticipantPanel } from "../components/sidebar/ParticipantPanel";
-import { Briefcase, ExternalLink } from "lucide-react";
+import { Briefcase, ExternalLink, ScrollText } from "lucide-react";
 import { ParticipantView } from "../components/ParticipantView";
 import { PresenterView } from "../components/PresenterView";
 import { nameTructed, trimSnackBarText } from "../utils/helper";
@@ -122,6 +122,7 @@ export function MeetingContainer({
   // Function to get sidebar width based on mode
   const getSidebarWidth = (mode) => {
     switch (mode) {
+      case "INSTRUCTIONS":
       case "CANDIDATE":
       case "POSITION":
       case "FEEDBACK":
@@ -387,6 +388,13 @@ export function MeetingContainer({
   const getNavigationItems = () => {
     return [
       {
+        id: "Instructions",
+        label: "INSTRUCTIONS",
+        tooltip: "Instructions",
+        icon: <ScrollText className="w-4 h-4" />,
+        show: isInterviewer || isSchedule,
+      },
+      {
         id: "chat",
         label: "Chat",
         tooltip: "Chat",
@@ -631,6 +639,7 @@ export function MeetingContainer({
               }}
             >
               {[
+                "INSTRUCTIONS",
                 "CANDIDATE",
                 "POSITION",
                 "FEEDBACK",
@@ -641,6 +650,9 @@ export function MeetingContainer({
                   {/* Sidebar Header for all four modes */}
                   <div className="flex items-center justify-between p-4 border-b border-gray-200">
                     <div className="flex items-center">
+                      {sideBarMode === "INSTRUCTIONS" && (
+                        <ScrollText className="h-5 w-5 mr-2" />
+                      )}
                       {sideBarMode === "CANDIDATE" && (
                         <User className="h-5 w-5 mr-2" />
                       )}
@@ -662,6 +674,7 @@ export function MeetingContainer({
                         {sideBarMode === "FEEDBACK" && "Interview Feedback"}
                         {sideBarMode === "INTERVIEWACTIONS" &&
                           "Interview Actions"}
+                        {sideBarMode === "INSTRUCTIONS" && "Instructions"}
                         {sideBarMode === "QUESTIONBANK" &&
                           "Interview Questions"}
                       </h3>
@@ -702,48 +715,56 @@ export function MeetingContainer({
 
                   {/* Sidebar Content */}
                   <div className="flex-1 overflow-y-auto">
-                    {sideBarMode === "CANDIDATE" ? (
-                      <CandidateMiniTab
-                        fromMeeting={true}
-                      // roundId={roundId} interviewType={interviewType}
-                      // candidateData={candidateData}
-                      // positionData={positionData}
-                      />
-                    )
-                      : sideBarMode === "POSITION" ? (
-                        <PositionDetails />
-                      ) : sideBarMode === "FEEDBACK" ? (
-                        <FeedbackForm
-                          custom={true}
-                          isAddMode={true}
-                          onClose={() => setSideBarMode(null)} />
-                      ) : sideBarMode === "INTERVIEWACTIONS" ? (
-                        <div className="p-4">
-                          <InterviewActions
-                            custom={true}
-                            onClose={() => setSideBarMode(null)}
-                            interviewData={{
-                              interviewRound: {
-                                dateTime: new Date().toLocaleString(),
-                                status: "Scheduled",
-                                _id: "mock-id",
-                              },
-                            }}
-                            isAddMode={false}
-                            decodedData={{}}
-                            onActionComplete={() => { }}
-                          />
-                        </div>
-                      ) : sideBarMode === "QUESTIONBANK" ? (
-                        <div className="">
-                          <InterviewsMiniTabComponent
+                    {sideBarMode === "INSTRUCTIONS" ? (
+                      <div className="p-4 flex justify-center items-center  m-4">
+                        {/* <h4 className="font-semibold text-center mb-2">Interview Instructions</h4> */}
+                        <p className="text-sm text-gray-600">
+                          {interviewRoundData?.instructions || "No instructions available for this round."}
+                        </p>
+                      </div>
+                    ) :
+                      sideBarMode === "CANDIDATE" ? (
+                        <CandidateMiniTab
+                          fromMeeting={true}
+                        // roundId={roundId} interviewType={interviewType}
+                        // candidateData={candidateData}
+                        // positionData={positionData}
+                        />
+                      )
+                        : sideBarMode === "POSITION" ? (
+                          <PositionDetails />
+                        ) : sideBarMode === "FEEDBACK" ? (
+                          <FeedbackForm
                             custom={true}
                             isAddMode={true}
-                            isMeetingSidePanel={sideBarMode === "QUESTIONBANK"}
-                          />
+                            onClose={() => setSideBarMode(null)} />
+                        ) : sideBarMode === "INTERVIEWACTIONS" ? (
+                          <div className="p-4">
+                            <InterviewActions
+                              custom={true}
+                              onClose={() => setSideBarMode(null)}
+                              interviewData={{
+                                interviewRound: {
+                                  dateTime: new Date().toLocaleString(),
+                                  status: "Scheduled",
+                                  _id: "mock-id",
+                                },
+                              }}
+                              isAddMode={false}
+                              decodedData={{}}
+                              onActionComplete={() => { }}
+                            />
+                          </div>
+                        ) : sideBarMode === "QUESTIONBANK" ? (
+                          <div className="">
+                            <InterviewsMiniTabComponent
+                              custom={true}
+                              isAddMode={true}
+                              isMeetingSidePanel={sideBarMode === "QUESTIONBANK"}
+                            />
 
-                        </div>
-                      ) : null}
+                          </div>
+                        ) : null}
                   </div>
                 </div>
               ) : (

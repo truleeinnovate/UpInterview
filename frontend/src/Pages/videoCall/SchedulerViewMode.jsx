@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   FileText,
   Plus,
@@ -13,12 +13,15 @@ import {
   Calendar,
   TrendingUp,
   TrendingDown,
+  DownloadIcon
 } from "lucide-react";
 import TechnicalSkillsAssessment from "../Dashboard-Part/Tabs/Feedback/TechnicalSkillsAssessment.jsx";
 import QuestionCard, { EmptyState } from "../../Components/QuestionCard.jsx";
 import { Button } from "../../Components/Buttons/Button.jsx";
 import { extractUrlData } from "../../apiHooks/useVideoCall.js";
 import { useLocation } from "react-router-dom";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 // Replicating the StarRating component from FeedbackForm.jsx
 const StarRating = ({ rating, onChange, size = "md", isReadOnly = false }) => {
@@ -27,6 +30,7 @@ const StarRating = ({ rating, onChange, size = "md", isReadOnly = false }) => {
     md: "w-5 h-5",
     lg: "w-6 h-6",
   };
+
 
   return (
     <div className="flex gap-1">
@@ -61,7 +65,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
   const [activeFeedbackIndex, setActiveFeedbackIndex] = useState(0);
   const activeFeedback = feedbacks[activeFeedbackIndex];
   // console.log("activeFeedback", feedbackData)
-
+  const modalContentRef = useRef(null);
   // console.log("activeFeedback activeFeedback", activeFeedback)
   // Extract URL data once
   const urlData = useMemo(
@@ -186,7 +190,86 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
     });
   }, [activeFeedback, feedbackData, isMockInterview]); // Keep all dependencies
 
+  const handleExportToPDF = async () => {
+    const input = modalContentRef.current;
+    if (!input) return;
 
+    try {
+      // Save original styles so we can restore after capture
+      const originalWidth = input.style.width;
+      const originalMinWidth = input.style.minWidth;
+      const originalMaxWidth = input.style.maxWidth;
+      const originalOverflow = input.style.overflow;
+
+      // Force a fixed width matching A4 proportions for consistent rendering
+      input.style.width = "794px";
+      input.style.minWidth = "794px";
+      input.style.maxWidth = "794px";
+      input.style.overflow = "visible";
+
+      // Wait for browser to reflow with the new width
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const canvas = await html2canvas(input, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        scrollY: -window.scrollY,
+      });
+
+      // Restore original styles immediately after capture
+      input.style.width = originalWidth;
+      input.style.minWidth = originalMinWidth;
+      input.style.maxWidth = originalMaxWidth;
+      input.style.overflow = originalOverflow;
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const usableWidth = pageWidth - margin * 2;
+      const titleY = 15;
+      const contentStartY = 20;
+
+      const imgWidth = usableWidth;
+      const imgHeight = (canvas.height * usableWidth) / canvas.width;
+
+      // Add Title
+      pdf.setFontSize(16);
+      pdf.text("Feedback Summary", pageWidth / 2, titleY, { align: "center" });
+
+      if (imgHeight <= pageHeight - contentStartY - margin) {
+        // Content fits on one page
+        pdf.addImage(imgData, "PNG", margin, contentStartY, imgWidth, imgHeight);
+      } else {
+        // Multi-page handling
+        let position = contentStartY;
+        let heightLeft = imgHeight;
+
+        while (heightLeft > 0) {
+          pdf.addImage(
+            imgData,
+            "PNG",
+            margin,
+            position,
+            imgWidth,
+            imgHeight,
+          );
+          heightLeft -= pageHeight;
+          if (heightLeft > 0) {
+            pdf.addPage();
+            position = 0;
+          }
+        }
+      }
+
+      pdf.save(`Feedback_Summary_${formData?.candidateName || "Candidate"}.pdf`);
+    } catch (err) {
+      console.error("Error exporting PDF:", err);
+      alert("Failed to export PDF. Check console.");
+    }
+  };
   // Context-specific variables for QuestionCard/TechnicalSkillsAssessment
   const questionsWithFeedback = useMemo(() => {
     const rawQF = activeFeedback?.questionFeedback || [];
@@ -211,116 +294,126 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
   }, [activeFeedback, feedbackData?.interviewQuestions]);
 
   return (
-    <div className={isSchedule ? "space-y-8 p-8" : "space-y-8 pb-20"}>
-      {/* Header Info */}
-      <div className="bg-white mt-4">
-        {!isSchedule &&
-          <div className="grid grid-cols-1 gap-6">
+    <div className={isSchedule ? "space-y-8 p-4" : "space-y-8 pb-10"}>
+      <div ref={modalContentRef} style={{ backgroundColor: "#ffffff", padding: "16px" }}>
 
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-custom-bg rounded-lg">
-                  <User className="w-5 h-5 text-gray-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Candidate</p>
-                  <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
-                    {formData?.candidateName || "N/A"}
-                  </p>
-                </div>
-              </div>
-              {!isViewMode &&
+
+
+
+        {/* Header Info */}
+        {!isSchedule &&
+          <div className="bg-white mt-4">
+
+            <div className="grid grid-cols-1 gap-6">
+
+              <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-custom-bg rounded-lg">
                     <User className="w-5 h-5 text-gray-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Interviewer</p>
+                    <p className="text-sm text-gray-500">Candidate</p>
                     <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
-                      {formData?.interviewerName || "N/A"}
+                      {formData?.candidateName || "N/A"}
                     </p>
                   </div>
                 </div>
-              }
+                {!isViewMode &&
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-custom-bg rounded-lg">
+                      <User className="w-5 h-5 text-gray-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Interviewer</p>
+                      <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
+                        {formData?.interviewerName || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                }
 
-              {/* <div className="grid grid-cols-2 sm:grid-cols-1 gap-6"> */}
+                {/* <div className="grid grid-cols-2 sm:grid-cols-1 gap-6"> */}
 
-              {!isMockInterview && <div className="flex items-center gap-3">
+                {!isMockInterview && <div className="flex items-center gap-3">
 
 
-                <div className="p-2 bg-custom-bg rounded-lg">
-                  <Briefcase className="w-5 h-5 text-gray-500" />
+                  <div className="p-2 bg-custom-bg rounded-lg">
+                    <Briefcase className="w-5 h-5 text-gray-500" />
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Position</p>
+                    <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
+                      {formData?.position || "N/A"}
+                    </p>
+                  </div>
+
+
+                </div>
+                }
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-custom-bg rounded-lg">
+                    <Calendar className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Interview Date</p>
+                    <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
+                      {formData?.interviewDate || "N/A"}
+                    </p>
+                  </div>
+                  {/* </div> */}
                 </div>
 
-                <div>
-                  <p className="text-sm text-gray-500">Position</p>
-                  <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
-                    {formData?.position || "N/A"}
-                  </p>
-                </div>
-
-
+                {isMockInterview && (
+                  <div className="flex items-center pt-3 pb-3">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        disabled
+                        checked={formData.isMockInterview}
+                        onChange={(e) => setFormData({ ...formData, isMockInterview: e.target.checked })}
+                        className="w-4 h-4 accent-custom-blue text-[rgb(33,121,137)] border-gray-300 rounded focus:ring-[rgb(33,121,137)]"
+                      />
+                      <span className="ml-2 text-sm font-medium text-gray-700">
+                        This is a Mock Interview
+                      </span>
+                    </label>
+                  </div>
+                )}
               </div>
-              }
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-custom-bg rounded-lg">
-                  <Calendar className="w-5 h-5 text-gray-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Interview Date</p>
-                  <p className="text-gray-800 font-semibold truncate cursor-default max-w-[200px]">
-                    {formData?.interviewDate || "N/A"}
-                  </p>
-                </div>
-                {/* </div> */}
-              </div>
 
-              {isMockInterview && (
-                <div className="flex items-center pt-6">
-                  <label className="flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      disabled
-                      checked={formData.isMockInterview}
-                      onChange={(e) => setFormData({ ...formData, isMockInterview: e.target.checked })}
-                      className="w-4 h-4 accent-custom-blue text-[rgb(33,121,137)] border-gray-300 rounded focus:ring-[rgb(33,121,137)]"
-                    />
-                    <span className="ml-2 text-sm font-medium text-gray-700">
-                      This is a Mock Interview
-                    </span>
-                  </label>
-                </div>
-              )}
             </div>
 
           </div>
         }
-      </div>
-      {/* Overall Assessment */}
-      <div className={`${isSchedule ? "" : "border-t  pt-6"} border-b border-gray-200 pb-6`}>
-        <div className="grid grid-cols-3 sm:grid-cols-1 gap-4">
-          <div className="bg-gray-50 p-3 rounded-md">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Overall Rating
-            </label>
-            <div className="flex items-center gap-3">
-              <StarRating
-                rating={formData.overallRating}
-                size="sm"
-                isReadOnly={true}
-              />
-              <span className="text-sm text-gray-600 font-medium">
-                {formData.overallRating > 0
-                  ? `${formData.overallRating}/5`
-                  : "Not rated"}
-              </span>
+
+
+
+        {/* Overall Assessment */}
+        <div className={`${isSchedule ? "" : "border-t  pt-6"} border-b border-gray-200 pb-6`}>
+          <div className="grid grid-cols-3 sm:grid-cols-1 gap-4">
+            <div className="bg-gray-50 p-3 rounded-md">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Overall Rating
+              </label>
+              <div className="flex items-center gap-3">
+                <StarRating
+                  rating={formData.overallRating}
+                  size="sm"
+                  isReadOnly={true}
+                />
+                <span className="text-sm text-gray-600 font-medium">
+                  {formData.overallRating > 0
+                    ? `${formData.overallRating}/5`
+                    : "Not rated"}
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="bg-gray-50 p-3 rounded-md">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Recommendation
-            </label>
-            {/* <select
+            <div className="bg-gray-50 p-3 rounded-md">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Recommendation
+              </label>
+              {/* <select
               disabled
               value={formData.recommendation}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
@@ -331,48 +424,48 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
               <option value="No Hire">No Hire</option>
               <option value="Strong No Hire">Strong No Hire</option>
             </select> */}
-            <p className="text-gray-800 text-sm font-medium">
-              {formData.recommendation || "N/A"}
-            </p>
-          </div>
-          <div className="bg-gray-50 p-3 rounded-md">
-            <p className="block text-sm font-medium text-gray-700 mb-2">
-              Submitted
-            </p>
-            <p className="text-gray-800 text-sm font-medium">
-              {formData.submittedAt
-                ? new Date(formData.submittedAt).toISOString().split('T')[0]
-                : "N/A"}
-            </p>
+              <p className="text-gray-800 text-sm font-medium">
+                {formData.recommendation || "N/A"}
+              </p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="block text-sm font-medium text-gray-700 mb-2">
+                Submitted
+              </p>
+              <p className="text-gray-800 text-sm font-medium">
+                {formData.submittedAt
+                  ? new Date(formData.submittedAt).toISOString().split('T')[0]
+                  : "N/A"}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Multiple Feedback Tabs */}
-      {
-        feedbacks.length > 1 && (
-          <div className="flex flex-wrap gap-2 p-1 bg-gray-100 rounded-xl w-fit">
-            {feedbacks.map((fb, idx) => (
-              <button
-                key={fb._id || idx}
-                onClick={() => setActiveFeedbackIndex(idx)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeFeedbackIndex === idx
-                  ? "bg-white text-[rgb(33,121,137)] shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-                  }`}
-              >
-                Feedback from {fb.interviewerId?.name || `Interviewer ${idx + 1}`}
-              </button>
-            ))}
-          </div>
-        )
-      }
+        {/* Multiple Feedback Tabs */}
+        {
+          feedbacks.length > 1 && (
+            <div className="flex flex-wrap gap-2 p-1 bg-gray-100 rounded-xl w-fit">
+              {feedbacks.map((fb, idx) => (
+                <button
+                  key={fb._id || idx}
+                  onClick={() => setActiveFeedbackIndex(idx)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeFeedbackIndex === idx
+                    ? "bg-white text-[rgb(33,121,137)] shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                    }`}
+                >
+                  Feedback from {fb.interviewerId?.name || `Interviewer ${idx + 1}`}
+                </button>
+              ))}
+            </div>
+          )
+        }
 
-      {/* Main Form Content - Exact Replication of FeedbackForm.jsx */}
-      <div className="bg-white">
-        <div className="grid grid-cols-1">
-          {/* Basic Information */}
-          {/* <div>
+        {/* Main Form Content - Exact Replication of FeedbackForm.jsx */}
+        <div className="bg-white">
+          <div className="grid grid-cols-1">
+            {/* Basic Information */}
+            {/* <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -394,23 +487,23 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
             </div>
           </div> */}
 
-          {/* Technical Skills Assessment */}
-          <TechnicalSkillsAssessment
-            formData={formData}
-            setFormData={setFormData}
-            isReadOnly={true}
-            fullscreenState={fullscreenState}
-          />
+            {/* Technical Skills Assessment */}
+            <TechnicalSkillsAssessment
+              formData={formData}
+              setFormData={setFormData}
+              isReadOnly={true}
+              fullscreenState={fullscreenState}
+            />
 
-          {/* Technical Competency Ratings */}
-          <div className="border-t border-gray-200 my-6">
-            <h3 className="text-lg font-semibold text-gray-900 my-4">
-              Technical Competency Ratings
-            </h3>
-            <div className="space-y-4">
-              {formData.skillRatings.map((skill, index) => (
-                <div key={index} className="rounded-lg p-3 bg-gray-50">
-                  {/* <div className="flex items-center justify-between mb-3">
+            {/* Technical Competency Ratings */}
+            <div className="border-t border-gray-200 my-6">
+              <h3 className="text-lg font-semibold text-gray-900 my-4">
+                Technical Competency Ratings
+              </h3>
+              <div className="space-y-4">
+                {formData.skillRatings.map((skill, index) => (
+                  <div key={index} className="rounded-lg p-3 bg-gray-50">
+                    {/* <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-4 flex-1">
                       <input
                         type="text"
@@ -434,33 +527,33 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none bg-gray-50"
                     />
                   </div> */}
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-800 mb-1">
-                        {skill.skillName || "N/A"}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        {skill.notes || "N/A"}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <StarRating
-                        size="sm"
-                        rating={skill.rating}
-                        isReadOnly={true}
-                      />
-                      <span className="text-sm text-gray-600">
-                        {skill.rating > 0 ? `${skill.rating}/5` : "Rate"}
-                      </span>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800 mb-1">
+                          {skill.skillName || "N/A"}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {skill.notes || "N/A"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <StarRating
+                          size="sm"
+                          rating={skill.rating}
+                          isReadOnly={true}
+                        />
+                        <span className="text-sm text-gray-600">
+                          {skill.rating > 0 ? `${skill.rating}/5` : "Rate"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Questions Asked */}
-          {/* <div className="border-t border-gray-200 pt-4">
+            {/* Questions Asked */}
+            {/* <div className="border-t border-gray-200 pt-4">
             <div className="mb-4">
               <label className="text-sm font-medium text-gray-700">Questions Asked</label>
               <span className="text-xs text-gray-500 mt-1 block">
@@ -483,17 +576,17 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
             </div>
           </div> */}
 
-          {/* Strengths & Areas for Improvement */}
-          <div className="grid grid-cols-2 sm:grid-cols-1 border-t border-gray-200 mb-6 pt-4 gap-3">
-            {/* Strengths */}
-            <div>
-              <div className="flex items-start gap-3">
-                <TrendingUp className="text-custom-blue" />
-                <p className="text-md font-semibold text-gray-900 mb-4">
-                  Strengths
-                </p>
-              </div>
-              {/* <div className="space-y-3">
+            {/* Strengths & Areas for Improvement */}
+            <div className="grid grid-cols-2 sm:grid-cols-1 border-t border-gray-200 mb-6 pt-4 gap-3">
+              {/* Strengths */}
+              <div>
+                <div className="flex items-start gap-3">
+                  <TrendingUp className="text-custom-blue" />
+                  <p className="text-md font-semibold text-gray-900 mb-4">
+                    Strengths
+                  </p>
+                </div>
+                {/* <div className="space-y-3">
                 {formData.strengths.map((strength, index) => (
                   <input
                     key={index}
@@ -504,25 +597,25 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
                   />
                 ))}
               </div> */}
-              <ul className="list-disc list-inside space-y-2 marker:text-custom-blue">
-                {formData.strengths.map((strength, index) => (
-                  <li key={index} className="text-sm text-gray-700 truncate">
-                    {strength || "N/A"}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Areas for Improvement */}
-            <div>
-              <div className="flex items-start gap-3">
-                <TrendingDown className="text-orange-500" />
-                <p className="text-md font-semibold text-gray-900 mb-4">
-                  Areas for Improvement
-                </p>
+                <ul className="list-disc list-inside space-y-2 marker:text-custom-blue">
+                  {formData.strengths.map((strength, index) => (
+                    <li key={index} className="text-sm text-gray-700 truncate">
+                      {strength || "N/A"}
+                    </li>
+                  ))}
+                </ul>
               </div>
 
-              {/* <div className="space-y-3">
+              {/* Areas for Improvement */}
+              <div>
+                <div className="flex items-start gap-3">
+                  <TrendingDown className="text-orange-500" />
+                  <p className="text-md font-semibold text-gray-900 mb-4">
+                    Areas for Improvement
+                  </p>
+                </div>
+
+                {/* <div className="space-y-3">
                 {formData.areasForImprovement.map((area, index) => (
                   <input
                     key={index}
@@ -533,93 +626,116 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
                   />
                 ))}
               </div> */}
-              <ul className="list-disc list-inside space-y-2 marker:text-orange-500">
-                {formData.areasForImprovement.map((area, index) => (
-                  <li key={index} className="text-sm text-gray-700 truncate">
-                    {area || "N/A"}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Additional Ratings */}
-          <div className="border-t border-gray-200 py-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Additional Ratings
-            </h3>
-            <div className="grid grid-cols-3 sm:grid-cols-1 gap-8">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Culture Fit
-                </label>
-                <div className="flex items-center gap-3">
-                  <StarRating
-                    size="sm"
-                    rating={formData.cultureFit}
-                    isReadOnly={true}
-                  />
-                  <span className="text-sm font-semibold text-gray-800">
-                    {formData.cultureFit > 0
-                      ? `${formData.cultureFit}/5`
-                      : "Not rated"}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Willingness to Learn
-                </label>
-                <div className="flex items-center gap-3">
-                  <StarRating
-                    size="sm"
-                    rating={formData.willingnessToLearn}
-                    isReadOnly={true}
-                  />
-                  <span className="text-sm font-semibold text-gray-800">
-                    {formData.willingnessToLearn > 0
-                      ? `${formData.willingnessToLearn}/5`
-                      : "Not rated"}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Communication Rating
-                </label>
-                <div className="flex items-center gap-3">
-                  <StarRating
-                    size="sm"
-                    rating={formData.communicationRating}
-                    isReadOnly={true}
-                  />
-                  <span className="text-sm font-semibold text-gray-800">
-                    {formData.communicationRating > 0
-                      ? `${formData.communicationRating}/5`
-                      : "Not rated"}
-                  </span>
-                </div>
+                <ul className="list-disc list-inside space-y-2 marker:text-orange-500">
+                  {formData.areasForImprovement.map((area, index) => (
+                    <li key={index} className="text-sm text-gray-700 truncate">
+                      {area || "N/A"}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
-          </div>
 
-          {/* Additional Comments */}
-          <div className="border-t border-gray-200 pt-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Additional Comments
-            </h3>
-            {/* <textarea
+            {/* Additional Ratings */}
+            <div className="border-t border-gray-200 py-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Additional Ratings
+              </h3>
+              <div className="grid grid-cols-3 sm:grid-cols-1 gap-8">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Culture Fit
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <StarRating
+                      size="sm"
+                      rating={formData.cultureFit}
+                      isReadOnly={true}
+                    />
+                    <span className="text-sm font-semibold text-gray-800">
+                      {formData.cultureFit > 0
+                        ? `${formData.cultureFit}/5`
+                        : "Not rated"}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Willingness to Learn
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <StarRating
+                      size="sm"
+                      rating={formData.willingnessToLearn}
+                      isReadOnly={true}
+                    />
+                    <span className="text-sm font-semibold text-gray-800">
+                      {formData.willingnessToLearn > 0
+                        ? `${formData.willingnessToLearn}/5`
+                        : "Not rated"}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Communication Rating
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <StarRating
+                      size="sm"
+                      rating={formData.communicationRating}
+                      isReadOnly={true}
+                    />
+                    <span className="text-sm font-semibold text-gray-800">
+                      {formData.communicationRating > 0
+                        ? `${formData.communicationRating}/5`
+                        : "Not rated"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Comments */}
+            <div className="border-t border-gray-200 pt-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Additional Comments
+              </h3>
+              {/* <textarea
               value={formData.additionalComments}
               readOnly
               rows="4"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none bg-gray-50"
             /> */}
-            <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">
-              {formData.additionalComments || "N/A"}
-            </p>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">
+                {formData.additionalComments || "N/A"}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </div>{/* end of modalContentRef */}
+
+      {/* Footer Actions - outside the ref so button is not captured in PDF */}
+      {isViewMode && (
+        <div className="p-2 flex justify-end print-hide">
+          {/* <Button
+          onClick={onClose}
+          variant="outline"
+          className="border border-custom-blue text-custom-blue"
+        >
+          Close
+        </Button> */}
+          <Button
+            onClick={handleExportToPDF}
+            className="text-white flex items-center "
+            style={{ backgroundColor: "#227a8a" }}
+          >
+            <DownloadIcon size={18} />
+            Export to PDF
+          </Button>
+        </div>
+      )
+      }
     </div >
   );
 };

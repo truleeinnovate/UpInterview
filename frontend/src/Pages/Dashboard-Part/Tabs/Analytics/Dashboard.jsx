@@ -47,6 +47,8 @@ const Dashboard = () => {
     type
   );
 
+  console.log("responseDashBoard", responseDashBoard);
+
 
   // Assessments
   const { responseAssessmentDashBoard } = useScheduleAssessments({
@@ -126,7 +128,7 @@ const Dashboard = () => {
     }));
   };
 
-  const handleLayoutChange = (newLayout) => {};
+  const handleLayoutChange = (newLayout) => { };
 
   const getVisibleKPIs = () => {
     const allKPIs = [
@@ -168,9 +170,8 @@ const Dashboard = () => {
         key: "outsourcedInterviews",
         title: "Outsourced Interviews",
         value: responseDashBoard?.outsourcedInterviews?.totalCount || 0,
-        subtitle: `Last month: ${
-          responseDashBoard?.outsourcedInterviews?.lastMonth || 0
-        }`,
+        subtitle: `Last month: ${responseDashBoard?.outsourcedInterviews?.lastMonth || 0
+          }`,
         icon: Clock,
         trend: responseDashBoard?.outsourcedInterviews?.trend,
         trendValue: responseDashBoard?.outsourcedInterviews?.trendValue,
@@ -179,9 +180,8 @@ const Dashboard = () => {
         key: "upcomingInterviews",
         title: "Upcoming Interviews",
         value: responseDashBoard?.upcomingInterviews?.currentWeekCount || 0,
-        subtitle: `Last week: ${
-          responseDashBoard?.upcomingInterviews?.lastWeek || 0
-        }`,
+        subtitle: `Last week: ${responseDashBoard?.upcomingInterviews?.lastWeek || 0
+          }`,
         icon: Calendar,
         trend: responseDashBoard?.upcomingInterviews?.trend,
         trendValue: responseDashBoard?.upcomingInterviews?.trendValue,
@@ -190,11 +190,10 @@ const Dashboard = () => {
         key: "noShows",
         title: "No-Shows/Cancellations",
         value: kpiData?.noShows || 0,
-        subtitle: `${
-          kpiData?.totalInterviews
+        subtitle: `${kpiData?.totalInterviews
             ? ((kpiData.noShows / kpiData.totalInterviews) * 100).toFixed(0)
             : 0
-        }% rate`,
+          }% rate`,
         icon: AlertTriangle,
         trend: "down",
         trendValue: "-15% vs last month",

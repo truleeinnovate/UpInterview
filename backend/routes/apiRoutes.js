@@ -4038,7 +4038,7 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
 
     // Additional metadata
     metadata: {
-      totalInterviewsCount: totalInterviews,
+      // totalInterviewsCount: totalInterviews,
       calculationDate: now,
       dateRanges: {
         currentMonth: { start: currentMonthStart, end: now },
