@@ -32,13 +32,26 @@ export const notify = {
 
   // ⏰ Meeting Timer Alerts → Top-Center, persistent (user must close manually via X)
   meetingAlert: (msg) =>
-    toast.error(msg, {
+    toast.warning(msg, {
       position: "top-center",
       autoClose: false,
       closeOnClick: false,
       closeButton: true,
       draggable: false,
       theme: "colored",
+      style: { width: "fit-content", whiteSpace: "nowrap" },
+    }),
+
+  // ✋ Hand Raise Alerts → Top-Center, auto-close after 3 seconds
+  handRaise: (msg) =>
+    toast.info(msg, {
+      position: "top-center",
+      autoClose: 3000,
+      closeOnClick: true,
+      closeButton: true,
+      draggable: false,
+      theme: "colored",
+      style: { width: "fit-content", whiteSpace: "nowrap" },
     }),
 
   // 🕒 Background Info → Bottom-Right

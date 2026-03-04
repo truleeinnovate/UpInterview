@@ -690,8 +690,25 @@ exports.acceptInterviewRequest = async (req, res) => {
         }
       } catch (schedError) {
         console.error("[acceptInterviewRequest] Error checking interviewer availability:", schedError);
-        // Continue with accept even if check fails — don't block the flow
+        return res.status(500).json({
+          success: false,
+          message: "Failed to verify interviewer availability. Please try again.",
+        });
       }
+    }
+
+    // v1.0.2 - Create InterviewerScheduling record EARLY (right after booking
+    // check passes) so it acts as a lock to prevent race conditions.
+    // If two accepts arrive within milliseconds, the second one will find
+    // this record and be blocked by the booking check above.
+    try {
+      if (round.dateTime) {
+        await createSchedulingRecords(roundId, [contactId], round.dateTime, "");
+        console.log(`[Accept] ✅ Early InterviewerScheduling lock created for interviewer ${contactId} round ${roundId}`);
+      }
+    } catch (earlySchedError) {
+      console.error("[Accept] ❌ Error creating early InterviewerScheduling lock:", earlySchedError);
+      // Don't block the accept if lock creation fails — the booking check already passed
     }
 
     if (!round.interviewers.includes(contactId)) {
@@ -763,14 +780,15 @@ exports.acceptInterviewRequest = async (req, res) => {
           console.error("[Accept] ❌ NoShow scheduling error:", noShowErr);
         }
 
-        // v1.0.1 - Create InterviewerScheduling record for accepted interviewer
+        // v1.0.2 - If the round dateTime changed after the update (e.g. instant
+        // interview), refresh the scheduling record with the updated dateTime.
         try {
-          if (updatedRoundDoc.dateTime) {
+          if (updatedRoundDoc.dateTime && updatedRoundDoc.dateTime !== round.dateTime) {
             await createSchedulingRecords(updatedRoundDoc._id, [contactId], updatedRoundDoc.dateTime, "");
-            console.log(`[Accept] ✅ InterviewerScheduling record created for interviewer ${contactId} round ${roundId}`);
+            console.log(`[Accept] ✅ InterviewerScheduling record refreshed with updated dateTime for round ${roundId}`);
           }
         } catch (schedError) {
-          console.error("[Accept] ❌ Error creating InterviewerScheduling record:", schedError);
+          console.error("[Accept] ❌ Error refreshing InterviewerScheduling record:", schedError);
         }
       }
 

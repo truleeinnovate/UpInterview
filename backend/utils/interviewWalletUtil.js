@@ -418,17 +418,6 @@ async function computeInterviewPricingForAccept({
     }
   }
 
-  console.log("[computeInterviewPricingForAccept] DEBUG:", {
-    isMockInterview: request.isMockInterview,
-    mock_interview_discount: contact.mock_interview_discount,
-    rate,
-    durationInMinutes,
-    originalAmount,
-    appliedDiscountPercentage,
-    discountAmount,
-    finalTotalAmount: totalAmount,
-  });
-
   return {
     durationInMinutes,
     experienceLevel,
