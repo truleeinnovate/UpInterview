@@ -1351,40 +1351,11 @@ app.use("/", CardDetailsRouter);
 
 // Note: Subscription cancellation routes are now part of RazorpayRoutes.js
 
-// this codes need to change in to routers and controllers,this will use in login pages and user creation page
-app.get("/check-email", async (req, res) => {
-  try {
-    const { email } = req.query;
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-    const user = await Users.findOne({ email });
-    res.json({ exists: !!user });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error checking email", error: error.message });
-  }
-});
 
 // const Emailrouter = require('./routes/emailCommonRoutes.js')
 // emailCommonRoutes.js
 // app.use('/', Emailrouter)
 
-app.get("/check-profileId", async (req, res) => {
-  try {
-    const { profileId } = req.query;
-    if (!profileId) {
-      return res.status(400).json({ message: "profileId is required" });
-    }
-    const user = await Users.findOne({ profileId });
-    res.json({ exists: !!user });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error checking username", error: error.message });
-  }
-});
 
 const MasterRoutes = require("./routes/MasterRoutes/masterRoutes.js");
 app.use("/master-data", MasterRoutes);

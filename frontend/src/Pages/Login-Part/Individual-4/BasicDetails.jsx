@@ -11,6 +11,10 @@ import InputField from "../../../Components/FormFields/InputField.jsx";
 import DateOfBirthField from "../../../Components/FormFields/DateOfBirthField.jsx";
 import GenderField from "../../../Components/FormFields/GenderDropdown.jsx";
 import PhoneField from "../../../Components/FormFields/PhoneField.jsx";
+import {
+    validateProfileIdFormat,
+    checkProfileIdExists,
+} from "../../../utils/userIdentifierValidation";
 
 const BasicDetails = ({
     basicDetailsData,
@@ -23,6 +27,7 @@ const BasicDetails = ({
     setFilePreview,
     linkedInData,
     setIsProfileRemoved,
+    isProfileCompleteStateOrg,
 }) => {
     const { useCallback } = React;
     const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
@@ -78,45 +83,65 @@ const BasicDetails = ({
     // Real-time profileId validation
     const handleProfileIdValidation = useCallback(
         async (profileId) => {
+            if (isProfileCompleteStateOrg) return;
             clearTimeout(profileIdTimeoutRef.current);
-            setIsCheckingProfileId(true);
 
-            profileIdTimeoutRef.current = setTimeout(async () => {
-                let errorMessage = "";
-                let suggestions = [];
-
-                if (!profileId) {
-                    errorMessage = "Profile ID is required";
-                } else if (profileId.length < 4) {
-                    errorMessage = "Profile ID must be at least 4 characters";
-                } else if (!/^[a-zA-Z0-9.]+$/.test(profileId)) {
-                    errorMessage = "Only letters, numbers, and dots allowed";
-                } else {
-                    // console.log("Profile ID is valid");
-                }
-
-                setErrors((prev) => ({ ...prev, profileId: errorMessage }));
-                setSuggestedProfileIds(suggestions);
-                setShowSuggestions(suggestions.length > 0);
+            const formatError = validateProfileIdFormat(profileId);
+            if (formatError) {
+                setErrors((prev) => ({ ...prev, profileId: formatError }));
                 setIsCheckingProfileId(false);
+                setSuggestedProfileIds([]);
+                return;
+            }
+
+            setIsCheckingProfileId(true);
+            profileIdTimeoutRef.current = setTimeout(async () => {
+                try {
+                    const exists = await checkProfileIdExists(profileId);
+                    let errorMessage = "";
+                    let suggestions = [];
+
+                    if (exists) {
+                        errorMessage = "Profile ID already taken";
+                        let suffix = 1;
+                        while (suggestions.length < 3) {
+                            const suggestedId = `${profileId}${suffix}`;
+                            const checkSuggested = await checkProfileIdExists(suggestedId);
+                            if (!checkSuggested) {
+                                suggestions.push(suggestedId);
+                            }
+                            suffix++;
+                        }
+                    }
+
+                    setErrors((prev) => ({ ...prev, profileId: errorMessage }));
+                    setSuggestedProfileIds(suggestions);
+                    setShowSuggestions(suggestions.length > 0);
+                } catch (error) {
+                    console.error("Error checking Profile ID:", error);
+                } finally {
+                    setIsCheckingProfileId(false);
+                }
             }, 500);
         },
-        [
-            setErrors,
-            setSuggestedProfileIds,
-            setShowSuggestions,
-            setIsCheckingProfileId,
-        ]
+        [setErrors, setSuggestedProfileIds, setShowSuggestions, setIsCheckingProfileId]
     );
 
     // Handle input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        setBasicDetailsData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        if (name === "profileId") {
+            setBasicDetailsData((prev) => ({
+                ...prev,
+                [name]: value.toLowerCase(),
+            }));
+        } else {
+            setBasicDetailsData((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
+        }
 
         setErrors((prev) => ({
             ...prev,
@@ -239,6 +264,7 @@ const BasicDetails = ({
     };
 
     useEffect(() => {
+        if (isProfileCompleteStateOrg) return;
         if (basicDetailsData.email && !basicDetailsData.profileId && !isProfileIdManuallyModified) {
             const generatedProfileId = generateProfileId(basicDetailsData.email);
             setBasicDetailsData((prev) => ({
@@ -388,54 +414,56 @@ const BasicDetails = ({
                 </div>
 
                 {/* Profile ID Field */}
-                <div className="sm:col-span-6">
-                    <div className="relative">
-                        <InputField
-                            name="profileId"
-                            id="profileId"
-                            value={basicDetailsData.profileId || ""}
-                            onChange={(e) => {
-                                const value = e.target.value.replace(/[^a-zA-Z0-9.]/g, "");
-                                setBasicDetailsData((prev) => ({ ...prev, profileId: value }));
-                                handleProfileIdValidation(value);
-                                setIsProfileIdManuallyModified(true);
-                            }}
-                            onBlur={handleBlur}
-                            onFocus={handleProfileIdFocus}
-                            label="Profile ID"
-                            placeholder="profile.id"
-                            error={errors.profileId}
-                            required
-                            inputRef={profileIdInputRef}
-                            className={isCheckingProfileId ? "pr-8" : ""}
-                        />
-                        {isCheckingProfileId && (
-                            <div className="absolute right-3 top-8">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                            </div>
-                        )}
-
-                        {showSuggestions && suggestedProfileIds.length > 0 && (
-                            <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200">
-                                <div className="py-1">
-                                    <p className="px-3 py-1 text-xs text-gray-500">
-                                        Try one of these:
-                                    </p>
-                                    {suggestedProfileIds.map((suggestion) => (
-                                        <button
-                                            key={suggestion}
-                                            type="button"
-                                            onClick={() => selectSuggestion(suggestion)}
-                                            className="block w-full text-left px-3 py-1 text-sm text-blue-600 hover:bg-blue-50"
-                                        >
-                                            {suggestion}
-                                        </button>
-                                    ))}
+                {!isProfileCompleteStateOrg && (
+                    <div className="sm:col-span-6">
+                        <div className="relative">
+                            <InputField
+                                name="profileId"
+                                id="profileId"
+                                value={basicDetailsData.profileId || ""}
+                                onChange={(e) => {
+                                    const value = e.target.value.replace(/[^a-zA-Z0-9.]/g, "");
+                                    setBasicDetailsData((prev) => ({ ...prev, profileId: value }));
+                                    handleProfileIdValidation(value);
+                                    setIsProfileIdManuallyModified(true);
+                                }}
+                                onBlur={handleBlur}
+                                onFocus={handleProfileIdFocus}
+                                label="Profile ID"
+                                placeholder="profile.id"
+                                error={errors.profileId}
+                                required
+                                inputRef={profileIdInputRef}
+                                className={isCheckingProfileId ? "pr-8" : ""}
+                            />
+                            {isCheckingProfileId && (
+                                <div className="absolute right-3 top-8">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+
+                            {showSuggestions && suggestedProfileIds.length > 0 && (
+                                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200">
+                                    <div className="py-1">
+                                        <p className="px-3 py-1 text-xs text-gray-500">
+                                            Try one of these:
+                                        </p>
+                                        {suggestedProfileIds.map((suggestion) => (
+                                            <button
+                                                key={suggestion}
+                                                type="button"
+                                                onClick={() => selectSuggestion(suggestion)}
+                                                className="block w-full text-left px-3 py-1 text-sm text-blue-600 hover:bg-blue-50"
+                                            >
+                                                {suggestion}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Phone Number */}
                 <div className="sm:col-span-6 w-full">

@@ -14,10 +14,11 @@ const contactPatchSchema = Joi.object({
     "string.empty": "Email is required",
     "string.email": "Please enter a valid email address",
   }),
-  profileId: Joi.string().trim().min(2).messages({
-    "string.empty": "Profile Id is required",
-    "string.min": "Profile Id must be at least 2 characters",
-  }),
+  profileId: Joi.alternatives()
+    .try(Joi.string().trim().min(2), Joi.string().trim().allow("", null))
+    .messages({
+      "string.min": "Profile Id must be at least 2 characters",
+    }),
   phone: Joi.string()
     .pattern(/^\d{10}$/)
     .messages({

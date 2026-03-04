@@ -13,6 +13,8 @@ import { useUserProfile } from "../../../../../../apiHooks/useUsers";
 import { notify } from "../../../../../../services/toastService";
 import AuthCookieManager from "../../../../../../utils/AuthCookieManager/AuthCookieManager";
 import LoadingButton from "../../../../../../Components/LoadingButton";
+import { decodeJwt } from "../../../../../../utils/AuthCookieManager/jwtDecode";
+import Cookies from "js-cookie";
 
 export const formatDateOfBirth = (dateString) => {
   if (!dateString) return "Not Provided";
@@ -26,6 +28,8 @@ export const formatDateOfBirth = (dateString) => {
 };
 
 const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
+  const tokenPayload = decodeJwt(Cookies.get("authToken"));
+  const organization = tokenPayload?.organization;
   const [contactData, setContactData] = useState({});
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [isResendingPassword, setIsResendingPassword] = useState(false);
@@ -202,8 +206,11 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
               <p className="font-medium sm:text-sm whitespace-pre-line break-words">
                 {contactData.email || "Not Provided"}
               </p>
-              {contactData.isEmailVerified ? (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[6px] font-medium bg-green-100 text-green-700 border border-green-200" title="Email is verified">
+              {contactData.isEmailVerified && (
+                <span
+                  className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[6px] font-medium bg-green-100 text-green-700 border border-green-200"
+                  title="Email is verified"
+                >
                   <svg
                     className="w-3 h-3 mr-0.5"
                     fill="currentColor"
@@ -216,23 +223,6 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
                     />
                   </svg>
                   Verified
-                </span>
-              ) : !contactData.isEmailVerified && !contactData.newEmail && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[6px] font-medium bg-red-100 text-red-700 border border-red-200" title="Email is not verified">
-                  <svg
-                    className="w-3 h-3 mr-0.5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                  Not Verified
                 </span>
               )}
             </div>
@@ -264,13 +254,14 @@ const BasicDetails = ({ mode, usersId, setBasicEditOpen, type }) => {
               {formatDateOfBirth(contactData.dateOfBirth) || "Not Provided"}
             </p>
           </div>
-
-          <div>
-            <p className="text-sm text-gray-500">Profile ID</p>
-            <p className="font-medium sm:text-sm">
-              {contactData.profileId || "Not Provided"}
-            </p>
-          </div>
+          {!organization && (
+            <div>
+              <p className="text-sm text-gray-500">Profile ID</p>
+              <p className="font-medium sm:text-sm">
+                {contactData.profileId || "Not Provided"}
+              </p>
+            </div>
+          )}
 
           <div>
             <p className="text-sm text-gray-500">Gender</p>

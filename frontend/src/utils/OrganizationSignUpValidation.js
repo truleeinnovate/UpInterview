@@ -1,4 +1,9 @@
 // v1.0.0  - Ashraf - changed user name format and place holder,suggest part
+import {
+  validateUsernameFormat,
+  validateUsername as sharedValidateUsername,
+  validateProfileId as sharedValidateProfileId
+} from './userIdentifierValidation';
 export const validateEmail = async (email, checkEmailExists) => {
   let errorMessage = '';
 
@@ -22,37 +27,8 @@ export const validateEmail = async (email, checkEmailExists) => {
 };
 //  -------------------------------------- v1.0.0 >
 
-export const validateProfileId = async (profileId, checkProfileIdExists) => {
-  let errorMessage = '';
-  if (!profileId) {
-    errorMessage = 'Username is required';
-  } else {
-    const usernameRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!usernameRegex.test(profileId)) {
-      errorMessage = 'Invalid Username format. Must be a valid email address format (e.g., user@company.com)';
-    } else {
-      const personalDomains = [
-        'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com',
-        'aol.com', 'icloud.com', 'protonmail.com', 'mail.com'
-      ];
-      const domain = profileId.split('@')[1]?.toLowerCase();
-      if (personalDomains.includes(domain)) {
-        errorMessage = 'Username cannot use personal email domains (e.g., gmail.com)';
-      } else if (checkProfileIdExists) {
-        try {
-          const exists = await checkProfileIdExists(profileId);
-          if (exists) {
-            errorMessage = 'Username already taken';
-          }
-        } catch (err) {
-          console.error('Error checking Username:', err);
-          errorMessage = 'Error verifying Username';
-        }
-      }
-    }
-  }
-  return errorMessage;
-};
+export const validateUsername = sharedValidateUsername;
+export const validateProfileId = sharedValidateProfileId;
 //  -------------------------------------- v1.0.0 >
 
 export const validatePhone = (phone, countryCode) => {
@@ -127,11 +103,11 @@ export const validateConfirmPassword = (password, confirmPassword) => {
   return '';
 };
 
-// export const validateOrganizationSignup = async (formData, setErrors, checkEmailExists, checkProfileIdExists) => {
+// export const validateOrganizationSignup = async (formData, setErrors, checkEmailExists, checkUsernameExists) => {
 //   const errors = {};
 
 //   // errors.email = await validateEmail(formData.email, checkEmailExists);
-//   errors.profileId = await validateProfileId(formData.profileId, checkProfileIdExists);
+//   errors.username = await validateUsername(formData.username, checkUsernameExists);
 //   errors.lastName = !formData.lastName ? 'Last Name is required' : '';
 //   errors.phone = validatePhone(formData.phone, formData.countryCode);
 //   errors.jobTitle = validateJobTitle(formData.jobTitle);
@@ -147,26 +123,25 @@ export const validateConfirmPassword = (password, confirmPassword) => {
 
 export const validateOrganizationSignup = async (
   formData, setErrors,
-  checkEmailExists, checkProfileIdExists
+  checkEmailExists, checkUsernameExists
 ) => {
   const errors = {};
 
-  // Email
-  errors.email = await validateEmail(formData.email, checkEmailExists);
+  const emailError = await validateEmail(formData.email, checkEmailExists);
+  errors.email = emailError || '';
 
-  // Profile ID
-  errors.profileId = await validateProfileId(formData.profileId, checkProfileIdExists);
+  const usernameError = await validateUsername(formData.username, checkUsernameExists);
+  errors.username = usernameError || '';
 
-  // Other fields
   errors.firstName = !formData.firstName ? 'First Name is required' : '';
   errors.lastName = !formData.lastName ? 'Last Name is required' : '';
-  errors.phone = validatePhone(formData.phone, formData.countryCode);
-  errors.jobTitle = validateJobTitle(formData.jobTitle);
-  errors.company = validateCompany(formData.company);
-  errors.employees = validateEmployees(formData.employees);
-  errors.country = validateCountry(formData.country);
-  errors.password = validatePassword(formData.password);
-  errors.confirmPassword = validateConfirmPassword(formData.password, formData.confirmPassword);
+  errors.phone = validatePhone(formData.phone, formData.countryCode) || '';
+  errors.jobTitle = validateJobTitle(formData.jobTitle) || '';
+  errors.company = validateCompany(formData.company) || '';
+  errors.employees = validateEmployees(formData.employees) || '';
+  errors.country = validateCountry(formData.country) || '';
+  errors.password = validatePassword(formData.password) || '';
+  errors.confirmPassword = validateConfirmPassword(formData.password, formData.confirmPassword) || '';
 
   setErrors(errors);
 

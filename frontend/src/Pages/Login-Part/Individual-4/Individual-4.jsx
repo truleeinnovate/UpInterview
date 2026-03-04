@@ -1479,6 +1479,7 @@ const MultiStepForm = () => {
                     setFilePreview={setFilePreview}
                     linkedInData={linkedInData}
                     setIsProfileRemoved={setIsProfileRemoved}
+                    isProfileCompleteStateOrg={isProfileCompleteStateOrg}
                   />
                 )}
                 {currentStep === 1 && (

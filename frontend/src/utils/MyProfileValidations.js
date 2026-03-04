@@ -1,5 +1,5 @@
 // validations.js
-export const validateFormMyProfile = (formData) => {
+export const validateFormMyProfile = (formData, isOrganization = false) => {
   const errors = {};
 
   // First Name
@@ -23,11 +23,13 @@ export const validateFormMyProfile = (formData) => {
     errors.email = "Please enter a valid email address";
   }
 
-  // Profile ID
-  if (!formData.profileId?.trim()) {
-    errors.profileId = "Profile ID is required";
-  } else if (formData.profileId.trim().length < 2) {
-    errors.profileId = "Profile ID must be at least 2 characters";
+  // Profile ID - Skip for organizations
+  if (!isOrganization) {
+    if (!formData.profileId?.trim()) {
+      errors.profileId = "Profile ID is required";
+    } else if (formData.profileId.trim().length < 2) {
+      errors.profileId = "Profile ID must be at least 2 characters";
+    }
   }
 
   // Phone (only digits check)

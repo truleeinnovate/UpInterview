@@ -7,7 +7,8 @@ const ContactsSchema = new mongoose.Schema(
     firstName: String,
     lastName: String,
     countryCode: String,
-    profileId: String,
+    profileId: String,//only for individual
+    username: String,// only for org
     email: String,
     phone: String,
     linkedinUrl: String,

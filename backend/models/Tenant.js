@@ -24,7 +24,7 @@ const TenantSchema = new mongoose.Schema(
     },
     type: { type: String, enum: ["organization", "individual"] },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
-    profileId: { type: String },
+    // profileId: { type: String },
     website: { type: String },
     status: {
       type: String,

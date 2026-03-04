@@ -154,7 +154,13 @@ const organizationUserCreation = async (req, res) => {
       // Create new user
       const existingUser = await Users.findOne({ email });
       if (existingUser) {
-        return res.status(400).json({ message: "Email already registered" });
+        let errorMessage;
+        if (existingUser.email === email) {
+          errorMessage = "Email already registered";
+        }
+        return res.status(400).json({
+          message: errorMessage,
+        });
       }
 
       const newUser = new Users({
@@ -2015,7 +2021,7 @@ const registerOrganization = async (req, res) => {
       email,
       phone,
       countryCode,
-      profileId,
+      username,
       jobTitle,
       company,
       employees,
@@ -2030,7 +2036,7 @@ const registerOrganization = async (req, res) => {
       !email ||
       !phone ||
       !countryCode ||
-      !profileId ||
+      !username ||
       !jobTitle ||
       !company ||
       !employees ||
@@ -2063,7 +2069,6 @@ const registerOrganization = async (req, res) => {
       lastName,
       email,
       phone,
-      profileId,
       jobTitle,
       company,
       employees,
@@ -2088,7 +2093,7 @@ const registerOrganization = async (req, res) => {
       lastName,
       firstName,
       email,
-      profileId,
+      username,
       phone,
       roleId: adminRole._id,
       tenantId: savedTenant._id,
@@ -2107,7 +2112,7 @@ const registerOrganization = async (req, res) => {
       firstName,
       email,
       phone,
-      profileId,
+      username,
       // jobTitle,
       company: company,
       employees: employees,

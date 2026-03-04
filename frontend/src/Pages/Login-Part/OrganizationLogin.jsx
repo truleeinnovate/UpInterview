@@ -717,13 +717,13 @@ const OrganizationLogin = () => {
                                                 const decodedReturnUrl = decodeURIComponent(returnUrl);
                                                 const returnUrlObj = new URL(decodedReturnUrl);
                                                 if (returnUrlObj.pathname === "/join-meeting") {
-                                                    return "Sign in to access your scheduled interview meeting";
+                                                    return "Login to access your scheduled interview meeting";
                                                 }
                                             } catch (error) {
                                                 console.error("Error processing returnUrl:", error);
                                             }
                                         }
-                                        return "Sign in to your organization dashboard";
+                                        return "Login to your organization dashboard";
                                     })()}
                                 </p>
                                 {/* Return URL indicator */}
@@ -958,13 +958,13 @@ const OrganizationLogin = () => {
                                                             decodeURIComponent(returnUrl);
                                                         const returnUrlObj = new URL(decodedReturnUrl);
                                                         if (returnUrlObj.pathname === "/join-meeting") {
-                                                            return "Sign In & Join Meeting ✨";
+                                                            return "Login & Join Meeting ✨";
                                                         }
                                                     } catch (error) {
                                                         console.error("Error processing returnUrl:", error);
                                                     }
                                                 }
-                                                return "Sign In to Dashboard ✨";
+                                                return "Login to Dashboard ✨";
                                             })()
                                         )}
                                     </button>

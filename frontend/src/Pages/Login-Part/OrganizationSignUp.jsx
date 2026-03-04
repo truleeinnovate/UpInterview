@@ -23,7 +23,7 @@ import * as countryCodesList from "country-codes-list";
 // import logo from "../../Pages/Dashboard-Part/Images/upinterviewLogo.webp";
 import {
   validateEmail,
-  validateProfileId,
+  validateUsername,
   validateOrganizationSignup,
   validatePhone,
   validatePassword,
@@ -34,8 +34,13 @@ import {
   clearAllAuth,
 } from "../../utils/AuthCookieManager/AuthCookieManager.jsx";
 import {
+  checkUsernameExists,
+  validateUsernameFormat,
+  validateUsername as sharedValidateUsername,
+} from "../../utils/userIdentifierValidation.js";
+import {
   validateWorkEmail,
-  checkEmailExists,
+  checkEmailExists
 } from "../../utils/workEmailValidation.js";
 
 import { Link } from "react-router-dom";
@@ -48,7 +53,7 @@ export const Organization = () => {
   const [selectedEmail, setSelectedEmail] = useState("");
   const [selectedPhone, setSelectedPhone] = useState("");
   const [selectedCountryCode, setSelectedCountryCode] = useState("+91");
-  const [selectedProfileId, setSelectedProfileId] = useState("");
+  const [selectedUsername, setSelectedUsername] = useState("");
   const [selectedJobTitle, setSelectedJobTitle] = useState("");
   const [selectedCompany, setSelectedCompany] = useState("");
   const [selectedEmployees, setSelectedEmployees] = useState("");
@@ -58,8 +63,8 @@ export const Organization = () => {
   const [showDropdownCountryCode, setShowDropdownCountryCode] = useState(false);
   const [errors, setErrors] = useState({});
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-  const [isCheckingProfileId, setIsCheckingProfileId] = useState(false);
-  const [suggestedProfileId, setSuggestedProfileId] = useState("");
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [suggestedUsername, setSuggestedUsername] = useState("");
 
   // Get all country names using country-codes-list package
   const countryOptions = useMemo(() => {
@@ -99,7 +104,7 @@ export const Organization = () => {
   const [isResending, setIsResending] = useState(false);
 
   const emailTimeoutRef = useRef(null);
-  const profileIdTimeoutRef = useRef(null);
+  const usernameTimeoutRef = useRef(null);
 
   // Refs for dropdowns
   const employeesDropdownRef = useRef(null);
@@ -145,17 +150,7 @@ export const Organization = () => {
     };
   }, []);
 
-  const checkProfileIdExists = async (profileId) => {
-    try {
-      const response = await axios.get(
-        `${config.REACT_APP_API_URL}/check-profileId?profileId=${profileId}`
-      );
-      return response.data.exists;
-    } catch (error) {
-      console.error("ProfileId check error:", error);
-      return false;
-    }
-  };
+  // Consolidated identity checks are now imported from userIdentifierValidation.js
 
   const handleChange = (field, value) => {
     // Prevent spaces in email and password fields
@@ -167,9 +162,19 @@ export const Organization = () => {
       const lowercasedEmail = value.toLowerCase();
       setSelectedEmail(lowercasedEmail);
       setErrors((prev) => ({ ...prev, email: "" }));
-    } else if (field === "profileId") {
-      setSelectedProfileId(value);
-      setErrors((prev) => ({ ...prev, profileId: "" }));
+
+      clearTimeout(emailTimeoutRef.current);
+      emailTimeoutRef.current = setTimeout(() => {
+        handleEmailValidation(lowercasedEmail);
+      }, 800);
+    } else if (field === "username") {
+      setSelectedUsername(value);
+      setErrors((prev) => ({ ...prev, username: "" }));
+
+      clearTimeout(usernameTimeoutRef.current);
+      usernameTimeoutRef.current = setTimeout(() => {
+        handleUsernameValidation(value);
+      }, 800);
     } else if (field === "firstName") {
       setSelectedFirstName(value);
       setErrors((prev) => ({ ...prev, firstName: "" }));
@@ -217,7 +222,7 @@ export const Organization = () => {
   useEffect(() => {
     return () => {
       clearTimeout(emailTimeoutRef.current);
-      clearTimeout(profileIdTimeoutRef.current);
+      clearTimeout(usernameTimeoutRef.current);
     };
   }, []);
 
@@ -225,6 +230,7 @@ export const Organization = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     // Prepare full data with confirmPassword
     const organizationData = {
@@ -233,7 +239,7 @@ export const Organization = () => {
       email: selectedEmail,
       countryCode: selectedCountryCode,
       phone: selectedPhone,
-      profileId: selectedProfileId,
+      username: selectedUsername,
       jobTitle: selectedJobTitle,
       company: selectedCompany,
       employees: selectedEmployees,
@@ -243,54 +249,15 @@ export const Organization = () => {
       contactType: "Organization",
     };
 
-    // Run validations first
+    // Run validations (includes async checks for email/username)
     const isValid = await validateOrganizationSignup(
       organizationData,
       setErrors,
       checkEmailExists,
-      checkProfileIdExists
+      checkUsernameExists
     );
 
     if (!isValid) {
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Only set submitting to true after all validations pass
-    setIsSubmitting(true);
-
-    // Validate email format and existence
-    const emailFormatError = validateWorkEmail(selectedEmail);
-    if (emailFormatError) {
-      setErrors((prev) => ({ ...prev, email: emailFormatError }));
-      setIsSubmitting(false);
-      return;
-    }
-
-    const emailExists = await checkEmailExists(selectedEmail);
-    if (emailExists) {
-      setErrors((prev) => ({ ...prev, email: "Email already registered" }));
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Validate profileId
-    const profileIdError = await validateProfileId(
-      selectedProfileId,
-      checkProfileIdExists
-    );
-    if (profileIdError) {
-      setErrors((prev) => ({ ...prev, profileId: profileIdError }));
-      setIsSubmitting(false);
-      return;
-    }
-
-    const confirmPasswordError = validateConfirmPassword(
-      selectedPassword,
-      selectedConfirmPassword
-    );
-    if (confirmPasswordError) {
-      setErrors((prev) => ({ ...prev, confirmPassword: confirmPasswordError }));
       setIsSubmitting(false);
       return;
     }
@@ -305,7 +272,9 @@ export const Organization = () => {
       );
       const { token } = response.data;
 
-      await setAuthCookies(token);
+      // Fixed: pass object as expected by AuthCookieManager
+      await setAuthCookies({ authToken: token });
+
       setEmail(selectedEmail);
       setFormSubmitted(true);
       notify.success("Verification email sent! Please check your inbox.");
@@ -344,10 +313,8 @@ export const Organization = () => {
   //  -------------------------------------- v1.0.1 >
 
   const handleEmailInput = (e) => {
-    const email = e.target.value.replace(/\s/g, "").toLowerCase();
-    setSelectedEmail(email);
-    setErrors((prev) => ({ ...prev, email: "" }));
-    // Remove profileId generation from here to prevent partial updates
+    const emailValue = e.target.value.replace(/\s/g, "").toLowerCase();
+    handleChange("email", emailValue);
   };
 
   const handleBlur = (field, value) => {
@@ -356,10 +323,10 @@ export const Organization = () => {
       emailTimeoutRef.current = setTimeout(() => {
         handleEmailValidation(value);
       }, 300); // Debounce to avoid rapid API calls
-    } else if (field === "profileId") {
-      clearTimeout(profileIdTimeoutRef.current);
-      profileIdTimeoutRef.current = setTimeout(() => {
-        handleProfileIdValidation(value);
+    } else if (field === "username") {
+      clearTimeout(usernameTimeoutRef.current);
+      usernameTimeoutRef.current = setTimeout(() => {
+        handleUsernameValidation(value);
       }, 300);
     } else if (field === "password") {
       const passwordError = validatePassword(value);
@@ -408,70 +375,67 @@ export const Organization = () => {
 
     setErrors((prev) => ({ ...prev, email: "" }));
 
-    // Only update profileId if the email is valid and profileId is empty or matches the previous email
-    const generatedProfileId = generateProfileId(email);
-    setSelectedProfileId(generatedProfileId);
-    handleProfileIdValidation(generatedProfileId);
+    // Only sync to username if the user hasn't started choosing a different one
+    // or if the username field is currently empty.
+    if (!selectedUsername || selectedUsername === email) {
+      const generatedUsername = generateUsername(email);
+      setSelectedUsername(generatedUsername);
+      handleUsernameValidation(generatedUsername);
+    }
 
     setIsCheckingEmail(false);
   };
 
-  const generateProfileId = (email) => {
+  const generateUsername = (email) => {
     if (!email) return "";
-    // console.log("generateProfileId input:", email); // Debug log
+    // console.log("generateUsername input:", email); // Debug log
     return email; // Use full email as username
   };
 
-  const handleProfileIdValidation = async (profileId) => {
-    // console.log("handleProfileIdValidation profileId:", profileId); // Debug log
-    if (!profileId) {
-      setErrors((prev) => ({ ...prev, profileId: "" }));
-      setSuggestedProfileId("");
-      setIsCheckingProfileId(false);
-      return;
-    }
-
-    setIsCheckingProfileId(true);
-    const profileIdError = await validateProfileId(
-      profileId,
-      checkProfileIdExists
-    );
-    // console.log("profileIdError:", profileIdError); // Debug log
-    setErrors((prev) => ({ ...prev, profileId: profileIdError }));
-
-    if (profileIdError && profileIdError.includes("already taken")) {
-      const [localPart, ...domainParts] = profileId.split("@");
-      const domain = domainParts.join("@"); // Handle edge cases like user@sub@domain.com
-      // console.log("localPart:", localPart, "domain:", domain); // Debug log
-      if (!localPart || !domain) {
-        setSuggestedProfileId("");
-        setIsCheckingProfileId(false);
+  const handleUsernameValidation = useCallback(
+    async (username) => {
+      if (!username) {
+        setErrors((prev) => ({ ...prev, username: "" }));
+        setSuggestedUsername("");
+        setIsCheckingUsername(false);
         return;
       }
-      let suffixCharCode = 97; // 'a'
-      let newProfileId = `${localPart}.a@${domain}`;
-      // console.log("Initial suggestion:", newProfileId); // Debug log
 
-      while (await checkProfileIdExists(newProfileId)) {
-        suffixCharCode++;
-        if (suffixCharCode > 122) {
-          // 'z'
-          setSuggestedProfileId("");
-          break;
-        }
-        newProfileId = `${localPart}.${String.fromCharCode(
-          suffixCharCode
-        )}@${domain}`;
-        // console.log("Next suggestion:", newProfileId); // Debug log
+      const formatError = validateUsernameFormat(username);
+      if (formatError) {
+        setErrors((prev) => ({ ...prev, username: formatError }));
+        setIsCheckingUsername(false);
+        setSuggestedUsername("");
+        return;
       }
-      // console.log("Final suggestedProfileId:", newProfileId); // Debug log
-      setSuggestedProfileId(newProfileId);
-    } else {
-      setSuggestedProfileId("");
-    }
 
-    setIsCheckingProfileId(false);
-  };
+      setIsCheckingUsername(true);
+      try {
+        const exists = await checkUsernameExists(username);
+        if (exists) {
+          setErrors((prev) => ({ ...prev, username: "Username already taken" }));
+          const [localPart, domain] = username.split("@");
+          let suffix = 1;
+          let suggested = "";
+          while (!suggested && suffix < 100) {
+            const candidate = `${localPart}${suffix}@${domain}`;
+            const check = await checkUsernameExists(candidate);
+            if (!check) suggested = candidate;
+            suffix++;
+          }
+          setSuggestedUsername(suggested);
+        } else {
+          setErrors((prev) => ({ ...prev, username: "" }));
+          setSuggestedUsername("");
+        }
+      } catch (error) {
+        console.error("Error checking Username:", error);
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    },
+    [setErrors, setIsCheckingUsername, setSuggestedUsername]
+  );
 
   const [countdown, setCountdown] = useState(0);
 
@@ -799,7 +763,7 @@ export const Organization = () => {
                 </div>
 
                 {!formSubmitted ? (
-                  <form className="space-y-6">
+                  <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Company Information Section */}
                     <div className="bg-gray-50 rounded-xl p-4 mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -979,44 +943,44 @@ export const Organization = () => {
                         <InputField
                           label="Username"
                           type="text"
-                          name="profileId"
-                          id="profileId"
-                          value={selectedProfileId}
+                          name="username"
+                          id="username"
+                          value={selectedUsername}
                           onChange={(e) =>
-                            handleChange("profileId", e.target.value)
+                            handleChange("username", e.target.value)
                           }
                           onBlur={(e) =>
-                            handleBlur("profileId", e.target.value)
+                            handleBlur("username", e.target.value)
                           }
-                          error={errors.profileId}
+                          error={errors.username}
                           placeholder="your-username@company.com"
                           autoComplete="username"
                           required={true}
                           className="focus:ring-custom-blue focus:border-custom-blue"
                         />
-                        {isCheckingProfileId && (
+                        {isCheckingUsername && (
                           <div className="absolute top-8 right-0 flex items-center pr-3">
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-custom-blue"></div>
                           </div>
                         )}
-                        {suggestedProfileId &&
-                          errors.profileId &&
-                          errors.profileId.includes("already taken") && (
+                        {suggestedUsername &&
+                          errors.username &&
+                          errors.username.includes("already taken") && (
                             <p className="text-blue-600 text-xs mt-1">
                               Try this:{" "}
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setSelectedProfileId(suggestedProfileId);
-                                  setSuggestedProfileId("");
+                                  setSelectedUsername(suggestedUsername);
+                                  setSuggestedUsername("");
                                   setErrors((prev) => ({
                                     ...prev,
-                                    profileId: "",
+                                    username: "",
                                   }));
                                 }}
                                 className="underline"
                               >
-                                {suggestedProfileId}
+                                {suggestedUsername}
                               </button>
                             </p>
                           )}
@@ -1105,7 +1069,6 @@ export const Organization = () => {
 
                     <button
                       type="submit"
-                      onClick={handleSubmit}
                       disabled={isSubmitting}
                       className={`w-full text-lg font-medium rounded-lg py-3 transition-all duration-300 flex items-center justify-center ${isSubmitting
                         ? "bg-gray-400 cursor-not-allowed transform scale-95"
@@ -1227,9 +1190,9 @@ export const Organization = () => {
                     Already have an account?{" "}
                     <Link
                       to="/organization-login"
-                      className="text-custom-blue hover:text-custom-blue/80 font-medium"
+                      className="text-custom-blue hover:text-custom-blue/80 font-medium underline"
                     >
-                      Sign in here
+                      Login here
                     </Link>
                   </p>
                 </div>
