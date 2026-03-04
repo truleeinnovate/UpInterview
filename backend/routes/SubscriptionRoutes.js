@@ -24,9 +24,9 @@ router.get('/subscriptions/:id', getSubscriptionPlanById);
 
 // Update
 router.put(
-	'/subscription-plan-update/:id',
-	loggingService.internalLoggingMiddleware,
-	updateSubscriptionPlan
+  '/subscription-plan-update/:id',
+  loggingService.internalLoggingMiddleware,
+  updateSubscriptionPlan
 );
 
 // Delete

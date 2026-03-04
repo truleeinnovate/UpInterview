@@ -241,6 +241,8 @@ const getApplicationsByPosition = async (req, res) => {
  */
 // this will use to create application with already created postion and candidate
 const createApplication = async (req, res) => {
+    res.locals.loggedByController = true;
+    res.locals.processName = "Create Application";
     try {
         const { candidateId, positionId, status, currentStage, type, screeningData, resumeId: providedResumeId } = req.body;
 
@@ -429,6 +431,16 @@ const createApplication = async (req, res) => {
             // Do NOT fail the response — just log
         }
 
+        res.locals.logData = {
+            tenantId: populatedApplication?.tenantId || req.body.tenantId || "",
+            ownerId: populatedApplication?.ownerId || req.body.userId || "",
+            processName: "Create Application",
+            requestBody: req.body,
+            status: "success",
+            message: "Application created successfully",
+            responseBody: { applicationId: populatedApplication?._id },
+        };
+
         // Final success response
         res.status(201).json({
             success: true,
@@ -453,6 +465,15 @@ const createApplication = async (req, res) => {
             });
         }
 
+        res.locals.logData = {
+            tenantId: req.body.tenantId || "",
+            ownerId: req.body.userId || "",
+            processName: "Create Application",
+            requestBody: req.body,
+            status: "error",
+            message: error.message,
+        };
+
         res.status(500).json({
             success: false,
             message: "Failed to create application",
@@ -465,6 +486,8 @@ const createApplication = async (req, res) => {
  * Update an existing application
  */
 const updateApplication = async (req, res) => {
+    res.locals.loggedByController = true;
+    res.locals.processName = "Update Application";
     try {
         const { id } = req.params;
         const { status, currentStage, interviewId } = req.body;
@@ -496,6 +519,16 @@ const updateApplication = async (req, res) => {
             .populate("interviewId", "interviewCode status")
             .lean();
 
+        res.locals.logData = {
+            tenantId: updatedApplication?.tenantId || req.body.tenantId || "",
+            ownerId: updatedApplication?.ownerId || req.body.userId || "",
+            processName: "Update Application",
+            requestBody: req.body,
+            status: "success",
+            message: "Application updated successfully",
+            responseBody: { applicationId: updatedApplication?._id },
+        };
+
         res.status(200).json({
             success: true,
             message: "Application updated successfully",
@@ -503,6 +536,15 @@ const updateApplication = async (req, res) => {
         });
     } catch (error) {
         console.error("Error updating application:", error);
+        res.locals.logData = {
+            tenantId: req.body.tenantId || "",
+            ownerId: req.body.userId || "",
+            processName: "Update Application",
+            requestBody: req.body,
+            status: "error",
+            message: error.message,
+        };
+
         res.status(500).json({
             success: false,
             message: "Failed to update application",
@@ -658,6 +700,8 @@ const filterApplications = async (req, res) => {
  * Update application status based on action
  */
 const updateApplicationStatus = async (req, res) => {
+    res.locals.loggedByController = true;
+    res.locals.processName = "Update Application Status";
     try {
         const { id } = req.params;
         const { action, status: providedStatus } = req.body;
@@ -798,6 +842,16 @@ const updateApplicationStatus = async (req, res) => {
             return res.status(404).json({ message: "Application not found" });
         }
 
+        res.locals.logData = {
+            tenantId: updatedApplication?.tenantId || req.body.tenantId || "",
+            ownerId: updatedApplication?.ownerId || req.body.userId || "",
+            processName: "Update Application Status",
+            requestBody: req.body,
+            status: "success",
+            message: `Application status updated to ${updatedApplication?.status}`,
+            responseBody: { applicationId: updatedApplication?._id, newStatus: updatedApplication?.status },
+        };
+
         res.status(200).json({
             success: true,
             message: "Application status updated successfully",
@@ -806,6 +860,15 @@ const updateApplicationStatus = async (req, res) => {
 
     } catch (error) {
         console.error("Error updating application status:", error);
+        res.locals.logData = {
+            tenantId: req.body.tenantId || "",
+            ownerId: req.body.userId || "",
+            processName: "Update Application Status",
+            requestBody: req.body,
+            status: "error",
+            message: error.message,
+        };
+
         res.status(500).json({
             success: false,
             message: "Failed to update application status",
