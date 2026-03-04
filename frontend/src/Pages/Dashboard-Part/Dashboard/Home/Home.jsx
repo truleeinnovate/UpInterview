@@ -88,17 +88,17 @@ const Home = () => {
   // ).length;
   //----v1.0.3-------->
 
-//   useEffect(() => {
-//   if (pendingDraftCount > 0) {
-//     showBanner({
-//       title: "Pending Feedback",
-//       message: `You have ${pendingDraftCount} drafts to complete.`,
-//       type: "warning",
-//       actionLabel: "View Feedbacks",
-//       onActionClick: () => navigate("/feedback")
-//     });
-//   }
-// }, [pendingDraftCount]);
+  //   useEffect(() => {
+  //   if (pendingDraftCount > 0) {
+  //     showBanner({
+  //       title: "Pending Feedback",
+  //       message: `You have ${pendingDraftCount} drafts to complete.`,
+  //       type: "warning",
+  //       actionLabel: "View Feedbacks",
+  //       onActionClick: () => navigate("/feedback")
+  //     });
+  //   }
+  // }, [pendingDraftCount]);
 
   const [stats, setStats] = useState({
     totalInterviews: 0,
