@@ -288,7 +288,7 @@ function UpcomingInterviewCard({ item, onExpire }) {
 
 function ActionRequiredSkeleton() {
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden animate-pulse">
+    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
       {/* Header Skeleton */}
       <div className="flex items-center gap-3 px-5 py-3 border-b bg-gray-50">
         <div className="h-7 w-7 rounded-md shimmer" />
@@ -369,12 +369,8 @@ export function ActionRequiredCards() {
 
   return (
     <div className="border border-gray-300 bg-white rounded-lg overflow-hidden">
-      <div
-        className="flex items-center gap-3 px-5 py-3 border-b border-custom-blue/10 bg-custom-blue/10"
-      >
-        <div
-          className="h-7 w-7 rounded-md flex items-center justify-center text-white bg-custom-blue"
-        >
+      <div className="flex items-center gap-3 px-5 py-3 border-b border-custom-blue/10 bg-custom-blue/10">
+        <div className="h-7 w-7 rounded-md flex items-center justify-center text-white bg-custom-blue">
           <AlertTriangle className="h-4 w-4" />
         </div>
         <div className="flex items-center gap-2">
