@@ -17,7 +17,7 @@ import { useMockInterviewById, useUpdateRoundStatus } from "../../../apiHooks/us
  *  - 1:42 PM → Call automatically ends
  */
 export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
-    const { end } = useMeeting();
+    const { leave } = useMeeting();
     const { updateRoundStatus, useInterviewDetails } = useInterviews();
     const updateMockRoundStatus = useUpdateRoundStatus();
     // Countdown state for last 5 min visual overlay
@@ -60,7 +60,7 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
     });
 
     const interviewRound =
-        interviewData?.rounds[0] || mockinterview?.rounds[0] || {};
+        interviewData?.rounds?.[0] || mockinterview?.rounds?.[0] || {};
 
     // Robust date parser that handles:
     // 1. "24-02-2026 11:37 AM - 11:57 AM" (combined range format from RoundForm)
@@ -77,11 +77,9 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
 
         console.log("[MeetingTimer] Parsing start part:", startPart);
 
-        // Step 2: Try standard Date parse (ISO format, etc.)
-        let parsed = new Date(startPart);
-        if (!isNaN(parsed.getTime())) return parsed;
-
-        // Step 3: Handle DD-MM-YYYY HH:MM AM/PM format (e.g., "24-02-2026 11:37 AM")
+        // Step 2: Try DD-MM-YYYY HH:MM AM/PM format FIRST (e.g., "04-03-2026 07:12 PM")
+        // IMPORTANT: Must check this BEFORE native Date() because Date("04-03-2026")
+        // would incorrectly parse as April 3rd (MM-DD) instead of March 4th (DD-MM)
         const ddmmyyyyMatch = startPart.match(
             /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)?$/i
         );
@@ -95,11 +93,12 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
                 if (ampm.toUpperCase() === "AM" && h === 12) h = 0;
             }
 
-            parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), h, m);
+            const parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), h, m);
+            console.log("[MeetingTimer] DD-MM-YYYY parsed:", parsed.toLocaleString());
             if (!isNaN(parsed.getTime())) return parsed;
         }
 
-        // Step 4: Handle YYYY-MM-DD HH:MM AM/PM format
+        // Step 3: Handle YYYY-MM-DD HH:MM AM/PM format
         const yyyymmddMatch = startPart.match(
             /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})\s+(\d{1,2}):(\d{2})\s*(AM|PM)?$/i
         );
@@ -113,9 +112,13 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
                 if (ampm.toUpperCase() === "AM" && h === 12) h = 0;
             }
 
-            parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), h, m);
+            const parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), h, m);
             if (!isNaN(parsed.getTime())) return parsed;
         }
+
+        // Step 4: Fallback to native Date parse (ISO strings, etc.)
+        const parsed = new Date(startPart);
+        if (!isNaN(parsed.getTime())) return parsed;
 
         console.error("[MeetingTimer] Could not parse dateTime:", dateTimeStr);
         return null;
@@ -193,7 +196,7 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
         if (hasEndedRef.current) return;
         hasEndedRef.current = true;
 
-        notify.meetingAlert("⏰ Meeting ended. Closing call...");
+        notify.critical("⏰ Meeting ended. Closing call...");
 
         // Build the payload based on status
         const payload = {
@@ -224,38 +227,48 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
             console.error("[MeetingTimer] Error updating round status:", error);
         }
 
-        // End the VideoSDK meeting
+        // Leave the meeting cleanly — don't use end() as it triggers internal
+        // mediasoup "queue stopped" errors. leave() disconnects gracefully.
         try {
-            end();
+            leave();
         } catch (e) {
-            console.error("[MeetingTimer] Error ending meeting:", e);
+            console.log("[MeetingTimer] Leave cleanup:", e?.message || e);
         }
 
-        // Auto-reload the page — always runs regardless of success/failure above
-        window.setTimeout(() => {
-            window.location.reload();
-        }, 2000);
-    }, [end, setIsMeetingLeft, isMockInterview, updateMockRoundStatus, updateRoundStatus, interviewRound, mockinterview]);
+        // Show the leave screen — NO reload needed (reload would cause a loop)
+        setIsMeetingLeft(true);
+    }, [leave, setIsMeetingLeft, isMockInterview, updateMockRoundStatus, updateRoundStatus, interviewRound, mockinterview]);
 
     // Main timer logic
     useEffect(() => {
         const boundaries = getTimeBoundaries();
+        console.log("[MeetingTimer] useEffect fired, boundaries:", boundaries ? "RESOLVED" : "NULL");
         if (!boundaries) return;
 
         const { scheduledEnd, graceEnd, tenMinWarning, fiveMinCountdown } = boundaries;
 
         const checkTime = () => {
             const now = new Date();
+            const nowMs = now.getTime();
+            const c1 = nowMs >= graceEnd.getTime();
+            const c2 = nowMs >= fiveMinCountdown.getTime() && nowMs < graceEnd.getTime();
+            const c3 = nowMs >= scheduledEnd.getTime() && nowMs < fiveMinCountdown.getTime();
+            const c4 = nowMs >= tenMinWarning.getTime() && nowMs < scheduledEnd.getTime();
+            console.log("[MeetingTimer] checkTime:", now.toLocaleTimeString(),
+                "| c1(autoEnd):", c1, "| c2(countdown):", c2, "| c3(grace):", c3, "| c4(10min):", c4,
+                "| shown:", JSON.stringify(shownNotificationsRef.current),
+                "| nowMs:", nowMs, "| schedEndMs:", scheduledEnd.getTime(), "| diff:", nowMs - scheduledEnd.getTime());
 
             // 1. Auto-end when grace period expires
-            if (now >= graceEnd) {
+            if (c1) {
+                console.log("[MeetingTimer] >>> AUTO-ENDING MEETING");
                 endMeeting();
                 return;
             }
 
             // 2. Last 5 minutes countdown (grace period - last 5 min)
-            if (now >= fiveMinCountdown && now < graceEnd) {
-                const remainingMs = graceEnd.getTime() - now.getTime();
+            if (c2) {
+                const remainingMs = graceEnd.getTime() - nowMs;
                 const remainingSec = Math.ceil(remainingMs / 1000);
                 setCountdown(remainingSec);
 
@@ -280,22 +293,27 @@ export function MeetingTimer({ interviewRoundData, setIsMeetingLeft }) {
             }
 
             // 3. Scheduled time over, grace period started
-            if (now >= scheduledEnd && now < fiveMinCountdown) {
+            if (c3) {
                 if (!shownNotificationsRef.current.graceStarted) {
                     shownNotificationsRef.current.graceStarted = true;
+                    console.log("[MeetingTimer] >>> FIRING: Grace period started");
                     notify.meetingAlert("Grace period started (10 min)");
                 }
                 return;
             }
 
             // 4. 10 minutes remaining before scheduled end
-            if (now >= tenMinWarning && now < scheduledEnd) {
+            if (c4) {
                 if (!shownNotificationsRef.current.tenMinWarning) {
                     shownNotificationsRef.current.tenMinWarning = true;
+                    console.log("[MeetingTimer] >>> FIRING: 10 min warning");
                     notify.meetingAlert("10 minutes remaining before scheduled end time.");
                 }
                 return;
             }
+
+            // None of the conditions matched
+            console.log("[MeetingTimer] NO CONDITION MATCHED!");
         };
 
         // Check immediately

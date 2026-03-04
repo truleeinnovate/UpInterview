@@ -337,6 +337,9 @@ export function MeetingContainer({
 
       const { senderId, senderName } = data;
 
+      // Strip the "|||imageUrl" suffix from the name (used for profile image encoding)
+      const cleanName = senderName?.split('|||')[0] || 'Someone';
+
       const isLocal = senderId === localParticipantId;
 
       // Check if hand is currently raised (use ref for latest value)
@@ -349,16 +352,16 @@ export function MeetingContainer({
 
       // Show appropriate notification
       if (isCurrentlyRaised) {
-        notify.meetingAlert(
+        notify.handRaise(
           isLocal
             ? "✋ You lowered your hand"
-            : `✋ ${senderName || 'Someone'} lowered hand`
+            : `✋ ${cleanName} lowered hand`
         );
       } else {
-        notify.meetingAlert(
+        notify.handRaise(
           isLocal
             ? "✋ You raised your hand"
-            : `✋ ${senderName || 'Someone'} raised hand`
+            : `✋ ${cleanName} raised hand`
         );
       }
     },

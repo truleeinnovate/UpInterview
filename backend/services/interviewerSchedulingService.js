@@ -6,28 +6,45 @@ const { InterviewerScheduling } = require("../models/InterviewerScheduling");
 const { parse } = require("date-fns");
 
 /**
- * Parse a dateTime string like "02-03-2026 10:56 AM - 11:56 AM" into { start: Date, end: Date }
- * Format: "dd-MM-yyyy hh:mm a - hh:mm a"
+ * Parse a dateTime string into { start: Date, end: Date }
+ * Supports two formats:
+ *   - "dd-MM-yyyy hh:mm a - hh:mm a"  (with explicit end time)
+ *   - "dd-MM-yyyy hh:mm a"            (start only – e.g. instant interviews)
+ *
+ * When the end time is missing, `durationMinutes` (default 60) is used to
+ * compute the end time from the start.
+ *
+ * @param {string} dateTimeStr
+ * @param {number} [durationMinutes=60]
  */
-function parseDateTimeRange(dateTimeStr) {
+function parseDateTimeRange(dateTimeStr, durationMinutes = 60) {
     if (!dateTimeStr || typeof dateTimeStr !== "string") return null;
 
     try {
         const parts = dateTimeStr.split(" - ");
-        if (parts.length !== 2) return null;
 
         const startPart = parts[0].trim(); // "02-03-2026 10:56 AM"
-        const endTimePart = parts[1].trim(); // "11:56 AM"
 
         // Parse start datetime
         const startDate = parse(startPart, "dd-MM-yyyy hh:mm a", new Date());
         if (isNaN(startDate.getTime())) return null;
 
-        // Extract date portion and combine with end time
-        const datePortion = startPart.split(" ")[0]; // "02-03-2026"
-        const endDateStr = `${datePortion} ${endTimePart}`;
-        const endDate = parse(endDateStr, "dd-MM-yyyy hh:mm a", new Date());
-        if (isNaN(endDate.getTime())) return null;
+        let endDate;
+
+        if (parts.length >= 2 && parts[1].trim()) {
+            // Explicit end time provided: "hh:mm a"
+            const endTimePart = parts[1].trim();
+            const datePortion = startPart.split(" ")[0]; // "02-03-2026"
+            const endDateStr = `${datePortion} ${endTimePart}`;
+            endDate = parse(endDateStr, "dd-MM-yyyy hh:mm a", new Date());
+            if (isNaN(endDate.getTime())) {
+                // Fallback: compute from duration
+                endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
+            }
+        } else {
+            // No end time (instant interviews) — compute from duration
+            endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
+        }
 
         return { start: startDate, end: endDate };
     } catch (error) {

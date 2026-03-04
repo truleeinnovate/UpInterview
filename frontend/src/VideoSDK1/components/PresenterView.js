@@ -367,7 +367,7 @@ export function PresenterView({ height }) {
         <div className="bottom-2 left-2 bg-gray-750/80 p-2 absolute rounded-md flex items-center z-10">
           {!micOn ? <MicOffSmallIcon fillcolor="white" /> : micOn && isActiveSpeaker ? <SpeakerIcon /> : null}
           <p className="text-sm text-white ml-1">
-            {isLocal ? 'You are presenting' : `${nameTructed(displayName, 15)} is presenting`}
+            {isLocal ? 'You are presenting' : `${nameTructed((displayName || '').split('|||')[0], 15)} is presenting`}
           </p>
         </div>
 
@@ -378,7 +378,7 @@ export function PresenterView({ height }) {
         )}
 
         <CornerDisplayName
-          {...{ isLocal, displayName, micOn, webcamOn: false, isPresenting: true, participantId: presenterId, isActiveSpeaker }}
+          {...{ isLocal, displayName: (displayName || '').split('|||')[0], micOn, webcamOn: false, isPresenting: true, participantId: presenterId, isActiveSpeaker }}
         />
       </div>
     </div>

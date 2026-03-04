@@ -39,6 +39,27 @@ const Dashboard = () => {
   const [customAudioStream, setCustomAudioStream] = useState(null);
   const [isMeetingStarted, setMeetingStarted] = useState(false);
 
+  // Suppress VideoSDK/mediasoup internal "queue stopped" errors
+  // These are thrown internally when transports close during meeting leave/end
+  // and cannot be caught in try/catch (they're async internal errors)
+  useEffect(() => {
+    const suppressQueueStopped = (event) => {
+      if (event?.message?.includes?.('queue stopped') ||
+        event?.reason?.message?.includes?.('queue stopped')) {
+        event.preventDefault();
+        event.stopImmediatePropagation?.();
+        console.log('[Dashboard] Suppressed VideoSDK queue stopped error');
+        return true;
+      }
+    };
+    window.addEventListener('error', suppressQueueStopped);
+    window.addEventListener('unhandledrejection', suppressQueueStopped);
+    return () => {
+      window.removeEventListener('error', suppressQueueStopped);
+      window.removeEventListener('unhandledrejection', suppressQueueStopped);
+    };
+  }, []);
+
   // const { useInterviewDetails } = useInterviews();
 
   const isMobile = window.matchMedia(
@@ -108,25 +129,30 @@ const Dashboard = () => {
       startPart = dateTimeStr.split(" - ")[0].trim();
     }
 
-    // Parse DD-MM-YYYY HH:MM AM/PM format
-    let startTime = new Date(startPart);
-    if (isNaN(startTime.getTime())) {
-      const match = startPart.match(
-        /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)?$/i
-      );
-      if (match) {
-        const [, day, month, year, hours, minutes, ampm] = match;
-        let h = parseInt(hours, 10);
-        const m = parseInt(minutes, 10);
-        if (ampm) {
-          if (ampm.toUpperCase() === "PM" && h !== 12) h += 12;
-          if (ampm.toUpperCase() === "AM" && h === 12) h = 0;
-        }
-        startTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), h, m);
+    // Try DD-MM-YYYY HH:MM AM/PM format FIRST (most common in our app)
+    // IMPORTANT: Must check before native Date() because Date("04-03-2026")
+    // incorrectly parses as April 3rd (MM-DD) instead of March 4th (DD-MM)
+    let startTime = null;
+    const ddmmMatch = startPart.match(
+      /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)?$/i
+    );
+    if (ddmmMatch) {
+      const [, day, month, year, hours, minutes, ampm] = ddmmMatch;
+      let h = parseInt(hours, 10);
+      const m = parseInt(minutes, 10);
+      if (ampm) {
+        if (ampm.toUpperCase() === "PM" && h !== 12) h += 12;
+        if (ampm.toUpperCase() === "AM" && h === 12) h = 0;
       }
+      startTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), h, m);
     }
 
-    if (isNaN(startTime.getTime())) return false;
+    // Fallback to native Date parse (ISO strings)
+    if (!startTime || isNaN(startTime.getTime())) {
+      startTime = new Date(startPart);
+    }
+
+    if (!startTime || isNaN(startTime.getTime())) return false;
 
     const durationMin = parseInt(interviewRoundData.duration, 10);
     if (isNaN(durationMin) || durationMin <= 0) return false;
@@ -134,13 +160,6 @@ const Dashboard = () => {
     // Grace end = start + duration + 10 min grace
     const graceEnd = new Date(startTime.getTime() + (durationMin + 10) * 60 * 1000);
     const now = new Date();
-
-    // console.log("[Dashboard] Meeting expiry check:", {
-    //   startTime: startTime.toLocaleString(),
-    //   graceEnd: graceEnd.toLocaleString(),
-    //   now: now.toLocaleString(),
-    //   expired: now > graceEnd,
-    // });
 
     return now > graceEnd;
   }, [interviewRoundData?.dateTime, interviewRoundData?.duration]);
