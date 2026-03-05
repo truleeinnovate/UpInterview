@@ -3991,11 +3991,11 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
           upcomingData.lastWeekCount) *
         100
       ).toFixed(1)}% vs last week`;
-  console.log("upcomingData", {
-    matchInterview,
-    now,
-    limit: 5, // Limit for dashboard display
-  });
+  // console.log("upcomingData", {
+  //   matchInterview,
+  //   now,
+  //   limit: 5, // Limit for dashboard display
+  // });
 
   // Get upcoming rounds for dashboard (without filters)
   const upcomingRoundsData = await getUpcomingRoundsOnly({
@@ -4003,6 +4003,145 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     now,
     limit: 5, // Limit for dashboard display
   });
+
+
+
+// --------------------------------------------------------------------
+// ROUND STATUS COUNTS + RATE + TREND
+// --------------------------------------------------------------------
+const roundStatusAgg = await InterviewRounds.aggregate([
+  {
+    $lookup: {
+      from: "interviews",
+      localField: "interviewId",
+      foreignField: "_id",
+      as: "interview",
+    },
+  },
+  { $unwind: "$interview" },
+
+  // tenant / owner filter
+  { $match: matchInterview },
+
+  {
+    $project: {
+      status: 1,
+      createdAt: 1,
+    },
+  },
+
+  {
+    $group: {
+      _id: null,
+
+      totalRounds: { $sum: 1 },
+
+      // Individual status counts
+      noShowCount: {
+        $sum: {
+          $cond: [{ $eq: ["$status", "NoShow"] }, 1, 0],
+        },
+      },
+      cancelledCount: {
+        $sum: {
+          $cond: [{ $eq: ["$status", "Cancelled"] }, 1, 0],
+        },
+      },
+
+
+      // Total NoShow + Cancelled
+      noShowCancelledTotal: {
+        $sum: {
+          $cond: [
+            { $in: ["$status", ["NoShow", "Cancelled"]] },
+            1,
+            0,
+          ],
+        },
+      },
+
+      // Current month NoShow + Cancelled
+      currentMonthNoShowCancelled: {
+        $sum: {
+          $cond: [
+            {
+              $and: [
+                { $in: ["$status", ["NoShow", "Cancelled"]] },
+                { $gte: ["$createdAt", currentMonthStart] },
+              ],
+            },
+            1,
+            0,
+          ],
+        },
+      },
+
+      // Last month NoShow + Cancelled
+      lastMonthNoShowCancelled: {
+        $sum: {
+          $cond: [
+            {
+              $and: [
+                { $in: ["$status", ["NoShow", "Cancelled"]] },
+                { $gte: ["$createdAt", lastMonthStart] },
+                { $lte: ["$createdAt", lastMonthEnd] },
+              ],
+            },
+            1,
+            0,
+          ],
+        },
+      },
+    },
+  },
+]);
+
+// default fallback
+const roundStatusData = roundStatusAgg[0] || {
+  totalRounds: 0,
+  noShowCount: 0,
+  cancelledCount: 0,
+  noShowCancelledTotal: 0,
+  currentMonthNoShowCancelled: 0,
+  lastMonthNoShowCancelled: 0,
+};
+
+// --------------------------------------------------
+// NoShow + Cancelled Rate Calculation
+// --------------------------------------------------
+const totalRounds = roundStatusData.totalRounds || 0;
+const totalNoShowCancelled = roundStatusData.noShowCancelledTotal || 0;
+
+// Rate %
+const noShowCancelRate =
+  totalRounds === 0
+    ? 0
+    : ((totalNoShowCancelled / totalRounds) * 100).toFixed(0);
+
+// --------------------------------------------------
+// Trend Calculation
+// --------------------------------------------------
+const lastMonthNoShowCancelled =
+  roundStatusData.lastMonthNoShowCancelled || 0;
+
+const currentMonthNoShowCancelled =
+  roundStatusData.currentMonthNoShowCancelled || 0;
+
+const noShowTrend =
+  lastMonthNoShowCancelled === 0
+    ? "up"
+    : currentMonthNoShowCancelled >= lastMonthNoShowCancelled
+    ? "up"
+    : "down";
+
+const noShowTrendValue =
+  lastMonthNoShowCancelled === 0
+    ? "+100% vs last month"
+    : `${(
+        ((currentMonthNoShowCancelled - lastMonthNoShowCancelled) /
+          lastMonthNoShowCancelled) *
+        100
+      ).toFixed(0)}% vs last month`;
 
   // --------------------------------------------------------------------
   // RETURN COMPLETE DASHBOARD DATA
@@ -4017,6 +4156,27 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
       trendValue: totalTrendValue,
       totalRounds: monthlyData.totalRounds,
     },
+
+// roundStatusCounts: {
+//   noShow: roundStatusData.noShowCount,
+//   cancelled: roundStatusData.cancelledCount,
+//   requestSent: roundStatusData.requestSentCount,
+
+//   rate: `${noShowCancelRate}%`,
+//   trend: noShowTrend,
+//   trendValue: noShowTrendValue,
+// },
+roundStatusCounts: {
+  value: roundStatusData.currentMonthNoShowCancelled,
+  lastMonth: roundStatusData.lastMonthNoShowCancelled,
+  trend: noShowTrend,
+  trendValue: noShowTrendValue,
+  totalCount: roundStatusData.noShowCancelledTotal,
+  rate: `${noShowCancelRate}%`,
+
+  noShow: roundStatusData.noShowCount,
+  cancelled: roundStatusData.cancelledCount,
+},
 
     // Outsourced Interviews Card Data
     outsourcedInterviews: {
