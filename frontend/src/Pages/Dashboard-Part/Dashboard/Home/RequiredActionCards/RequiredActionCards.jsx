@@ -144,11 +144,11 @@ function FeedbackCard({ item, onDismiss }) {
     capitalizeFirstLetter(item?.roundDetails?.roundTitle) || "Interview Round";
 
   // Use updatedAt for completion time
-  const completedDate = item?.updatedAt
-    ? new Date(item?.updatedAt)
-    : new Date();
+  // const completedDate = item?.updatedAt
+  //   ? new Date(item?.updatedAt)
+  //   : new Date();
   // Standard 24h SLA
-  const slaDate = new Date(completedDate?.getTime() + 24 * 60 * 60 * 1000);
+  // const slaDate = new Date(completedDate?.getTime() + 24 * 60 * 60 * 1000);
 
   return (
     <div className="flex items-start gap-4 p-4 rounded-lg border border-custom-blue/20 bg-white hover:shadow-sm transition-shadow">
@@ -178,14 +178,14 @@ function FeedbackCard({ item, onDismiss }) {
                   {roundName}
                 </p>
               </div>
-              <span className="text-gray-800">|</span>
+              {/* <span className="text-gray-800">|</span>
               <div className="flex items-center gap-1">
                 <CalendarClock className="h-3 w-3" />
                 <p>Completed {timeAgo(completedDate)}</p>
-              </div>
+              </div> */}
             </div>
           </div>
-          <SlaCountdown deadline={slaDate} />
+          {/* <SlaCountdown deadline={slaDate} /> */}
         </div>
 
         <div className="flex items-center gap-2 mt-3">
