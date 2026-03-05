@@ -566,7 +566,7 @@ const RegionalTaxDetails = lazyWithRetry(
 const GlobalSearchResults = lazyWithRetry(
   () => import("./Pages/GlobalSearch/GlobalSearchResults.jsx"),
 );
-const NotFound = lazy(
+const NotFound = lazyWithRetry(
   () => import("./Pages/NotFound/NotFound.jsx"),
 );
 
