@@ -95,7 +95,7 @@
 #           REACT_APP_CLIENT_ID: ${{ secrets.REACT_APP_CLIENT_ID }}
 #           REACT_APP_CLIENT_SECRET: ${{ secrets.REACT_APP_CLIENT_SECRET }}
 #           REACT_APP_REDIRECT_URI: ${{ secrets.REACT_APP_REDIRECT_URI }}
-
+          
 #           # API URLs
 #           REACT_APP_API_URL_FRONTEND: ${{ secrets.REACT_APP_API_URL_FRONTEND }}
 #         run: npm ci --only=production
@@ -104,7 +104,7 @@
 #         run: |
 #           # Create deployment directory
 #           mkdir -p deploy/backend
-
+          
 #           # Copy only essential files (much faster than rsync)
 #           cp -r backend/package*.json deploy/backend/
 #           cp -r backend/index.js deploy/backend/
@@ -119,10 +119,14 @@
 #           cp -r backend/data deploy/backend/
 #           cp -r backend/validations deploy/backend/
 #           cp -r backend/services deploy/backend/
+#           cp -r backend/cron deploy/backend/
+#           cp -r backend/agenda deploy/backend/
 
+
+          
 #           # Copy node_modules (already installed with production deps)
 #           cp -r backend/node_modules deploy/backend/
-
+          
 #           # Create zip file
 #           cd deploy
 #           zip -r ../release.zip . -x "*.git*" "*.DS_Store*" "*.log*"
@@ -136,8 +140,6 @@
 #           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DEV_BACKEND }}
 #           clean: true
 
-
-
 name: Build and deploy Node.js app to Azure Web App - dev-backend-upinterview
 
 on:
@@ -145,6 +147,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Manual Version (Leave empty for Timestamp)'
+        required: false
+        default: ''
 
 jobs:
   build-and-deploy:
@@ -152,6 +159,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Generate Version String
+        id: vars
+        run: |
+          # Generates format: YYYYMMDD-HHMM (e.g., 20240520-1430)
+          TIMESTAMP=$(date +'%Y%m%d-%H%M')
+          
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            echo "FINAL_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          else
+            echo "FINAL_VERSION=v${TIMESTAMP}" >> $GITHUB_ENV
+          fi
 
       - name: Set up Node.js version
         uses: actions/setup-node@v3
@@ -162,61 +181,34 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./backend
-        env:
-          # LinkedIn OAuth configuration
-          REACT_APP_CLIENT_ID: ${{ secrets.REACT_APP_CLIENT_ID }}
-          REACT_APP_CLIENT_SECRET: ${{ secrets.REACT_APP_CLIENT_SECRET }}
-          REACT_APP_REDIRECT_URI: ${{ secrets.REACT_APP_REDIRECT_URI }}
-
-          # API URLs
-          REACT_APP_API_URL_FRONTEND: ${{ secrets.REACT_APP_API_URL_FRONTEND }}
-
-          # video sdk
-          VIDEOSDK_API_KEY: ${{ secrets.VIDEOSDK_API_KEY }}
-          VIDEOSDK_SECRET_KEY: ${{ secrets.VIDEOSDK_SECRET_KEY }}
-          VIDEOSDK_API_ENDPOINT: ${{ secrets.VIDEOSDK_API_ENDPOINT }}
-
         run: npm ci --only=production
-
-      # 👇 NEW STEP — Install PM2 globally
-      - name: Install PM2
-        run: npm install -g pm2
 
       - name: Create optimized deployment package
         run: |
-          # Create deployment directory
           mkdir -p deploy/backend
-
-          # Copy only essential files (much faster than rsync)
-          cp -r backend/package*.json deploy/backend/
-          cp -r backend/index.js deploy/backend/
-          cp -r backend/config.js deploy/backend/
-          cp -r backend/web.config deploy/backend/
-          cp -r backend/routes deploy/backend/
-          cp -r backend/controllers deploy/backend/
-          cp -r backend/models deploy/backend/
-          cp -r backend/middleware deploy/backend/
-          cp -r backend/utils deploy/backend/
-          cp -r backend/constants deploy/backend/
-          cp -r backend/data deploy/backend/
-          cp -r backend/validations deploy/backend/
-          cp -r backend/services deploy/backend/
-          cp -r backend/cron deploy/backend/
-          cp -r backend/agenda deploy/backend/
-
-
-          # Copy node_modules (already installed with production deps)
-          cp -r backend/node_modules deploy/backend/
-
-          # Create zip file
+          
+          # Efficiently copy folders
+          FILES_TO_COPY="package*.json index.js config.js web.config routes controllers models middleware utils constants data validations services cron agenda node_modules"
+          for item in $FILES_TO_COPY; do
+            [ -e "backend/$item" ] && cp -r "backend/$item" deploy/backend/
+          done
+          
           cd deploy
-          zip -r ../release.zip . -x "*.git*" "*.DS_Store*" "*.log*"
+          # Zip named with timestamp (e.g. release-v20240520-1430.zip)
+          zip -r ../release-${{ env.FINAL_VERSION }}.zip . -x "*.git*" "*.DS_Store*" "*.log*"
+
+      - name: Upload Artifact for History
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ env.FINAL_VERSION }}
+          path: release-${{ env.FINAL_VERSION }}.zip
+          retention-days: 5
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'dev-backend-upinterview'
           slot-name: 'Production'
-          package: release.zip
+          package: release-${{ env.FINAL_VERSION }}.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DEV_BACKEND }}
           clean: true

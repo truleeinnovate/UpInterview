@@ -201,10 +201,9 @@ const PhoneField = ({
                         onChange={handlePhoneChange}
                         maxLength={maxDigits} // 👈 Dynamic based on country
                         className={`block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
-                            border ${
-                                displayError
-                                    ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
-                                    : "border-gray-300 focus:ring-red-300"
+                            border ${displayError
+                                ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
+                                : "border-gray-300 focus:ring-red-300"
                             }
                             focus:outline-gray-300
                         `}

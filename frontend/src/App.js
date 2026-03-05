@@ -12,8 +12,10 @@
 // v1.0.9 - Ashok - Added Master Data page at super admin
 // v2.0.0 - Ashok - Added Question Bank Manager page in super admin
 // v2.0.1 - Ashraf - removed unwanted outsource request path,added condition like super admin pages only open if super admin
-import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
+import lazyWithRetry from "./utils/lazyWithRetry";
+import ErrorBoundary from "./Components/ErrorBoundary";
 import Logo from "./Pages/Login-Part/Logo";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import { decodeJwt } from "./utils/AuthCookieManager/jwtDecode";
@@ -52,33 +54,33 @@ import FeedbackForm from "./Pages/videoCall/FeedbackForm.jsx";
 import CandidateMiniTab from "./Pages/Dashboard-Part/Tabs/Feedback/MiniTabs/Candidate.js";
 import InterviewsMiniTabComponent from "./Pages/Dashboard-Part/Tabs/Feedback/MiniTabs/Interviews.js";
 
-const LandingPage = lazy(() => import("./Pages/Login-Part/Individual-1"));
-const SelectProfession = lazy(() => import("./Pages/Login-Part/Individual-3"));
-const ProfileWizard = lazy(
+const LandingPage = lazyWithRetry(() => import("./Pages/Login-Part/Individual-1"));
+const SelectProfession = lazyWithRetry(() => import("./Pages/Login-Part/Individual-3"));
+const ProfileWizard = lazyWithRetry(
   () => import("./Pages/Login-Part/Individual-4/Individual-4"),
 );
-const OrganizationSignUp = lazy(
+const OrganizationSignUp = lazyWithRetry(
   () => import("./Pages/Login-Part/OrganizationSignUp"),
 );
-const OrganizationLogin = lazy(
+const OrganizationLogin = lazyWithRetry(
   () => import("./Pages/Login-Part/OrganizationLogin"),
 );
-const SubscriptionPlan = lazy(
+const SubscriptionPlan = lazyWithRetry(
   () => import("./Pages/Login-Part/SubscriptionPlans/SubscriptionPlan"),
 );
-const LinkedInCallback = lazy(() => import("./Components/LinkedInCallback"));
-const OAuthCallback = lazy(() => import("./Components/OAuthCallback"));
-const CardDetails = lazy(
+const LinkedInCallback = lazyWithRetry(() => import("./Components/LinkedInCallback"));
+const OAuthCallback = lazyWithRetry(() => import("./Components/OAuthCallback"));
+const CardDetails = lazyWithRetry(
   () => import("./Pages/Login-Part/SubscriptionPlans/CardDetails"),
 );
-const SubscriptionCardDetails = lazy(
+const SubscriptionCardDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/Subscription/subscriptionCardDetails.jsx"),
 );
-const ForgetPassword = lazy(() => import("./Pages/Login-Part/ForgetPassword"));
-const ResetPassword = lazy(() => import("./Pages/Login-Part/ResetPassword"));
+const ForgetPassword = lazyWithRetry(() => import("./Pages/Login-Part/ForgetPassword"));
+const ResetPassword = lazyWithRetry(() => import("./Pages/Login-Part/ResetPassword"));
 
-// const UserTypeSelection = lazy(() => import("./Pages/Login-Part/Individual-2"));
+// const UserTypeSelection = lazyWithRetry(() => import("./Pages/Login-Part/Individual-2"));
 // import {
 //   preloadPermissions,
 //   hasValidCachedPermissions,
@@ -88,420 +90,420 @@ const ResetPassword = lazy(() => import("./Pages/Login-Part/ResetPassword"));
 // import { config } from "./config.js";
 
 //  Video Call Application Components
-const VideoCallLanding = lazy(
+const VideoCallLanding = lazyWithRetry(
   () => import("./Pages/CustomVideoCall/Landing.jsx"),
 );
-const VideoSDKDashboard1 = lazy(() => import("./VideoSDK1/Dashboard"));
-const FullScreenPanel = lazy(() => import("./VideoSDK1/FullScreenPanel.jsx"));
+const VideoSDKDashboard1 = lazyWithRetry(() => import("./VideoSDK1/Dashboard"));
+const FullScreenPanel = lazyWithRetry(() => import("./VideoSDK1/FullScreenPanel.jsx"));
 
-const VideoCallJoinRoom = lazy(
+const VideoCallJoinRoom = lazyWithRetry(
   () => import("./Pages/CustomVideoCall/JoinRoom.jsx"),
 );
-const VideoCallRoom = lazy(() => import("./Pages/CustomVideoCall/Room.jsx"));
+const VideoCallRoom = lazyWithRetry(() => import("./Pages/CustomVideoCall/Room.jsx"));
 
 // Interviewers
-const InterviewersList = lazy(
+const InterviewersList = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Interviewers/Interviewers"),
 );
-const CreateInterviewer = lazy(
+const CreateInterviewer = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Interviewers/CreateInterviewer"),
 );
-const InterviewerDetails = lazy(
+const InterviewerDetails = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Interviewers/InterviewerDetails"),
 );
 
 // v1.0.5 ------------------------------>
 
-const Home = lazy(
+const Home = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Dashboard/Home/Home.jsx"),
 );
-const OutsourceInterviewerRequest = lazy(
+const OutsourceInterviewerRequest = lazyWithRetry(
   () =>
     import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx"),
 );
-const OrganizationRequest = lazy(
+const OrganizationRequest = lazyWithRetry(
   () =>
     import("./Pages/SuperAdmin-Part/OrganizationRequest/OrganizationRequest.jsx"),
 );
 
-const EnterpriseContactSale = lazy(
+const EnterpriseContactSale = lazyWithRetry(
   () =>
     import("./Pages/SuperAdmin-Part/EnterpriseContactSale/EnterpriseContactSale.jsx"),
 );
 
-const CandidateTab = lazy(
+const CandidateTab = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/Candidate"),
 );
-const CandidateTabDetails = lazy(
+const CandidateTabDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/360MainContent.jsx"),
 );
-const AddCandidateForm = lazy(
+const AddCandidateForm = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/AddCandidateForm"),
 );
-const CandidateDetails = lazy(
+const CandidateDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateDetails"),
 );
-const CandidateFullscreen = lazy(
+const CandidateFullscreen = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/Candidate-Tab/CandidateViewDetails/CandidateFullscreen"),
 );
-const Position = lazy(
+const Position = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Position-Tab/Position"),
 );
-const PositionForm = lazy(
+const PositionForm = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Position-Tab/Position-Form"),
 );
-const PositionSlideDetails = lazy(
+const PositionSlideDetails = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Position-Tab/PositionSlideDetails"),
 );
-const ApplicationViewWrapper = lazy(
+const ApplicationViewWrapper = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Position-Tab/ApplicationViewWrapper"),
 );
-const RoundFormPosition = lazy(
+const RoundFormPosition = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/Position-Tab/PositionRound/RoundFormPosition.jsx"),
 );
-const ResumeUploadPage = lazy(
+const ResumeUploadPage = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/Position-Tab/ResumeUploadPopup.jsx"),
 );
-const MockInterview = lazy(
+const MockInterview = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterview"),
 );
-const MockInterviewDetails = lazy(
+const MockInterviewDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewDetails"),
 );
-const MockSchedulelater = lazy(
+const MockSchedulelater = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/MockInterview/MockInterviewForm"),
 );
-const InterviewList = lazy(
+const InterviewList = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewList"),
 );
-const InterviewDetail = lazy(
+const InterviewDetail = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewDetail"),
 );
-const InterviewForm = lazy(
+const InterviewForm = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/InterviewForm"),
 );
-const RoundForm = lazy(
+const RoundForm = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Interview-New/pages/RoundForm"),
 );
-const QuestionBank = lazy(
+const QuestionBank = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/QuestionBank-Tab/QuestionBank"),
 );
-const Assessment = lazy(
+const Assessment = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Assessment-Tab/Assessment"),
 );
-const AssessmentForm = lazy(
+const AssessmentForm = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentForm/NewAssessment"),
 );
-const AssessmentDetails = lazy(
+const AssessmentDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/Assessment-Tab/AssessmentViewDetails/AssessmentViewDetails"),
 );
-const AssessmentTest = lazy(
+const AssessmentTest = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/AssessmentTest-Tab/AssessmentTest"),
 );
-const ScheduleAssessment = lazy(
+const ScheduleAssessment = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssessment"),
 );
-const ScheduleAssDetails = lazy(
+const ScheduleAssDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/ScheduleAssessment/ScheduleAssDetails"),
 );
-const SubscriptionPlansPage = lazy(
+const SubscriptionPlansPage = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/Subscription-Plans/Plans.jsx"),
 );
 
-const PlatformWalletPage = lazy(
+const PlatformWalletPage = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/Wallet/PlatformWalletPage.jsx"),
 );
 
 // Feedback Components
-const FeedbackTab = lazy(
+const FeedbackTab = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Feedback/Feedback.jsx"),
 );
-const FeedbackFormModel = lazy(
+const FeedbackFormModel = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Feedback/FeedbackFormModel.jsx"),
 );
 
-const AddFeedbackForm = lazy(
+const AddFeedbackForm = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Feedback/AddFeedbackForm.jsx"),
 );
 
-const Companies = lazy(
+const Companies = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Companies/Companies.jsx"),
 );
-const CompanyDetails = lazy(
+const CompanyDetails = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Companies/CompanyDetails.jsx"),
 );
-const CompanyForm = lazy(
+const CompanyForm = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Companies/CompanyForm.jsx"),
 );
 
-const InterviewerTags = lazy(
+const InterviewerTags = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/InterviewerTags/InterviewerTags.jsx"),
 );
-const InterviewerTagDetails = lazy(
+const InterviewerTagDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/InterviewerTags/InterviewerTagDetails.jsx"),
 );
-const InterviewerTagsForm = lazy(
+const InterviewerTagsForm = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/InterviewerTags/InterviewerTagsForm.jsx"),
 );
 
 // Code Editor
-const CodeEditor = lazy(
+const CodeEditor = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/CodeEditor/Editor.jsx"),
 );
-const WhiteBoard = lazy(
+const WhiteBoard = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/CodeEditor/Whiteboard.jsx"),
 );
 
-const MyProfile = lazy(
+const MyProfile = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/MyProfile.jsx"),
 );
-const BasicDetails = lazy(
+const BasicDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetails.jsx"),
 );
-const BasicDetailsEditPage = lazy(
+const BasicDetailsEditPage = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/BasicDetails/BasicDetailsEditPage.jsx"),
 );
-const AdvancedDetails = lazy(
+const AdvancedDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/AdvacedDetails.jsx"),
 );
-const EditAdvacedDetails = lazy(
+const EditAdvacedDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AdvancedDetails/EditAdvacedDetails.jsx"),
 );
-const InterviewUserDetails = lazy(
+const InterviewUserDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/InterviewDetails.jsx"),
 );
-const EditInterviewDetails = lazy(
+const EditInterviewDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/InterviewDetails/EditInterviewDetails"),
 );
-const AvailabilityUser = lazy(
+const AvailabilityUser = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/AvailabilityUser"),
 );
-const EditAvailabilityDetails = lazy(
+const EditAvailabilityDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/MyProfile/AvailabilityDetailsUser/EditAvailabilityDetails"),
 );
-const CompanyProfile = lazy(
+const CompanyProfile = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfile"),
 );
-const CompanyEditProfile = lazy(
+const CompanyEditProfile = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/CompanyProfile/CompanyProfileEdit"),
 );
-const Subscription = lazy(
+const Subscription = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/Subscription/Subscription"),
 );
-const Wallet = lazy(
+const Wallet = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Accountsettings/account/wallet/Wallet"),
 );
-const WalletBalancePopup = lazy(
+const WalletBalancePopup = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletBalancePopup"),
 );
-const WalletTransactionPopup = lazy(
+const WalletTransactionPopup = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/wallet/WalletTransactionPopup"),
 );
-const Security = lazy(
+const Security = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Accountsettings/account/Security"),
 );
-const NotificationsDetails = lazy(
+const NotificationsDetails = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Accountsettings/account/Notifications"),
 );
-const Usage = lazy(
+const Usage = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Accountsettings/account/Usage"),
 );
-const InterviewerGroups = lazy(
+const InterviewerGroups = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/InterviewGroups/InterviewerGroups.jsx"),
 );
-const InterviewerGroupFormPopup = lazy(
+const InterviewerGroupFormPopup = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/InterviewGroups/InterviewerGroupFormPopup.jsx"),
 );
-const InterviewGroupDetails = lazy(
+const InterviewGroupDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/InterviewGroups/InterviewGroupDetails.jsx"),
 );
-const UsersLayout = lazy(
+const UsersLayout = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UsersLayout"),
 );
-const UserForm = lazy(
+const UserForm = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserForm"),
 );
-const UserProfileDetails = lazy(
+const UserProfileDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/Organization_users_create/UserProfileDetails"),
 );
-const EmailTemplate = lazy(
+const EmailTemplate = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/EmailSettings/EmailTemplate"),
 );
-const Role = lazy(
+const Role = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Accountsettings/account/Roles/Role"),
 );
-const RoleFormPopup = lazy(
+const RoleFormPopup = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleFormPopup"),
 );
-const RoleView = lazy(
+const RoleView = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/Roles/RoleView.jsx"),
 );
 
-const Sharing = lazy(
+const Sharing = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Accountsettings/account/Sharing"),
 );
-const DomainManagement = lazy(
+const DomainManagement = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/SubdomainManagement/SubdomainManagement"),
 );
-const Webhooks = lazy(
+const Webhooks = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Accountsettings/integrations/Webhooks"),
 );
-const HrmsAtsApi = lazy(
+const HrmsAtsApi = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/integrations/HrmsAtsApi"),
 );
 // v1.0.6 <-----------------------------------------------------------------------------
-const SettingsIntegrations = lazy(
+const SettingsIntegrations = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Accountsettings/account/WebHooks/MainContent.jsx"),
 );
 // v1.0.6 ----------------------------------------------------------------------------->
-const InterviewTemplates = lazy(
+const InterviewTemplates = lazyWithRetry(
   () => import("../src/Pages/InteviewTemplates/InterviewTemplates"),
 );
-const TemplateDetail = lazy(
+const TemplateDetail = lazyWithRetry(
   () => import("../src/Pages/InteviewTemplates/TemplateDetail"),
 );
-const RoundFormTemplate = lazy(
+const RoundFormTemplate = lazyWithRetry(
   () => import("../src/Pages/InteviewTemplates/RoundForm"),
 );
-const InterviewTemplateForm = lazy(
+const InterviewTemplateForm = lazyWithRetry(
   () => import("../src/Pages/InteviewTemplates/InterviewTemplateForm"),
 );
-const SupportDesk = lazy(
+const SupportDesk = lazyWithRetry(
   () => import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk"),
 );
-const SuperSupportDetails = lazy(
+const SuperSupportDetails = lazyWithRetry(
   () =>
     import("./Pages/Dashboard-Part/Tabs/SupportDesk/SuperSupportDetails.jsx"),
 );
-const SupportForm = lazy(
+const SupportForm = lazyWithRetry(
   () => import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportForm"),
 );
-const SupportViewPage = lazy(
+const SupportViewPage = lazyWithRetry(
   () => import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportViewPage"),
 );
-const InterviewRequest = lazy(
+const InterviewRequest = lazyWithRetry(
   () => import("./Pages/Interview-Request/InterviewRequest.jsx"),
 );
-const WithdrawalRequests = lazy(
+const WithdrawalRequests = lazyWithRetry(
   () => import("./Pages/Withdrawal-Request/WithdrawalRequests.jsx"),
 );
-const Task = lazy(
+const Task = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Dashboard/TaskTab/Task.jsx"),
 );
-const VerifyEmail = lazy(() => import("./VerifyWorkEmail.jsx"));
+const VerifyEmail = lazyWithRetry(() => import("./VerifyWorkEmail.jsx"));
 
 // v1.0.5 <--------------------------------------------------------------------------------
-const AnalyticsLayout = lazy(() => import("./Components/Analytics/Layout.jsx"));
-const AnalyticsDashboard = lazy(
+const AnalyticsLayout = lazyWithRetry(() => import("./Components/Analytics/Layout.jsx"));
+const AnalyticsDashboard = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Analytics/Dashboard.jsx"),
 );
-const AnalyticsReports = lazy(
+const AnalyticsReports = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Analytics/Reports.jsx"),
 );
-const AnalyticsReportDetail = lazy(
+const AnalyticsReportDetail = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Analytics/ReportDetail.jsx"),
 );
-const AnalyticsTrends = lazy(
+const AnalyticsTrends = lazyWithRetry(
   () => import("./Pages/Dashboard-Part/Tabs/Analytics/Trends.jsx"),
 );
 // v1.0.5 -------------------------------------------------------------------------------->
 
 // Super Admin Lazy-loaded components
-const SuperAdminDashboard = lazy(
+const SuperAdminDashboard = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/Dashboard.jsx"),
 );
-const TenantsPage = lazy(
+const TenantsPage = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/TenantsPage.jsx"),
 );
-const AddTenantForm = lazy(
+const AddTenantForm = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/Tenant/AddTenantForm.jsx"),
 );
-const TenantDetailsPage = lazy(
+const TenantDetailsPage = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/TenantDetailsPage.jsx"),
 );
-// const CandidatesPage = lazy(() =>
+// const CandidatesPage = lazyWithRetry(() =>
 //     import("./Pages/SuperAdmin-Part/CandidatesPage.jsx")
 // );
-// const PositionsPage = lazy(() =>
+// const PositionsPage = lazyWithRetry(() =>
 //     import("./Pages/SuperAdmin-Part/PositionsPage.jsx")
 // );
-// const InterviewsPage = lazy(() =>
+// const InterviewsPage = lazyWithRetry(() =>
 //     import("./Pages/SuperAdmin-Part/InterviewsPage.jsx")
 // );
-// const AssessmentsPage = lazy(() =>
+// const AssessmentsPage = lazyWithRetry(() =>
 //     import("./Pages/SuperAdmin-Part/AssessmentsPage.jsx")
 // );
 
-const OutsourceInterviewersPage = lazy(
+const OutsourceInterviewersPage = lazyWithRetry(
   () =>
     import("./Pages/Outsource-Interviewer-Request/OutsourceInterviewers.jsx"),
 );
-const InterviewerRequestsPage = lazy(
+const InterviewerRequestsPage = lazyWithRetry(
   () => import("./Pages/Interview-Request/InterviewRequest.jsx"),
 );
-const BillingPage = lazy(
+const BillingPage = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/BillingPage.jsx"),
 );
-const AddInvoiceForm = lazy(
+const AddInvoiceForm = lazyWithRetry(
   () =>
     import("./Components/SuperAdminComponents/Billing/Invoice/AddInvoiceForm.jsx"),
 );
-// const SupportTicketsPage = lazy(() =>
+// const SupportTicketsPage = lazyWithRetry(() =>
 //     import("../src/Pages/Dashboard-Part/Tabs/SupportDesk/SupportDesk")
 // );
-// const AddSupportForm = lazy(() =>
+// const AddSupportForm = lazyWithRetry(() =>
 //     import("./Pages/SuperAdmin-Part/Support/AddSupportForm.jsx")
 // );
-const SettingsPage = lazy(
+const SettingsPage = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/SettingsPage.jsx"),
 );
-const InternalLogsPage = lazy(
+const InternalLogsPage = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/InternalLogsPage.jsx"),
 );
-const IntegrationsPage = lazy(
+const IntegrationsPage = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/IntegrationsPage.jsx"),
 );
-const ContactProfileDetails = lazy(
+const ContactProfileDetails = lazyWithRetry(
   () =>
     import("./Components/SuperAdminComponents/TenantDetails/Contact/ContactProfileDetails.jsx"),
 );
@@ -509,50 +511,50 @@ const ContactProfileDetails = lazy(
 // v1.0.9 <-------------------------------------------------------------------------------
 // v1.0.8 <-------------------------------------------------------------------------------
 // v1.0.7 <-------------------------------------------------------------------------------
-const InterviewerRatesPage = lazy(
+const InterviewerRatesPage = lazyWithRetry(
   () =>
     import("./Pages/SuperAdmin-Part/InterviewerRates/InterviewerRatesPage.jsx"),
 );
-const Interviewers = lazy(
+const Interviewers = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/Interviews/Interviews.jsx"),
 );
-const MasterData = lazy(
+const MasterData = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/MasterData/MasterData.jsx"),
 );
-const MasterTable = lazy(
+const MasterTable = lazyWithRetry(
   () =>
     import("./Pages/SuperAdmin-Part/MasterData/MasterTable/MasterTable.jsx"),
 );
 // v2.0.0 <------------------------------------------------------------------
-const QuestionBankManager = lazy(
+const QuestionBankManager = lazyWithRetry(
   () =>
     import("./Pages/SuperAdmin-Part/QuestionBankManager/QuestionBankManager.jsx"),
 );
-const ContactUsPage = lazy(
+const ContactUsPage = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/ContactUs/ContactUsPage.jsx"),
 );
-const ContactUsViewPage = lazy(
+const ContactUsViewPage = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/ContactUs/ContactUsViewPage.jsx"),
 );
-const InterviewPolicy = lazy(
+const InterviewPolicy = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicy.jsx"),
 );
-const InterviewPolicyDetails = lazy(
+const InterviewPolicyDetails = lazyWithRetry(
   () =>
     import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicyDetails.jsx"),
 );
-const InterviewPolicyForm = lazy(
+const InterviewPolicyForm = lazyWithRetry(
   () =>
     import("./Pages/SuperAdmin-Part/InterviewPolicy/InterviewPolicyForm.jsx"),
 );
 
-const RegionalTax = lazy(
+const RegionalTax = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTax.jsx"),
 );
-const RegionalTaxForm = lazy(
+const RegionalTaxForm = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTaxForm.jsx"),
 );
-const RegionalTaxDetails = lazy(
+const RegionalTaxDetails = lazyWithRetry(
   () => import("./Pages/SuperAdmin-Part/RegionalTax/RegionalTaxDetails.jsx"),
 );
 // v2.0.0 <------------------------------------------------------------------
@@ -561,7 +563,7 @@ const RegionalTaxDetails = lazy(
 // v1.0.9 ------------------------------------------------------------------------------->
 
 // Global Search
-const GlobalSearchResults = lazy(
+const GlobalSearchResults = lazyWithRetry(
   () => import("./Pages/GlobalSearch/GlobalSearchResults.jsx"),
 );
 const NotFound = lazy(
@@ -1798,25 +1800,27 @@ const App = () => {
           onSuccess={onSuccess}
         >
           <UserDataLoader>
-            <ToastProvider />
-            {isPublicPath ? (
-              <AuthRoutes />
-            ) : (
-              <ProtectedRoute>
-                {/* <CustomProvider> */}
-                <PermissionsProvider>
-                  <MainAppRoutes
-                    location={location}
-                    organization={organization}
-                    sessionExpired={sessionExpired}
-                    setSessionExpired={setSessionExpired}
-                    showLogoPaths={showLogoPaths}
-                    noNavbarPaths={noNavbarPaths}
-                  />
-                </PermissionsProvider>
-                {/* </CustomProvider> */}
-              </ProtectedRoute>
-            )}
+            <ErrorBoundary>
+              <ToastProvider />
+              {isPublicPath ? (
+                <AuthRoutes />
+              ) : (
+                <ProtectedRoute>
+                  {/* <CustomProvider> */}
+                  <PermissionsProvider>
+                    <MainAppRoutes
+                      location={location}
+                      organization={organization}
+                      sessionExpired={sessionExpired}
+                      setSessionExpired={setSessionExpired}
+                      showLogoPaths={showLogoPaths}
+                      noNavbarPaths={noNavbarPaths}
+                    />
+                  </PermissionsProvider>
+                  {/* </CustomProvider> */}
+                </ProtectedRoute>
+              )}
+            </ErrorBoundary>
           </UserDataLoader>
         </PersistQueryClientProvider>
       </QueryClientProvider>

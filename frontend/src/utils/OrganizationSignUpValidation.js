@@ -32,9 +32,8 @@ export const validateProfileId = sharedValidateProfileId;
 //  -------------------------------------- v1.0.0 >
 
 export const validatePhone = (phone, countryCode) => {
-  // Make phone number optional
   if (!phone || phone.trim() === '') {
-    return '';
+    return 'Phone Number is required';
   }
 
   const cleanPhone = phone.replace(/\D/g, '');

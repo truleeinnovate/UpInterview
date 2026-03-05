@@ -526,7 +526,7 @@ const generateReport = async (req, res) => {
 
     // Other filters
     Object.keys(activeFilters).forEach(key => {
-      if (["dateRange", "customStartDate", "customEndDate", "viewScope", "roundType"].includes(key)) return;
+      if (["dateRange", "customStartDate", "customEndDate", "viewScope"].includes(key)) return;
       const value = activeFilters[key];
       if (value && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
         finalQuery[key] = Array.isArray(value) ? { $in: value } : value;
@@ -543,33 +543,25 @@ const generateReport = async (req, res) => {
     let rawData = [];
 
     if (collectionName === "interviewrounds") {
-      const [interviews, mockInterviews] = await Promise.all([
-        Interview.find(permissionQuery, { _id: 1 }).lean(),
-        MockInterview.find(permissionQuery, { _id: 1 }).lean()
-      ]);
-
+      const interviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
       const interviewIds = interviews.map(i => i._id);
-      const mockIds = mockInterviews.map(i => i._id);
 
-      const [rounds, mockRounds] = await Promise.all([
-        InterviewRounds.find({ interviewId: { $in: interviewIds }, ...finalQuery }, projection).lean(),
-        MockInterviewRound.find({ mockInterviewId: { $in: mockIds }, ...finalQuery }, projection).lean()
-      ]);
+      const rounds = await InterviewRounds.find({ interviewId: { $in: interviewIds }, ...finalQuery }, projection)
+        .populate({
+          path: "interviewId",
+          select: "status interviewCode"
+        })
+        .lean();
 
-      rawData = [
-        ...rounds.map(r => ({ ...r, roundType: 'real' })),
-        ...mockRounds.map(r => ({ ...r, roundType: 'mock' }))
-      ];
+      rawData = rounds.map(r => ({
+        ...r,
+        parentStatus: r.interviewId?.status || "Unknown",
+        interviewCode: r.interviewId?.interviewCode || "Unknown",
+        interviewId: r.interviewId?._id // keep original ID reference
+      }));
     }
     else if (collectionName === "interviews") {
-      const [regular, mock] = await Promise.all([
-        Interview.find({ ...permissionQuery, ...finalQuery }, projection).lean(),
-        MockInterview.find({ ...permissionQuery, ...finalQuery }, projection).lean()
-      ]);
-      rawData = [
-        ...regular.map(r => ({ ...r, roundType: 'real' })),
-        ...mock.map(m => ({ ...m, roundType: 'mock' }))
-      ];
+      rawData = await Interview.find({ ...permissionQuery, ...finalQuery }, projection).lean();
     }
     else if (collectionName === "scheduledassessments") {
       const scheduled = await ScheduledAssessment.find(
@@ -616,22 +608,13 @@ const generateReport = async (req, res) => {
       }
     }
     else if (collectionName === "feedback") {
-      // 1. Get regular and mock interviews based on permission query
-      const [regularInterviews, mockInterviews] = await Promise.all([
-        Interview.find(permissionQuery, { _id: 1 }).lean(),
-        MockInterview.find(permissionQuery, { _id: 1 }).lean()
-      ]);
-
+      // 1. Get regular interview based on permission query
+      const regularInterviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
       const regularIds = regularInterviews.map(i => i._id);
-      const mockIds = mockInterviews.map(i => i._id);
 
       // 2. Get all rounds for these interviews
-      const [regularRounds, mockRounds] = await Promise.all([
-        InterviewRounds.find({ interviewId: { $in: regularIds } }, { _id: 1 }).lean(),
-        MockInterviewRound.find({ mockInterviewId: { $in: mockIds } }, { _id: 1 }).lean()
-      ]);
-
-      const roundIds = [...regularRounds.map(r => r._id), ...mockRounds.map(r => r._id)];
+      const regularRounds = await InterviewRounds.find({ interviewId: { $in: regularIds } }, { _id: 1 }).lean();
+      const roundIds = regularRounds.map(r => r._id);
 
       // 3. Find feedback matching these rounds OR the general query
       rawData = await FeedbackModel.find(
@@ -651,7 +634,6 @@ const generateReport = async (req, res) => {
 
       rawData = rawData.map(fb => ({
         ...fb,
-        roundType: fb.isMockInterview ? 'mock' : 'real',
         candidateName: fb.candidateId ? `${fb.candidateId.FirstName || ''} ${fb.candidateId.LastName || ''}`.trim() : 'Unknown',
         positionTitle: fb.positionId?.title || 'Unknown',
         roundTitle: fb.interviewRoundId?.roundTitle || 'Unknown',
@@ -671,11 +653,6 @@ const generateReport = async (req, res) => {
     // ALWAYS SORT IN JAVASCRIPT — COSMOS DB SAFE
     let sortedData = rawData
       .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
-    // IN-MEMORY FILTERING — e.g. Round Type
-    if (activeFilters.roundType && activeFilters.roundType !== "all") {
-      sortedData = sortedData.filter(d => d.roundType === activeFilters.roundType);
-    }
 
     const slicedData = sortedData.slice(0, 2000);
 

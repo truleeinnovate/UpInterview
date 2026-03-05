@@ -1,10 +1,10 @@
 import React from 'react';
 
 class ErrorBoundary extends React.Component {
-  state = { 
+  state = {
     hasError: false,
     error: null,
-    errorInfo: null 
+    errorInfo: null
   };
 
   static getDerivedStateFromError(error) {
@@ -21,6 +21,8 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
+      const isChunkError = this.state.error?.name === 'ChunkLoadError';
+
       return (
         <div style={{
           display: 'flex',
@@ -54,7 +56,7 @@ class ErrorBoundary extends React.Component {
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <circle cx="12" cy="12" r="10" fill="#fff0f0"/>
+                <circle cx="12" cy="12" r="10" fill="#fff0f0" />
                 <path
                   d="M12 8v4m0 4h.01M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"
                   stroke="#ff4d4f"
@@ -63,27 +65,45 @@ class ErrorBoundary extends React.Component {
                 />
               </svg>
             </div>
-            
+
             {/* Error Heading */}
-            <h2 style={{ 
+            <h2 style={{
               margin: '0 0 1rem 0',
               fontSize: '1.5rem',
               color: '#2d3748',
               fontWeight: 600,
               lineHeight: 1.3
             }}>
-              Something went wrong
+              {isChunkError ? 'Connection Lost' : 'Something went wrong'}
             </h2>
-            
+
             {/* Error Message */}
-            <p style={{ 
+            <p style={{
               margin: '0 0 2rem 0',
               color: '#4a5568',
               lineHeight: 1.6,
               fontSize: '1rem'
             }}>
-              We've encountered an unexpected error. please Login again
+              {isChunkError
+                ? "We're having trouble loading some parts of the application. This usually happens due to a poor internet connection."
+                : "We've encountered an unexpected error. please Login again"}
             </p>
+
+            <button
+              onClick={() => isChunkError ? window.location.reload() : window.location.href = '/'}
+              style={{
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: 500
+              }}
+            >
+              {isChunkError ? 'Reload Page' : 'Go to Login'}
+            </button>
 
           </div>
         </div>
