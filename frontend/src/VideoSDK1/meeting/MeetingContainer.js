@@ -559,36 +559,53 @@ export function MeetingContainer({
                   )}
                   <div className="flex-1 overflow-hidden">
                     {isPresenting ? (
-                      <div className="flex flex-col h-full">
-                        {/* Horizontal PiP Participants - Top strip below navbar */}
-                        <div className="h-32 bg-gray-800 border-b border-gray-600 flex flex-row gap-2 overflow-x-auto p-2">
-                          {Array.from(uniqueParticipants).map(
-                            (participantId) => (
-                              <div
-                                key={`pip-${participantId}`}
-                                className="relative flex-shrink-0 h-full"
-                                style={{
-                                  width: "320px", // Fixed width for each participant
-                                }}
-                              >
-                                <ParticipantView
-                                  participantId={participantId}
-                                />
-                                <ParticipantMicStream
-                                  participantId={participantId}
-                                />
-                              </div>
-                            ),
-                          )}
+                      sideBarMode ? (
+                        /* ===== SIDEBAR OPEN: Participants TOP strip + Screen below ===== */
+                        <div className="flex flex-col h-full">
+                          {/* Horizontal participant strip at top */}
+                          <div className="h-28 bg-gray-800 border-b border-gray-600 flex flex-row gap-2 overflow-x-auto p-2 flex-shrink-0">
+                            {Array.from(uniqueParticipants).map(
+                              (participantId) => (
+                                <div
+                                  key={`pip-top-${participantId}`}
+                                  className="relative flex-shrink-0 h-full rounded-lg overflow-hidden"
+                                  style={{ width: "180px" }}
+                                >
+                                  <ParticipantView participantId={participantId} />
+                                  <ParticipantMicStream participantId={participantId} />
+                                </div>
+                              )
+                            )}
+                          </div>
+                          {/* Screen share area */}
+                          <div className="flex-1 relative min-h-0">
+                            <PresenterView height={"100%"} />
+                          </div>
                         </div>
-                        {/* Main presentation area */}
-                        <div className="flex-1 relative">
-                          <PresenterView
-                            height={containerHeight - bottomBarHeight - 128}
-                          />{" "}
-                          {/* Adjust for h-32 (~128px) */}
+                      ) : (
+                        /* ===== NO SIDEBAR: Screen LEFT + Participants RIGHT column ===== */
+                        <div className="flex flex-row h-full">
+                          {/* Screen share — takes most of the width */}
+                          <div className="flex-1 relative min-w-0">
+                            <PresenterView height={"100%"} />
+                          </div>
+                          {/* Participants stacked vertically on the right */}
+                          <div className="w-52 bg-gray-800 border-l border-gray-600 flex flex-col gap-2 overflow-y-auto p-2 flex-shrink-0">
+                            {Array.from(uniqueParticipants).map(
+                              (participantId) => (
+                                <div
+                                  key={`pip-right-${participantId}`}
+                                  className="relative flex-shrink-0 rounded-lg overflow-hidden"
+                                  style={{ height: "120px" }}
+                                >
+                                  <ParticipantView participantId={participantId} />
+                                  <ParticipantMicStream participantId={participantId} />
+                                </div>
+                              )
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )
                     ) : (
                       <div
                         className="grid h-full w-full"
