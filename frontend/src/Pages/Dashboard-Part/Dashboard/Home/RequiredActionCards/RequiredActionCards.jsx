@@ -17,7 +17,14 @@ import { useFeedbacks } from "../../../../../apiHooks/useFeedbacks";
 import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import { useUpcomingRoundsForInterviewer } from "../../../../../apiHooks/useUpcomingRoundsForInterviews";
 
-import { parse, isValid, addMinutes, subMinutes, isAfter, isBefore } from "date-fns";
+import {
+  parse,
+  isValid,
+  addMinutes,
+  subMinutes,
+  isAfter,
+  isBefore,
+} from "date-fns";
 import { createJoinMeetingUrl } from "../../../Tabs/Interview-New/components/joinMeeting";
 import { useSingleContact } from "../../../../../apiHooks/useUsers";
 
@@ -132,6 +139,7 @@ function JoinCountdown({ startsAt }) {
 }
 
 function FeedbackCard({ item, onDismiss }) {
+  console.log("FEEDBACK CARD =========================> ", item);
   const navigate = useNavigate();
 
   const candidateName = item.candidateId
@@ -147,6 +155,33 @@ function FeedbackCard({ item, onDismiss }) {
   // const completedDate = item?.updatedAt
   //   ? new Date(item?.updatedAt)
   //   : new Date();
+
+  const getCompletedDate = () => {
+    const rawDateTime = item?.roundDetails?.dateTime; // "27-02-2026 05:23 PM - 06:23 PM"
+
+    if (rawDateTime && rawDateTime.includes("-")) {
+      try {
+        // 1. Split to get the date and the end-time part
+        // parts[0] = "27-02-2026 05:23 PM", parts[1] = "06:23 PM"
+        const parts = rawDateTime.split(" - ");
+        const datePart = parts[0].split(" ")[0]; // "27-02-2026"
+        const endTimePart = parts[1]; // "06:23 PM"
+
+        // 2. Reconstruct into a format JS Date likes (DD-MM-YYYY HH:mm AM/PM)
+        // Note: Some browsers struggle with DD-MM-YYYY, so we flip to YYYY-MM-DD if needed
+        const [day, month, year] = datePart.split("-");
+        const formattedDateString = `${year}-${month}-${day} ${endTimePart}`;
+
+        const parsedDate = new Date(formattedDateString);
+        return isNaN(parsedDate) ? new Date(item?.updatedAt) : parsedDate;
+      } catch (e) {
+        return new Date(item?.updatedAt || Date.now());
+      }
+    }
+    return new Date(item?.updatedAt || Date.now());
+  };
+
+  const completedDate = getCompletedDate();
   // Standard 24h SLA
   // const slaDate = new Date(completedDate?.getTime() + 24 * 60 * 60 * 1000);
 
@@ -178,11 +213,11 @@ function FeedbackCard({ item, onDismiss }) {
                   {roundName}
                 </p>
               </div>
-              {/* <span className="text-gray-800">|</span>
+              <span className="text-gray-800">|</span>
               <div className="flex items-center gap-1">
                 <CalendarClock className="h-3 w-3" />
                 <p>Completed {timeAgo(completedDate)}</p>
-              </div> */}
+              </div>
             </div>
           </div>
           {/* <SlaCountdown deadline={slaDate} /> */}
@@ -307,7 +342,11 @@ function UpcomingInterviewCard({ item, onExpire }) {
       const start = parse(startFull, "dd-MM-yyyy hh:mm a", new Date());
       if (isValid(start)) startDate = start;
 
-      let end = parse(`${startFull.split(" ")[0]} ${endTimeOnly}`, "dd-MM-yyyy hh:mm a", new Date());
+      let end = parse(
+        `${startFull.split(" ")[0]} ${endTimeOnly}`,
+        "dd-MM-yyyy hh:mm a",
+        new Date(),
+      );
       if (!isValid(end)) {
         const period = startFull.split(" ").pop();
         const fallbackEnd = `${startFull.split(" ")[0]} ${endTimeOnly} ${period}`;
@@ -373,8 +412,6 @@ function UpcomingInterviewCard({ item, onExpire }) {
   //   }
   // }
 
-
-
   const handleJoinClick = async (round) => {
     if (!round) return;
 
@@ -391,8 +428,13 @@ function UpcomingInterviewCard({ item, onExpire }) {
     };
     // console.log("interviewData", interviewData)
 
-    const joinUrl = await createJoinMeetingUrl(round, interviewData, singleContact?.contactId, type);
-    console.log("joinUrl", joinUrl)
+    const joinUrl = await createJoinMeetingUrl(
+      round,
+      interviewData,
+      singleContact?.contactId,
+      type,
+    );
+    console.log("joinUrl", joinUrl);
     if (joinUrl) {
       window.open(joinUrl, "_blank", "noopener,noreferrer");
     } else {
@@ -417,7 +459,9 @@ function UpcomingInterviewCard({ item, onExpire }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold">
-            {isMock ? "Mock Interview Starting Soon" : "Interview Starting Soon"}
+            {isMock
+              ? "Mock Interview Starting Soon"
+              : "Interview Starting Soon"}
           </p>
 
           {startDate && <JoinCountdown startsAt={startDate} />}
@@ -432,17 +476,21 @@ function UpcomingInterviewCard({ item, onExpire }) {
         </div>
 
         <div className="flex items-center gap-2 mt-3">
-          {(item.status === "Scheduled" || item.status === "Rescheduled") && item.meetPlatform && (
-            <button
-              disabled={!canJoin}
-              onClick={() => canJoin && handleJoinClick(item)}
-              className={`flex items-center gap-2 px-4 py-1 rounded-sm text-xs font-semibold text-white ${canJoin ? "bg-amber-500 hover:bg-amber-600" : "bg-gray-400 cursor-not-allowed"
+          {(item.status === "Scheduled" || item.status === "Rescheduled") &&
+            item.meetPlatform && (
+              <button
+                disabled={!canJoin}
+                onClick={() => canJoin && handleJoinClick(item)}
+                className={`flex items-center gap-2 px-4 py-1 rounded-sm text-xs font-semibold text-white ${
+                  canJoin
+                    ? "bg-amber-500 hover:bg-amber-600"
+                    : "bg-gray-400 cursor-not-allowed"
                 }`}
-            >
-              <Video className="h-3 w-3" />
-              Join Interview
-            </button>
-          )}
+              >
+                <Video className="h-3 w-3" />
+                Join Interview
+              </button>
+            )}
         </div>
       </div>
     </div>
@@ -510,8 +558,10 @@ export function ActionRequiredCards() {
     status: ["draft"],
   });
 
-  const { data: feedbacksResponse, isLoading: isFeedbacksLoading } = useFeedbacks(filters);
-  const { data: upcomingRounds = [], isLoading: isUpcomingRoundsLoading } = useUpcomingRoundsForInterviewer();
+  const { data: feedbacksResponse, isLoading: isFeedbacksLoading } =
+    useFeedbacks(filters);
+  const { data: upcomingRounds = [], isLoading: isUpcomingRoundsLoading } =
+    useUpcomingRoundsForInterviewer();
   const draftFeedbacks = feedbacksResponse?.feedbacks || [];
   const upcomingInterviews = upcomingRounds || [];
 
@@ -540,7 +590,7 @@ export function ActionRequiredCards() {
     let end = parse(
       `${startFull.split(" ")[0]} ${endTimeOnly}`,
       "dd-MM-yyyy hh:mm a",
-      new Date()
+      new Date(),
     );
 
     if (!isValid(end)) {
@@ -563,7 +613,8 @@ export function ActionRequiredCards() {
 
   const totalActions = visibleFeedback.length + visibleUpcoming.length;
 
-  if (isFeedbacksLoading || isUpcomingRoundsLoading) return <ActionRequiredSkeleton />;
+  if (isFeedbacksLoading || isUpcomingRoundsLoading)
+    return <ActionRequiredSkeleton />;
   if (totalActions === 0) return null;
 
   return (
@@ -588,7 +639,7 @@ export function ActionRequiredCards() {
               <div className="flex items-center gap-2 mb-3">
                 <MessageSquarePlus
                   className="h-4 w-4 text-custom-blue"
-                // style={{ color: BRAND }}
+                  // style={{ color: BRAND }}
                 />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Feedback Pending
