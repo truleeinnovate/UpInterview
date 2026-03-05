@@ -1,11 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 const NotFound = () => {
   const navigate = useNavigate();
 
   const handleBackHome = () => {
-    navigate("/");
+    const authToken = Cookies.get("authToken");
+    navigate(authToken ? "/home" : "/");
   };
 
   return (
