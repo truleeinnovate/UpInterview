@@ -1,5 +1,4 @@
 # name: Build and deploy Node.js app to Azure Web App - frontend-001
-
 # on:
 #   push:
 #     branches:
@@ -83,6 +82,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Manual Version (Leave empty for Timestamp)'
+        required: false
+        default: ''
 
 jobs:
   build-and-deploy:
@@ -92,6 +96,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
+      - name: Generate Version String
+        id: vars
+        run: |
+          # Generates format: YYYYMMDD-HHMM (e.g., 20240520-1430)
+          TIMESTAMP=$(date +'%Y%m%d-%H%M')
+          
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            echo "FINAL_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          else
+            echo "FINAL_VERSION=v${TIMESTAMP}" >> $GITHUB_ENV
+          fi
 
       - name: Set up Node.js version
         uses: actions/setup-node@v3
@@ -145,33 +161,45 @@ jobs:
         working-directory: ./frontend
         run: |
           mkdir -p release
-          cp -r build release/
-          cd release && zip -r ../release.zip .
+          # Copy the contents of build into release
+          cp -r build/* release/
+          # Zip the contents of release. 
+          # We save the zip in the ROOT of the workspace (one level up from frontend)
+          cd release && zip -r ../../release-${{ env.FINAL_VERSION }}.zip .
+
+      - name: Upload Artifact for History
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ env.FINAL_VERSION }}
+          # The zip is now in the root workspace, so we don't need ./frontend/
+          path: release-${{ env.FINAL_VERSION }}.zip
+          retention-days: 5
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'dev-frontend-upinterview'
           slot-name: 'production'
-          package: ./frontend/release.zip
+          # Point to the root workspace path
+          package: release-${{ env.FINAL_VERSION }}.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DEV_FRONTEND }}
           clean: true
-
-      - name: Create optimized deployment package
-        working-directory: ./frontend
-        run: |
-          # Create deployment directory
-          mkdir -p release
-          cp -r build release/
           
-          # Create zip file
-          cd release && zip -r ../release.zip .
+      # - name: Create optimized deployment package
+      #   working-directory: ./frontend
+      #   run: |
+      #     # Create deployment directory
+      #     mkdir -p release
+      #     cp -r build release/
+          
+      #     # Create zip file
+      #     cd release && zip -r ../release.zip .
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'dev-frontend-upinterview'
-          slot-name: 'production'
-          package: ./frontend/release.zip
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DEV_FRONTEND }}
-          clean: true
+      # - name: Deploy to Azure Web App
+      #   uses: azure/webapps-deploy@v3
+      #   with:
+      #     app-name: 'dev-frontend-upinterview'
+      #     slot-name: 'production'
+      #     package: ./frontend/release.zip
+      #     publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DEV_FRONTEND }}
+      #     clean: true

@@ -229,7 +229,7 @@ export const Organization = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setIsSubmitting(true);
 
     // Prepare full data with confirmPassword
@@ -763,7 +763,7 @@ export const Organization = () => {
                 </div>
 
                 {!formSubmitted ? (
-                  <form onSubmit={handleSubmit} className="space-y-6">
+                  <form className="space-y-6">
                     {/* Company Information Section */}
                     <div className="bg-gray-50 rounded-xl p-4 mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -901,18 +901,19 @@ export const Organization = () => {
                           onCountryCodeChange={(e) => {
                             const code = e.target.value;
                             setSelectedCountryCode(code);
-                            setErrors((prev) => ({ ...prev, phone: "" }));
+                            setErrors((prev) => ({ ...prev, phone: "", countryCode: "" }));
                           }}
+                          countryCodeError={errors.countryCode}
+                          countryCodeRef={countryCodeDropdownRef}
                           phoneValue={selectedPhone}
                           onPhoneChange={(e) => {
                             const value = e.target.value.replace(/\D/g, "");
                             handleChange("phone", value);
                           }}
-                          error={errors.phone}
-                          countryCodeRef={countryCodeDropdownRef}
+                          phoneError={errors.phone}
                           phoneRef={phoneRef}
                           label="Phone Number"
-                          required={false}
+                          required
                         />
                       </div>
 
@@ -1068,7 +1069,8 @@ export const Organization = () => {
                     </div>
 
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={handleSubmit}
                       disabled={isSubmitting}
                       className={`w-full text-lg font-medium rounded-lg py-3 transition-all duration-300 flex items-center justify-center ${isSubmitting
                         ? "bg-gray-400 cursor-not-allowed transform scale-95"
