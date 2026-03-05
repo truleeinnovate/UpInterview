@@ -440,7 +440,7 @@ const RoundFormInterviews = () => {
 
       if (interviewType === "instant") {
         const now = new Date();
-        now.setMinutes(now.getMinutes() + 5); // Start after 15 min changed for testing
+        now.setMinutes(now.getMinutes() + 15); // Start after 15 min changed for testing
 
         // Convert to UTC
         const localTimeStr = moment(now)?.format("YYYY-MM-DD HH:mm");
@@ -558,7 +558,7 @@ const RoundFormInterviews = () => {
   const calculateInstantTimes = useCallback(
     (durationMinutes = 60) => {
       const now = new Date();
-      const start = new Date(now.getTime() + 5 * 60 * 1000); // +15 min // Start after 15 min changed for testing
+      const start = new Date(now.getTime() + 15 * 60 * 1000); // +15 min // Start after 15 min changed for testing
       start.setSeconds(0, 0);
       start.setMilliseconds(0);
 
@@ -978,7 +978,7 @@ const RoundFormInterviews = () => {
 
   useEffect(() => {
     const date = new Date();
-    date.setMinutes(date.getMinutes() + 5); // Start after 15 min changed for testing
+    date.setMinutes(date.getMinutes() + 15); // Start after 15 min changed for testing
     const newScheduledDate = date.toISOString().slice(0, 16);
 
     if (scheduledDate !== newScheduledDate) {
@@ -1525,7 +1525,7 @@ const RoundFormInterviews = () => {
 
       // Calculate instant time: now + 15 minutes
       const now = new Date();
-      now.setMinutes(now.getMinutes() + 5); // Start after 15 min changed for testing
+      now.setMinutes(now.getMinutes() + 15); // Start after 15 min changed for testing
       now.setSeconds(0, 0);
 
       const localTimeStr = moment(now).format("YYYY-MM-DD HH:mm");
@@ -1605,7 +1605,7 @@ const RoundFormInterviews = () => {
 
         // Calculate instant time: now + 15 minutes
         const now = new Date();
-        now.setMinutes(now.getMinutes() + 5); // Start after 15 min changed for testing
+        now.setMinutes(now.getMinutes() + 15); // Start after 15 min changed for testing
         now.setSeconds(0, 0);
 
         const localTimeStr = moment(now).format("YYYY-MM-DD HH:mm");

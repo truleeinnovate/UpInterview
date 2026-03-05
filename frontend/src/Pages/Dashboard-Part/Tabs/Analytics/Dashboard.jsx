@@ -189,14 +189,12 @@ const Dashboard = () => {
       {
         key: "noShows",
         title: "No-Shows/Cancellations",
-        value: kpiData?.noShows || 0,
-        subtitle: `${kpiData?.totalInterviews
-            ? ((kpiData.noShows / kpiData.totalInterviews) * 100).toFixed(0)
-            : 0
-          }% rate`,
+        value: responseDashBoard?.roundStatusCounts?.totalCount || 0,
+        subtitle: `Last month: ${responseDashBoard?.roundStatusCounts?.lastMonth || 0
+          }`,
         icon: AlertTriangle,
-        trend: "down",
-        trendValue: "-15% vs last month",
+        trend: responseDashBoard?.roundStatusCounts?.trend,
+        trendValue: responseDashBoard?.roundStatusCounts?.trendValue,
       },
       // {
       //   key: "assessmentsCompleted",
