@@ -151,17 +151,24 @@ async function scheduleOrRescheduleNoShow(roundDoc, options = {}) {
   }
   console.log("[NoShow] ✅ PAST CHECK PASSED: runAt is in the future");
 
-  // ================ Cancel any existing job ================
-  if (roundDoc.noShowJobId) {
-    console.log("[NoShow] Cancelling existing job:", roundDoc.noShowJobId);
-    try {
+  // ================ Cancel any existing jobs for this round ================
+  // Cancel by roundId (prevents duplicates when function is called twice simultaneously)
+  try {
+    const cancelledCount = await agenda.cancel({
+      name: "round-no-show",
+      "data.roundId": roundDoc._id,
+    });
+    if (cancelledCount > 0) {
+      console.log("[NoShow] ✅ Cancelled", cancelledCount, "existing job(s) for roundId:", roundDoc._id);
+    } else if (roundDoc.noShowJobId) {
+      // Fallback: cancel by job ID if roundId-based cancel found nothing
       await agenda.cancel({ _id: roundDoc.noShowJobId });
-      console.log("[NoShow] ✅ Old job cancelled successfully");
-    } catch (err) {
-      console.warn("[NoShow] ⚠️ Failed to cancel old job:", err.message);
+      console.log("[NoShow] ✅ Cancelled existing job by ID:", roundDoc.noShowJobId);
+    } else {
+      console.log("[NoShow] No existing job to cancel");
     }
-  } else {
-    console.log("[NoShow] No existing job to cancel");
+  } catch (err) {
+    console.warn("[NoShow] ⚠️ Failed to cancel existing job(s):", err.message);
   }
 
   // ================ Ensure Agenda is connected ================

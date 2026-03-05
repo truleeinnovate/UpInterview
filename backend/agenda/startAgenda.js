@@ -15,14 +15,21 @@ module.exports = async function startAgenda() {
     await agenda.start();
     console.log("[AGENDA] ✅ Started successfully — processing jobs every 30s");
 
-    // Process any overdue jobs immediately
-    const overdueCount = await agenda.jobs({
+    // Process any overdue/missed jobs immediately after restart
+    // This is critical for Azure App Service where restarts can cause missed jobs
+    const overdueJobs = await agenda.jobs({
       name: "round-no-show",
       nextRunAt: { $lte: new Date() },
-      lockedAt: null,
+      lastFinishedAt: null,
     });
-    if (overdueCount.length > 0) {
-      console.log(`[AGENDA] ⚠️ Found ${overdueCount.length} overdue round-no-show jobs — will process shortly`);
+    if (overdueJobs.length > 0) {
+      console.log(`[AGENDA] ⚠️ Found ${overdueJobs.length} overdue round-no-show jobs — unlocking and processing now`);
+      // Unlock any stuck jobs so they run on the next poll cycle
+      for (const job of overdueJobs) {
+        job.attrs.lockedAt = null;
+        await job.save();
+      }
+      console.log(`[AGENDA] ✅ Unlocked ${overdueJobs.length} overdue jobs — will process within 30s`);
     }
   } catch (err) {
     console.error("[AGENDA] ❌ Failed to start:", err.message);
