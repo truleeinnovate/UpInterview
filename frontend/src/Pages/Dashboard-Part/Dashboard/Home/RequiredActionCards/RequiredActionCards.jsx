@@ -27,31 +27,30 @@ import {
 } from "date-fns";
 import { createJoinMeetingUrl } from "../../../Tabs/Interview-New/components/joinMeeting";
 import { useSingleContact } from "../../../../../apiHooks/useUsers";
+import Cookies from "js-cookie";
+import { decodeJwt } from "../../../../../utils/AuthCookieManager/jwtDecode.js";
 
-// const BRAND = "rgb(33, 121, 137)";
-const BRAND_LIGHT = "rgba(33, 121, 137, 0.08)";
-const BRAND_BORDER = "rgba(33, 121, 137, 0.2)";
 
-const upcomingInterviews = [
-  {
-    _id: "ui-1",
-    interviewId: "INT-1012",
-    candidate: "Sarah Lee",
-    role: "Frontend Engineer",
-    round: "Technical Round 1",
-    startsAt: new Date(Date.now() + 10 * 60 * 1000),
-    meetingLink: "#",
-  },
-  {
-    _id: "ui-2",
-    interviewId: "INT-1015",
-    candidate: "David Kim",
-    role: "Product Manager",
-    round: "Behavioral",
-    startsAt: new Date(Date.now() + 25 * 60 * 1000),
-    meetingLink: "#",
-  },
-];
+// const upcomingInterviews = [
+//   {
+//     _id: "ui-1",
+//     interviewId: "INT-1012",
+//     candidate: "Sarah Lee",
+//     role: "Frontend Engineer",
+//     round: "Technical Round 1",
+//     startsAt: new Date(Date.now() + 10 * 60 * 1000),
+//     meetingLink: "#",
+//   },
+//   {
+//     _id: "ui-2",
+//     interviewId: "INT-1015",
+//     candidate: "David Kim",
+//     role: "Product Manager",
+//     round: "Behavioral",
+//     startsAt: new Date(Date.now() + 25 * 60 * 1000),
+//     meetingLink: "#",
+//   },
+// ];
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -64,55 +63,55 @@ function timeAgo(date) {
   return `${days}d ago`;
 }
 
-function timeUntil(date) {
-  const seconds = Math.floor((date.getTime() - Date.now()) / 1000);
-  if (seconds <= 0) return "now";
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ${minutes % 60}m`;
-  return `${Math.floor(hours / 24)}d`;
-}
+// function timeUntil(date) {
+//   const seconds = Math.floor((date.getTime() - Date.now()) / 1000);
+//   if (seconds <= 0) return "now";
+//   if (seconds < 60) return `${seconds}s`;
+//   const minutes = Math.floor(seconds / 60);
+//   if (minutes < 60) return `${minutes} min`;
+//   const hours = Math.floor(minutes / 60);
+//   if (hours < 24) return `${hours}h ${minutes % 60}m`;
+//   return `${Math.floor(hours / 24)}d`;
+// }
 
-function SlaCountdown({ deadline }) {
-  const [remaining, setRemaining] = useState("");
-  const [urgency, setUrgency] = useState("normal");
+// function SlaCountdown({ deadline }) {
+//   const [remaining, setRemaining] = useState("");
+//   const [urgency, setUrgency] = useState("normal");
 
-  const update = useCallback(() => {
-    const ms = deadline.getTime() - Date.now();
-    if (ms <= 0) {
-      setRemaining("Overdue");
-      setUrgency("critical");
-      return;
-    }
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    setRemaining(`${hours}h ${minutes}m left`);
-    setUrgency(hours < 4 ? "warning" : "normal");
-  }, [deadline]);
+//   const update = useCallback(() => {
+//     const ms = deadline.getTime() - Date.now();
+//     if (ms <= 0) {
+//       setRemaining("Overdue");
+//       setUrgency("critical");
+//       return;
+//     }
+//     const hours = Math.floor(ms / (1000 * 60 * 60));
+//     const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+//     setRemaining(`${hours}h ${minutes}m left`);
+//     setUrgency(hours < 4 ? "warning" : "normal");
+//   }, [deadline]);
 
-  useEffect(() => {
-    update();
-    const interval = setInterval(update, 60000);
-    return () => clearInterval(interval);
-  }, [update]);
+//   useEffect(() => {
+//     update();
+//     const interval = setInterval(update, 60000);
+//     return () => clearInterval(interval);
+//   }, [update]);
 
-  const colorMap = {
-    normal: "text-muted-foreground",
-    warning: "text-amber-600",
-    critical: "text-red-600",
-  };
+//   const colorMap = {
+//     normal: "text-muted-foreground",
+//     warning: "text-amber-600",
+//     critical: "text-red-600",
+//   };
 
-  return (
-    <span
-      className={`text-xs font-medium flex items-center gap-1 ${colorMap[urgency]}`}
-    >
-      <Clock className="h-3 w-3" />
-      SLA: {remaining}
-    </span>
-  );
-}
+//   return (
+//     <span
+//       className={`text-xs font-medium flex items-center gap-1 ${colorMap[urgency]}`}
+//     >
+//       <Clock className="h-3 w-3" />
+//       SLA: {remaining}
+//     </span>
+//   );
+// }
 
 // Countdown component
 function JoinCountdown({ startsAt }) {
@@ -139,7 +138,9 @@ function JoinCountdown({ startsAt }) {
 }
 
 function FeedbackCard({ item, onDismiss }) {
-  console.log("FEEDBACK CARD =========================> ", item);
+  const authToken = Cookies.get("authToken");
+  const tokenPayload = decodeJwt(authToken);
+
   const navigate = useNavigate();
 
   const candidateName = item.candidateId
@@ -224,17 +225,21 @@ function FeedbackCard({ item, onDismiss }) {
         </div>
 
         <div className="flex items-center gap-2 mt-3">
-          <button
-            onClick={() =>
-              navigate(`/feedback/edit/${item._id}`, {
-                state: { feedback: { ...item }, mode: "edit" },
-              })
-            }
-            className="flex items-center gap-2 text-xs px-4 py-1 rounded-sm font-semibold bg-custom-blue hover:bg-custom-blue/90 text-white"
-          >
-            <MessageSquarePlus className="h-3 w-3" />
-            Submit Feedback
-          </button>
+          {item.status === "draft" &&
+            item?.ownerId?._id === tokenPayload.userId && (
+              <button
+                onClick={() =>
+                  navigate(`/feedback/edit/${item._id}`, {
+                    state: { feedback: { ...item }, mode: "edit" },
+                  })
+                }
+                className="flex items-center gap-2 text-xs px-4 py-1 rounded-sm font-semibold bg-custom-blue hover:bg-custom-blue/90 text-white"
+              >
+                <MessageSquarePlus className="h-3 w-3" />
+                Submit Feedback
+              </button>
+            )}
+
           <button
             onClick={() =>
               navigate(`/feedback/view/${item._id}`, {
@@ -329,8 +334,6 @@ function UpcomingInterviewCard({ item, onExpire }) {
   const candidate = item.candidateName || item.mockCandidateName || "Candidate";
   const role = item.positionTitle || item.mockCurrentRole || "Role";
   const round = item.roundTitle || "Round";
-
-  // console.log("item", item);
 
   // Parse start & end
   let startDate = null;
@@ -434,7 +437,7 @@ function UpcomingInterviewCard({ item, onExpire }) {
       singleContact?.contactId,
       type,
     );
-    console.log("joinUrl", joinUrl);
+    // console.log("joinUrl", joinUrl);
     if (joinUrl) {
       window.open(joinUrl, "_blank", "noopener,noreferrer");
     } else {
@@ -615,6 +618,7 @@ export function ActionRequiredCards() {
 
   if (isFeedbacksLoading || isUpcomingRoundsLoading)
     return <ActionRequiredSkeleton />;
+
   if (totalActions === 0) return null;
 
   return (
