@@ -574,84 +574,86 @@ const SuspenseWithLoading = ({ fallback, children }) => (
 );
 
 // Component to handle authentication routes
-const AuthRoutes = () => (
-  <Routes>
-    <Route path="/" element={<LandingPage />} />
-    <Route path="/select-profession" element={<SelectProfession />} />
-    <Route path="/create-profile" element={<ProfileWizard />} />
-    <Route path="/subscription-plans" element={<SubscriptionPlan />} />
-    <Route path="/organization/signup" element={<OrganizationSignUp />} />
-    <Route path="/organization-login" element={<OrganizationLogin />} />
-    <Route
-      path="/individual-login"
-      element={<WelcomePageUpinterviewIndividual />}
-    />
-    <Route path="/callback" element={<LinkedInCallback />} />
-    <Route path="/oauth2callback" element={<OAuthCallback />} />
-    <Route path="/join-meeting" element={<JoinMeeting />} />
-    <Route path="/verify-email" element={<VerifyEmail />} />
-    <Route path="/verify-user-email" element={<VerifyUserEmail />} />
-    <Route path="/resetPassword" element={<ResetPassword />} />
-    <Route path="/forgot-password" element={<ForgetPassword />} />
+const AuthRoutes = () => {
+  const authToken = getAuthToken();
+  return (
+    <Routes>
+      <Route path="/" element={authToken ? <Navigate to="/home" replace /> : <LandingPage />} />
+      <Route path="/select-profession" element={<SelectProfession />} />
+      <Route path="/create-profile" element={<ProfileWizard />} />
+      <Route path="/subscription-plans" element={<SubscriptionPlan />} />
+      <Route path="/organization/signup" element={<OrganizationSignUp />} />
+      <Route path="/organization-login" element={<OrganizationLogin />} />
+      <Route
+        path="/individual-login"
+        element={<WelcomePageUpinterviewIndividual />}
+      />
+      <Route path="/callback" element={<LinkedInCallback />} />
+      <Route path="/oauth2callback" element={<OAuthCallback />} />
+      <Route path="/join-meeting" element={<JoinMeeting />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/verify-user-email" element={<VerifyUserEmail />} />
+      <Route path="/resetPassword" element={<ResetPassword />} />
+      <Route path="/forgot-password" element={<ForgetPassword />} />
 
-    <Route
-      path="/video-call"
-      element={
-        <Suspense
-          fallback={
-            <div>
-              <Loading />
+      <Route
+        path="/video-call"
+        element={
+          <Suspense
+            fallback={
+              <div>
+                <Loading />
+              </div>
+            }
+          >
+            <VideoSDKDashboard1 />
+          </Suspense>
+        }
+      />
+      <Route path="/fullscreen/:panelType" element={<FullScreenPanel />} />
+
+      <Route
+        path="/video-sdk-candidate-details"
+        element={<VideoSdkPanel panelType="candidate-details" />}
+      />
+      <Route
+        path="/video-sdk-feedback"
+        element={<VideoSdkPanel panelType="feedback" />}
+      />
+      <Route
+        path="/video-sdk-interview-actions"
+        element={<VideoSdkPanel panelType="interview-actions" />}
+      />
+
+      <Route path="/assessmenttest" element={<AssessmentTest />} />
+      <Route path="/pending-approval" element={<PendingApproval />} />
+      <Route path="/subscription-success" element={<SubscriptionSuccess />} />
+      <Route
+        path="/payment-details"
+        element={
+          <>
+            <CardDetails />
+            <SubscriptionPlan />
+          </>
+        }
+      />
+      <Route
+        path="/subscription-payment-details"
+        element={
+          <>
+            <AccountSettingsSidebar />
+            <div className="ml-80">
+              <Subscription />
             </div>
-          }
-        >
-          <VideoSDKDashboard1 />
-        </Suspense>
-      }
-    />
-    <Route path="/fullscreen/:panelType" element={<FullScreenPanel />} />
-
-    <Route
-      path="/video-sdk-candidate-details"
-      element={<VideoSdkPanel panelType="candidate-details" />}
-    />
-    <Route
-      path="/video-sdk-feedback"
-      element={<VideoSdkPanel panelType="feedback" />}
-    />
-    <Route
-      path="/video-sdk-interview-actions"
-      element={<VideoSdkPanel panelType="interview-actions" />}
-    />
-
-    <Route path="/assessmenttest" element={<AssessmentTest />} />
-    <Route path="/pending-approval" element={<PendingApproval />} />
-    <Route path="/subscription-success" element={<SubscriptionSuccess />} />
-    <Route
-      path="/payment-details"
-      element={
-        <>
-          <CardDetails />
-          <SubscriptionPlan />
-        </>
-      }
-    />
-    <Route
-      path="/subscription-payment-details"
-      element={
-        <>
-          <AccountSettingsSidebar />
-          <div className="ml-80">
-            <Subscription />
-          </div>
-        </>
-      }
-    />
-    <Route path="/code-editor" element={<CodeEditor />} />
-    <Route path="/whiteboard" element={<WhiteBoard />} />
-    <Route path="*" element={<NotFound />} />
-  </Routes>
-);
-
+          </>
+        }
+      />
+      <Route path="/code-editor" element={<CodeEditor />} />
+      <Route path="/whiteboard" element={<WhiteBoard />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
 // Move all logic that uses usePermissions into this component
 const MainAppRoutes = ({
   location,
