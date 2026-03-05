@@ -3078,29 +3078,30 @@ const fetchAndSaveRecording = async (req, res) => {
       { algorithm: "HS256", expiresIn: "1h" }
     );
 
-    // Fetch recordings from VideoSDK API
-    const response = await fetch(
-      `https://api.videosdk.live/v2/recordings?roomId=${round.meetingId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: token,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("[Recording] VideoSDK API error:", response.status, errorText);
+    // Fetch recordings from VideoSDK API using axios (compatible with all Node.js versions)
+    const axios = require("axios");
+    let response;
+    try {
+      response = await axios.get(
+        `https://api.videosdk.live/v2/recordings?roomId=${round.meetingId}`,
+        {
+          headers: {
+            Authorization: token,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    } catch (apiErr) {
+      const errorText = apiErr.response?.data || apiErr.message;
+      console.error("[Recording] VideoSDK API error:", apiErr.response?.status || apiErr.code, errorText);
       return res.status(502).json({
         success: false,
         message: "Failed to fetch recording from VideoSDK",
-        error: errorText,
+        error: typeof errorText === 'string' ? errorText : JSON.stringify(errorText),
       });
     }
 
-    const data = await response.json();
+    const data = response.data;
     console.log("[Recording] VideoSDK response:", JSON.stringify(data, null, 2));
 
     // VideoSDK returns { pageInfo: {}, data: [{ file: { fileUrl, ... }, ... }] }

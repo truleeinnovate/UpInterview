@@ -2261,9 +2261,9 @@ const RoundCard = ({
                       </button>
                     )}
 
-                  {/* Meeting Video - only show after meeting has ended */}
+                  {/* Meeting Video - show after meeting has completed/ended */}
                   {round?.roundTitle !== "Assessment" && round?.interviewMode !== "Face to Face" &&
-                    ["Evaluated", "FeedbackSubmitted"].includes(round?.status) && (
+                    ["Completed", "FeedbackPending", "Evaluated", "FeedbackSubmitted"].includes(round?.status) && (
                       <button
                         onClick={async () => {
                           if (videoUrls.length > 0) {
