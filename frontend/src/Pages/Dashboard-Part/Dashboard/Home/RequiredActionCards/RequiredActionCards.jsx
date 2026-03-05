@@ -652,7 +652,8 @@ export function ActionRequiredCards() {
                   {visibleFeedback.length}
                 </div>
               </div>
-              <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+              {/* <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4"> */}
+              <div className={`grid grid-cols-1 ${visibleFeedback.length > 1 ? "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2" : ""} gap-4`}>
                 {visibleFeedback.map((item) => (
                   <FeedbackCard
                     key={item._id}
@@ -678,7 +679,7 @@ export function ActionRequiredCards() {
                   {visibleUpcoming.length}
                 </span>
               </div>
-              <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-4">
+              <div className={`grid grid-cols-1 ${visibleUpcoming.length > 1 ? "lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2" : ""} gap-4`}>
                 {visibleUpcoming.map((item) => (
                   <UpcomingInterviewCard
                     key={item._id}
