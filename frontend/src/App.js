@@ -564,6 +564,9 @@ const RegionalTaxDetails = lazy(
 const GlobalSearchResults = lazy(
   () => import("./Pages/GlobalSearch/GlobalSearchResults.jsx"),
 );
+const NotFound = lazy(
+  () => import("./Pages/NotFound/NotFound.jsx"),
+);
 
 // Custom Suspense component
 const SuspenseWithLoading = ({ fallback, children }) => (
@@ -645,6 +648,7 @@ const AuthRoutes = () => (
     />
     <Route path="/code-editor" element={<CodeEditor />} />
     <Route path="/whiteboard" element={<WhiteBoard />} />
+    <Route path="*" element={<NotFound />} />
   </Routes>
 );
 
@@ -1710,6 +1714,8 @@ const MainAppRoutes = ({
                 {/* v1.0.9 ---------------------------------------------------------------------> */}
               </>
             )}
+            {/* 404 Not Found - catch all unmatched routes */}
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
       </div>
