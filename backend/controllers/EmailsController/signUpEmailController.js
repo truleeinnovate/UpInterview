@@ -119,48 +119,49 @@ const handlePasswordEmail = async ({ email, type }) => {
       return { success: false, message: "Email is required" };
     }
 
-    const user = await Users.findOne({ email });
+    // Fetch user with firstName & lastName
+    const user = await Users.findOne({ email }).select('firstName lastName');
     if (!user) {
       return { success: false, message: "User not found" };
     }
 
-    // Generate token
+    const userName = [user.firstName, user.lastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || "User";
+
+    // Generate short-lived token
     const resetToken = jwt.sign(
       { id: user._id, type },
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
-    const actionLink = `${config.REACT_APP_API_URL_FRONTEND
-      }/resetPassword?token=${encodeURIComponent(resetToken)}&type=${type}`;
 
-    // Get email template
+    const actionLink = `${config.REACT_APP_API_URL_FRONTEND}/resetPassword?token=${encodeURIComponent(resetToken)}&type=${type}`;
+
+    // Fetch template
     const emailTemplate = await emailTemplateModel.findOne({
       category: "reset_or_create_password",
       isActive: true,
       isSystemTemplate: true,
     });
+
     if (!emailTemplate) {
       return { success: false, message: "Email template not found" };
     }
 
-    // Set dynamic values based on type
-    const actionType =
-      type === "usercreatepass" ? "Account Setup" : "Password Reset";
-    const actionTitle =
-      type === "usercreatepass"
-        ? "Create Your Password"
-        : "Reset Your Password";
-    const actionDescription =
-      type === "usercreatepass"
-        ? "set up your account password"
-        : "reset your password";
-    const actionButtonText =
-      type === "usercreatepass" ? "Create Password" : "Reset Password";
+    // Dynamic content based on type
+    const isCreate = type === "usercreatepass";
+
+    const actionType = isCreate ? "Create Password" : "Reset Password";
+    const actionTitle = isCreate ? "Create Your Password" : "Reset Your Password";
+    const actionDescription = isCreate ? "create your account password" : "reset your password";
+    const actionButtonText = isCreate ? "Create Password" : "Reset Password";
 
     // Replace placeholders
     const emailSubject = emailTemplate.subject
-      .replace("{{actionType}}", actionType)
-      .replace("{{companyName}}", process.env.COMPANY_NAME);
+      .replace(/{{actionType}}/g, actionType)
+      .replace(/{{companyName}}/g, process.env.COMPANY_NAME || "Your Company");
 
     const emailBody = emailTemplate.body
       .replace(/{{actionType}}/g, actionType)
@@ -168,20 +169,26 @@ const handlePasswordEmail = async ({ email, type }) => {
       .replace(/{{actionDescription}}/g, actionDescription)
       .replace(/{{actionButtonText}}/g, actionButtonText)
       .replace(/{{actionLink}}/g, actionLink)
-      .replace(/{{companyName}}/g, process.env.COMPANY_NAME)
-      .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL);
+      .replace(/{{companyName}}/g, process.env.COMPANY_NAME || "Your Company")
+      .replace(/{{supportEmail}}/g, process.env.SUPPORT_EMAIL || "support@yourcompany.com")
+      .replace(/{{userName}}/g, userName);
 
-    // Use queueEmail for background processing
+    // Queue email (background job)
     await queueEmail(email, emailSubject, emailBody);
 
     return {
       success: true,
-      message: `${actionTitle} email queued`,
-      data: { actionLink },
+      message: `${actionTitle} email queued successfully`,
+      data: { actionLink } // only for debugging / logs – don't send to frontend in production
     };
+
   } catch (error) {
     console.error("Password Email Error:", error);
-    return { success: false, message: "Failed to send password email", error: error.message };
+    return {
+      success: false,
+      message: "Failed to queue password email",
+      error: error.message
+    };
   }
 };
 

@@ -91,7 +91,7 @@ const VerifyUserEmail = () => {
               </svg>
             </div>
             <h2 className="text-2xl font-bold text-gray-800">Email Verified Successfully!</h2>
-            <p className="text-gray-600">Your account is now active.</p>
+            {/* <p className="text-gray-600">Your account is now active.</p> */}
             <div className="pt-4">
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div
