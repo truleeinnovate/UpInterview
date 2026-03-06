@@ -183,10 +183,6 @@ const MasterForm = ({
           notify.error(`Role Category is required ${entryNum}`);
           return false;
         }
-        if (!item.relatedRoles || item.relatedRoles.length === 0) {
-          notify.error(`Related Roles are required ${entryNum}`);
-          return false;
-        }
       }
 
       if (type === "technology") {
@@ -503,7 +499,7 @@ const MasterForm = ({
                         </div>
                         <div>
                           <label className="block text-gray-700 text-sm font-medium mb-1">
-                            Related Roles <RequiredStar />
+                            Related Roles
                           </label>
                           <DropdownSelect
                             isMulti
@@ -518,7 +514,6 @@ const MasterForm = ({
                               handleSelectChange(selected, f.id)
                             }
                             closeMenuOnSelect={false}
-                            required={true}
                           />
                         </div>
                       </>
@@ -726,7 +721,7 @@ const MasterForm = ({
                       </div>
                       <div className="mt-3">
                         <label className="block text-gray-700 text-sm font-medium mb-1">
-                          Related Roles <RequiredStar />
+                          Related Roles
                         </label>
                         <DropdownSelect
                           isMulti
@@ -741,7 +736,6 @@ const MasterForm = ({
                             handleSelectChange(selected, null, true)
                           }
                           closeMenuOnSelect={false}
-                          required={true}
                         />
                       </div>
                     </>

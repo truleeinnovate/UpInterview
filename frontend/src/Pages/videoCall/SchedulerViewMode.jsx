@@ -294,16 +294,15 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
   }, [activeFeedback, feedbackData?.interviewQuestions]);
 
   return (
-    <div className={isSchedule ? "space-y-8 p-4" : "space-y-8 pb-10"}>
-      <div ref={modalContentRef} style={{ backgroundColor: "#ffffff", padding: "16px" }}>
+    <div className={isSchedule ? "px-5 pt-2" : "pb-6"}>
+      <div ref={modalContentRef} className="bg-white">
 
 
 
 
         {/* Header Info */}
         {!isSchedule &&
-          <div className="bg-white mt-4">
-
+          <div className="bg-white mt-4 mb-4">
             <div className="grid grid-cols-1 gap-6">
 
               <div className="grid grid-cols-2 sm:grid-cols-1 gap-6">
@@ -383,14 +382,13 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
               </div>
 
             </div>
-
           </div>
         }
 
 
 
         {/* Overall Assessment */}
-        <div className={`${isSchedule ? "" : "border-t  pt-6"} border-b border-gray-200 pb-6`}>
+        <div className={`${isSchedule ? "" : "pt-6 border-t"} border-b pb-6  border-gray-200 mb-4`}>
           <div className="grid grid-cols-3 sm:grid-cols-1 gap-4">
             <div className="bg-gray-50 p-3 rounded-md">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -727,8 +725,7 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
         </Button> */}
           <Button
             onClick={handleExportToPDF}
-            className="text-white flex items-center "
-            style={{ backgroundColor: "#227a8a" }}
+            className="flex items-center gap-2 bg-custom-blue text-white"
           >
             <DownloadIcon size={18} />
             Export to PDF
@@ -736,6 +733,6 @@ export const SchedulerViewMode = ({ feedbackData, isViewMode, MockInterview, ful
         </div>
       )
       }
-    </div >
+    </div>
   );
 };
