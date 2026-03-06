@@ -114,6 +114,7 @@ const SubscriptionCardDetails = () => {
 
   const location = useLocation();
   const isUpgrading = location.state?.isUpgrading || false;
+  const isPaymentMethodUpdate = location.state?.isPaymentMethodUpdate || false;
   // const {
   //     userProfile,
   // } = useCustomContext();
@@ -569,6 +570,7 @@ const SubscriptionCardDetails = () => {
                         subscriptionId: orderResponse.subscriptionId,
                         orderId: response.razorpay_order_id,
                         isUpgrading: isUpgrading,
+                        isPaymentMethodUpdate: isPaymentMethodUpdate,
                         planName: planDetails.name,
                         membershipType: cardDetails.membershipType,
                         nextRoute: isUpgrading
@@ -577,7 +579,11 @@ const SubscriptionCardDetails = () => {
                       },
                     });
 
-                    notify.success("Payment successfully completed!");
+                    notify.success(
+                      isPaymentMethodUpdate
+                        ? "Payment method updated successfully!"
+                        : "Payment successfully completed!"
+                    );
                     setProcessing(false);
 
                     // axios
@@ -674,11 +680,15 @@ const SubscriptionCardDetails = () => {
             <div className="flex items-start justify-between">
               <div className="pr-8">
                 <h2 className="text-lg lg:text-xl font-semibold text-gray-800">
-                  {`Upgrade to a ${planDetails.name} ${cardDetails.membershipType === "monthly" ? "Monthly" : "Annual"
+                  {isPaymentMethodUpdate
+                    ? `Update Payment Method for ${planDetails.name} (${cardDetails.membershipType === "monthly" ? "Monthly" : "Annual"})`
+                    : `Upgrade to a ${planDetails.name} ${cardDetails.membershipType === "monthly" ? "Monthly" : "Annual"
                     } Membership`}
                 </h2>
                 <p className="text-gray-500 text-sm mt-1">
-                  Get all access and an extra 20% off when you subscribe annually
+                  {isPaymentMethodUpdate
+                    ? "Choose a new payment method for your subscription auto-debit"
+                    : "Get all access and an extra 20% off when you subscribe annually"}
                 </p>
               </div>
               <button
@@ -762,12 +772,15 @@ const SubscriptionCardDetails = () => {
 
               <div className="flex flex-col gap-3 mb-5">
                 <div
-                  className={`border p-3 flex items-center gap-3 rounded-lg cursor-pointer transition-all ${cardDetails.membershipType === "monthly"
-                    ? "border-[#217989] bg-blue-50"
-                    : "border-gray-300 bg-gray-50 hover:border-gray-400"
+                  className={`border p-3 flex items-center gap-3 rounded-lg transition-all ${isPaymentMethodUpdate
+                    ? "cursor-not-allowed opacity-60"
+                    : "cursor-pointer"
+                    } ${cardDetails.membershipType === "monthly"
+                      ? "border-[#217989] bg-blue-50"
+                      : "border-gray-300 bg-gray-50 hover:border-gray-400"
                     }`}
                   onClick={() =>
-                    handleMembershipChange(
+                    !isPaymentMethodUpdate && handleMembershipChange(
                       "monthly",
                       setCardDetails,
                       pricePerMember,
@@ -796,12 +809,15 @@ const SubscriptionCardDetails = () => {
                 </div>
 
                 <div
-                  className={`border p-3 flex items-center justify-between rounded-lg cursor-pointer transition-all ${cardDetails.membershipType === "annual"
-                    ? "border-[#217989] bg-blue-50"
-                    : "border-gray-300 bg-gray-50 hover:border-gray-400"
+                  className={`border p-3 flex items-center justify-between rounded-lg transition-all ${isPaymentMethodUpdate
+                    ? "cursor-not-allowed opacity-60"
+                    : "cursor-pointer"
+                    } ${cardDetails.membershipType === "annual"
+                      ? "border-[#217989] bg-blue-50"
+                      : "border-gray-300 bg-gray-50 hover:border-gray-400"
                     }`}
                   onClick={() =>
-                    handleMembershipChange(
+                    !isPaymentMethodUpdate && handleMembershipChange(
                       "annual",
                       setCardDetails,
                       pricePerMember,
@@ -900,7 +916,7 @@ const SubscriptionCardDetails = () => {
                 className="w-full p-3 bg-[#217989] text-[#C7EBF2] font-semibold rounded-lg hover:bg-[#1a6170] transition-colors"
                 disabled={buttonLoading || processing}
               >
-                {buttonLoading ? "Processing..." : "Pay"}
+                {buttonLoading ? "Processing..." : isPaymentMethodUpdate ? "Update Payment Method" : "Pay"}
               </button>
             </div>
           </div>

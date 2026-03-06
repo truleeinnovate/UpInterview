@@ -148,6 +148,7 @@ const Subscription = () => {
   const [loadingPlanId, setLoadingPlanId] = useState(null);
   const [showRenewalModal, setShowRenewalModal] = useState(false);
   const [selectedPlanForRenewal, setSelectedPlanForRenewal] = useState(null);
+  const [showUpdatePaymentModal, setShowUpdatePaymentModal] = useState(false);
 
   // Check if subscription is expired
   const isSubscriptionExpired = subscriptionData?.status === "expired";
@@ -518,8 +519,6 @@ const Subscription = () => {
       {/* v1.0.2 <--------------------------------------------------- */}
       <div className="space-y-6 sm:mt-10 sm:mx-2 md:mt-20">
         {/* v1.0.2 <--------------------------------------------------- */}
-        {/* Hidden element for Razorpay */}
-        <div id="razorpay-card-update" style={{ display: "none" }}></div>
 
         {/* Header Section - Always visible */}
         <div className="flex-1">
@@ -528,26 +527,45 @@ const Subscription = () => {
             <h2 className="sm:text-xl text-2xl font-bold">Subscription</h2>
             {/* v1.0.2 ---------------------------------------------------> */}
 
-            {!loading &&
-              subscriptionData &&
-              (subscriptionData.status === "active" || isSubscriptionExpired) &&
-              subscriptionData.planName !== "Free" && (
-                <button
-                  onClick={() =>
-                    isSubscriptionExpired
-                      ? setShowRenewalModal(true)
-                      : setShowCancelModal(true)
-                  }
-                  className={`${isSubscriptionExpired
+            <div className="flex items-center gap-2">
+              {/* Update Payment Method button - only visible for active paid subscriptions */}
+              {subscriptionData.status === "active" &&
+                subscriptionData.planName !== "Free" &&
+                subscriptionData.razorpaySubscriptionId && (
+                  <button
+                    type="button"
+                    onClick={() => setShowUpdatePaymentModal(true)}
+                    className="flex items-center gap-1.5 py-2 px-4 font-semibold text-custom-blue border border-custom-blue rounded-md hover:bg-custom-blue hover:text-white transition-all duration-200"
+                    title="Change your card, UPI, or net banking for auto-debit"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    Update Payment Method
+                  </button>
+                )}
+
+              {!loading &&
+                subscriptionData &&
+                (subscriptionData.status === "active" || isSubscriptionExpired) &&
+                subscriptionData.planName !== "Free" && (
+                  <button
+                    onClick={() =>
+                      isSubscriptionExpired
+                        ? setShowRenewalModal(true)
+                        : setShowCancelModal(true)
+                    }
+                    className={`${isSubscriptionExpired
                       ? "bg-green-600 hover:bg-green-700 animate-pulse"
                       : "bg-custom-blue hover:bg-custom-blue/80"
-                    } py-2 px-4 rounded-md text-white transition-all duration-300 font-semibold`}
-                >
-                  {isSubscriptionExpired
-                    ? "🔄 Renew Subscription"
-                    : "Cancel Subscription"}
-                </button>
-              )}
+                      } py-2 px-4 rounded-md text-white transition-all duration-300 font-semibold`}
+                  >
+                    {isSubscriptionExpired
+                      ? "🔄 Renew Subscription"
+                      : "Cancel Subscription"}
+                  </button>
+                )}
+            </div>
           </div>
         </div>
 
@@ -561,8 +579,8 @@ const Subscription = () => {
               <div>
                 {/* v1.0.2 <------------------------------------------------------- */}
                 <h3 className="text-base sm:text-sm md:text-xl font-medium">{`Current Plan: ${subscriptionData?.planName
-                    ? subscriptionData?.planName
-                    : "Plan Name Not Available"
+                  ? subscriptionData?.planName
+                  : "Plan Name Not Available"
                   } (${subscriptionData?.selectedBillingCycle
                     ? capitalizeFirstLetter(
                       subscriptionData?.selectedBillingCycle
@@ -595,21 +613,24 @@ const Subscription = () => {
                   )}
                 </p>
               </div>
-              <span
-                className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${subscriptionData.status === "active"
+              <div className="flex items-center gap-2 sm:flex-col sm:items-end">
+                <span
+                  className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${subscriptionData.status === "active"
                     ? "bg-green-100 text-green-800"
                     : subscriptionData.status === "expired"
                       ? "bg-red-100 text-red-800 animate-pulse"
                       : subscriptionData.status === "cancelled"
                         ? "bg-gray-100 text-gray-800"
                         : "bg-yellow-100 text-yellow-800"
-                  }`}
-              >
-                {subscriptionData.status
-                  ? subscriptionData.status.charAt(0).toUpperCase() +
-                  subscriptionData.status.slice(1)
-                  : "inactive"}
-              </span>
+                    }`}
+                >
+                  {subscriptionData.status
+                    ? subscriptionData.status.charAt(0).toUpperCase() +
+                    subscriptionData.status.slice(1)
+                    : "inactive"}
+                </span>
+
+              </div>
             </div>
           </div>
         )}
@@ -621,8 +642,8 @@ const Subscription = () => {
           <div className="flex justify-center items-center space-x-2 mb-16">
             <p
               className={`text-custom-blue ${!isAnnual
-                  ? "font-semibold text-base sm:text-lg md:text-xl"
-                  : "font-medium text-sm sm:text-base md:text-lg"
+                ? "font-semibold text-base sm:text-lg md:text-xl"
+                : "font-medium text-sm sm:text-base md:text-lg"
                 }`}
             >
               Bill Monthly
@@ -639,8 +660,8 @@ const Subscription = () => {
             </div>
             <p
               className={`text-[#217989] ${isAnnual
-                  ? "font-semibold text-base sm:text-lg md:text-xl"
-                  : "font-medium text-sm sm:text-base md:text-lg"
+                ? "font-semibold text-base sm:text-lg md:text-xl"
+                : "font-medium text-sm sm:text-base md:text-lg"
                 }`}
             >
               Bill Annually
@@ -702,7 +723,7 @@ const Subscription = () => {
                   !organization && isAnnual && individualAnnualSavings > 0;
 
                 const savingsAmount = organization
-                  ? staticHigherPrice - actualPrice
+                  ? Math.abs(staticHigherPrice - actualPrice)
                   : individualAnnualSavings;
                 const isEnterprise = plan.name === "Enterprise";
                 const isFree = plan.name === "Free" || actualPrice === 0;
@@ -711,8 +732,8 @@ const Subscription = () => {
                   <div
                     key={plan.name}
                     className={`shadow-lg rounded-2xl relative transition-all duration-300 flex flex-col h-full ${isHighlighted(plan)
-                        ? "-translate-y-2 md:-translate-y-3 z-10 bg-[#217989] text-white transform scale-[1.02]"
-                        : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
+                      ? "-translate-y-2 md:-translate-y-3 z-10 bg-[#217989] text-white transform scale-[1.02]"
+                      : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
                       }`}
                     onMouseEnter={() => setHoveredPlan(plan.name)}
                     onMouseLeave={() => setHoveredPlan(null)}
@@ -735,8 +756,8 @@ const Subscription = () => {
                       <div className="text-start mb-4">
                         <h5
                           className={`text-xl md:text-2xl font-bold ${isHighlighted(plan)
-                              ? "text-white"
-                              : "text-[#217989]"
+                            ? "text-white"
+                            : "text-[#217989]"
                             }`}
                         >
                           {plan?.name ? plan?.name : "Plan Name Not Available"}
@@ -754,8 +775,8 @@ const Subscription = () => {
                               <li key={idx} className="flex items-center">
                                 <span
                                   className={`mr-2 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${isHighlighted(plan)
-                                      ? "bg-white/20 text-white"
-                                      : "bg-green-100 text-green-600"
+                                    ? "bg-white/20 text-white"
+                                    : "bg-green-100 text-green-600"
                                     }`}
                                 >
                                   <svg
@@ -783,8 +804,8 @@ const Subscription = () => {
                           <div>
                             <p
                               className={`text-xl sm:text-2xl md:text-3xl font-bold line-through ${isHighlighted(plan)
-                                  ? "text-white/70"
-                                  : "text-gray-400"
+                                ? "text-white/70"
+                                : "text-gray-400"
                                 }`}
                             >
                               <span className="text-base sm:text-lg md:text-xl">
@@ -794,8 +815,8 @@ const Subscription = () => {
                             </p>
                             <p
                               className={`text-xs font-medium mt-1 ${isHighlighted(plan)
-                                  ? "text-white/80"
-                                  : "text-gray-500"
+                                ? "text-white/80"
+                                : "text-gray-500"
                                 }`}
                             >
                               per month
@@ -803,8 +824,8 @@ const Subscription = () => {
                             <div className="mt-1">
                               <span
                                 className={`inline-block px-3 py-1.5 rounded-md text-xs font-semibold ${isHighlighted(plan)
-                                    ? "bg-white/20 text-white"
-                                    : "bg-yellow-100 text-yellow-800"
+                                  ? "bg-white/20 text-white"
+                                  : "bg-yellow-100 text-yellow-800"
                                   }`}
                               >
                                 Limited-Time Offer: ₹
@@ -817,8 +838,8 @@ const Subscription = () => {
                           <div>
                             <p
                               className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
-                                  ? "text-white"
-                                  : "text-[#217989]"
+                                ? "text-white"
+                                : "text-[#217989]"
                                 }`}
                             >
                               <span className="text-base sm:text-lg md:text-xl">
@@ -828,8 +849,8 @@ const Subscription = () => {
                             </p>
                             <p
                               className={`text-xs font-medium mt-1 ${isHighlighted(plan)
-                                  ? "text-white/80"
-                                  : "text-gray-600"
+                                ? "text-white/80"
+                                : "text-gray-600"
                                 }`}
                             >
                               per year
@@ -837,8 +858,8 @@ const Subscription = () => {
                             <div className="mt-1">
                               <span
                                 className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${isHighlighted(plan)
-                                    ? "bg-green-100/20 text-white border border-white/30"
-                                    : "bg-green-50 text-green-700 border border-green-200"
+                                  ? "bg-green-100/20 text-white border border-white/30"
+                                  : "bg-green-50 text-green-700 border border-green-200"
                                   }`}
                               >
                                 <span className="text-sm">🔥</span>
@@ -852,16 +873,16 @@ const Subscription = () => {
                           <div>
                             <p
                               className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
-                                  ? "text-white"
-                                  : "text-[#217989]"
+                                ? "text-white"
+                                : "text-[#217989]"
                                 }`}
                             >
                               Custom
                             </p>
                             <p
                               className={`text-xs font-medium mt-1 ${isHighlighted(plan)
-                                  ? "text-white/80"
-                                  : "text-gray-600"
+                                ? "text-white/80"
+                                : "text-gray-600"
                                 }`}
                             >
                               pricing
@@ -872,8 +893,8 @@ const Subscription = () => {
                           <div>
                             <p
                               className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
-                                  ? "text-white"
-                                  : "text-[#217989]"
+                                ? "text-white"
+                                : "text-[#217989]"
                                 }`}
                             >
                               <span className="text-base sm:text-lg md:text-xl">
@@ -883,8 +904,8 @@ const Subscription = () => {
                             </p>
                             <p
                               className={`text-xs font-medium mt-1 ${isHighlighted(plan)
-                                  ? "text-white/80"
-                                  : "text-gray-600"
+                                ? "text-white/80"
+                                : "text-gray-600"
                                 }`}
                             >
                               forever
@@ -895,8 +916,8 @@ const Subscription = () => {
                           <div>
                             <p
                               className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
-                                  ? "text-white"
-                                  : "text-[#217989]"
+                                ? "text-white"
+                                : "text-[#217989]"
                                 }`}
                             >
                               <span className="text-base sm:text-lg md:text-xl">
@@ -906,8 +927,8 @@ const Subscription = () => {
                             </p>
                             <p
                               className={`text-xs font-medium mt-1 ${isHighlighted(plan)
-                                  ? "text-white/80"
-                                  : "text-gray-600"
+                                ? "text-white/80"
+                                : "text-gray-600"
                                 }`}
                             >
                               per year
@@ -915,8 +936,8 @@ const Subscription = () => {
                             <div className="mt-1">
                               <span
                                 className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${isHighlighted(plan)
-                                    ? "bg-green-100/20 text-white border border-white/30"
-                                    : "bg-green-50 text-green-700 border border-green-200"
+                                  ? "bg-green-100/20 text-white border border-white/30"
+                                  : "bg-green-50 text-green-700 border border-green-200"
                                   }`}
                               >
                                 Save ₹{savingsAmount.toLocaleString("en-IN")}
@@ -929,8 +950,8 @@ const Subscription = () => {
                           <div>
                             <p
                               className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
-                                  ? "text-white"
-                                  : "text-[#217989]"
+                                ? "text-white"
+                                : "text-[#217989]"
                                 }`}
                             >
                               <span className="text-base sm:text-lg md:text-xl">
@@ -1389,6 +1410,108 @@ const Subscription = () => {
           document.body
         )}
       {/* v1.0.2 ----------------------------------------------------------------------> */}
+
+      {/* Update Payment Method Modal */}
+      {showUpdatePaymentModal &&
+        createPortal(
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full m-4 animate-slide-in">
+              <div className="flex items-center mb-4">
+                <div className="bg-blue-100 rounded-full p-3 mr-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-custom-blue">
+                  Update Payment Method
+                </h2>
+              </div>
+
+              <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-gray-700 mb-2">
+                  Current plan:
+                </p>
+                <p className="font-semibold text-lg text-custom-blue">
+                  {subscriptionData?.planName} ({capitalizeFirstLetter(subscriptionData?.selectedBillingCycle || "")})
+                </p>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-3">
+                  Choose a new payment method for your subscription auto-debit:
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    <span className="text-sm text-gray-700">Credit/Debit Card (Visa, Mastercard, RuPay)</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm text-gray-700">UPI Autopay (GPay, PhonePe, Paytm)</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <span className="text-sm text-gray-700">Net Banking (eMandate)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <p className="text-xs text-yellow-800">
+                  <span className="font-semibold">ℹ️ Note:</span> Your current subscription will be updated with the new payment method. You will need to authorize the new payment method via Razorpay to continue auto-debit for future billing cycles.
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowUpdatePaymentModal(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition duration-150"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowUpdatePaymentModal(false);
+                    // Find the current plan from the plans list
+                    const currentPlan = plans.find(
+                      (p) => p.planId === subscriptionData.subscriptionPlanId
+                    );
+                    if (currentPlan) {
+                      navigate("/account-settings/subscription/card-details", {
+                        state: {
+                          plan: {
+                            ...currentPlan,
+                            billingCycle: subscriptionData.selectedBillingCycle,
+                            user: { userType, tenantId, ownerId },
+                            invoiceId: subscriptionData.invoiceId,
+                            razorpayPlanIds: currentPlan.razorpayPlanIds,
+                          },
+                          isUpgrading: false,
+                          isPaymentMethodUpdate: true,
+                        },
+                      });
+                    } else {
+                      toast.error("Could not find your current plan details. Please try again.");
+                    }
+                  }}
+                  className="px-4 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/80 transition duration-150 flex items-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  Continue to Update
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* contact sale popup */}
       {isContactSalesOpen && (
