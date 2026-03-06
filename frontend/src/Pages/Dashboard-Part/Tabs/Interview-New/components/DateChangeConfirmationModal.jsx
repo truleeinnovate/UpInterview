@@ -214,7 +214,6 @@ const DateChangeConfirmationModal = ({
     isCancelAction ||
     isNoShowAction ||
     isRejectAction ||
-    isEvaluatedAction ||
     isWithdrawAction;
 
   // Get the appropriate options for the dropdown
@@ -348,7 +347,11 @@ const DateChangeConfirmationModal = ({
                     </div>
                   )}
 
-                {/* Reason Dropdown - Always show for these actions */}
+
+{!isEvaluatedAction && (
+               
+                <>
+                 {/* Reason Dropdown - Always show for these actions */}
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Reason for{" "}
@@ -396,6 +399,8 @@ const DateChangeConfirmationModal = ({
                     />
                   </div>
                 )}
+                </>
+             ) }
 
                 {/* Round Outcome Dropdown - Only for Evaluated action */}
                 {isEvaluatedAction && (
@@ -481,7 +486,7 @@ const DateChangeConfirmationModal = ({
                 )}
 
                 {/* Case 3: Internal Interview */}
-                {isInternal && (
+                {isInternal && isScheduledOrReschedule && (
                   <div className="text-sm text-gray-700 leading-relaxed space-y-4">
                     <p>
                       Changing the interview date, time, or type will remove the
@@ -525,7 +530,7 @@ const DateChangeConfirmationModal = ({
             disabled={isConfirmDisabled}
             className={`px-6 h-9 rounded-md font-medium transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isCancelAction ||
               isNoShowAction ||
-              isEvaluatedAction ||
+              // isEvaluatedAction ||
               isRejectAction ||
               isWithdrawAction
               ? "bg-red-600 text-white hover:bg-red-700"

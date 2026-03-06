@@ -556,7 +556,7 @@ function ActionRequiredSkeleton() {
 
 export function ActionRequiredCards() {
   const [filters] = useState({
-    page: 0,
+    page: 1,
     limit: Infinity,
     status: ["draft"],
   });

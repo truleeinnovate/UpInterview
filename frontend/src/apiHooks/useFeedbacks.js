@@ -15,6 +15,11 @@ export const useFeedbacks = (filters = {}) => {
     type: filters.type ? filters.type : "feedback",
   };
 
+  // Convert Infinity to string "infinity" since Infinity can't be serialized as a query param
+  if (params.limit === Infinity || params.limit === "Infinity") {
+    params.limit = "infinity";
+  }
+
   return useQuery({
     queryKey: ["feedbacks", filters],
     queryFn: async () => {

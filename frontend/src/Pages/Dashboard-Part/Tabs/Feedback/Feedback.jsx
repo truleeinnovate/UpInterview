@@ -112,7 +112,7 @@ const Feedback = () => {
   // ------------------------------v1.0.3 >
   // State for filters and pagination
   const [filters, setFilters] = useState({
-    page: 0,
+    page: 1,
     limit: 10,
     search: "",
     status: [],
@@ -144,7 +144,7 @@ const allFeedbacks = feedbacksResponse?.feedbacks || [];
 const feedbacks = allFeedbacks.filter((row) => {
   // Case 1: feedback is submitted → include
   if (row?.status?.toLowerCase() === "submitted" && row?.ownerId?._id !== tokenPayload.userId) {
-    console.log("row submitted", row?.ownerId?._id !== tokenPayload.userId);
+    // console.log("row submitted", row?.ownerId?._id !== tokenPayload.userId);
     return true;
 
   }
@@ -194,8 +194,6 @@ console.log("feedbacks", feedbacks);
   //
   // ------------------------------v1.0.3 >
   const rowsPerPage = 10;
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
 
   useEffect(() => {
     const handleResize = () => {
@@ -212,8 +210,9 @@ console.log("feedbacks", feedbacks);
       setFilters((prev) => ({
         ...prev,
         search: searchQuery,
-        page: 0, // Reset to first page when searching
+        page: 1, // Reset to first page when searching
       }));
+      setCurrentPage(0);
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
@@ -328,8 +327,9 @@ console.log("feedbacks", feedbacks);
       ratingMin: tempRatingRange.min,
       ratingMax: tempRatingRange.max,
       interviewDate: tempInterviewDatePreset,
-      page: 0, // Reset to first page when applying filters
+      page: 1, // Reset to first page when applying filters
     }));
+    setCurrentPage(0);
 
     setIsFilterActive(
       tempSelectedStatus.length > 0 ||
@@ -463,8 +463,9 @@ console.log("feedbacks", feedbacks);
       ratingMin: "",
       ratingMax: "",
       interviewDate: "",
-      page: 0,
+      page: 1,
     }));
+    setCurrentPage(0);
     setFilterPopupOpen(false);
   };
 
@@ -529,22 +530,24 @@ console.log("feedbacks", feedbacks);
   //   setCurrentPage((prev) => Math.max(prev - 1, 0));
   // };
 
-  // Pagination handlers
+  // Pagination handlers (server uses 1-based pages)
   const nextPage = () => {
-    if (paginationInfo.currentPage < paginationInfo.totalPages - 1) {
+    if (paginationInfo.currentPage < paginationInfo.totalPages) {
       setFilters((prev) => ({
         ...prev,
         page: prev.page + 1,
       }));
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
   const prevPage = () => {
-    if (paginationInfo.currentPage > 0) {
+    if (paginationInfo.currentPage > 1) {
       setFilters((prev) => ({
         ...prev,
         page: prev.page - 1,
       }));
+      setCurrentPage((prev) => Math.max(prev - 1, 0));
     }
   };
 
@@ -662,16 +665,13 @@ console.log("feedbacks", feedbacks);
                 searchQuery={searchQuery}
                 onSearch={handleSearchInputChange}
                 currentPage={currentPage}
-                //totalPages={totalPages}
-                totalPages={
-                  Math.ceil(filteredFeedbacks.length / rowsPerPage) || 1
-                }
+                totalPages={paginationInfo.totalPages || 1}
                 onPrevPage={prevPage}
                 onNextPage={nextPage}
                 onFilterClick={handleFilterIconClick}
                 isFilterActive={isFilterActive}
                 isFilterPopupOpen={isFilterPopupOpen}
-                dataLength={filteredFeedbacks.length}
+                dataLength={paginationInfo.totalItems || 0}
                 searchPlaceholder="Search by ID, Name, Position..."
                 filterIconRef={filterIconRef}
               />
@@ -686,8 +686,7 @@ console.log("feedbacks", feedbacks);
               {viewMode === "table" ? (
                 <div className="overflow-x-autow-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                   <TableView
-                    //data={currentRows}
-                    data={filteredFeedbacks.slice(startIndex, endIndex)}
+                    data={filteredFeedbacks}
                     columns={tableColumns}
                     actions={tableActions}
                     loading={loading}
@@ -697,8 +696,7 @@ console.log("feedbacks", feedbacks);
                 </div>
               ) : (
                 <FeedbackKanban
-                  //feedbacks={currentRows}
-                  feedbacks={filteredFeedbacks.slice(startIndex, endIndex)}
+                  feedbacks={filteredFeedbacks}
                   loading={loading}
                   onView={handleView}
                   onEdit={handleEdit}
