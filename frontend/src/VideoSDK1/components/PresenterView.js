@@ -239,18 +239,37 @@ export function PresenterView({ height }) {
     }
   }, [isLocal, localScreenShareStream, screenShareOn]);
 
-  // Local video (unchanged)
+  // Compute effective local stream: prefer context stream, fallback to VideoSDK track
+  const effectiveLocalStream = useMemo(() => {
+    // Prefer the context stream (native MediaStream from getDisplayMedia)
+    if (localScreenShareStream && typeof localScreenShareStream.getVideoTracks === 'function') {
+      return localScreenShareStream;
+    }
+    // Fallback: build a MediaStream from VideoSDK's screenShareVideoTrack
+    if (isLocal && screenShareOn && screenShareVideoTrack) {
+      try {
+        return new MediaStream([screenShareVideoTrack]);
+      } catch (e) {
+        console.error('Failed to create MediaStream from screenShareVideoTrack:', e);
+      }
+    }
+    return null;
+  }, [localScreenShareStream, isLocal, screenShareOn, screenShareVideoTrack]);
+
+  // Local video
   useEffect(() => {
-    if (isLocal && localScreenShareStream && videoRef.current) {
-      console.log('Setting local video stream:', localScreenShareStream.getVideoTracks().length, 'video tracks');
-      videoRef.current.srcObject = localScreenShareStream;
+    if (isLocal && effectiveLocalStream && videoRef.current) {
+      const trackCount = typeof effectiveLocalStream.getVideoTracks === 'function'
+        ? effectiveLocalStream.getVideoTracks().length : 'unknown';
+      console.log('Setting local video stream:', trackCount, 'video tracks');
+      videoRef.current.srcObject = effectiveLocalStream;
       videoRef.current.muted = false;
       videoRef.current.play().catch(err => console.error('Local video play error:', err));
     } else if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
     return () => { if (videoRef.current) videoRef.current.srcObject = null; };
-  }, [isLocal, localScreenShareStream]);
+  }, [isLocal, effectiveLocalStream]);
 
   // NEW: Remote video fallback (if VideoPlayer stream delayed)
   useEffect(() => {
@@ -306,45 +325,34 @@ export function PresenterView({ height }) {
     localScreenShareStream: !!localScreenShareStream,
     screenShareOn,
     presenterId,
-    videoTracks: localScreenShareStream?.getVideoTracks().length || 0
+    videoTracks: localScreenShareStream?.getVideoTracks?.()?.length || 0
   });
 
-  const showPlaceholder = !screenShareOn; // Simplified: Only if not active
+  const showPlaceholder = !screenShareOn;
 
   return (
     <div className="bg-gray-750 relative overflow-hidden w-full" style={{ height }}>
       <audio playsInline controls={false} ref={audioPlayer} />
 
-      <div className="video-contain absolute h-full w-full">
-        {isLocal ? (
-          // Local: Show own screen share preview
-          localScreenShareStream ? (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="h-full w-full object-contain bg-black"
-            />
-          ) : (
-            <div className="h-full w-full bg-gray-900 flex flex-col items-center justify-center">
-              <ScreenShareIcon style={{ height: 48, width: 48, color: "#22c55e" }} />
-              <p className="text-white text-lg font-semibold mt-4">Screen share starting...</p>
-            </div>
-          )
-        ) : (
-          // Remote: VideoPlayer shows the presenter's screen share
+      <div className="absolute h-full w-full bg-black">
+        {screenShareOn && presenterId ? (
+          // Use VideoPlayer for both local and remote — it handles stream internally
           <VideoPlayer
             participantId={presenterId}
             type="share"
-            containerStyle={{ height: "100%", width: "100%" }}
-            className="h-full"
-            classNameVideo="h-full"
+            containerStyle={{ height: "100%", width: "100%", backgroundColor: "#000" }}
+            className="h-full w-full"
+            classNameVideo="h-full w-full object-contain"
           />
+        ) : (
+          <div className="h-full w-full bg-gray-900 flex flex-col items-center justify-center">
+            <ScreenShareIcon style={{ height: 48, width: 48, color: "#22c55e" }} />
+            <p className="text-white text-lg font-semibold mt-4">Screen share starting...</p>
+          </div>
         )}
 
-        {/* Top banner overlay (unchanged) */}
-        {isLocal && localScreenShareStream && showOverlay && (
+        {/* Top banner overlay */}
+        {isLocal && effectiveLocalStream && showOverlay && (
           <div className="absolute top-4 left-4 right-4 bg-gray-750/80 backdrop-blur-sm p-3 rounded-lg flex items-center justify-between z-10 border border-white/20">
             <div className="flex items-center space-x-2">
               <ScreenShareIcon style={{ height: 20, width: 20, color: "white" }} />
