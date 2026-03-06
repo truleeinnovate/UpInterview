@@ -293,44 +293,79 @@ const generateReport = async (req, res) => {
       }));
     }
     else if (collectionName === "interviewrounds") {
-      const interviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
-      const interviewIds = interviews.map(i => i._id);
+      // ────────────────────────────────────────────────
+      // Step 1: Get allowed PARENT INTERVIEWS
+      // Use finalQuery → respects viewScope "me"/"all" + role permissions
+      // ────────────────────────────────────────────────
+      const allowedInterviews = await Interview.find(
+        finalQuery,
+        { _id: 1 }
+      ).lean();
 
-      const rounds = await InterviewRounds.find(
-        { interviewId: { $in: interviewIds }, ...finalQuery },
-        projection
-      )
-        .populate({
-          path: "interviewId",
-          select: "interviewCode status interviewType candidateId positionId createdAt",
-          populate: [
-            { path: "candidateId", select: "FirstName LastName" },
-            { path: "positionId", select: "title" }
-          ]
-        })
-        .lean();
+      const allowedInterviewIds = allowedInterviews.map(i => i._id);
 
-      rawData = rounds.map(r => {
-        const interview = r.interviewId || {};
-        const candidate = interview.candidateId || {};
-        const position = interview.positionId || {};
+      console.log(`Allowed parent interviews: ${allowedInterviewIds.length}`);
 
-        return {
-          ...r,
-          interviewCode: interview.interviewCode || "—",
-          parentStatus: interview.status || "Unknown",
-          interviewType: interview.interviewType || "regular",
-          candidateName: candidate ? `${candidate.FirstName || ''} ${candidate.LastName || ''}`.trim() || "Unknown" : "—",
-          positionTitle: position.title || "—",
-          roundTitle: r.roundTitle || "Untitled Round",
-          status: r.status || "Draft",
-          interviewerType: r.interviewerType || "Unknown",
-          interviewMode: r.interviewMode || "—",
-          roundOutcome: r.roundOutcome || "—",
-          roundDate: r.dateTime ? new Date(r.dateTime).toISOString().split('T')[0] : null,
-          createdAt: r.createdAt || interview.createdAt,
+      if (allowedInterviewIds.length === 0) {
+        console.log("→ No allowed interviews → cannot have rounds");
+        rawData = [];
+      } else {
+        // ────────────────────────────────────────────────
+        // Step 2: Get rounds ONLY for allowed interviews
+        // Add any round-specific filters (status, interviewerType, etc.)
+        // ────────────────────────────────────────────────
+        const roundsQuery = {
+          interviewId: { $in: allowedInterviewIds },
+          // Keep round-level filters from user (status, dateRange on round, etc.)
+          // But REMOVE user-level fields that don't exist on rounds
         };
-      });
+
+        // Preserve useful round filters (don't blindly spread finalQuery)
+        if (finalQuery.status) roundsQuery.status = finalQuery.status;
+        if (finalQuery.interviewerType) roundsQuery.interviewerType = finalQuery.interviewerType;
+        if (finalQuery.interviewMode) roundsQuery.interviewMode = finalQuery.interviewMode;
+        if (finalQuery.roundOutcome) roundsQuery.roundOutcome = finalQuery.roundOutcome;
+        // Add date range on round dateTime if needed
+        if (finalQuery.createdAt?.$gte || finalQuery.createdAt?.$lte) {
+          roundsQuery.dateTime = finalQuery.createdAt; // or use a roundDate field if you have one
+        }
+
+        const rounds = await InterviewRounds.find(
+          roundsQuery,
+          projection
+        )
+          .populate({
+            path: "interviewId",
+            select: "interviewCode status interviewType candidateId positionId createdAt",
+            populate: [
+              { path: "candidateId", select: "FirstName LastName" },
+              { path: "positionId", select: "title" }
+            ]
+          })
+          .lean();
+
+        rawData = rounds.map(r => {
+          const interview = r.interviewId || {};
+          const candidate = interview.candidateId || {};
+          const position = interview.positionId || {};
+
+          return {
+            ...r,
+            interviewCode: interview.interviewCode || "—",
+            parentStatus: interview.status || "Unknown",
+            interviewType: interview.interviewType || "regular",
+            candidateName: candidate ? `${candidate.FirstName || ''} ${candidate.LastName || ''}`.trim() || "Unknown" : "—",
+            positionTitle: position.title || "—",
+            roundTitle: r.roundTitle || "Untitled Round",
+            status: r.status || "Draft",
+            interviewerType: r.interviewerType || "Unknown",
+            interviewMode: r.interviewMode || "—",
+            roundOutcome: r.roundOutcome || "—",
+            roundDate: r.dateTime || null,
+            createdAt: r.createdAt || interview.createdAt,
+          };
+        });
+      }
     }
     else if (collectionName === "feedback") {
       const regularInterviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
@@ -378,6 +413,7 @@ const generateReport = async (req, res) => {
         interviewCode: fb.interviewRoundId?.interviewId?.interviewCode || '—',
         interviewStatus: fb.interviewRoundId?.interviewId?.status || 'Unknown',
       }));
+
     }
     else if (collectionName === "scheduledassessments") {
       const scheduled = await ScheduledAssessment.find(
@@ -422,6 +458,7 @@ const generateReport = async (req, res) => {
           };
         });
       }
+
     }
     else {
       rawData = await Model.find(

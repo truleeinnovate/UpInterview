@@ -934,33 +934,38 @@ const ReportsTable = ({
                     {/* Columns */}
                     {propColumns.map((col) => {
                       let value = item[col.key];
-                      if (col.key === "createdAt")
+
+                      // Special cases — keep your existing formatting
+                      if (col.key === "createdAt") {
                         value = formatDateTime(value);
-                      if (col.key === "description")
-                        value =
-                          value?.length > 80
-                            ? value.substring(0, 80) + "..."
-                            : value;
+                      }
+                      if (col.key === "description") {
+                        value = value?.length > 80 ? value.substring(0, 80) + "..." : value;
+                      }
+
+                      // Decide what to display
+                      let displayValue;
+
+                      if (col.key === "status") {
+                        displayValue = <StatusBadge status={capitalizeFirstLetter(item[col.key])} />;
+                      } else if (col.render) {
+                        // Let the render function handle it — pass RAW value (not capitalized)
+                        displayValue = col.render(value, item);
+                      } else {
+                        // Default: show raw value (numbers stay numbers, strings can be capitalized if needed)
+                        displayValue = value != null ? value : "-";
+                        // Optional: Only capitalize if it's a string (uncomment if you want)
+                        // if (typeof value === "string") displayValue = capitalizeFirstLetter(value);
+                      }
 
                       return (
                         <td
                           key={col.key}
                           title={col.key === "description" ? value : ""}
-                          className={`px-6 py-4 text-sm ${
-                            col.key === "description"
-                              ? "text-gray-600 max-w-xs truncate"
-                              : "text-gray-900"
-                          }`}
+                          className={`px-6 py-4 text-sm ${col.key === "description" ? "text-gray-600 max-w-xs truncate" : "text-gray-900"
+                            }`}
                         >
-                          {col.key === "status" ? (
-                            <StatusBadge
-                              status={capitalizeFirstLetter(item[col.key])}
-                            />
-                          ) : col.render ? (
-                            col.render(capitalizeFirstLetter(value), item)
-                          ) : (
-                            capitalizeFirstLetter(value) ?? "-"
-                          )}
+                          {displayValue}
                         </td>
                       );
                     })}
