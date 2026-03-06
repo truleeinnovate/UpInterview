@@ -62,7 +62,7 @@ export const validateJobTitle = (jobTitle) => {
 
 export const validateCompany = (company) => {
   if (!company) {
-    return 'Company is required';
+    return 'Company Name is required';
   }
   return '';
 };

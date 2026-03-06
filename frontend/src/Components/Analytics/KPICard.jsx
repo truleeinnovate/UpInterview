@@ -22,7 +22,7 @@ const KPICard = ({ title, value, subtitle, icon: Icon, trend, trendValue, classN
 
 
   return (
-    <div className={`rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all bg-white duration-200 min-h-[162px] ${className}`}>
+    <div className={`rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all bg-white duration-200 min-h-[102px] ${className}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-custom-blue mb-1">{title}</p>

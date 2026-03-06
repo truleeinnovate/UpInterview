@@ -1409,7 +1409,7 @@ const AdvancedFilters = ({
         </div>
         <button
           onClick={applyFilters}
-          className="px-6 py-2.5 bg-custom-blue text-white font-medium rounded-lg hover:bg-custom-blue/90 transition"
+          className="px-5 py-2 bg-custom-blue text-white font-medium rounded-lg hover:bg-custom-blue/90 transition"
         >
           Apply Filters
         </button>
