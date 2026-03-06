@@ -406,7 +406,7 @@ const WebCamBTN = () => {
 // When defined inside, audio/video events cause BottomBar to re-render, which recreates
 // RecordingBTN as a new function → React unmounts/remounts it → all state (timer) resets.
 const RecordingBTN = () => {
-  const { startRecording, stopRecording, recordingState } = useMeeting();
+  const { startRecording, stopRecording, recordingState, meetingId } = useMeeting();
   const isRecording = useIsRecording();
   const isRecordingRef = useRef(isRecording);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -414,23 +414,41 @@ const RecordingBTN = () => {
   const wasRecordingRef = useRef(false);
   const elapsedRef = useRef(0);
 
+  // localStorage key for persisting recording start time across refreshes
+  const storageKey = `rec_start_${meetingId || 'default'}`;
+
   useEffect(() => { isRecordingRef.current = isRecording; }, [isRecording]);
 
   useEffect(() => {
     const wasRecording = wasRecordingRef.current;
+
     if (isRecording && !wasRecording) {
-      elapsedRef.current = 0;
-      setElapsedSeconds(0);
+      // Recording just became active
+      let savedStart = localStorage.getItem(storageKey);
+      if (!savedStart) {
+        // Fresh recording start — save timestamp
+        savedStart = Date.now().toString();
+        localStorage.setItem(storageKey, savedStart);
+      }
+      // Calculate elapsed from saved start time (handles refresh)
+      const initialElapsed = Math.floor((Date.now() - parseInt(savedStart, 10)) / 1000);
+      elapsedRef.current = initialElapsed;
+      setElapsedSeconds(initialElapsed);
+
+      // Start interval from the calculated elapsed time
       timerRef.current = setInterval(() => {
         elapsedRef.current += 1;
         setElapsedSeconds(elapsedRef.current);
       }, 1000);
     } else if (!isRecording && wasRecording) {
+      // Recording stopped — clear timer and saved start time
       if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      localStorage.removeItem(storageKey);
     }
+
     wasRecordingRef.current = isRecording;
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [isRecording]);
+  }, [isRecording, storageKey]);
 
   const formatTime = (totalSeconds) => {
     const mins = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
@@ -445,7 +463,16 @@ const RecordingBTN = () => {
   );
 
   const _handleClick = () => {
-    if (isRecordingRef.current) { stopRecording(); } else { startRecording(); }
+    if (isRecordingRef.current) {
+      // Stop recording
+      stopRecording();
+    } else {
+      // Only start if not already recording (prevents duplicate on refresh/rejoin)
+      if (recordingState !== Constants.recordingEvents.RECORDING_STARTED &&
+        recordingState !== Constants.recordingEvents.RECORDING_STARTING) {
+        startRecording();
+      }
+    }
   };
 
   const tooltipText = recordingState === Constants.recordingEvents.RECORDING_STARTED
@@ -490,7 +517,7 @@ const ControlButton = ({ children, className = '' }) => (
   </div>
 );
 
-export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = false, isMockInterview = false, isCandidate = false }) {
+export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = false, isInterviewer = false, isMockInterview = false, isCandidate = false }) {
 
   const RaiseHandBTN = ({ isMobile, isTab }) => {
     const { publish } = usePubSub("RAISE_HAND");
@@ -710,7 +737,7 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = fals
         <div className="flex items-center">
           {/* First group */}
           <div className="flex items-center space-x-4">
-            {(isSchedule || (isMockInterview && isCandidate)) && (
+            {(isSchedule || isInterviewer || (isMockInterview && isCandidate)) && (
               <RecordingBTN {...buttonProps} />
             )}
             <ControlButton><RaiseHandBTN isMobile={false} isTab={false} {...buttonProps} /></ControlButton>

@@ -312,7 +312,7 @@ export function PresenterView({ height }) {
   const showPlaceholder = !screenShareOn; // Simplified: Only if not active
 
   return (
-    <div className="bg-gray-750 rounded m-2 relative overflow-hidden w-full" style={{ height }}>
+    <div className="bg-gray-750 relative overflow-hidden w-full" style={{ height }}>
       <audio playsInline controls={false} ref={audioPlayer} />
 
       <div className="video-contain absolute h-full w-full">

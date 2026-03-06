@@ -2266,11 +2266,6 @@ const RoundCard = ({
                     ["Completed", "FeedbackPending", "Evaluated", "FeedbackSubmitted"].includes(round?.status) && (
                       <button
                         onClick={async () => {
-                          if (videoUrls.length > 0) {
-                            setActiveVideoIndex(0);
-                            setShowVideoModal(true);
-                            return;
-                          }
                           if (!round?.meetingId && !round._id) return;
                           setFetchingVideo(true);
                           try {

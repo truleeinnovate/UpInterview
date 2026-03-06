@@ -27,6 +27,55 @@ const validateTransactionStatus = function (value) {
   return validStatuses.includes(value.toLowerCase());
 };
 
+// Transaction sub-schema with timestamps for automatic createdAt & updatedAt
+const TransactionSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      required: true,
+      validate: {
+        validator: validateTransactionType,
+        message: (props) =>
+          `${props.value} is not a valid transaction type`,
+      },
+    },
+    bucket: {
+      type: String,
+      enum: ["AVAILABLE", "HOLD"],
+    },
+    effect: {
+      type: String,
+      enum: ["CREDITED", "DEBITED", "NONE"],
+    },
+    walletId: { type: String },
+    // interviewId: { type: String },
+    // roundId: { type: String },
+    amount: { type: Number, required: true },
+    gstAmount: { type: Number, default: 0 },
+    serviceCharge: { type: Number, default: 0 },
+    totalAmount: { type: Number, default: 0 },
+    description: { type: String },
+    reason: { type: String },
+    relatedInvoiceId: { type: String, required: false },
+    status: {
+      type: String,
+      default: "completed",
+      validate: {
+        validator: validateTransactionStatus,
+        message: (props) =>
+          `${props.value} is not a valid transaction status`,
+      },
+    },
+    metadata: { type: mongoose.Schema.Types.Mixed },
+    balanceBefore: { type: Number },
+    balanceAfter: { type: Number },
+    holdBalanceBefore: { type: Number },
+    holdBalanceAfter: { type: Number },
+    createdDate: { type: Date },
+  },
+  { timestamps: true }
+);
+
 const WalletSchema = new mongoose.Schema(
   {
     tenantId: { type: String },
@@ -36,53 +85,7 @@ const WalletSchema = new mongoose.Schema(
     balance: { type: Number, required: true, default: 0 },
     holdAmount: { type: Number, required: true, default: 0 },
     walletCode: { type: String, unique: true },
-    transactions: [
-      {
-        type: {
-          type: String,
-          required: true,
-          validate: {
-            validator: validateTransactionType,
-            message: (props) =>
-              `${props.value} is not a valid transaction type`,
-          },
-        },
-        bucket: {
-          type: String,
-          enum: ["AVAILABLE", "HOLD"],
-        },
-        effect: {
-          type: String,
-          enum: ["CREDITED", "DEBITED", "NONE"],
-        },
-        walletId: { type: String },
-        // interviewId: { type: String },
-        // roundId: { type: String },
-        amount: { type: Number, required: true },
-        gstAmount: { type: Number, default: 0 },
-        serviceCharge: { type: Number, default: 0 },
-        totalAmount: { type: Number, default: 0 },
-        description: { type: String },
-        reason: { type: String },
-        relatedInvoiceId: { type: String, required: false },
-        status: {
-          type: String,
-          default: "completed",
-          validate: {
-            validator: validateTransactionStatus,
-            message: (props) =>
-              `${props.value} is not a valid transaction status`,
-          },
-        },
-        metadata: { type: mongoose.Schema.Types.Mixed },
-        balanceBefore: { type: Number },
-        balanceAfter: { type: Number },
-        holdBalanceBefore: { type: Number },
-        holdBalanceAfter: { type: Number },
-        createdDate: { type: Date },
-        createdAt: { type: Date, default: Date.now },
-      },
-    ],
+    transactions: [TransactionSchema],
   },
   { timestamps: true }
 );

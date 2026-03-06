@@ -3052,15 +3052,7 @@ const fetchAndSaveRecording = async (req, res) => {
       return res.status(400).json({ success: false, message: "No meetingId found for this round" });
     }
 
-    // If we already have recording URLs saved, return them
-    if (round.recordingUrls && round.recordingUrls.length > 0) {
-      return res.status(200).json({
-        success: true,
-        recordingUrl: round.recordingUrl,
-        recordingUrls: round.recordingUrls,
-        message: "Recordings already saved",
-      });
-    }
+    // Always fetch fresh from VideoSDK to pick up all recordings (including new ones)
 
     // Generate JWT token for VideoSDK API
     const jwt = require("jsonwebtoken");
@@ -3083,7 +3075,7 @@ const fetchAndSaveRecording = async (req, res) => {
     let response;
     try {
       response = await axios.get(
-        `https://api.videosdk.live/v2/recordings?roomId=${round.meetingId}`,
+        `https://api.videosdk.live/v2/recordings?roomId=${round.meetingId}&perPage=100`,
         {
           headers: {
             Authorization: token,
@@ -3114,9 +3106,20 @@ const fetchAndSaveRecording = async (req, res) => {
       });
     }
 
-    // Collect ALL recording file URLs
+    // Collect ALL recording file URLs — handle various VideoSDK response structures
+    console.log(`[Recording] Found ${recordings.length} recording(s) from VideoSDK`);
     const allRecordingUrls = recordings
-      .map((rec) => rec?.file?.fileUrl || rec?.fileUrl || null)
+      .map((rec, idx) => {
+        const url = rec?.file?.fileUrl || rec?.file?.url || rec?.fileUrl || rec?.url || rec?.filePath || null;
+        console.log(`[Recording] Recording ${idx + 1}:`, {
+          id: rec?.id || rec?._id,
+          status: rec?.status,
+          url: url ? url.substring(0, 80) + '...' : 'NO URL',
+          hasFile: !!rec?.file,
+          keys: Object.keys(rec || {}),
+        });
+        return url;
+      })
       .filter(Boolean);
 
     if (!allRecordingUrls.length) {
