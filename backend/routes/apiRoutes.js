@@ -2582,22 +2582,59 @@ router.get(
             // -------------------------------------------------------
             // 3️⃣ BUILD PROPER BASE QUERY WITH ALL FILTERS
             // -------------------------------------------------------
-            let baseQuery = {
-              $or: [
-                { interviewRoundId: { $in: feedbackRoundIds } },
-                { interviewRoundId: { $in: feedbackMockRoundIds } },
-                { ...query },
-              ],
-            };
+            // let baseQuery = {
+            //   $or: [
+            //     { interviewRoundId: { $in: feedbackRoundIds } },
+            //     { interviewRoundId: { $in: feedbackMockRoundIds } },
+            //     { ...query },
+            //   ],
+            // };
+
+
+            // -------------------------------------------------------
+  // 3️⃣ BUILD BASE QUERY - NEW LOGIC (THIS IS THE IMPORTANT CHANGE)
+  // -------------------------------------------------------
+  let orClauses = [];
+ 
+  // ── Round-linked feedbacks → ONLY submitted ──
+  if (feedbackRoundIds.length > 0) {
+    orClauses.push({
+      interviewRoundId: { $in: feedbackRoundIds },
+      status: "submitted",
+    });
+  }
+  if (feedbackMockRoundIds.length > 0) {
+    orClauses.push({
+      interviewRoundId: { $in: feedbackMockRoundIds },
+      status: "submitted",
+    });
+  }
+ 
+  // ── Original query (tenant/visibility etc.) ──
+  if (query && Object.keys(query).length > 0) {
+      // orClauses.push({ ...query });
+    //  orClauses.$or.push({ ownerId: userId });
+    orClauses.push({ ...query });
+  }
+ 
+  // ── NON-ADMIN → own feedbacks (draft + submitted) ──
+  if (
+    roleType === "individual" ||
+    (roleType === "organization" && roleName !== "Admin")
+  ) {
+    orClauses.push({ ownerId: userId });
+  }
+ 
+  let baseQuery = orClauses.length > 0 ? { $or: orClauses } : {};
 
             // EXTRA rule for non-admin users → own feedback only
-            if (
-              roleType === "individual" ||
-              (roleType === "organization" && roleName !== "Admin")
-            ) {
-              baseQuery.$or.push({ ownerId: userId });
-              // baseQuery.$or.push({ interviewerId: userId });
-            }
+            // if (
+            //   roleType === "individual" ||
+            //   (roleType === "organization" && roleName !== "Admin")
+            // ) {
+            //   baseQuery.$or.push({ ownerId: userId });
+            //   // baseQuery.$or.push({ interviewerId: userId });
+            // }
 
 
             // -------------------------------------------------------
