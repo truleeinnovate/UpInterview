@@ -216,7 +216,7 @@ const Dashboard = () => {
       },
       {
         key: "averageScore",
-        title: "Average Interview Score",
+        title: "Average Assessment Score",
         value: kpiData?.averageScore || "0.0",
         subtitle: "Out of 10",
         icon: Star,

@@ -2596,7 +2596,10 @@ router.get(
               (roleType === "organization" && roleName !== "Admin")
             ) {
               baseQuery.$or.push({ ownerId: userId });
+              // baseQuery.$or.push({ interviewerId: userId });
             }
+
+
             // -------------------------------------------------------
             // 4️⃣ SEARCH FILTER (PRESERVE EXISTING FUNCTIONALITY)
             // -------------------------------------------------------
@@ -2714,8 +2717,6 @@ router.get(
               .populate("interviewerId", "firstName lastName email")
               .populate("ownerId", "firstName lastName email")
               .sort({ _id: -1 })
-              .skip(skip)
-              .limit(feedbackLimitNum)
               .lean();
 
             // console.log("feedbacks FeedbackModel", feedbacks)
@@ -2961,7 +2962,9 @@ router.get(
             // 1️⃣7️⃣ APPLY PAGINATION TO FILTERED RESULTS
             // -------------------------------------------------------
             const totalFilteredItems = feedbackWithDetails.length;
-            const paginatedFeedbacks = feedbackWithDetails.slice(skip, skip + feedbackLimitNum);
+            const paginatedFeedbacks = feedbackLimitNum > 0
+              ? feedbackWithDetails.slice(skip, skip + feedbackLimitNum)
+              : feedbackWithDetails;
 
             // -------------------------------------------------------
             // 1️⃣8️⃣ FINAL RESPONSE
@@ -2970,9 +2973,9 @@ router.get(
               feedbacks: paginatedFeedbacks,
               pagination: {
                 currentPage: feedbackPageNum,
-                totalPages: Math.ceil(totalFilteredItems / feedbackLimitNum),
+                totalPages: feedbackLimitNum > 0 ? Math.ceil(totalFilteredItems / feedbackLimitNum) : 1,
                 totalItems: totalFilteredItems,
-                itemsPerPage: feedbackLimitNum,
+                itemsPerPage: feedbackLimitNum || totalFilteredItems,
               },
             };
           } else {
