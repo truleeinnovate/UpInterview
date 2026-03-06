@@ -358,34 +358,30 @@ const SubscriptionPlan = () => {
         {/* Toggle Section */}
         <div className="flex justify-center items-center space-x-2 mb-16">
           <p
-            className={`text-custom-blue ${
-              !isAnnual
+            className={`text-custom-blue ${!isAnnual
                 ? "font-semibold text-lg sm:text-sm"
                 : "font-medium sm:text-xs"
-            }`}
+              }`}
           >
             Bill Monthly
           </p>
           <div
             onClick={toggleBilling}
-            className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
-              isAnnual ? "bg-[#217989]" : "bg-[#217989]"
-            }`}
+            className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${isAnnual ? "bg-[#217989]" : "bg-[#217989]"
+              }`}
           >
             <div
-              className={`w-4 h-4 rounded-full shadow-md transform transition-all ${
-                isAnnual
+              className={`w-4 h-4 rounded-full shadow-md transform transition-all ${isAnnual
                   ? "translate-x-6 bg-yellow-500"
                   : "translate-x-0 bg-yellow-500"
-              }`}
+                }`}
             ></div>
           </div>
           <p
-            className={`text-[#217989] ${
-              isAnnual
+            className={`text-[#217989] ${isAnnual
                 ? "font-semibold text-lg sm:text-sm"
                 : "font-medium sm:text-xs"
-            }`}
+              }`}
           >
             Bill Annually
           </p>
@@ -439,7 +435,7 @@ const SubscriptionPlan = () => {
                 !organization && isAnnual && individualAnnualSavings > 0;
 
               const savingsAmount = organization
-                ? staticHigherPrice - actualPrice
+                ? Math.abs(staticHigherPrice - actualPrice)
                 : individualAnnualSavings;
               const isEnterprise = plan.name === "Enterprise";
               const isFree = plan.name === "Free" || actualPrice === 0;
@@ -447,11 +443,10 @@ const SubscriptionPlan = () => {
               return (
                 <div
                   key={plan.name}
-                  className={`shadow-xl rounded-2xl relative transition-all duration-300 flex flex-col h-full ${
-                    isHighlighted(plan)
+                  className={`shadow-xl rounded-2xl relative transition-all duration-300 flex flex-col h-full ${isHighlighted(plan)
                       ? "-translate-y-2 md:-translate-y-3 z-10 bg-[#217989] text-white transform scale-[1.02]"
                       : "bg-white text-[#217989] hover:shadow-xl hover:-translate-y-1"
-                  }`}
+                    }`}
                   onMouseEnter={() => setHoveredPlan(plan.name)}
                   onMouseLeave={() => setHoveredPlan(null)}
                   style={{ minHeight: "500px" }}
@@ -461,18 +456,17 @@ const SubscriptionPlan = () => {
                     {((organization &&
                       (plan.name === "Professional" || plan.name === "Pro")) ||
                       (!organization && plan.name === "Premium")) && (
-                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                        <span className="bg-[#217989] text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
-                          Most Popular
-                        </span>
-                      </div>
-                    )}
+                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                          <span className="bg-[#217989] text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
+                            Most Popular
+                          </span>
+                        </div>
+                      )}
                     {/* Plan Name - Left aligned */}
                     <div className="text-start mb-4">
                       <h5
-                        className={`text-xl md:text-2xl font-bold ${
-                          isHighlighted(plan) ? "text-white" : "text-[#217989]"
-                        }`}
+                        className={`text-xl md:text-2xl font-bold ${isHighlighted(plan) ? "text-white" : "text-[#217989]"
+                          }`}
                       >
                         {plan?.name ? plan?.name : "Plan Name Not Available"}
                       </h5>
@@ -487,11 +481,10 @@ const SubscriptionPlan = () => {
                           plan.features.map((feature, idx) => (
                             <li key={idx} className="flex items-center">
                               <span
-                                className={`mr-2 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
-                                  isHighlighted(plan)
+                                className={`mr-2 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${isHighlighted(plan)
                                     ? "bg-white/20 text-white"
                                     : "bg-green-100 text-green-600"
-                                }`}
+                                  }`}
                               >
                                 <svg
                                   className="w-3 h-3"
@@ -517,11 +510,10 @@ const SubscriptionPlan = () => {
                         // Monthly plans for organizations - Show strikethrough and Limited-Time Offer
                         <div>
                           <p
-                            className={`text-xl sm:text-2xl md:text-3xl font-bold line-through ${
-                              isHighlighted(plan)
+                            className={`text-xl sm:text-2xl md:text-3xl font-bold line-through ${isHighlighted(plan)
                                 ? "text-white/70"
                                 : "text-gray-400"
-                            }`}
+                              }`}
                           >
                             <span className="text-base sm:text-lg md:text-xl">
                               ₹
@@ -529,21 +521,19 @@ const SubscriptionPlan = () => {
                             {staticHigherPrice.toLocaleString("en-IN")}
                           </p>
                           <p
-                            className={`text-xs font-medium mt-1 ${
-                              isHighlighted(plan)
+                            className={`text-xs font-medium mt-1 ${isHighlighted(plan)
                                 ? "text-white/80"
                                 : "text-gray-500"
-                            }`}
+                              }`}
                           >
                             per month
                           </p>
                           <div className="mt-1">
                             <span
-                              className={`inline-block px-3 py-1.5 rounded-md text-xs font-semibold ${
-                                isHighlighted(plan)
+                              className={`inline-block px-3 py-1.5 rounded-md text-xs font-semibold ${isHighlighted(plan)
                                   ? "bg-white/20 text-white"
                                   : "bg-yellow-100 text-yellow-800"
-                              }`}
+                                }`}
                             >
                               Limited-Time Offer: ₹
                               {actualPrice.toLocaleString("en-IN")} / month
@@ -554,11 +544,10 @@ const SubscriptionPlan = () => {
                         // Annual plans for organizations - Show actual price and savings
                         <div>
                           <p
-                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${
-                              isHighlighted(plan)
+                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
                                 ? "text-white"
                                 : "text-[#217989]"
-                            }`}
+                              }`}
                           >
                             <span className="text-base sm:text-lg md:text-xl">
                               ₹
@@ -566,21 +555,19 @@ const SubscriptionPlan = () => {
                             {actualPrice.toLocaleString("en-IN")}
                           </p>
                           <p
-                            className={`text-xs font-medium mt-1 ${
-                              isHighlighted(plan)
+                            className={`text-xs font-medium mt-1 ${isHighlighted(plan)
                                 ? "text-white/80"
                                 : "text-gray-600"
-                            }`}
+                              }`}
                           >
                             per year
                           </p>
                           <div className="mt-1">
                             <span
-                              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                                isHighlighted(plan)
+                              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${isHighlighted(plan)
                                   ? "bg-green-100/20 text-white border border-white/30"
                                   : "bg-green-50 text-green-700 border border-green-200"
-                              }`}
+                                }`}
                             >
                               <span className="text-sm">🔥</span>
                               Save ₹{savingsAmount.toLocaleString("en-IN")}/year
@@ -591,20 +578,18 @@ const SubscriptionPlan = () => {
                         // Enterprise plan - Show custom pricing
                         <div>
                           <p
-                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${
-                              isHighlighted(plan)
+                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
                                 ? "text-white"
                                 : "text-[#217989]"
-                            }`}
+                              }`}
                           >
                             Custom
                           </p>
                           <p
-                            className={`text-xs font-medium mt-1 ${
-                              isHighlighted(plan)
+                            className={`text-xs font-medium mt-1 ${isHighlighted(plan)
                                 ? "text-white/80"
                                 : "text-gray-600"
-                            }`}
+                              }`}
                           >
                             pricing
                           </p>
@@ -613,11 +598,10 @@ const SubscriptionPlan = () => {
                         // Free plan - Show ₹0 forever
                         <div>
                           <p
-                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${
-                              isHighlighted(plan)
+                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
                                 ? "text-white"
                                 : "text-[#217989]"
-                            }`}
+                              }`}
                           >
                             <span className="text-base sm:text-lg md:text-xl">
                               ₹
@@ -625,11 +609,10 @@ const SubscriptionPlan = () => {
                             0
                           </p>
                           <p
-                            className={`text-xs font-medium mt-1 ${
-                              isHighlighted(plan)
+                            className={`text-xs font-medium mt-1 ${isHighlighted(plan)
                                 ? "text-white/80"
                                 : "text-gray-600"
-                            }`}
+                              }`}
                           >
                             forever
                           </p>
@@ -638,11 +621,10 @@ const SubscriptionPlan = () => {
                         // Individual annual plans - Show price with savings
                         <div>
                           <p
-                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${
-                              isHighlighted(plan)
+                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
                                 ? "text-white"
                                 : "text-[#217989]"
-                            }`}
+                              }`}
                           >
                             <span className="text-base sm:text-lg md:text-xl">
                               ₹
@@ -650,21 +632,19 @@ const SubscriptionPlan = () => {
                             {actualPrice.toLocaleString("en-IN")}
                           </p>
                           <p
-                            className={`text-xs font-medium mt-1 ${
-                              isHighlighted(plan)
+                            className={`text-xs font-medium mt-1 ${isHighlighted(plan)
                                 ? "text-white/80"
                                 : "text-gray-600"
-                            }`}
+                              }`}
                           >
                             per year
                           </p>
                           <div className="mt-1">
                             <span
-                              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                                isHighlighted(plan)
+                              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${isHighlighted(plan)
                                   ? "bg-green-100/20 text-white border border-white/30"
                                   : "bg-green-50 text-green-700 border border-green-200"
-                              }`}
+                                }`}
                             >
                               Save ₹{savingsAmount.toLocaleString("en-IN")}/year
                             </span>
@@ -674,11 +654,10 @@ const SubscriptionPlan = () => {
                         // Regular pricing for individuals or other cases
                         <div>
                           <p
-                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${
-                              isHighlighted(plan)
+                            className={`text-xl sm:text-2xl md:text-3xl font-bold ${isHighlighted(plan)
                                 ? "text-white"
                                 : "text-[#217989]"
-                            }`}
+                              }`}
                           >
                             <span className="text-base sm:text-lg md:text-xl">
                               ₹
@@ -701,17 +680,15 @@ const SubscriptionPlan = () => {
                           : () => !isEnterprise && submitPlans(plan)
                       }
                       className={`w-full font-semibold py-2.5 mt-auto rounded-lg text-sm
-                ${
-                  isHighlighted(plan)
-                    ? "bg-white text-custom-blue hover:text-custom-blue "
-                    : "text-white bg-custom-blue"
-                }
-                ${
-                  subscriptionData.subscriptionPlanId === plan.planId &&
-                  subscriptionData.status === "active"
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
+                ${isHighlighted(plan)
+                          ? "bg-white text-custom-blue hover:text-custom-blue "
+                          : "text-white bg-custom-blue"
+                        }
+                ${subscriptionData.subscriptionPlanId === plan.planId &&
+                          subscriptionData.status === "active"
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                        }`}
                       disabled={
                         subscriptionData.subscriptionPlanId === plan.planId &&
                         subscriptionData.status === "active"
