@@ -102,6 +102,14 @@ export function MeetingContainer({
   const { useRaisedHandParticipants, raisedHandsParticipants } = useMeetingAppContext();
   const bottomBarHeight = 60;
 
+  // Track window width for responsive layouts
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // State for active sidebar item
   const [activeItem, setActiveItem] = useState(null);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
@@ -119,8 +127,28 @@ export function MeetingContainer({
     }
   }, [sideBarMode]);
 
-  // Function to get sidebar width based on mode
+  // Function to get sidebar width based on mode and screen size
   const getSidebarWidth = (mode) => {
+    // Mobile: full width overlay
+    if (windowWidth < 640) return "100%";
+    // Tablet: larger panels
+    if (windowWidth < 1024) {
+      switch (mode) {
+        case "INSTRUCTIONS":
+        case "CANDIDATE":
+        case "POSITION":
+        case "FEEDBACK":
+        case "INTERVIEWACTIONS":
+        case "QUESTIONBANK":
+          return "60%";
+        case "CHAT":
+        case "PARTICIPANTS":
+          return "40%";
+        default:
+          return "40%";
+      }
+    }
+    // Desktop
     switch (mode) {
       case "INSTRUCTIONS":
       case "CANDIDATE":
@@ -559,17 +587,20 @@ export function MeetingContainer({
                   )}
                   <div className="flex-1 overflow-hidden">
                     {isPresenting ? (
-                      sideBarMode ? (
-                        /* ===== SIDEBAR OPEN: Participants TOP strip + Screen below ===== */
+                      /* ===== SCREEN SHARE LAYOUT - Responsive ===== */
+                      (sideBarMode || windowWidth < 1024) ? (
+                        /* COLUMN LAYOUT: Mobile/Tablet OR Sidebar open
+                           - Participants as horizontal strip at TOP
+                           - Screen share fills remaining space below */
                         <div className="flex flex-col h-full">
-                          {/* Horizontal participant strip at top */}
-                          <div className="h-28 bg-gray-800 border-b border-gray-600 flex flex-row gap-2 overflow-x-auto p-2 flex-shrink-0">
+                          {/* Horizontal participant strip at top - responsive height */}
+                          <div className={`${windowWidth < 640 ? 'h-20' : windowWidth < 1024 ? 'h-24' : 'h-28'} bg-gray-800 border-b border-gray-600 flex flex-row gap-1.5 sm:gap-2 overflow-x-auto p-1.5 sm:p-2 flex-shrink-0`}>
                             {Array.from(uniqueParticipants).map(
                               (participantId) => (
                                 <div
                                   key={`pip-top-${participantId}`}
-                                  className="relative flex-shrink-0 h-full rounded-lg overflow-hidden"
-                                  style={{ width: "180px" }}
+                                  className="relative flex-shrink-0 h-full rounded-md sm:rounded-lg overflow-hidden"
+                                  style={{ width: windowWidth < 640 ? "120px" : windowWidth < 1024 ? "150px" : "180px" }}
                                 >
                                   <ParticipantView participantId={participantId} />
                                   <ParticipantMicStream participantId={participantId} />
@@ -583,20 +614,22 @@ export function MeetingContainer({
                           </div>
                         </div>
                       ) : (
-                        /* ===== NO SIDEBAR: Screen LEFT + Participants RIGHT column ===== */
+                        /* ROW LAYOUT: Desktop without sidebar
+                           - Screen share LEFT (flex-1)
+                           - Participants stacked vertically RIGHT */
                         <div className="flex flex-row h-full">
-                          {/* Screen share — takes most of the width */}
+                          {/* Screen share — takes most width */}
                           <div className="flex-1 relative min-w-0">
                             <PresenterView height={"100%"} />
                           </div>
-                          {/* Participants stacked vertically on the right */}
-                          <div className="w-52 bg-gray-800 border-l border-gray-600 flex flex-col gap-2 overflow-y-auto p-2 flex-shrink-0">
+                          {/* Participants on the right — responsive width */}
+                          <div className={`${windowWidth >= 1536 ? 'w-64' : 'w-52'} bg-gray-800 border-l border-gray-600 flex flex-col gap-2 overflow-y-auto p-2 flex-shrink-0`}>
                             {Array.from(uniqueParticipants).map(
                               (participantId) => (
                                 <div
                                   key={`pip-right-${participantId}`}
                                   className="relative flex-shrink-0 rounded-lg overflow-hidden"
-                                  style={{ height: "120px" }}
+                                  style={{ height: windowWidth >= 1536 ? "140px" : "120px" }}
                                 >
                                   <ParticipantView participantId={participantId} />
                                   <ParticipantMicStream participantId={participantId} />
@@ -607,22 +640,35 @@ export function MeetingContainer({
                         </div>
                       )
                     ) : (
+                      /* ===== NORMAL (NO SCREEN SHARE) - Responsive Grid ===== */
                       <div
                         className="grid h-full w-full"
                         style={{
-                          gap: '4px',
+                          gap: windowWidth < 640 ? '2px' : '4px',
                           gridTemplateColumns:
                             uniqueParticipants.size === 1
                               ? "1fr"
                               : uniqueParticipants.size === 2
-                                ? "1fr 1fr"
-                                : "1fr 1fr 1fr",
+                                ? windowWidth < 640 ? "1fr" : "1fr 1fr"
+                                : windowWidth < 640
+                                  ? "1fr"
+                                  : windowWidth < 1024
+                                    ? "1fr 1fr"
+                                    : "1fr 1fr 1fr",
                           gridTemplateRows:
-                            uniqueParticipants.size <= 3
+                            uniqueParticipants.size <= 1
                               ? "1fr"
-                              : uniqueParticipants.size <= 6
-                                ? "1fr 1fr"
-                                : "1fr 1fr 1fr",
+                              : windowWidth < 640
+                                ? uniqueParticipants.size <= 2
+                                  ? "1fr 1fr"
+                                  : uniqueParticipants.size <= 4
+                                    ? "1fr 1fr 1fr 1fr"
+                                    : "1fr 1fr 1fr 1fr 1fr 1fr"
+                                : uniqueParticipants.size <= 3
+                                  ? "1fr"
+                                  : uniqueParticipants.size <= 6
+                                    ? "1fr 1fr"
+                                    : "1fr 1fr 1fr",
                         }}
                       >
                         {Array.from(uniqueParticipants).map((participantId) => (
@@ -805,6 +851,7 @@ export function MeetingContainer({
             bottomBarHeight={bottomBarHeight}
             setIsMeetingLeft={setIsMeetingLeft}
             isSchedule={isSchedule}
+            isInterviewer={isInterviewer}
             isMockInterview={isMockInterview}
             isCandidate={isCandidate}
           />

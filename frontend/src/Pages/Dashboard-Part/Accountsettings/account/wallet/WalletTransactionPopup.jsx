@@ -461,7 +461,7 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
                   <span className="text-sm font-medium text-gray-700">Date & Time</span>
                 </div>
                 <span className="text-sm font-semibold text-gray-900">
-                  {new Date(transaction?.createdAt || transaction?.createdDate).toLocaleString('en-IN', {
+                  {new Date(transaction?.updatedAt || transaction?.createdAt || transaction?.createdDate).toLocaleString('en-IN', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric',

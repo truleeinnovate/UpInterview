@@ -438,16 +438,20 @@ const Wallet = () => {
             {walletTransactions && walletTransactions.length > 0 ? (
               [...walletTransactions]
                 .sort((a, b) => {
-                  const dateA = a.createdAt
-                    ? new Date(a.createdAt)
-                    : a.createdDate
-                      ? new Date(a.createdDate)
-                      : new Date(0);
-                  const dateB = b.createdAt
-                    ? new Date(b.createdAt)
-                    : b.createdDate
-                      ? new Date(b.createdDate)
-                      : new Date(0);
+                  const dateA = a.updatedAt
+                    ? new Date(a.updatedAt)
+                    : a.createdAt
+                      ? new Date(a.createdAt)
+                      : a.createdDate
+                        ? new Date(a.createdDate)
+                        : new Date(0);
+                  const dateB = b.updatedAt
+                    ? new Date(b.updatedAt)
+                    : b.createdAt
+                      ? new Date(b.createdAt)
+                      : b.createdDate
+                        ? new Date(b.createdDate)
+                        : new Date(0);
                   return dateB - dateA; // Sort in descending order (newest first)
                 })
                 .slice(0, 10)
@@ -523,23 +527,15 @@ const Wallet = () => {
                           )}
                         </div>
                         <span className="text-xs text-gray-500">
-                          {transaction.createdAt
-                            ? new Date(transaction.createdAt).toLocaleString('en-IN', {
+                          {(transaction.updatedAt || transaction.createdAt || transaction.createdDate)
+                            ? new Date(transaction.updatedAt || transaction.createdAt || transaction.createdDate).toLocaleString('en-IN', {
                               day: '2-digit',
                               month: 'short',
                               year: 'numeric',
                               hour: '2-digit',
                               minute: '2-digit'
                             })
-                            : transaction.createdDate
-                              ? new Date(transaction.createdDate).toLocaleString('en-IN', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })
-                              : "N/A"}
+                            : "N/A"}
                         </span>
                       </div>
 
@@ -793,11 +789,9 @@ const Wallet = () => {
                           )}
                         </div>
                         <span className="text-xs text-gray-500">
-                          {transaction.createdAt
-                            ? new Date(transaction.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                            : transaction.createdDate
-                              ? new Date(transaction.createdDate).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                              : "N/A"}
+                          {(transaction.updatedAt || transaction.createdAt || transaction.createdDate)
+                            ? new Date(transaction.updatedAt || transaction.createdAt || transaction.createdDate).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                            : "N/A"}
                         </span>
                       </div>
 
