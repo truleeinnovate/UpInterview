@@ -568,7 +568,7 @@ const CombinedNavbar = React.memo(() => {
   );
 
   const profileDropdownContent = (
-    <div className="absolute top-12 border w-48 text-sm rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 right-0 -mr-2 z-30">
+    <div className="absolute top-12 border pb-2 w-48 text-sm rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 right-0 -mr-2 z-30">
       <div className="p-2 flex items-center">
         <p
           className="font-medium text-custom-blue"
@@ -616,7 +616,7 @@ const CombinedNavbar = React.memo(() => {
         </button>
       </div>
       {(checkPermission("Billing") || checkPermission("Wallet")) && (
-        <div className="px-2 py-2 border-t">
+        <div className="px-2 py-2 mt-1 border-t">
           {[
             ...(checkPermission("Billing")
               ? [
