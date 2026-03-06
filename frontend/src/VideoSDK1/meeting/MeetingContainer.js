@@ -150,7 +150,6 @@ export function MeetingContainer({
     }
     // Desktop
     switch (mode) {
-      case "INSTRUCTIONS":
       case "CANDIDATE":
       case "POSITION":
       case "FEEDBACK":
@@ -158,6 +157,7 @@ export function MeetingContainer({
       case "QUESTIONBANK":
         return "50%";
       case "CHAT":
+         case "INSTRUCTIONS":
       case "PARTICIPANTS":
         return "25%";
       default:
@@ -463,7 +463,7 @@ export function MeetingContainer({
         label: "Feedback Form",
         tooltip: "Feedback Form",
         icon: <ClipboardList className="w-4 h-4" />,
-        show: isInterviewer || isSchedule,
+        show: isInterviewer , // isSchedule
         // show: isCandidate || isInterviewer || isSchedule,
       },
       {

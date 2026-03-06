@@ -1644,7 +1644,7 @@ const getInterviewDataforOrg = async (req, res) => {
     let interview = await Interview.findById(finalInterviewId)
       .populate({
         path: "candidateId",
-        select: "FirstName LastName Email ImageData",
+        select: "FirstName LastName Email ImageData certifications",
       })
       .populate({
         path: "positionId",

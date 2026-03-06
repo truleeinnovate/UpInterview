@@ -1838,11 +1838,20 @@ const updateInterviewRoundFeedbackStatus = async ({
     status: "submitted",
   });
 
+
+
   // 3. Update round status
   const newStatus =
     submittedCount === interviewerIds.length
       ? "FeedbackSubmitted"
       : "FeedbackPending";
+
+        //  if feedback already submitted means no need to update
+    if (round.status === newStatus) {
+      return { message: "Status already correct - skipping update" };
+    }
+
+
 
   // const RoundModel = isMock
   //   ? MockInterviewRound
