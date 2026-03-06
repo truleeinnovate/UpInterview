@@ -2487,9 +2487,26 @@ router.get(
             // const feedbackLimitNum = parseInt(feedbackLimit);
             // const skip = (feedbackPageNum - 1) * feedbackLimitNum;
             // Ensure page is at least 1 and limit is positive
-            const feedbackPageNum = Math.max(1, parseInt(feedbackPage) || 1);
-            const feedbackLimitNum = Math.max(1, parseInt(feedbackLimit) || 10);
-            const skip = (feedbackPageNum - 1) * feedbackLimitNum;
+            const feedbackPageNum =  parseInt(feedbackPage) || 1;
+            // const feedbackLimitNum = Math.max(1, parseInt(feedbackLimit) || 10);
+            // const skip = (feedbackPageNum - 1) * feedbackLimitNum;
+
+       
+               // Parse candidateLimit - handle "infinity" or other non-numeric values
+          let feedbackLimitNum;
+          if (
+            feedbackLimit === "infinity" ||
+            feedbackLimit === "Infinity" ||
+            feedbackLimit === "INFINITY"
+          ) {
+            feedbackLimitNum = 0; // 0 means no limit in MongoDB
+          } else {
+            feedbackLimitNum = parseInt(feedbackLimit) || 10;
+          }
+
+          // const skip =
+          //   (feedbackPageNum - 1) * (feedbackLimitNum || 0);
+          const skip = Math.max(0, (feedbackPageNum - 1) * feedbackLimitNum);
 
 
             // -------------------------------------------------------
@@ -2558,6 +2575,10 @@ router.get(
             const feedbackRoundIds = feedbackInterviewRounds.map((r) => r._id);
             const feedbackMockRoundIds = feedbackMockInterviewRounds.map((r) => r._id);
 
+
+  //           const statusFilter = status
+  // ? { status: { $in: Array.isArray(status) ? status : [status] } }
+  // : { status: "submitted" };
             // -------------------------------------------------------
             // 3️⃣ BUILD PROPER BASE QUERY WITH ALL FILTERS
             // -------------------------------------------------------
@@ -2576,7 +2597,6 @@ router.get(
             ) {
               baseQuery.$or.push({ ownerId: userId });
             }
-
             // -------------------------------------------------------
             // 4️⃣ SEARCH FILTER (PRESERVE EXISTING FUNCTIONALITY)
             // -------------------------------------------------------

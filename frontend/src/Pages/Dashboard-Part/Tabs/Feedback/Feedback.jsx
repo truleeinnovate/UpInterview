@@ -137,13 +137,44 @@ const Feedback = () => {
   // Use data from the hook
   // const feedbacks = feedbacksData || [];
   // Extract data from response
-  const feedbacks = feedbacksResponse?.feedbacks || [];
+  // const feedbacks = feedbacksResponse?.feedbacks || [];
+
+const allFeedbacks = feedbacksResponse?.feedbacks || [];
+
+const feedbacks = allFeedbacks.filter((row) => {
+  // Case 1: feedback is submitted → include
+  if (row?.status?.toLowerCase() === "submitted" && row?.ownerId?._id !== tokenPayload.userId) {
+    console.log("row submitted", row?.ownerId?._id !== tokenPayload.userId);
+    return true;
+
+  }
+
+  // Case 2: owner matches → include all
+  if (row?.ownerId?._id === tokenPayload.userId) {
+      console.log("row owner", row?.ownerId?._id === tokenPayload.userId);
+    return true;
+  }
+
+  // Otherwise, exclude
+  return false;
+});
+
+console.log("feedbacks", feedbacks);
+
+
   const paginationInfo = feedbacksResponse?.pagination || {
     currentPage: 0,
     totalPages: 1,
     totalItems: 0,
     itemsPerPage: 10,
   };
+
+
+  // const isSubmittedAndOwner = row.status === "Submitted" && row?.ownerId?._id === tokenPayload.userId;
+
+
+
+
   const loading = feedbacksLoading;
   const error = feedbacksError;
   // Removed modal-related state variables as modal is now in separate component

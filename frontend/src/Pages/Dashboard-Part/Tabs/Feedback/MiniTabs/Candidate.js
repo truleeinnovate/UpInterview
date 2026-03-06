@@ -80,8 +80,10 @@ const CandidateMiniTab = ({
       mockInterview
       : feedback.candidateId || {};
 
+      console.log("candidateData",candidateData)
+
   const safeSkills = candidateData?.skills ?? [];
-  const safeCertificates = candidateData?.certificates ?? [];
+  const safeCertificates = candidateData?.certifications ?? [];
   const safeProjects = candidateData?.projects ?? [];
 
   const positionData = !isMockInterview
@@ -306,18 +308,19 @@ const CandidateMiniTab = ({
         {expandedSections?.certificates && safeCertificates?.length === 0 ? (
           <p className="text-sm text-gray-500 mt-4">No certificates found.</p>
         ) : (
-          expandedSections?.certificates && (
-            <div className="mt-4 space-y-3">
-              {safeCertificates?.map((cert, index) => (
-                <div key={index} className="p-3 bg-gray-50 rounded-md">
-                  <p className="font-medium text-gray-900">{cert?.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {cert?.issuer} • {new Date(cert?.date).getFullYear()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )
+         expandedSections?.certificates && (
+  <div className="mt-4 space-y-3">
+    {safeCertificates?.map((cert, index) => (
+      <div key={index} className="p-3 bg-gray-50 rounded-md">
+        <p className="font-medium text-gray-900">{cert?.name}</p>
+
+        <p className="text-sm text-gray-500">
+          {cert?.issuingFrom} • {cert?.issuingYear}
+        </p>
+      </div>
+    ))}
+  </div>
+)
         )}
       </div>
 
