@@ -681,6 +681,53 @@ const ReportDetail = () => {
   // THIS IS THE KEY — track last fetched reportId
   const lastFetchedId = useRef(null);
 
+  // DYNAMIC KPI FILTERING LOGIC
+  const visibleKpis = React.useMemo(() => {
+    // 1. Identify status-related filter keys dynamically
+    const statusFilterKeys = (availableFilters || [])
+      .filter((f) =>
+        f.key?.toLowerCase().includes("status") ||
+        f.label?.toLowerCase().includes("status")
+      )
+      .map((f) => f.key);
+
+    // 2. Extract selected status values
+    const selectedValues = [];
+    statusFilterKeys.forEach((key) => {
+      const val = filters[key];
+      if (!val || val === "all") return;
+      if (Array.isArray(val)) {
+        selectedValues.push(...val.filter((v) => v && v !== "all"));
+      } else {
+        selectedValues.push(val);
+      }
+    });
+
+    // 3. If no status filters are active, show all KPIs
+    if (selectedValues.length === 0) return kpis;
+
+    // 4. Match KPIs to selected status values
+    return kpis.filter((kpi) => {
+      const label = kpi.label?.toLowerCase() || "";
+      const key = kpi.key?.toLowerCase() || "";
+
+      return selectedValues.some((v) => {
+        if (typeof v !== "string") return false;
+        const sVal = v.toLowerCase();
+
+        // Basic matching
+        if (label.includes(sVal) || key.includes(sVal)) return true;
+
+        // Special case mapping
+        if (sVal === "opened" && label.includes("open")) return true;
+        if (sVal === "hold" && label.includes("on hold")) return true;
+        if (sVal === "onhold" && label.includes("on hold")) return true;
+
+        return false;
+      });
+    });
+  }, [kpis, filters, availableFilters]);
+
   // useEffect(() => {
   //   // If no reportId → do nothing
   //   if (!reportId) return;
@@ -829,6 +876,7 @@ const ReportDetail = () => {
         kpis: apiKpis = [],
         charts: apiCharts = [],
       } = response;
+      console.log("Full Report data:", data);
 
       setColumns(
         apiColumns.map((col, i) => ({
@@ -1304,15 +1352,15 @@ const ReportDetail = () => {
             {kpis.length > 0 && (
               <div className="mb-10">
                 <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
-                  {kpis.map((kpi) => (
-                      <KPICard
-                        key={kpi.key}
-                        kpi={kpi}
-                        value={aggregates[kpi.key]}
-                        title={kpi.label}
-                        icon={getLucideIcon(kpi.icon)}
-                      />
-                    ))}
+                  {visibleKpis.map((kpi) => (
+                    <KPICard
+                      key={kpi.key}
+                      kpi={kpi}
+                      value={aggregates[kpi.key]}
+                      title={kpi.label}
+                      icon={getLucideIcon(kpi.icon)}
+                    />
+                  ))}
                 </div>
               </div>
             )}

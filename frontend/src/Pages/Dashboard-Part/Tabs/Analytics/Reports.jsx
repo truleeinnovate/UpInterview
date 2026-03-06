@@ -525,7 +525,7 @@
 // Reports.jsx
 // src/pages/Reports/Reports.jsx
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FileText,
   Users,
@@ -549,7 +549,10 @@ import ShareReportPopup from "./ShareReportPopup.jsx";
 
 const Reports = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryParam = searchParams.get("category");
+
+  // const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
@@ -562,6 +565,38 @@ const Reports = () => {
 
   const [loadingId, setLoadingId] = useState(null);
   const { data: usageData = [], isLoading: usageLoading } = useReportUsage();
+
+  // Icon mapping
+  const getIconComponent = (iconName) => {
+    const map = {
+      users: Users,
+      building: Building,
+      briefcase: Briefcase,
+      filter: Filter,
+      "trending-up": TrendingUp,
+      folder: FileText,
+      chart: TrendingUp,
+    };
+    return map[iconName] || FileText;
+  };
+
+  // DYNAMIC TABS: All + Real Categories from DB
+  const tabs = React.useMemo(() => [
+    { id: "all", name: "All Reports", icon: FileText },
+    ...(data?.categories || []).map((cat) => ({
+      id: cat.id, // ← MongoDB _id as string
+      name: cat.label,
+      icon: getIconComponent(cat.icon || "folder"),
+    })),
+  ], [data]);
+
+  // Find the active tab ID based on the category name in URL, default to "all"
+  const activeTab = React.useMemo(() => {
+    if (!categoryParam || categoryParam === "all") return "all";
+    // Check if categoryParam matches a tab name or id (fallback)
+    const found = tabs.find((t) => t.name === categoryParam || t.id === categoryParam);
+    return found ? found.id : "all";
+  }, [categoryParam, tabs]);
 
   // Create a map: templateId → usage info
   const usageMap = React.useMemo(() => {
@@ -585,29 +620,6 @@ const Reports = () => {
       setAllTemplates(data.templates);
     }
   }, [data]);
-  // Icon mapping
-  const getIconComponent = (iconName) => {
-    const map = {
-      users: Users,
-      building: Building,
-      briefcase: Briefcase,
-      filter: Filter,
-      "trending-up": TrendingUp,
-      folder: FileText,
-      chart: TrendingUp,
-    };
-    return map[iconName] || FileText;
-  };
-
-  // DYNAMIC TABS: All + Real Categories from DB
-  const tabs = [
-    { id: "all", name: "All Reports", icon: FileText },
-    ...(data?.categories || []).map((cat) => ({
-      id: cat.id, // ← MongoDB _id as string
-      name: cat.label,
-      icon: getIconComponent(cat.icon || "folder"),
-    })),
-  ];
 
   // FILTER: Category + Search
   const filteredTemplates = allTemplates.filter((template) => {
@@ -801,14 +813,18 @@ const Reports = () => {
                 <button
                   key={tab.id}
                   onClick={() => {
-                    setActiveTab(tab.id);
+                    if (tab.id === "all") {
+                      searchParams.delete("category");
+                    } else {
+                      searchParams.set("category", tab.name);
+                    }
+                    setSearchParams(searchParams);
                     setCurrentPage(0);
                   }}
-                  className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? "border-custom-blue text-custom-blue"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                  className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                    ? "border-custom-blue text-custom-blue"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
                 >
                   <Icon className="w-5 h-5" />
                   {tab.name}
