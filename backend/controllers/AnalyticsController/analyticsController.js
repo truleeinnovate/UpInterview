@@ -22,292 +22,8 @@ const RolesPermissionObject = require('../../models/rolesPermissionObject');
 const { MockInterview } = require("../../models/Mockinterview/mockinterview");
 const { MockInterviewRound } = require("../../models/Mockinterview/mockinterviewRound");
 const FeedbackModel = require("../../models/feedback");
+const { TenantCompany } = require("../../models/TenantCompany/TenantCompany.js");
 
-// const generateReport = async (req, res) => {
-//   try {
-//     console.log("========== [REPORT DEBUG START] ==========\n");
-
-//     const { actingAsUserId,
-//       actingAsTenantId, } = res.locals.auth;
-//     let userId = actingAsUserId;
-//     let tenantId = actingAsTenantId;
-//     const {
-//       effectivePermissions,
-//       inheritedRoleIds,
-//       effectivePermissions_RoleType,
-//       effectivePermissions_RoleName,
-//     } = res.locals;
-//     const { templateId } = req.params;
-
-//     console.log("[DEBUG] tenantId:", tenantId);
-//     console.log("[DEBUG] userId:", userId);
-//     console.log("[DEBUG] templateId:", templateId);
-
-//     // 1. Fetch Template
-//     const template = await ReportTemplate.findOne({
-//       $or: [
-//         { _id: templateId, tenantId: null, isSystemTemplate: true },
-//         { _id: templateId, tenantId },
-//       ],
-//     }).lean();
-
-//     console.log("[DEBUG] Fetched Template:", template);
-
-//     if (!template) {
-//       return res.status(404).json({ success: false, message: "Report template not found" });
-//     }
-
-//     const { dataSource, columns: columnConfig, filters: filterConfig } = template.configuration || {};
-
-//     console.log("[DEBUG] Template configuration:", template.configuration);
-
-//     if (!dataSource?.collections?.length) {
-//       return res.status(400).json({ success: false, message: "No data source defined" });
-//     }
-
-//     // 2. Resolve Model
-//     const collectionName = dataSource.collections[0].toLowerCase();
-
-//     const ModelMap = {
-//       candidates: Candidate,
-//       positions: Position,
-//       interviews: Interview,
-//       interviewrounds: InterviewRounds,
-//       assessments: Assessment,
-//     };
-//     const Model = ModelMap[collectionName];
-
-//     console.log("[DEBUG] Collection Name:", collectionName);
-//     console.log("[DEBUG] Resolved Model:", Model?.modelName);
-
-//     if (!Model) {
-//       return res.status(400).json({ success: false, message: `Unsupported collection: ${collectionName}` });
-//     }
-
-//     // 3. Saved Configs
-//     const filterPreset = tenantId ? await FilterPreset.findOne({ templateId, tenantId, isDefault: true }).lean() : null;
-//     const savedColumnConfig = tenantId ? await ColumnConfiguration.findOne({ templateId, tenantId }).lean() : null;
-
-//     console.log("[DEBUG] Filter Preset:", filterPreset);
-//     console.log("[DEBUG] Saved Column Configuration:", savedColumnConfig);
-
-//     // 4. Permission Query
-//     const permissionQuery = await buildPermissionQuery(
-//       userId,
-//       tenantId,
-//       effectivePermissions,
-//       inheritedRoleIds,
-//       effectivePermissions_RoleType,
-//       effectivePermissions_RoleName
-//     );
-//     console.log("[DEBUG] Final Permission Query:", permissionQuery);
-
-//     // 5. Build Columns
-//     const lockedColumns = (columnConfig?.lockedColumns || []).map(col => ({
-//       key: col.key, label: col.label, width: col.width || "180px", visible: true, locked: true, order: col.order ?? 0,
-//     }));
-
-//     console.log("[DEBUG] Locked Columns:", lockedColumns);
-
-//     let finalColumns = [...lockedColumns];
-
-//     if (savedColumnConfig?.selectedColumns?.length > 0) {
-//       const userMap = new Map();
-//       savedColumnConfig.selectedColumns.forEach(col => {
-//         if (col.key && !lockedColumns.some(l => l.key === col.key)) {
-//           userMap.set(col.key, {
-//             key: col.key,
-//             label: col.label || col.key,
-//             width: col.width || "180px",
-//             visible: col.visible !== false,
-//             locked: false,
-//             order: col.order ?? 999,
-//           });
-//         }
-//       });
-//       finalColumns.push(...userMap.values());
-//       console.log("[DEBUG] Columns from Saved User Settings:", [...userMap.values()]);
-//     } else {
-//       (columnConfig?.default || []).forEach(col => {
-//         if (!finalColumns.some(c => c.key === col.key)) {
-//           finalColumns.push({
-//             key: col.key,
-//             label: col.label,
-//             width: col.width || "160px",
-//             visible: true,
-//             locked: false,
-//             order: col.order ?? 999
-//           });
-//         }
-//       });
-//       console.log("[DEBUG] Columns from Default Template:", columnConfig?.default || []);
-//     }
-
-//     finalColumns.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
-//     const responseColumns = finalColumns.map(({ order, ...col }) => col);
-
-//     console.log("[DEBUG] Final Columns After Sorting:", responseColumns);
-
-//     // 6. Available Columns
-//     const availableColumns = [
-//       ...lockedColumns.map(col => ({
-//         key: col.key,
-//         label: col.label,
-//         type: columnConfig?.available?.find(a => a.key === col.key)?.type || "text",
-//         locked: true,
-//         selected: true,
-//       })),
-//       ...(columnConfig?.available || []).map(col => {
-//         const isVisible = responseColumns.some(c => c.key === col.key && c.visible);
-//         return {
-//           key: col.key,
-//           label: col.label || col.key,
-//           type: col.type || "text",
-//           locked: false,
-//           selected: isVisible,
-//         };
-//       }),
-//     ];
-//     const uniqueAvailableColumns = Array.from(new Map(availableColumns.map(c => [c.key, c])).values());
-
-//     console.log("[DEBUG] Available Columns:", uniqueAvailableColumns);
-
-//     // 7. Active Filters
-//     let activeFilters = {};
-
-//     if (filterPreset?.filters?.length > 0) {
-//       filterPreset.filters.forEach(f => { activeFilters[f.key] = f.value; });
-//     } else if (filterConfig?.default) {
-//       activeFilters = { ...filterConfig.default };
-//     }
-
-//     console.log("[DEBUG] Active Filters:", activeFilters);
-
-//     // 8. Final Query
-//     let filterQuery = { ...permissionQuery };
-
-//     // Apply date filters
-//     if (activeFilters.dateRange && activeFilters.dateRange !== "all") {
-//       const now = new Date();
-//       let startDate;
-
-//       switch (activeFilters.dateRange) {
-//         case "last7days": startDate = new Date(now.setDate(now.getDate() - 7)); break;
-//         case "last30days": startDate = new Date(now.setDate(now.getDate() - 30)); break;
-//         case "last90days": startDate = new Date(now.setDate(now.getDate() - 90)); break;
-//         case "custom":
-//           if (activeFilters.customStartDate) {
-//             startDate = new Date(activeFilters.customStartDate);
-//             filterQuery.createdAt = { $gte: startDate };
-//             if (activeFilters.customEndDate) {
-//               filterQuery.createdAt.$lte = new Date(activeFilters.customEndDate);
-//             }
-//           }
-//           break;
-//         default:
-//           startDate = new Date(now.setDate(now.getDate() - 30));
-//       }
-
-//       if (startDate && activeFilters.dateRange !== "custom") {
-//         filterQuery.createdAt = { $gte: startDate };
-//       }
-//     }
-
-//     // Other filters
-//     Object.keys(activeFilters).forEach(key => {
-//       if (["dateRange", "customStartDate", "customEndDate"].includes(key)) return;
-
-//       const value = activeFilters[key];
-//       if (value && value !== "all" && value !== null && value !== undefined) {
-//         filterQuery[key] =
-//           Array.isArray(value) && value.length > 0
-//             ? { $in: value }
-//             : value;
-//       }
-//     });
-
-//     console.log("[DEBUG] Final Filter Query:", filterQuery);
-
-//     // 9. Fetch Data
-//     const projection = responseColumns.reduce(
-//       (acc, col) => ({ ...acc, [col.key]: 1 }),
-//       { _id: 1 }
-//     );
-
-//     console.log("[DEBUG] Projection Used:", projection);
-
-//     const data = await Model.find(filterQuery, projection)
-//       .sort({ createdAt: -1 })
-//       .limit(2000)
-//       .lean();
-
-//     console.log("[DEBUG] Data Count:", data.length);
-//     console.log("[DEBUG] First 3 raw records:", data.slice(0, 3));
-
-//     const mappedData = data.map(d => ({
-//       id: d._id.toString(),
-//       ...d
-//     }));
-
-//     console.log("[DEBUG] First 3 mapped records:", mappedData.slice(0, 3));
-
-//     // 10. selectedFilters
-//     let selectedFilters = filterPreset?.filters?.length > 0
-//       ? filterPreset.filters.map(f => ({
-//         key: f.key,
-//         value: f.value,
-//         label: f.label || String(f.value)
-//       }))
-//       : Object.entries(filterConfig?.default || {})
-//         .map(([key, value]) => {
-// if (value == null || (Array.isArray(value) && value.length === 0)) return null;
-
-//           const def = filterConfig.available?.find(f => f.key === key);
-//           let label = Array.isArray(value) ? value.join(", ") : String(value);
-
-//           if (def?.options) {
-//             label = Array.isArray(value)
-//               ? value.map(v => def.options.find(o => o.value === v)?.label || v)
-//                 .filter(Boolean)
-//                 .join(", ")
-//               : def.options.find(o => o.value === value)?.label || value;
-//           }
-
-//           return { key, value, label };
-//         })
-//         .filter(Boolean);
-
-//     console.log("[DEBUG] Selected Filters:", selectedFilters);
-
-//     // 11. Response
-//     console.log("\n========== [REPORT DEBUG END] ==========\n");
-
-//     res.json({
-//       success: true,
-//       report: {
-//         id: template._id.toString(),
-//         label: template.label,
-//         description: template.description || "",
-//         generatedAt: new Date().toISOString(),
-//         totalRecords: mappedData.length,
-//         source: filterPreset
-//           ? "saved_view"
-//           : savedColumnConfig
-//             ? "saved_columns"
-//             : "template_default",
-//       },
-//       columns: responseColumns,
-//       availableColumns: uniqueAvailableColumns,
-//       data: mappedData,
-//       selectedFilters,
-//       availableFilters: filterConfig?.available || [],
-//     });
-
-//   } catch (error) {
-//     console.error("[ERROR] Generate Report Error:", error);
-//     res.status(500).json({ success: false, message: "Server error", error: error.message });
-//   }
-// };
 
 const generateReport = async (req, res) => {
   try {
@@ -365,7 +81,7 @@ const generateReport = async (req, res) => {
       });
     }
 
-    // 2. FETCH LATEST FILTER PRESET — COSMOS DB SAFE (NO .sort())
+    // 2. FETCH LATEST FILTER PRESET
     let filterPreset = null;
     if (actingAsTenantId) {
       const presets = await FilterPreset.find({
@@ -374,11 +90,10 @@ const generateReport = async (req, res) => {
       }).lean();
 
       if (presets.length > 0) {
-        // Pick latest using JavaScript (safe)
         filterPreset = presets.reduce((latest, current) =>
           new Date(current.updatedAt) > new Date(latest.updatedAt) ? current : latest
         );
-        console.log(`[FILTERS] Using latest saved preset: "${filterPreset.name}"`);
+        console.log(`[FILTERS] Using latest preset: "${filterPreset.name || 'unnamed'}"`);
       } else {
         console.log("[FILTERS] No saved preset → using template defaults");
       }
@@ -463,20 +178,9 @@ const generateReport = async (req, res) => {
     );
 
     // 6. ACTIVE FILTERS
-    let activeFilters = {};
-
-    if (filterPreset?.filters?.length > 0) {
-      const firstFilter = filterPreset.filters[0];
-      if (firstFilter && !firstFilter.key && !firstFilter.value) {
-        activeFilters = { ...firstFilter };
-      } else {
-        activeFilters = Object.fromEntries(
-          filterPreset.filters.map(f => [f.key, f.value])
-        );
-      }
-    } else {
-      activeFilters = { ...(filterConfig?.default || {}) };
-    }
+    let activeFilters = filterPreset?.filters?.length > 0
+      ? Object.fromEntries(filterPreset.filters.map(f => [f.key, f.value]))
+      : { ...(filterConfig?.default || {}) };
 
     // 7. PERMISSIONS
     const permissionQuery = await buildPermissionQuery(
@@ -488,21 +192,15 @@ const generateReport = async (req, res) => {
     );
 
     // 8. FINAL QUERY
-    // 8. FINAL QUERY
-    let finalQuery = {};
-
-    // VIEW SCOPE: "me" = only user's records, "all" = permission query
-    if (activeFilters.viewScope === "me") {
-      finalQuery = {
+    let finalQuery = activeFilters.viewScope === "me"
+      ? {
         $or: [
           { createdBy: actingAsUserId },
           { ownerId: actingAsUserId },
-          { updatedBy: actingAsUserId }
-        ]
-      };
-    } else {
-      finalQuery = { ...permissionQuery }; // full access
-    }
+          { updatedBy: actingAsUserId },
+        ],
+      }
+      : { ...permissionQuery };
 
     // DATE RANGE
     if (activeFilters.dateRange === "custom") {
@@ -525,7 +223,7 @@ const generateReport = async (req, res) => {
     }
 
     // Other filters
-    Object.keys(activeFilters).forEach(key => {
+    Object.keys(activeFilters).forEach((key) => {
       if (["dateRange", "customStartDate", "customEndDate", "viewScope"].includes(key)) return;
       const value = activeFilters[key];
       if (value && value !== "all" && (!Array.isArray(value) || value.length > 0)) {
@@ -533,35 +231,153 @@ const generateReport = async (req, res) => {
       }
     });
 
-    // 9. PROJECTION
+    // 9. PROJECTION — Force include important fields
     const projection = responseColumns.reduce(
-      (acc, col) => ({ ...acc, [col.key]: 1 }),
+      (acc, col) => {
+        if (collectionName === "positions") {
+          acc.minexperience = 1;
+          acc.maxexperience = 1;
+          acc.NoofPositions = 1;
+          acc.companyname = 1;
+          acc.minSalary = 1;
+          acc.maxSalary = 1;
+        }
+        if (collectionName === "interviewrounds") {
+          acc.interviewId = 1;
+          acc.roundTitle = 1;
+          acc.status = 1;
+          acc.interviewMode = 1;
+          acc.interviewerType = 1;
+          acc.roundOutcome = 1;
+          acc.dateTime = 1;
+        }
+        return { ...acc, [col.key]: 1 };
+      },
       { _id: 1, createdAt: 1 }
     );
 
-    // 10. FETCH DATA — NO .sort() ANYWHERE (COSMOS DB SAFE)
+    // 10. FETCH DATA
     let rawData = [];
 
-    if (collectionName === "interviewrounds") {
+    if (collectionName === "positions") {
+      const positions = await Position.find(
+        { ...finalQuery },
+        projection
+      ).lean();
+
+      // Resolve company names
+      const companyIds = positions
+        .filter(p => mongoose.isValidObjectId(p.companyname))
+        .map(p => p.companyname);
+
+      const companyMap = new Map();
+      if (companyIds.length > 0) {
+        const companies = await TenantCompany.find(
+          { _id: { $in: companyIds } },
+          { name: 1 }
+        ).lean();
+        companies.forEach(c => companyMap.set(c._id.toString(), c.name));
+      }
+
+      rawData = positions.map(p => ({
+        ...p,
+        companyname: mongoose.isValidObjectId(p.companyname)
+          ? (companyMap.get(p.companyname.toString()) || "Unknown Company")
+          : (typeof p.companyname === "string" && p.companyname.trim() ? p.companyname.trim() : "—"),
+        minexperience: p.minexperience ?? null,
+        maxexperience: p.maxexperience ?? null,
+        NoofPositions: p.NoofPositions || 1,
+        minSalary: p.minSalary ?? null,
+        maxSalary: p.maxSalary ?? null,
+        status: p.status || "draft",
+      }));
+    }
+    else if (collectionName === "interviewrounds") {
       const interviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
       const interviewIds = interviews.map(i => i._id);
 
-      const rounds = await InterviewRounds.find({ interviewId: { $in: interviewIds }, ...finalQuery }, projection)
+      const rounds = await InterviewRounds.find(
+        { interviewId: { $in: interviewIds }, ...finalQuery },
+        projection
+      )
         .populate({
           path: "interviewId",
-          select: "status interviewCode"
+          select: "interviewCode status interviewType candidateId positionId createdAt",
+          populate: [
+            { path: "candidateId", select: "FirstName LastName" },
+            { path: "positionId", select: "title" }
+          ]
         })
         .lean();
 
-      rawData = rounds.map(r => ({
-        ...r,
-        parentStatus: r.interviewId?.status || "Unknown",
-        interviewCode: r.interviewId?.interviewCode || "Unknown",
-        interviewId: r.interviewId?._id // keep original ID reference
-      }));
+      rawData = rounds.map(r => {
+        const interview = r.interviewId || {};
+        const candidate = interview.candidateId || {};
+        const position = interview.positionId || {};
+
+        return {
+          ...r,
+          interviewCode: interview.interviewCode || "—",
+          parentStatus: interview.status || "Unknown",
+          interviewType: interview.interviewType || "regular",
+          candidateName: candidate ? `${candidate.FirstName || ''} ${candidate.LastName || ''}`.trim() || "Unknown" : "—",
+          positionTitle: position.title || "—",
+          roundTitle: r.roundTitle || "Untitled Round",
+          status: r.status || "Draft",
+          interviewerType: r.interviewerType || "Unknown",
+          interviewMode: r.interviewMode || "—",
+          roundOutcome: r.roundOutcome || "—",
+          roundDate: r.dateTime ? new Date(r.dateTime).toISOString().split('T')[0] : null,
+          createdAt: r.createdAt || interview.createdAt,
+        };
+      });
     }
-    else if (collectionName === "interviews") {
-      rawData = await Interview.find({ ...permissionQuery, ...finalQuery }, projection).lean();
+    else if (collectionName === "feedback") {
+      const regularInterviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
+      const regularIds = regularInterviews.map(i => i._id);
+
+      const regularRounds = await InterviewRounds.find({ interviewId: { $in: regularIds } }, { _id: 1 }).lean();
+      const roundIds = regularRounds.map(r => r._id);
+
+      rawData = await FeedbackModel.find(
+        {
+          $or: [
+            { interviewRoundId: { $in: roundIds } },
+            finalQuery
+          ]
+        },
+        projection
+      )
+        .populate("candidateId", "FirstName LastName Email")
+        .populate({
+          path: "positionId",
+          select: "title",
+          populate: { path: "companyname", select: "name" }
+        })
+        .populate({
+          path: "interviewRoundId",
+          select: "roundTitle interviewerType dateTime interviewId",
+          populate: {
+            path: "interviewId",
+            select: "interviewType status interviewCode"
+          }
+        })
+        .populate("interviewerId", "firstName lastName")
+        .lean();
+
+      rawData = rawData.map(fb => ({
+        ...fb,
+        candidateName: fb.candidateId ? `${fb.candidateId.FirstName || ''} ${fb.candidateId.LastName || ''}`.trim() : 'Unknown',
+        positionTitle: fb.positionId?.title || 'Unknown',
+        companyName: fb.positionId?.companyname?.name || '—',
+        roundTitle: fb.interviewRoundId?.roundTitle || 'Unknown',
+        interviewerName: fb.interviewerId ? `${fb.interviewerId.firstName || ''} ${fb.interviewerId.lastName || ''}`.trim() : 'Unknown',
+        overallRating: fb.overallImpression?.overallRating || 0,
+        recommendation: fb.overallImpression?.recommendation || 'Maybe',
+        interviewType: fb.interviewRoundId?.interviewId?.interviewType || 'Unknown',
+        interviewCode: fb.interviewRoundId?.interviewId?.interviewCode || '—',
+        interviewStatus: fb.interviewRoundId?.interviewId?.status || 'Unknown',
+      }));
     }
     else if (collectionName === "scheduledassessments") {
       const scheduled = await ScheduledAssessment.find(
@@ -607,42 +423,6 @@ const generateReport = async (req, res) => {
         });
       }
     }
-    else if (collectionName === "feedback") {
-      // 1. Get regular interview based on permission query
-      const regularInterviews = await Interview.find(permissionQuery, { _id: 1 }).lean();
-      const regularIds = regularInterviews.map(i => i._id);
-
-      // 2. Get all rounds for these interviews
-      const regularRounds = await InterviewRounds.find({ interviewId: { $in: regularIds } }, { _id: 1 }).lean();
-      const roundIds = regularRounds.map(r => r._id);
-
-      // 3. Find feedback matching these rounds OR the general query
-      rawData = await FeedbackModel.find(
-        {
-          $or: [
-            { interviewRoundId: { $in: roundIds } },
-            finalQuery
-          ]
-        },
-        projection
-      )
-        .populate("candidateId", "FirstName LastName Email")
-        .populate("positionId", "title")
-        .populate("interviewRoundId", "roundTitle")
-        .populate("interviewerId", "firstName lastName")
-        .lean();
-
-      rawData = rawData.map(fb => ({
-        ...fb,
-        candidateName: fb.candidateId ? `${fb.candidateId.FirstName || ''} ${fb.candidateId.LastName || ''}`.trim() : 'Unknown',
-        positionTitle: fb.positionId?.title || 'Unknown',
-        roundTitle: fb.interviewRoundId?.roundTitle || 'Unknown',
-        interviewerName: fb.interviewerId ? `${fb.interviewerId.firstName || ''} ${fb.interviewerId.lastName || ''}`.trim() : 'Unknown',
-        overallRating: fb.overallImpression?.overallRating || 0,
-        recommendation: fb.overallImpression?.recommendation || 'Maybe',
-      }));
-
-    }
     else {
       rawData = await Model.find(
         { ...permissionQuery, ...finalQuery },
@@ -650,21 +430,42 @@ const generateReport = async (req, res) => {
       ).lean();
     }
 
-    // ALWAYS SORT IN JAVASCRIPT — COSMOS DB SAFE
-    let sortedData = rawData
-      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
+    // 11. SORT & LIMIT
+    let sortedData = rawData.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     const slicedData = sortedData.slice(0, 2000);
 
-    const mappedData = slicedData.map((d) => ({ id: d._id?.toString() || d.id, ...d }));
-    // console.log("mappedData", mappedData);
+    const mappedData = slicedData.map(d => ({ id: d._id?.toString() || d.id, ...d }));
 
-
-    // 11. KPI + CHARTS
+    // 12. KPI + CHARTS
     let aggregates = {};
     let chartData = {};
 
-    if (collectionName === "feedback") {
+    if (collectionName === "positions") {
+      aggregates = {
+        totalPositions: mappedData.length,
+        openPositions: mappedData.filter(d => ["opened", "open", "active"].includes(d.status?.toLowerCase())).length,
+        closedPositions: mappedData.filter(d => ["closed", "filled"].includes(d.status?.toLowerCase())).length,
+        onHoldPositions: mappedData.filter(d => d.status?.toLowerCase() === "hold").length,
+        avgSalary: mappedData.reduce((sum, d) => sum + (Number(d.minSalary || 0) + Number(d.maxSalary || 0)) / 2, 0) / (mappedData.length || 1),
+      };
+
+      chartData = {
+        positionsByStatus: Object.entries(
+          mappedData.reduce((m, d) => {
+            m[d.status || "Unknown"] = (m[d.status || "Unknown"] || 0) + 1;
+            return m;
+          }, {})
+        ).map(([name, value]) => ({ name, value })),
+        positionsByMonth: Object.entries(
+          mappedData.reduce((m, d) => {
+            const month = new Date(d.createdAt).toLocaleString("default", { month: "short", year: "numeric" });
+            m[month] = (m[month] || 0) + 1;
+            return m;
+          }, {})
+        ).map(([name, value]) => ({ name, value })),
+      };
+    }
+    else if (collectionName === "feedback") {
       const totalFeedback = mappedData.length;
       const ratings = mappedData.map(d => Number(d.overallRating) || 0).filter(r => r > 0);
       const avgRating = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
@@ -686,69 +487,18 @@ const generateReport = async (req, res) => {
             return m;
           }, {})
         ).map(([name, value]) => ({ name, value })),
-
         feedbackByMonth: Object.entries(
           mappedData.reduce((m, d) => {
-            const month = new Date(d.createdAt).toLocaleString("default", {
-              month: "short",
-              year: "numeric",
-            });
+            const month = new Date(d.createdAt).toLocaleString("default", { month: "short", year: "numeric" });
             m[month] = (m[month] || 0) + 1;
             return m;
           }, {})
         ).map(([name, value]) => ({ name, value })),
-      };
-    } else {
-      aggregates = {
-        totalPositions: mappedData.length,
-        openPositions: mappedData.filter((d) =>
-          ["opened", "open", "active"].includes(d.status?.toLowerCase())
-        ).length,
-        closedPositions: mappedData.filter((d) =>
-          ["closed", "filled"].includes(d.status?.toLowerCase())
-        ).length,
-        onHoldPositions: mappedData.filter(
-          (d) => d.status?.toLowerCase() === "hold"
-        ).length,
-        avgSalary:
-          mappedData.reduce(
-            (sum, d) =>
-              sum + (Number(d.minSalary || 0) + Number(d.maxSalary || 0)) / 2,
-            0
-          ) / (mappedData.length || 1),
-      };
-
-      chartData = {
-        positionsByStatus: Object.entries(
-          mappedData.reduce((m, d) => {
-            m[d.status || "Unknown"] = (m[d.status || "Unknown"] || 0) + 1;
-            return m;
-          }, {})
-        ).map(([name, value]) => ({ name, value })),
-
-        positionsByMonth: Object.entries(
-          mappedData.reduce((m, d) => {
-            const month = new Date(d.createdAt).toLocaleString("default", {
-              month: "short",
-              year: "numeric",
-            });
-            m[month] = (m[month] || 0) + 1;
-            return m;
-          }, {})
-        ).map(([name, value]) => ({ name, value })),
-
-        positionsByLocation: Object.entries(
-          mappedData.reduce((m, d) => {
-            m[d.Location || "Unknown"] = (m[d.Location || "Unknown"] || 0) + 1;
-            return m;
-          }, {})
-        )
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 10)
-          .map(([name, value]) => ({ name, value })),
       };
     }
+    // Add more collection-specific KPIs here if needed
 
+    // 13. USAGE TRACKING
     await ReportUsage.findOneAndUpdate(
       { tenantId: actingAsTenantId, templateId },
       {
@@ -762,10 +512,8 @@ const generateReport = async (req, res) => {
       { upsert: true }
     );
 
-    // 12. FINAL RESPONSE — UX PERFECT
-    console.log(
-      "[SUCCESS] Report generated successfully\n========== [END] ==========\n"
-    );
+    // 14. FINAL RESPONSE
+    console.log("[SUCCESS] Report generated successfully\n========== [END] ==========\n");
 
     return res.json({
       success: true,
@@ -780,14 +528,9 @@ const generateReport = async (req, res) => {
       availableColumns: uniqueAvailableColumns,
       data: mappedData,
       availableFilters: filterConfig?.available || [],
-      // SAVED DEFAULT FILTERS (for "Reset" button)
-      defaultFilters:
-        filterPreset?.filters?.length > 0
-          ? Object.fromEntries(
-            filterPreset.filters.map((f) => [f.key, f.value])
-          )
-          : filterConfig?.default || {},
-
+      defaultFilters: filterPreset?.filters?.length > 0
+        ? Object.fromEntries(filterPreset.filters.map(f => [f.key, f.value]))
+        : filterConfig?.default || {},
       kpis: templateKpis,
       charts: templateCharts,
       aggregates,

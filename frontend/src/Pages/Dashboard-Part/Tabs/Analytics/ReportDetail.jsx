@@ -648,7 +648,7 @@ const ReportDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [activeView, setActiveView] = useState("dashboard");
+  const [activeView, setActiveView] = useState("table");
   const [filters, setFilters] = useState({});
   const [availableFilters, setAvailableFilters] = useState([]);
   const [availableColumns, setAvailableColumns] = useState([]);
@@ -838,7 +838,15 @@ const ReportDetail = () => {
           width: col.width || "180px",
           order: col.order ?? i,
           locked: col.locked === true,
-          render: (value) => (value == null ? "-" : String(value)),
+          render: (value) => {
+            if (value == null) return "-";
+            // Format salary values to 'k'
+            if (["minSalary", "maxSalary"].includes(col.key)) {
+              const numValue = Number(value);
+              return numValue >= 1000 ? `${(numValue / 1000).toFixed(0)}k` : String(value);
+            }
+            return String(value);
+          },
         }))
       );
 
@@ -1014,8 +1022,7 @@ const ReportDetail = () => {
     link.href = url;
     link.setAttribute(
       "download",
-      `${reportMeta.title || "report"}_${
-        new Date().toISOString().split("T")[0]
+      `${reportMeta.title || "report"}_${new Date().toISOString().split("T")[0]
       }.csv`
     );
     document.body.appendChild(link);
@@ -1065,8 +1072,7 @@ const ReportDetail = () => {
 
     // Save
     doc.save(
-      `${reportMeta.title || "report"}_${
-        new Date().toISOString().split("T")[0]
+      `${reportMeta.title || "report"}_${new Date().toISOString().split("T")[0]
       }.pdf`
     );
   };
@@ -1117,20 +1123,18 @@ const ReportDetail = () => {
         <Tooltip title="Dashboard">
           <span className="cursor-pointer">
             <LayoutDashboard
-              className={`text-xl mr-4 ${
-                activeView === "dashboard"
-                  ? "text-custom-blue"
-                  : "text-gray-500"
-              }`}
+              className={`text-xl mr-4 ${activeView === "dashboard"
+                ? "text-custom-blue"
+                : "text-gray-500"
+                }`}
             />
           </span>
         </Tooltip>
         <Tooltip title="Table">
           <span className="cursor-pointer">
             <Table
-              className={`text-xl ${
-                activeView === "table" ? "text-custom-blue" : "text-gray-500"
-              }`}
+              className={`text-xl ${activeView === "table" ? "text-custom-blue" : "text-gray-500"
+                }`}
             />
           </span>
         </Tooltip>
@@ -1253,29 +1257,27 @@ const ReportDetail = () => {
 
       {/* YOUR ORIGINAL VIEW TOGGLE — UNCHANGED */}
       <div className="flex items-center">
-        <Tooltip title="Dashboard">
-          <span
-            onClick={() => setActiveView("dashboard")}
-            className="cursor-pointer"
-          >
-            <LayoutDashboard
-              className={`text-xl mr-4 ${
-                activeView === "dashboard"
-                  ? "text-custom-blue"
-                  : "text-gray-500"
-              }`}
-            />
-          </span>
-        </Tooltip>
         <Tooltip title="Table">
           <span
             onClick={() => setActiveView("table")}
             className="cursor-pointer"
           >
             <Table
-              className={`text-xl ${
-                activeView === "table" ? "text-custom-blue" : "text-gray-500"
-              }`}
+              className={`text-xl mr-4 ${activeView === "table" ? "text-custom-blue" : "text-gray-500"
+                }`}
+            />
+          </span>
+        </Tooltip>
+        <Tooltip title="Dashboard">
+          <span
+            onClick={() => setActiveView("dashboard")}
+            className="cursor-pointer"
+          >
+            <LayoutDashboard
+              className={`text-xl ${activeView === "dashboard"
+                ? "text-custom-blue"
+                : "text-gray-500"
+                }`}
             />
           </span>
         </Tooltip>
@@ -1303,14 +1305,14 @@ const ReportDetail = () => {
               <div className="mb-10">
                 <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
                   {kpis.map((kpi) => (
-                    <KPICard
-                      key={kpi.key}
-                      kpi={kpi}
-                      value={aggregates[kpi.key]}
-                      title={kpi.label}
-                      icon={getLucideIcon(kpi.icon)}
-                    />
-                  ))}
+                      <KPICard
+                        key={kpi.key}
+                        kpi={kpi}
+                        value={aggregates[kpi.key]}
+                        title={kpi.label}
+                        icon={getLucideIcon(kpi.icon)}
+                      />
+                    ))}
                 </div>
               </div>
             )}
@@ -1364,7 +1366,7 @@ const ReportDetail = () => {
                     : "Detailed View"
                 }
                 type="template"
-                onGenerate={() => {}}
+                onGenerate={() => { }}
                 loadingId="RPT001"
               />
             </div>
