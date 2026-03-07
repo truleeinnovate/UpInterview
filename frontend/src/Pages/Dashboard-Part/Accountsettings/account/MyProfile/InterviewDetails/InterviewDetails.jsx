@@ -170,7 +170,7 @@ const InterviewUserDetails = ({
           {/* Row 1: Technologies and Skills */}
           <div className="col-span-1 space-y-2">
             <p className="text-sm text-gray-500">
-              Selected Role or Technology{" "}
+              Selected Role / Technology{" "}
             </p>
             <div className="flex flex-wrap gap-2 mt-1">
               {/* {contactData?.currentRole ? (

@@ -331,14 +331,14 @@ const EditInterviewDetails = ({
                 normalizedRole === normalizedSelectedValue ||
                 normalizedRole.includes(normalizedSelectedValue) ||
                 normalizedSelectedValue.includes(normalizedRole);
-              console.log(
-                "Checking role:",
-                role,
-                "normalized:",
-                normalizedRole,
-                "match:",
-                isMatch,
-              );
+              // console.log(
+              //   "Checking role:",
+              //   role,
+              //   "normalized:",
+              //   normalizedRole,
+              //   "match:",
+              //   isMatch,
+              // );
               return isMatch;
             });
             if (match) {
@@ -351,12 +351,12 @@ const EditInterviewDetails = ({
         });
 
         // console.log("Filtered rate cards:", filteredRateCards);
-        console.log(
-          "Total rate cards before filtering:",
-          rateCardsData.length,
-          "after filtering:",
-          filteredRateCards.length,
-        );
+        // console.log(
+        //   "Total rate cards before filtering:",
+        //   rateCardsData.length,
+        //   "after filtering:",
+        //   filteredRateCards.length,
+        // );
 
         setRateCards(filteredRateCards);
       }
@@ -533,13 +533,13 @@ const EditInterviewDetails = ({
     (level) => {
       if (!rateCards.length) return null;
 
-      console.log(
-        "Getting rate ranges for level:",
-        level,
-        "from",
-        rateCards.length,
-        "rate cards",
-      );
+      // console.log(
+      //   "Getting rate ranges for level:",
+      //   level,
+      //   "from",
+      //   rateCards.length,
+      //   "rate cards",
+      // );
 
       // Find the first rate card that has the specified level
       const rateCard = rateCards.find((card) =>
@@ -578,10 +578,10 @@ const EditInterviewDetails = ({
         return rates;
       } else if (levelData.rateRange) {
         // Old data structure (fallback)
-        console.log(
-          "Using old data structure (rateRange):",
-          levelData.rateRange,
-        );
+        // console.log(
+        //   "Using old data structure (rateRange):",
+        //   levelData.rateRange,
+        // );
         return levelData.rateRange;
       }
 
@@ -1246,7 +1246,7 @@ const EditInterviewDetails = ({
                   handleTechnologyChange(e.target.value);
                 }}
                 error={errors.technologies}
-                label="Selected Role or Technology"
+                label="Selected Role / Technology"
                 name="currentRole"
                 required={true}
                 onMenuOpen={loadCurrentRoles}
@@ -1401,9 +1401,9 @@ const EditInterviewDetails = ({
                         max={15}
                         placeholder={0}
                         required
-                        value={formData.PreviousExperienceConductingInterviewerYears}
+                        value={formData.PreviousExperienceConductingInterviewsYears}
                         onChange={handleYearsOfExperienceChange}
-                        errors={errors.PreviousExperienceConductingInterviewerYears}
+                        errors={errors.PreviousExperienceConductingInterviewsYears}
                       />
                     </div>
                   )}
