@@ -529,9 +529,23 @@ const Subscription = () => {
 
             <div className="flex items-center gap-2">
               {/* Update Payment Method button - only visible for active paid subscriptions */}
+              {/* Monthly: always shown | Annual: only shown within 15 days before next billing date */}
               {subscriptionData.status === "active" &&
                 subscriptionData.planName !== "Free" &&
-                subscriptionData.razorpaySubscriptionId && (
+                subscriptionData.razorpaySubscriptionId &&
+                (() => {
+                  if (subscriptionData.selectedBillingCycle === "monthly") return true;
+                  if (subscriptionData.selectedBillingCycle === "annual") {
+                    const nextBilling = subscriptionData.nextBillingDate
+                      ? new Date(subscriptionData.nextBillingDate)
+                      : null;
+                    if (!nextBilling) return false;
+                    const now = new Date();
+                    const daysRemaining = Math.ceil((nextBilling - now) / (1000 * 60 * 60 * 24));
+                    return daysRemaining <= 15;
+                  }
+                  return false;
+                })() && (
                   <button
                     type="button"
                     onClick={() => setShowUpdatePaymentModal(true)}
