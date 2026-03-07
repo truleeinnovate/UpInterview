@@ -1359,10 +1359,13 @@ export const getFeedbackColumns = (navigate, options = {}) => {
             key: "interviewer",
             header: "Interviewer",
             render: (value, row) => {
-                if (row.interviewRoundId?.interviewerType === "Internal") {
+                console.log("row row",row)
+                if (row.roundDetails?.interviewerType === "Internal") {
                     return (row.interviewerId?.firstName + " " + row.interviewerId?.lastName) || "Not Provided";
+                } if (row.roundDetails?.interviewerType === "External") { 
+                     return "External"; 
                 }
-                return "External";
+                return "";
             },
         },
         {

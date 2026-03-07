@@ -129,7 +129,12 @@ const FeedbackCard = ({ item, onView, onEdit, tokenPayload }) => {
           <div className="grid grid-cols-2">
             <p className="text-xs text-gray-500">Interviewer</p>
             <p className="text-xs text-gray-800 font-medium truncate">
-              {capitalizeFirstLetter(item.interviewerId?.firstName || "N/A")}
+             {  item.roundDetails?.interviewerType === "Internal" ?
+                    item.interviewerId?.firstName + " " + item.interviewerId?.lastName
+                : item.roundDetails?.interviewerType === "External"
+                 ? "External"  : ""}
+
+              {/* {capitalizeFirstLetter(item.interviewerId?.firstName || "N/A")} */}
             </p>
           </div>
         )}

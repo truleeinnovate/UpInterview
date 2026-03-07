@@ -557,12 +557,12 @@ const InterviewActions = ({
               title="Interviewer Joined"
               description="Confirm that the interviewer has successfully joined the interview"
               // onClick={() => handleConfirm("interviewerJoined")}
-              onClick={() => {
-                // openModal("noShow");
-                // setActionInProgress(true);
-                setInterviewerJoinedReasonModalOpen(true);
-              }}
-              disabled={isCompleted || isInterviewerJoined}
+              // onClick={() => {
+              //   // openModal("noShow");
+              //   // setActionInProgress(true);
+              //   setInterviewerJoinedReasonModalOpen(true);
+              // }}
+              disabled={ isCompleted || isInterviewerJoined}
               variant="success"
             />
           )}
@@ -573,11 +573,11 @@ const InterviewActions = ({
             title="Candidate Joined"
             description="Confirm that the candidate has successfully joined the interview"
             // onClick={() => handleConfirm("candidateJoined")}
-            onClick={() => {
-              // openModal("noShow");
-              setActionInProgress(true);
-              setCandidateJoinedReasonModalOpen(true);
-            }}
+            // onClick={() => {
+            //   // openModal("noShow");
+            //   setActionInProgress(true);
+            //   setCandidateJoinedReasonModalOpen(true);
+            // }}
             disabled={
               isCompleted || !candidateActionEnabled || isCandidateJoined
             }
