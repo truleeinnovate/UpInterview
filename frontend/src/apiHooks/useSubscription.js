@@ -38,29 +38,29 @@ const formatPlans = (plans, userType) => {
       razorpayPlanIds: plan.razorpayPlanIds || {},
       features: Array.isArray(plan.features)
         ? plan.features
-            .map((f) => {
-              // Return just the description string for display
-              return f.description || f.name || 'Feature';
-            })
-            .filter((feature) => {
-              // Hide user-related features for individual accounts
-              if (userType === 'individual') {
-                const featureLower = feature.toLowerCase();
-                // Check for various user/team member related patterns
-                if (
-                  featureLower.includes('only 1 user')
-                  // featureLower.includes('1 user') ||
-                  // featureLower.includes('single user') ||
-                  // featureLower.includes('team member') ||
-                  // featureLower.includes('team members') ||
-                  // (featureLower.includes('up to') && featureLower.includes('user')) ||
-                  // (featureLower.includes('up to') && featureLower.includes('member'))
-                ) {
-                  return false;
-                }
+          .map((f) => {
+            // Return just the description string for display
+            return f.description || f.name || 'Feature';
+          })
+          .filter((feature) => {
+            // Hide user-related features for individual accounts
+            if (userType === 'individual') {
+              const featureLower = feature.toLowerCase();
+              // Check for various user/team member related patterns
+              if (
+                featureLower.includes('only 1 user')
+                // featureLower.includes('1 user') ||
+                // featureLower.includes('single user') ||
+                // featureLower.includes('team member') ||
+                // featureLower.includes('team members') ||
+                // (featureLower.includes('up to') && featureLower.includes('user')) ||
+                // (featureLower.includes('up to') && featureLower.includes('member'))
+              ) {
+                return false;
               }
-              return true;
-            })
+            }
+            return true;
+          })
         : [],
       monthlyBadge:
         monthlyPricing?.discountType === 'percentage' && monthlyPricing?.discount > 0
@@ -128,7 +128,7 @@ export const useSubscription = () => {
   } = useQuery({
     queryKey: ['subscriptionPlans', userType],
     queryFn: async () => {
-      const res = await axios.get(`${config.REACT_APP_API_URL}/all-subscription-plans?t=${Date.now()}`,(authToken ? authHeader(authToken) : undefined));
+      const res = await axios.get(`${config.REACT_APP_API_URL}/all-subscription-plans?t=${Date.now()}`, (authToken ? authHeader(authToken) : undefined));
       return formatPlans(res?.data || [], userType);
     },
     enabled: !!userType,
@@ -138,6 +138,27 @@ export const useSubscription = () => {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
+  });
+
+  // Saved payment cards
+  const {
+    data: savedCards = [],
+    isLoading: isLoadingSavedCards,
+    refetch: refetchSavedCards,
+  } = useQuery({
+    queryKey: ['savedCards', ownerId],
+    queryFn: async () => {
+      if (!ownerId) return [];
+      const res = await axios.get(
+        `${config.REACT_APP_API_URL}/payment/saved-cards/${ownerId}`,
+        authToken ? authHeader(authToken) : undefined
+      );
+      return res?.data?.cards || [];
+    },
+    enabled: !!ownerId,
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
   });
 
   // Update plan mutation
@@ -299,10 +320,12 @@ export const useSubscription = () => {
     // data
     subscriptionData,
     plans,
+    savedCards,
 
     // loading/error states
     isSubscriptionLoading,
     isPlansLoading,
+    isLoadingSavedCards,
     isMutationLoading,
     isSubscriptionError,
     subscriptionError,
@@ -320,6 +343,7 @@ export const useSubscription = () => {
     refetchSubscription,
     forceRefreshSubscription, // New function for force refresh
     refetchPlans,
+    refetchSavedCards,
 
     // user context (for convenience)
     ownerId,
