@@ -3738,10 +3738,58 @@ const createRecurringSubscription = async (req, res) => {
 //         });
 //     }
 // };
+// Get saved payment cards for a user
+const getSavedCards = async (req, res) => {
+  try {
+    const { ownerId } = req.params;
+
+    if (!ownerId) {
+      return res.status(400).json({ status: "error", message: "ownerId is required" });
+    }
+
+    const paymentCard = await PaymentCard.findOne({ ownerId });
+
+    if (!paymentCard || !paymentCard.cards || paymentCard.cards.length === 0) {
+      return res.status(200).json({
+        status: "success",
+        cards: [],
+        message: "No saved payment methods found",
+      });
+    }
+
+    // Return cards sorted by lastUsed (most recent first)
+    const cards = paymentCard.cards
+      .map((card) => ({
+        cardNumber: card.cardNumber || "Unknown",
+        cardBrand: card.cardBrand || "Unknown",
+        cardType: card.cardType || "unknown",
+        status: card.status || "active",
+        lastUsed: card.lastUsed || null,
+      }))
+      .sort((a, b) => {
+        if (!a.lastUsed) return 1;
+        if (!b.lastUsed) return -1;
+        return new Date(b.lastUsed) - new Date(a.lastUsed);
+      });
+
+    return res.status(200).json({
+      status: "success",
+      cards,
+      isDefault: paymentCard.isDefault || false,
+    });
+  } catch (error) {
+    console.error("Error fetching saved cards:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to fetch saved payment methods",
+    });
+  }
+};
 
 module.exports = {
   verifyPayment,
   createRecurringSubscription,
   //verifySubscription,
   handleWebhook,
+  getSavedCards,
 };

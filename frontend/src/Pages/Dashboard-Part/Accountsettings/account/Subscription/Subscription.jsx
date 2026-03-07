@@ -118,6 +118,7 @@ const Subscription = () => {
   const {
     subscriptionData,
     plans,
+    savedCards,
     isSubscriptionLoading,
     isPlansLoading,
     isMutationLoading,
@@ -1429,7 +1430,7 @@ const Subscription = () => {
       {showUpdatePaymentModal &&
         createPortal(
           <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full m-4 animate-slide-in">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full m-4 animate-slide-in" style={{ maxHeight: "90vh", overflowY: "auto" }}>
               <div className="flex items-center mb-4">
                 <div className="bg-blue-100 rounded-full p-3 mr-3">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1442,13 +1443,86 @@ const Subscription = () => {
               </div>
 
               <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-sm text-gray-700 mb-2">
+                <p className="text-sm text-gray-700 mb-1">
                   Current plan:
                 </p>
                 <p className="font-semibold text-lg text-custom-blue">
                   {subscriptionData?.planName} ({capitalizeFirstLetter(subscriptionData?.selectedBillingCycle || "")})
                 </p>
               </div>
+
+              {/* Saved Payment Methods Section */}
+              {savedCards && savedCards.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Your Saved Payment Methods:
+                  </p>
+                  <div className="space-y-2">
+                    {savedCards.map((card, index) => (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-lg border ${index === 0
+                          ? "border-green-300 bg-green-50"
+                          : card.status === "active"
+                            ? "border-gray-200 bg-gray-50"
+                            : "border-red-200 bg-red-50 opacity-70"
+                          }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {/* Card brand icon */}
+                            <div className={`flex-shrink-0 w-10 h-7 rounded flex items-center justify-center text-xs font-bold text-white ${card.cardBrand?.toLowerCase() === "visa"
+                              ? "bg-blue-700"
+                              : card.cardBrand?.toLowerCase() === "mastercard"
+                                ? "bg-red-600"
+                                : card.cardBrand?.toLowerCase() === "rupay"
+                                  ? "bg-orange-500"
+                                  : "bg-gray-500"
+                              }`}>
+                              {card.cardBrand?.toUpperCase()?.slice(0, 4) || "CARD"}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-800">
+                                {card.cardNumber || "**** ****"}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {card.cardType ? `${card.cardType.charAt(0).toUpperCase() + card.cardType.slice(1)} Card` : "Card"}
+                                {card.lastUsed && (
+                                  <> · Last used {new Date(card.lastUsed).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            {index === 0 ? (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
+                                Currently Active
+                              </span>
+                            ) : card.status === "active" ? (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+                                Active
+                              </span>
+                            ) : (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-medium">
+                                {card.status?.charAt(0).toUpperCase() + card.status?.slice(1) || "Inactive"}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* No saved cards message */}
+              {(!savedCards || savedCards.length === 0) && (
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-sm text-gray-500 text-center">
+                    No saved payment methods found
+                  </p>
+                </div>
+              )}
 
               <div className="mb-4">
                 <p className="text-sm text-gray-600 mb-3">
