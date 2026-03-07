@@ -606,21 +606,20 @@ export function BottomBar({ bottomBarHeight, setIsMeetingLeft, isSchedule = fals
 
         console.log('Screen share stream obtained:', stream);
         screenShareStreamRef.current = stream;
-        setLocalScreenShareStream(stream);
+        setLocalScreenShareStream(stream); // Keep original for local preview
 
-        // Handle stream ended (user stops sharing)
+        // Handle stream ended (user clicks browser's "Stop sharing")
         stream.getVideoTracks().forEach(track => {
           track.onended = () => {
             console.log('Screen share track ended:', track.kind);
-            if (localScreenShareOn) {
-              toggleScreenShare();
-            }
+            toggleScreenShare(); // Stop in VideoSDK
             setLocalScreenShareStream(null);
           };
         });
 
-        // Start screen share through VideoSDK
-        await toggleScreenShare(stream);
+        // Clone stream for VideoSDK — original stays active for local preview
+        const clonedStream = stream.clone();
+        await toggleScreenShare(clonedStream);
 
       } catch (error) {
         console.error('Screen share failed:', error);
