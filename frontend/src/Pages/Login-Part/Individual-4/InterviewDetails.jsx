@@ -319,13 +319,13 @@ const InterviewDetails = ({
   const getRateRanges = (level) => {
     if (!rateCards.length) return null;
 
-    console.log(
-      "Getting rate ranges for level:",
-      level,
-      "from",
-      rateCards.length,
-      "rate cards",
-    );
+    // console.log(
+    //   "Getting rate ranges for level:",
+    //   level,
+    //   "from",
+    //   rateCards.length,
+    //   "rate cards",
+    // );
 
     const rateCard = rateCards.find((card) =>
       card.levels.some((lvl) => lvl.level === level),
@@ -912,7 +912,7 @@ const InterviewDetails = ({
             required={true}
             onMenuOpen={loadCurrentRoles}
             loading={isCurrentRolesFetching}
-            placeholder="Selected Role or Technology"
+            placeholder="Selected Role / Technology"
           />
           <div className="mt-2 flex items-center gap-1.5 text-xs">
             <CheckCircle className="h-4 w-4 text-green-700" />
