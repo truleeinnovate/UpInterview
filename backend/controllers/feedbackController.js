@@ -1851,6 +1851,10 @@ const updateInterviewRoundFeedbackStatus = async ({
       return { message: "Status already correct - skipping update" };
     }
 
+    if (round.interviewerType === "Internal" &&  round.status === "Evaluated"){
+  return { message: "Internal Interviewer feedback already submitted" };
+    } 
+
 
 
   // const RoundModel = isMock
