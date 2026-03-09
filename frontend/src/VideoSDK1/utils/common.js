@@ -17,7 +17,7 @@ export const getInterviewStatusLabel = (status) => {
     FeedbackPending: "Feedback Pending",
     FeedbackSubmitted: "Feedback Submitted",
     NoShow: "No Show",
-    InComplete: "In Complete",
+    Incomplete: "In Complete",
   };
 
   return statusMap[status] || capitalizeFirstLetter(status);

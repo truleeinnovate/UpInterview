@@ -1175,8 +1175,9 @@ const RoundCard = ({
     //   canShareLink: false,
     //   canNoShow: false,
     // },
-    InComplete: {
-      canEdit: true,
+    
+    Incomplete: {
+      canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
       canReschedule: true,
@@ -1186,6 +1187,7 @@ const RoundCard = ({
       canResendLink: false,
       canShareLink: false,
       canNoShow: false,
+      canSkipped: true,
     },
     NoShow: {
       canEdit: false,
@@ -1198,13 +1200,13 @@ const RoundCard = ({
       canResendLink: false,
       canShareLink: false,
       canNoShow: false,
-      // canSkipped: true,
+      canSkipped: true,
     },
     Skipped: {
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
-      canReschedule: false,
+      canReschedule: true,
       canCancel: false,
       canComplete: false,
       canFeedback: false,
@@ -1257,6 +1259,8 @@ const RoundCard = ({
       canEvaluated: true,
     },
   };
+
+  console.log("roundActionPermissions", round);
 
   // Helper to get permissions for current round status
   const getRoundPermissions = (status) =>
@@ -2033,8 +2037,12 @@ const RoundCard = ({
                   {permissions.canReschedule &&
                     !isInterviewCompleted &&
                     round?.roundTitle !== "Assessment" &&
-                    (round.status === "Cancelled" ||
-                      round.interviewType !== "instant") && (
+                    (round.status === "Cancelled"  ||
+                     (round.status === "NoShow" && round.interviewType === "instant") ||
+    (round.status === "NoShow" && round.interviewType === "reschedule") ||
+     (round.status === "Incomplete" && round.interviewType === "instant") ||
+    (round.status === "Incomplete" && round.interviewType === "reschedule") ||
+    (round.status !== "NoShow" || round.status !== "Incomplete" && round.interviewType === "reschedule") ) && (
                       <button
                         onClick={() => onEdit(round, { isReschedule: true })}
                         className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100"

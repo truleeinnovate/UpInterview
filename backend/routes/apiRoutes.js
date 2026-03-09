@@ -4057,6 +4057,94 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
   //   limit: 5, // Limit for dashboard display
   // });
 
+  // --------------------------------------------------------------------
+  // INTERVIEWS OVER TIME CHART (Last 30 Days)
+  // --------------------------------------------------------------------
+  const thirtyDaysAgo = new Date(now);
+  thirtyDaysAgo.setDate(now.getDate() - 30);
+
+  const chartAgg = await InterviewRounds.aggregate([
+    {
+      $lookup: {
+        from: "interviews",
+        localField: "interviewId",
+        foreignField: "_id",
+        as: "interview",
+      },
+    },
+    { $unwind: "$interview" },
+    { $match: matchInterview },
+    {
+      $project: {
+        interviewerType: 1,
+        // Calculate effectiveDate using the same logic as the monthly summary
+        effectiveDate: {
+          $cond: {
+            if: {
+              $and: [
+                { $ne: ["$dateTime", ""] },
+                { $ne: ["$dateTime", null] },
+                { $ne: ["$dateTime", undefined] },
+              ],
+            },
+            then: {
+              $cond: {
+                if: { $eq: [{ $type: "$dateTime" }, "string"] },
+                then: {
+                  $dateFromString: {
+                    dateString: "$dateTime",
+                    onError: "$createdAt", 
+                  },
+                },
+                else: "$dateTime",
+              },
+            },
+            else: "$createdAt", 
+          },
+        },
+      },
+    },
+    {
+      $match: {
+        effectiveDate: { $gte: thirtyDaysAgo, $lte: now },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: { format: "%Y-%m-%d", date: "$effectiveDate" },
+        },
+        interviews: { $sum: 1 },
+        outsourced: {
+          $sum: {
+            $cond: [{ $eq: ["$interviewerType", "External"] }, 1, 0],
+          },
+        },
+      },
+    },
+    { $sort: { _id: 1 } },
+    {
+      $project: {
+        _id: 0,
+        date: "$_id",
+        interviews: 1,
+        outsourced: 1,
+      },
+    },
+  ]);
+
+  // Ensure we fill in missing dates for the chart to look continuous
+  const interviewsOverTime = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+    const existing = chartAgg.find((c) => c.date === dateStr);
+    interviewsOverTime.push(
+      existing || { date: dateStr, interviews: 0, outsourced: 0 }
+    );
+  }
+
   // Get upcoming rounds for dashboard (without filters)
   const upcomingRoundsData = await getUpcomingRoundsOnly({
     matchInterview,
@@ -4064,7 +4152,76 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     limit: 5, // Limit for dashboard display
   });
 
+  console.log("InterviewRounds", InterviewRounds);
 
+  // --------------------------------------------------------------------
+// INTERVIEWER UTILIZATION CHART
+// --------------------------------------------------------------------
+const utilizationAgg = await InterviewRounds.aggregate([
+  {
+    $lookup: {
+      from: "interviews",
+      localField: "interviewId",
+      foreignField: "_id",
+      as: "interview",
+    },
+  },
+  { $unwind: "$interview" },
+
+  // tenant / owner filter
+  { $match: matchInterview },
+
+  // expand interviewer array
+  { $unwind: "$interviewers" },
+
+  // join contacts collection
+  {
+    $lookup: {
+      from: "contacts",
+      localField: "interviewers",
+      foreignField: "_id",
+      as: "interviewer",
+    },
+  },
+
+  { $unwind: { path: "$interviewer", preserveNullAndEmptyArrays: true } },
+
+  {
+    $group: {
+      _id: "$interviewers",
+      interviews: { $sum: 1 },
+
+      name: {
+        $first: {
+          $concat: [
+            { $ifNull: ["$interviewer.firstName", "Unknown"] },
+            " ",
+            { $ifNull: ["$interviewer.lastName", ""] },
+          ],
+        },
+      },
+
+      type: { $first: "$interviewerType" },
+    },
+  },
+
+  {
+    $project: {
+      _id: 0,
+      name: { $trim: { input: "$name" } },
+      interviews: 1,
+      type: { $toLower: "$type" },
+    },
+  },
+
+  { $sort: { interviews: -1 } },
+
+  { $limit: 10 },
+]);
+
+console.log("utilizationAgg", utilizationAgg);
+
+const interviewerUtilization = utilizationAgg ;
 
 // --------------------------------------------------------------------
 // ROUND STATUS COUNTS + RATE + TREND
@@ -4204,6 +4361,187 @@ const noShowTrendValue =
       ).toFixed(0)}% vs last month`;
 
   // --------------------------------------------------------------------
+  // TOTAL ASSESSMENTS & AVERAGE SCORE
+  // --------------------------------------------------------------------
+  const ScheduledAssessmentSchema = mongoose.models.ScheduledAssessment;
+  
+  let assessmentData = {
+    totalCompleted: 0,
+    currentMonthCount: 0,
+    lastMonthCount: 0,
+    averageScore: 0,
+    averageScoreLastMonth: 0,
+    trend: "up",
+    trendValue: "+0% vs last month",
+    averageScoreTrend: "up",
+    averageScoreTrendValue: "+0 vs last month"
+  };
+
+  if (ScheduledAssessmentSchema) {
+    try {
+      const query = {
+        tenantId,
+        ...(ownerId ? { ownerId } : {}),
+      };
+
+      const analyticsAggregation = await ScheduledAssessmentSchema.aggregate([
+        {
+          $match: {
+            ...query,
+            isActive: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "candidateassessments",
+            localField: "_id",
+            foreignField: "scheduledAssessmentId",
+            as: "ca",
+          },
+        },
+        { $unwind: "$ca" },
+        {
+          $match: {
+            "ca.status": { $in: ["completed", "pass", "failed"] },
+          },
+        },
+        {
+          $project: {
+            "ca.createdAt": 1,
+            "ca.totalScore": 1,
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalCompleted: { $sum: 1 },
+            totalScoreSum: { $sum: "$ca.totalScore" },
+            scoredCount: {
+              $sum: {
+                $cond: [
+                  { $gt: [{ $type: "$ca.totalScore" }, "missing"] },
+                  1,
+                  0
+                ]
+              }
+            },
+            currentMonthCount: {
+              $sum: {
+                $cond: [
+                  { $gte: ["$ca.createdAt", currentMonthStart] },
+                  1,
+                  0,
+                ],
+              },
+            },
+            lastMonthCount: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $gte: ["$ca.createdAt", lastMonthStart] },
+                      { $lte: ["$ca.createdAt", lastMonthEnd] },
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+            lastMonthScoreSum: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $gte: ["$ca.createdAt", lastMonthStart] },
+                      { $lte: ["$ca.createdAt", lastMonthEnd] },
+                      { $gt: [{ $type: "$ca.totalScore" }, "missing"] }
+                    ],
+                  },
+                  "$ca.totalScore",
+                  0,
+                ],
+              },
+            },
+            lastMonthScoredCount: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $gte: ["$ca.createdAt", lastMonthStart] },
+                      { $lte: ["$ca.createdAt", lastMonthEnd] },
+                      { $gt: [{ $type: "$ca.totalScore" }, "missing"] }
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+          },
+        },
+      ]);
+
+      const result = analyticsAggregation[0] || {
+        totalCompleted: 0,
+        currentMonthCount: 0,
+        lastMonthCount: 0,
+        totalScoreSum: 0,
+        scoredCount: 0,
+        lastMonthScoreSum: 0,
+        lastMonthScoredCount: 0,
+      };
+
+      const averageScore = result.scoredCount > 0 
+        ? result.totalScoreSum / result.scoredCount 
+        : 0;
+        
+      const averageScoreLastMonth = result.lastMonthScoredCount > 0 
+        ? result.lastMonthScoreSum / result.lastMonthScoredCount 
+        : 0;
+
+      const assessmentTrend = result.lastMonthCount === 0
+        ? "up"
+        : result.currentMonthCount >= result.lastMonthCount
+          ? "up"
+          : "down";
+
+      const assessmentPercentageChange = result.lastMonthCount === 0
+        ? 100
+        : ((result.currentMonthCount - result.lastMonthCount) / result.lastMonthCount) * 100;
+      
+      const assessmentTrendValue = result.lastMonthCount === 0
+        ? "+100% vs last month"
+        : `${(assessmentPercentageChange > 0 ? '+' : '')}${assessmentPercentageChange.toFixed(1)}% vs last month`;
+
+      const avgScoreTrend = averageScoreLastMonth === 0
+        ? "up"
+        : averageScore >= averageScoreLastMonth
+          ? "up"
+          : "down";
+
+      const difference = averageScore - averageScoreLastMonth;
+      const avgScoreTrendValue = averageScoreLastMonth === 0
+        ? `+${averageScore.toFixed(1)} vs last month`
+        : `${(difference > 0 ? '+' : '')}${difference.toFixed(1)} vs last month`;
+
+      assessmentData = {
+        totalCompleted: result.currentMonthCount,
+        lastMonthCount: result.lastMonthCount,
+        averageScore: averageScore,
+        averageScoreLastMonth: averageScoreLastMonth,
+        trend: assessmentTrend,
+        trendValue: assessmentTrendValue,
+        averageScoreTrend: avgScoreTrend,
+        averageScoreTrendValue: avgScoreTrendValue,
+        totalAllTime: result.totalCompleted
+      };
+    } catch (err) {
+      console.error("Error aggregating assessments in getInterviewDashboardStats", err);
+    }
+  }
+
+  // --------------------------------------------------------------------
   // RETURN COMPLETE DASHBOARD DATA
   // --------------------------------------------------------------------
   return {
@@ -4255,6 +4593,31 @@ roundStatusCounts: {
       trendValue: upcomingTrendValue,
       currentWeekCount: upcomingData.currentWeekCount,
     },
+
+    // Chart Data Object
+    chartData: {
+      interviewsOverTime,
+      interviewerUtilization,
+    },
+
+    // Assessments Data map for the frontend Dashboard card
+    assessmentsCompleted: {
+      totalCompleted: assessmentData.totalCompleted,
+      lastMonth: assessmentData.lastMonthCount,
+      trend: assessmentData.trend,
+      trendValue: assessmentData.trendValue,
+      totalAllTime: assessmentData.totalAllTime,
+    },
+
+    // Flattened structure for frontend Assessment Dashboard calculations
+    totalCompleted: assessmentData.totalCompleted,
+    lastMonth: assessmentData.lastMonthCount,
+    trend: assessmentData.trend,
+    trendValue: assessmentData.trendValue,
+    averageScore: assessmentData.averageScore,
+    averageScoreLastMonth: assessmentData.averageScoreLastMonth,
+    averageScoreTrend: assessmentData.averageScoreTrend,
+    averageScoreTrendValue: assessmentData.averageScoreTrendValue,
 
     // Additional metadata
     metadata: {
