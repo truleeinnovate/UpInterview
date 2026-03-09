@@ -1128,9 +1128,8 @@ const FeedbackForm = ({
 
   // console.log("feedbackData", feedbackData);
 
-  // Add the auto-save hook after all your useState declarations (around line 350):
-
-  const { isSaving, lastSaved, saveNow: autoSaveQuestions } = useAutoSaveFeedback({
+  // Auto-save hook — handles debouncing internally (2s idle), no extra wrapper needed
+  const { isSaving, saveNow: autoSaveQuestions, triggerAutoSave } = useAutoSaveFeedback({
     isAddMode,
     isEditMode,
     interviewRoundId:
@@ -1174,32 +1173,6 @@ const FeedbackForm = ({
       setAutoSaveFeedbackId(newId);
     },
   });
-
-  // Watch for changes to feedback data and trigger auto-save
-  useEffect(() => {
-    if (!feedbackLoading && !isMockLoading && !isInterviewLoading) {
-      triggerAutoSave();
-    }
-  }, [
-    formData,
-    interviewerSectionData,
-    preselectedQuestionsResponses,
-  ]);
-
-  const saveTimeoutRef = React.useRef(null);
-
-  // Helper Function (Outside the component or inside FeedbackForm)
-  const triggerAutoSave = () => {
-    if (isAddMode || isEditMode) {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-
-      saveTimeoutRef.current = setTimeout(() => {
-        autoSaveQuestions();
-      }, 500);
-    }
-  };
 
   // Question Bank Handler Functions
   const handleAddQuestionToRound = (question) => {

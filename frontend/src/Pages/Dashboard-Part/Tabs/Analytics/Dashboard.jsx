@@ -208,20 +208,20 @@ const Dashboard = () => {
       {
         key: "assessmentsCompleted",
         title: "Assessments Completed",
-        value: responseAssessmentDashBoard?.totalCompleted || 0,
-        subtitle: `Last month: ${responseAssessmentDashBoard?.lastMonth}`,
+        value: responseDashBoard?.assessmentsCompleted?.totalCompleted || 0,
+        subtitle: `Last month: ${responseDashBoard?.assessmentsCompleted?.lastMonth || 0}`,
         icon: CheckCircle,
-        trend: responseAssessmentDashBoard?.trend,
-        trendValue: responseAssessmentDashBoard?.trendValue,
+        trend: responseDashBoard?.assessmentsCompleted?.trend || "up",
+        trendValue: responseDashBoard?.assessmentsCompleted?.trendValue || "+0% vs last month",
       },
       {
         key: "averageScore",
         title: "Average Assessment Score",
-        value: kpiData?.averageScore || "0.0",
-        subtitle: "Out of 10",
+        value: responseDashBoard?.averageScore?.toFixed(1) || "0.0",
+        subtitle: `Last month: ${responseDashBoard?.averageScoreLastMonth?.toFixed(1) || "0.0"}`,
         icon: Star,
-        trend: "up",
-        trendValue: "+0.3 vs last month",
+        trend: responseDashBoard?.averageScoreTrend || "up",
+        trendValue: responseDashBoard?.averageScoreTrendValue || "+0 vs last month",
       },
       // {
       //   key: "billableInterviews",
@@ -243,7 +243,8 @@ const Dashboard = () => {
         key: "interviewsOverTime",
         title: "Interviews Over Time",
         component: (
-          <InterviewsOverTimeChart data={chartData?.interviewsOverTime || []} />
+          <InterviewsOverTimeChart data={responseDashBoard?.chartData?.interviewsOverTime || []} />
+          // <InterviewsOverTimeChart data={chartData?.interviewsOverTime || []} />
         ),
       },
       {
@@ -251,7 +252,7 @@ const Dashboard = () => {
         title: "Interviewer Utilization",
         component: (
           <InterviewerUtilizationChart
-            data={chartData?.interviewerUtilization || []}
+            data={responseDashBoard?.chartData?.interviewerUtilization || []}
           />
         ),
       },
