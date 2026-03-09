@@ -580,7 +580,8 @@ const AuthRoutes = () => {
   const authToken = getAuthToken();
   return (
     <Routes>
-      <Route path="/" element={authToken ? <Navigate to="/home" replace /> : <LandingPage />} />
+      {/* <Route path="/" element={authToken ? <Navigate to="/home" replace /> : <LandingPage />} /> */}
+      <Route path="/" element={<LandingPage />} />
       <Route path="/select-profession" element={<SelectProfession />} />
       <Route path="/create-profile" element={<ProfileWizard />} />
       <Route path="/subscription-plans" element={<SubscriptionPlan />} />
