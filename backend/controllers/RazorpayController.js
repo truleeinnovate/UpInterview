@@ -344,10 +344,11 @@ const verifyPayment = async (req, res) => {
           paymentCard.cards = [];
         }
 
-        // Check if this card already exists
+        // Check if this card already exists (match by last 4 digits + card brand)
         const last4Digits = cardInfo?.last4 || "";
         cardIndex = paymentCard.cards.findIndex(
-          (card) => card.cardNumber && card.cardNumber.includes(last4Digits)
+          (card) => card.cardNumber && card.cardNumber.includes(last4Digits) &&
+            (!cardBrand || cardBrand === "Unknown" || card.cardBrand === cardBrand)
         );
 
         if (cardIndex !== -1) {
@@ -2569,8 +2570,10 @@ const handleSubscriptionCharged = async (subscription, res) => {
         } else {
           if (!paymentCard.cards) paymentCard.cards = [];
           const last4Digits = cardInfo?.last4 || "";
+          const network = cardInfo?.network || "Unknown";
           const cardIndex = paymentCard.cards.findIndex(
-            (c) => c.cardNumber && c.cardNumber.includes(last4Digits)
+            (c) => c.cardNumber && c.cardNumber.includes(last4Digits) &&
+              (!network || network === "Unknown" || c.cardBrand === network)
           );
           if (cardIndex !== -1) {
             if (hasToken) {
