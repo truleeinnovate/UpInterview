@@ -96,8 +96,8 @@ const Dashboard = () => {
   });
 
   // Use mock data as fallback when API is not available
-  const [kpiData] = useState(() => getKPIData());
-  const [chartData] = useState(() => getChartData());
+  // const [kpiData] = useState(() => getKPIData());
+  // const [chartData] = useState(() => getChartData());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -260,25 +260,25 @@ const Dashboard = () => {
         key: "assessmentStats",
         title: "Assessment Statistics",
         component: (
-          <AssessmentPieChart data={chartData?.assessmentStats || []} />
+          <AssessmentPieChart data={responseDashBoard?.chartData?.assessmentStats || []} />
         ),
       },
       {
         key: "ratingDistribution",
         title: "Rating Distribution",
         component: (
-          <RatingDistributionChart data={chartData?.ratingDistribution || []} />
+          <RatingDistributionChart data={responseDashBoard?.chartData?.ratingDistribution || []} />
         ),
       },
       {
         key: "noShowTrends",
         title: "No-Show Trends",
-        component: <NoShowTrendsChart data={chartData?.noShowTrends || []} />,
+        component: <NoShowTrendsChart data={responseDashBoard?.chartData?.noShowTrends || []} />,
       },
       {
         key: "cycleTimeTrends",
         title: "Cycle Time Trends",
-        component: <CycleTimeChart data={chartData?.cycleTimeTrends || []} />,
+        component: <CycleTimeChart data={responseDashBoard?.chartData?.cycleTimeTrends || []} />,
       },
     ];
 
