@@ -158,6 +158,7 @@ const RoundCard = ({
   const [isActionPopupOpen, setIsActionPopupOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [selectedAction, setSelectedAction] = useState(""); // "extend" | "cancel"
+  const [InCompleteReasonModalOpen, setInCompleteReasonModalOpen] = useState(false);
 
   const queryClient = useQueryClient();
   // v1.0.1 <--------------------------------------------
@@ -189,6 +190,7 @@ const RoundCard = ({
   const [actionInProgress, setActionInProgress] = useState(false);
   const [isCancellingRound, setIsCancellingRound] = useState(false); // Loading state for cancel operation
   const [isNoShowingRound, setIsNoShowingRound] = useState(false); // Loading state for no-show operation
+  const [isInCompletingRound, setIsInCompletingRound] = useState(false); // Loading state for InComplete operation
 
 
   // State for tracking validation
@@ -422,6 +424,21 @@ const RoundCard = ({
       setActionInProgress(false);
     } finally {
       setIsCancellingRound(false);
+    }
+  };
+
+
+  // handling InComplete functionlity
+  const handleInCompleteWithReason = async ({ reason, comment }) => {
+    setIsInCompletingRound(true);
+    try {
+      await handleStatusChange("InComplete", reason, comment || null);
+      setInCompleteReasonModalOpen(false);
+      setActionInProgress(false);
+    } catch (error) {
+      setActionInProgress(false);
+    } finally {
+      setIsInCompletingRound(false);
     }
   };
 
@@ -1134,6 +1151,7 @@ const RoundCard = ({
       canShareLink: false,
       canSkipped: false,
       canEvaluated: false,
+      canInComplete: true,
     },
     Cancelled: {
       canEdit: false,
@@ -1177,6 +1195,19 @@ const RoundCard = ({
     // },
     
     Incomplete: {
+      canEdit: false,
+      canDelete: false,
+      canMarkScheduled: false,
+      canReschedule: true,
+      canCancel: false,
+      canComplete: false,
+      canFeedback: false,
+      canResendLink: false,
+      canShareLink: false,
+      canNoShow: false,
+      canSkipped: true,
+    },
+    Rejected: {
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
@@ -2097,6 +2128,25 @@ const RoundCard = ({
                     )}
 
 
+                     {/* Cancel */}
+                  {permissions.canInComplete &&
+                    round.roundTitle !== "Assessment" && (
+                      <button
+                        onClick={() => {
+                          setActionInProgress(true);
+                          setInCompleteReasonModalOpen(true);
+
+                          // setConfirmAction("Cancelled");
+                          // setShowConfirmModal(true);
+                        }}
+                        className="inline-flex items-center px-3 py-2 border border-red-300 text-sm rounded-md text-red-700 bg-red-50 hover:bg-red-100"
+                      >
+                        <XCircle className="h-4 w-4 mr-1" /> In Complete 
+                      </button>
+                    )}
+
+
+
                   {/* Mark Scheduled */}
                   {permissions.canMarkScheduled &&
                     round.roundTitle !== "Assessment" && (
@@ -2384,6 +2434,21 @@ const RoundCard = ({
         isLoading={isCancellingRound}
       />
 
+      {/* Modal for InComplete using DateChangeConfirmationModal */}
+      <DateChangeConfirmationModal
+        isOpen={InCompleteReasonModalOpen}
+        onClose={() => {
+          setInCompleteReasonModalOpen(false);
+          setActionInProgress(false);
+        }}
+        onConfirm={handleInCompleteWithReason}
+        selectedInterviewType={round?.interviewerType}
+        status={round?.roundStatus}
+        combinedDateTime={round?.dateTime}
+        actionType="InComplete"
+        isLoading={isInCompletingRound}
+      />
+
       {/* Modal for No Show using DateChangeConfirmationModal */}
       <DateChangeConfirmationModal
         isOpen={noShowReasonModalOpen}
@@ -2443,6 +2508,8 @@ const RoundCard = ({
         actionType="Evaluated"
         isLoading={false}
       />
+
+
 
       {(completedReasonModalOpen ||
         selectedReasonModalOpen ||
