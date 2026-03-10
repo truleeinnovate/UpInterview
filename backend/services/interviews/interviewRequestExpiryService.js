@@ -134,15 +134,15 @@ async function expireByInterviewTime(Model, isMock, now) {
 }
 
 // ────────────────────────────────────────────────
-//  Original logic - for normal (non-mock) rounds
+//  For normal (non-mock) InterviewRounds
 // ────────────────────────────────────────────────
 async function evaluateRoundAfterExpiry(roundId, now) {
-  // SAFETY: Check if interview time has actually passed before marking round
+  // SAFETY: Only evaluate if interview time has passed
   const round = await InterviewRounds.findById(roundId).select("dateTime").lean();
   if (round?.dateTime) {
     const interviewStart = parseInterviewDateTime(round.dateTime);
     if (interviewStart && interviewStart > now) {
-      console.log(`[Cron] Round ${roundId} interview time (${round.dateTime}) hasn't passed yet → skipping evaluation (PASS 2 will handle)`);
+      console.log(`[Cron] Round ${roundId} interview time (${round.dateTime}) hasn't passed yet → skipping`);
       return;
     }
   }
@@ -153,8 +153,6 @@ async function evaluateRoundAfterExpiry(roundId, now) {
       $group: {
         _id: null,
         accepted: { $sum: { $cond: [{ $eq: ["$status", "accepted"] }, 1, 0] } },
-        declined: { $sum: { $cond: [{ $eq: ["$status", "declined"] }, 1, 0] } },
-        expired: { $sum: { $cond: [{ $eq: ["$status", "expired"] }, 1, 0] } },
         total: { $sum: 1 }
       }
     }
@@ -162,32 +160,31 @@ async function evaluateRoundAfterExpiry(roundId, now) {
 
   if (!stats.length) return;
 
-  const { accepted, declined, expired, total } = stats[0];
+  const { accepted, total } = stats[0];
 
-  // If anyone accepted → do nothing
+  // Someone accepted → leave the round as-is (probably already moving forward)
   if (accepted > 0) return;
 
-  // Decide final round status (same logic as before)
-  const finalStatus =
-    declined === total ? "Rejected" : "Incomplete";
+  // ─── No one accepted ─────────────────────────────────────────────
+  const rejectionReason = "No interviewer accepted within the acceptance window";
 
   await InterviewRounds.findByIdAndUpdate(
     roundId,
     {
       $set: {
-        status: finalStatus,
-        rejectionReason: "No interviewer accepted within acceptance window",
-        currentAction: "Interviewer_NoShow",
-        currentActionReason: "Auto-expired by system",
+        status: "Rejected",
+        rejectionReason,
+        currentAction: "NoInterviewerAccepted",
+        currentActionReason: "Auto-rejected by system – no acceptance received",
         noShowJobId: null,
         updatedAt: now
       },
       $push: {
         history: {
           scheduledAt: now,
-          action: "Expired",
-          reasonCode: "SYSTEM_AUTO_INCOMPLETE",
-          comment: "No interviewer accepted the request before the scheduled interview time. Auto-marked by system.",
+          action: "Rejected",
+          reasonCode: "SYSTEM_NO_ACCEPTANCE",
+          comment: `${rejectionReason}. Automatically rejected by system.`,
           participants: [],
           updatedBy: null,
           updatedAt: now
@@ -196,22 +193,22 @@ async function evaluateRoundAfterExpiry(roundId, now) {
     }
   );
 
-  console.log(`[Cron] Round ${roundId} marked as ${finalStatus} (real)`);
+  console.log(`[Cron] Round ${roundId} marked as Rejected (no acceptance – real interview)`);
 
-  // Withdraw any remaining inprogress requests for this round
+  // Withdraw any lingering inprogress requests (cleanup)
   try {
     const withdrawResult = await InterviewRequest.updateMany(
       { roundId: new mongoose.Types.ObjectId(roundId), status: "inprogress" },
       { $set: { status: "withdrawn", respondedAt: now } }
     );
     if (withdrawResult.modifiedCount > 0) {
-      console.log(`[Cron] Withdrew ${withdrawResult.modifiedCount} remaining requests for round ${roundId}`);
+      console.log(`[Cron] Withdrew ${withdrawResult.modifiedCount} remaining inprogress requests for round ${roundId}`);
     }
   } catch (withdrawErr) {
     console.error(`[Cron] Error withdrawing requests for round ${roundId}:`, withdrawErr.message);
   }
 
-  // Auto-settlement: refund selection hold back to org
+  // Refund org's selection hold (no interview happened)
   try {
     await processWithdrawnRefund({ roundId });
     console.log(`[Cron] ✅ Selection hold refunded for round ${roundId}`);
@@ -221,15 +218,15 @@ async function evaluateRoundAfterExpiry(roundId, now) {
 }
 
 // ────────────────────────────────────────────────
-//  Almost identical logic - but for MockInterviewRound
+//  For MockInterviewRound
 // ────────────────────────────────────────────────
 async function evaluateMockRoundAfterExpiry(roundId, now) {
-  // SAFETY: Check if interview time has actually passed before marking mock round
+  // SAFETY: Only evaluate if interview time has passed
   const mockRound = await MockInterviewRound.findById(roundId).select("dateTime").lean();
   if (mockRound?.dateTime) {
     const interviewStart = parseInterviewDateTime(mockRound.dateTime);
     if (interviewStart && interviewStart > now) {
-      console.log(`[Cron] Mock round ${roundId} interview time (${mockRound.dateTime}) hasn't passed yet → skipping evaluation (PASS 2 will handle)`);
+      console.log(`[Cron] Mock round ${roundId} interview time (${mockRound.dateTime}) hasn't passed yet → skipping`);
       return;
     }
   }
@@ -240,8 +237,6 @@ async function evaluateMockRoundAfterExpiry(roundId, now) {
       $group: {
         _id: null,
         accepted: { $sum: { $cond: [{ $eq: ["$status", "accepted"] }, 1, 0] } },
-        declined: { $sum: { $cond: [{ $eq: ["$status", "declined"] }, 1, 0] } },
-        expired: { $sum: { $cond: [{ $eq: ["$status", "expired"] }, 1, 0] } },
         total: { $sum: 1 }
       }
     }
@@ -249,33 +244,31 @@ async function evaluateMockRoundAfterExpiry(roundId, now) {
 
   if (!stats.length) return;
 
-  const { accepted, declined, expired, total } = stats[0];
+  const { accepted, total } = stats[0];
 
-  // If anyone accepted → do nothing (same rule)
+  // Someone accepted → leave the round as-is
   if (accepted > 0) return;
 
-  // Same decision logic as normal rounds
-  const finalStatus =
-    declined === total ? "Rejected" : "Incomplete";
+  // ─── No one accepted ─────────────────────────────────────────────
+  const rejectionReason = "No mock interviewer accepted within the acceptance window";
 
-  // For mock rounds we use different status values in some cases
-  // but here we keep "Rejected" / "Incomplete" — change if your mock flow uses different enums
   await MockInterviewRound.findByIdAndUpdate(
     roundId,
     {
       $set: {
-        status: finalStatus,
-        currentAction: "Interviewer_NoShow",
-        currentActionReason: "Auto-expired by system",
+        status: "Rejected",
+        rejectionReason,
+        currentAction: "NoInterviewerAccepted",
+        currentActionReason: "Auto-rejected by system – no acceptance received",
         noShowJobId: null,
         updatedAt: now
       },
       $push: {
         history: {
           scheduledAt: now,
-          action: "Expired",
-          reasonCode: "SYSTEM_AUTO_INCOMPLETE",
-          comment: "No interviewer accepted the request before the scheduled interview time. Auto-marked by system.",
+          action: "Rejected",
+          reasonCode: "SYSTEM_NO_ACCEPTANCE",
+          comment: `${rejectionReason}. Automatically rejected by system.`,
           interviewers: [],
           createdBy: null,
         }
@@ -283,22 +276,22 @@ async function evaluateMockRoundAfterExpiry(roundId, now) {
     }
   );
 
-  console.log(`[Cron] Mock round ${roundId} marked as ${finalStatus}`);
+  console.log(`[Cron] Mock round ${roundId} marked as Rejected (no acceptance – mock interview)`);
 
-  // Withdraw any remaining inprogress requests for this round
+  // Withdraw any lingering inprogress requests
   try {
     const withdrawResult = await InterviewRequest.updateMany(
       { roundId: new mongoose.Types.ObjectId(roundId), status: "inprogress" },
       { $set: { status: "withdrawn", respondedAt: now } }
     );
     if (withdrawResult.modifiedCount > 0) {
-      console.log(`[Cron] Withdrew ${withdrawResult.modifiedCount} remaining requests for mock round ${roundId}`);
+      console.log(`[Cron] Withdrew ${withdrawResult.modifiedCount} remaining inprogress requests for mock round ${roundId}`);
     }
   } catch (withdrawErr) {
     console.error(`[Cron] Error withdrawing requests for mock round ${roundId}:`, withdrawErr.message);
   }
 
-  // Auto-settlement: refund selection hold back to org
+  // Refund org's selection hold
   try {
     await processWithdrawnRefund({ roundId });
     console.log(`[Cron] ✅ Selection hold refunded for mock round ${roundId}`);
@@ -306,5 +299,4 @@ async function evaluateMockRoundAfterExpiry(roundId, now) {
     console.error(`[Cron] ❌ Selection hold refund error for mock round ${roundId}:`, refundErr.message);
   }
 }
-
 module.exports = { expireInterviewRequests };
