@@ -20,6 +20,7 @@ import { ReactComponent as FaPlus } from "../../../../icons/FaPlus.svg";
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect";
 import DropdownWithSearchField from "../../../../Components/FormFields/DropdownWithSearchField";
 import { createPortal } from "react-dom";
+import { Button } from "../../../../Components/Buttons/Button";
 
 // Helper to safely get skill name regardless of casing
 const getSkillName = (skill) => {
@@ -427,7 +428,7 @@ const SkillsField = forwardRef(
               <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[80vh] flex flex-col animate-in fade-in zoom-in duration-200">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="sm:text-base md:text-base lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-900">
                     Select Skills
                   </h3>
                   <button
@@ -461,7 +462,7 @@ const SkillsField = forwardRef(
                       onChange={handlePopupSearchChange}
                       autoComplete="off"
                       spellCheck="false"
-                      className="w-full px-4 py-3 pl-10 border-2 border-custom-blue/30 rounded-lg focus:border-custom-blue focus:ring-2 focus:ring-custom-blue/20 outline-none transition-all text-gray-700 placeholder-gray-400"
+                      className="w-full px-4 py-3 pl-10 border-2 sm:text-sm md:text-sm text-base border-custom-blue/30 rounded-lg focus:border-custom-blue focus:ring-2 focus:ring-custom-blue/20 outline-none transition-all text-gray-700 placeholder-gray-400"
                       autoFocus
                     />
                     <svg
@@ -483,7 +484,7 @@ const SkillsField = forwardRef(
                       {popupSelectedSkills.map((skill) => (
                         <span
                           key={skill}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-custom-blue/10 text-custom-blue text-sm font-medium rounded-full border border-custom-blue/20"
+                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-custom-blue/10 text-custom-blue sm:text-xs md:text-xs lg:text-sm text-base font-medium rounded-full border border-custom-blue/20"
                         >
                           {skill}
                           <button
@@ -627,20 +628,21 @@ const SkillsField = forwardRef(
 
                 {/* Footer */}
                 <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={handleCloseSkillsPopup}
-                    className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors"
+                    className="border border-custom-blue text-custom-blue"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={handleApplySkillChanges}
-                    className="px-5 py-2.5 rounded-lg font-medium transition-colors bg-custom-blue text-white hover:bg-custom-blue/90 shadow-sm"
+                    className="bg-custom-blue text-white"
                   >
                     Save
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>,

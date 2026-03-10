@@ -173,7 +173,7 @@ const DropdownSelect = React.forwardRef(
   ({ hasError = false, classNamePrefix = "rs", styles, ...rest }, ref) => {
     const mergedStyles = styles || selectBaseStyles(hasError);
     return (
-      <div ref={ref} tabIndex={-1} className="text-base sm:text-sm leading-5">
+      <div ref={ref} tabIndex={-1} className="sm:text-sm md:text-sm text-base leading-5">
         <Select
           styles={mergedStyles}
           classNamePrefix={classNamePrefix}

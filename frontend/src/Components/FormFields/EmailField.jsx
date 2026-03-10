@@ -3,7 +3,7 @@ import React from "react";
 const EmailField = ({ value, onChange, inputRef, error, label = "Email", required = false, disabled = false }) => {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block sm:text-sm md:text-sm lg:text-sm xl:text-sm 2xl:text-base font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
@@ -12,7 +12,7 @@ const EmailField = ({ value, onChange, inputRef, error, label = "Email", require
         name="Email"
         value={value}
         onChange={onChange}
-        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+        className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm md:text-sm text-base font-medium placeholder:font-normal
         border ${
           error
             ? "border-red-500 focus:ring-red-500 focus:outline-red-300"

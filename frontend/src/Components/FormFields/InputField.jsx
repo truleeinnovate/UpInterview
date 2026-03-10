@@ -39,7 +39,7 @@ const InputField = React.forwardRef(
         {label && (
           <label
             htmlFor={computedId}
-            className="block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap"
+            className="block sm:text-sm md:text-sm lg:text-sm xl:text-sm 2xl:text-base font-medium text-gray-700 mb-1 whitespace-nowrap"
           >
             {label} {required && <span className="text-red-500">*</span>}
           </label>
@@ -62,7 +62,7 @@ const InputField = React.forwardRef(
           autoComplete={autoComplete}
           onFocus={onFocus}
           aria-invalid={!!error}
-          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm
+          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 sm:text-sm md:text-sm text-base font-medium placeholder:font-normal
         border ${error ? "border-red-500" : "border-gray-300"}
         focus:outline-none focus:ring-0 ${error ? "" : "focus:ring-custom-blue focus:border-custom-blue/70"} ${className}`}
           placeholder={computedPlaceholder}

@@ -274,7 +274,7 @@ const DropdownWithSearchField = forwardRef(
     return (
       <div>
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block sm:text-sm md:text-sm lg:text-sm xl:text-sm 2xl:text-base font-medium text-gray-700 mb-1">
             {label} {required && <span className="text-red-500">*</span>}
           </label>
         )}
@@ -354,7 +354,7 @@ const DropdownWithSearchField = forwardRef(
                   setIsCustomName(false);
                 }
               }}
-              className={`block w-full rounded-md shadow-sm h-10 px-3 sm:text-sm border
+              className={`block w-full rounded-md shadow-sm h-10 px-3 sm:text-sm md:text-sm text-base border
                             ${
                               error
                                 ? "border-red-500 focus:ring-red-500 focus:outline-red-300"

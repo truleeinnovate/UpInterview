@@ -69,6 +69,7 @@ import InputField from "../../../../Components/FormFields/InputField";
 import { Button } from "../../../../Components/Buttons/Button";
 import { useApplicationMutations } from "../../../../apiHooks/useApplications";
 import DescriptionField from "../../../../Components/FormFields/DescriptionField";
+import { capitalizeFirstLetter } from "../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 // v1.0.3 ----------------------------------------------------------------->
 
 // Main AddCandidateForm Component
@@ -191,8 +192,6 @@ const AddCandidateForm = ({
   const [selectedLevel, setSelectedLevel] = useState("");
   // const [filePreview, setFilePreview] = useState(null);
   // const [isImageUploaded, setIsImageUploaded] = useState(false);
-
-
 
   // const experienceCurrentOptions = Array.from({ length: 16 }, (_, i) => i);
   const genderOptions = ["Male", "Female"];
@@ -481,9 +480,10 @@ const AddCandidateForm = ({
         annualSalary: selectedCandidate?.annualSalary || "",
         languages: selectedCandidate?.languages || [],
         // certifications: selectedCandidate?.certifications || [],
-        certifications: selectedCandidate?.certifications?.length > 0
-          ? selectedCandidate.certifications
-          : [{ name: "", issuingFrom: "", issuingYear: "" }],
+        certifications:
+          selectedCandidate?.certifications?.length > 0
+            ? selectedCandidate.certifications
+            : [{ name: "", issuingFrom: "", issuingYear: "" }],
         noticePeriod: selectedCandidate?.noticePeriod || "",
       });
 
@@ -586,9 +586,9 @@ const AddCandidateForm = ({
       CountryCode: sd.candidate_country_code || "+91",
       Phone: sd.candidate_phone
         ? sd.candidate_phone
-          .replace(/^\+\d{1,3}/, "")
-          .replace(/^\d{1,3}/, "")
-          .trim()
+            .replace(/^\+\d{1,3}/, "")
+            .replace(/^\d{1,3}/, "")
+            .trim()
         : "",
 
       // ── Education ───────────────────────────────────
@@ -609,15 +609,15 @@ const AddCandidateForm = ({
       skills:
         parsedSkills.length > 0
           ? parsedSkills.map((name) => ({
-            skill: (name || "").trim(),
-            experience: "",
-            expertise: "",
-          }))
+              skill: (name || "").trim(),
+              experience: "",
+              expertise: "",
+            }))
           : (sd.screening_result?.extracted_skills || []).map((name) => ({
-            skill: (name || "").trim(),
-            experience: "",
-            expertise: "",
-          })),
+              skill: (name || "").trim(),
+              experience: "",
+              expertise: "",
+            })),
 
       // ── New Fields (Resume Analysis) ─────────────────
       professionalSummary:
@@ -678,8 +678,6 @@ const AddCandidateForm = ({
     );
   }, [screeningData, source]);
 
-
-
   const skillpopupcancelbutton = () => {
     setIsModalOpen(false);
     setSearchTerm("");
@@ -692,10 +690,10 @@ const AddCandidateForm = ({
       const updatedEntries = entries.map((entry, index) =>
         index === editingIndex
           ? {
-            skill: selectedSkill,
-            experience: selectedExp,
-            expertise: selectedLevel,
-          }
+              skill: selectedSkill,
+              experience: selectedExp,
+              expertise: selectedLevel,
+            }
           : entry,
       );
       setEntries(updatedEntries);
@@ -1283,14 +1281,14 @@ const AddCandidateForm = ({
       // These fields are NOT for form pre-fill — only for backend Resume / ScreeningResult
       ...(source === "candidate-screening" &&
         mode !== "Edit" && {
-        source: "UPLOAD",
-        // Pass full screeningData so backend can store it
-        screeningData: screeningData, // ← direct pass (full object)
-        parsedJson: screeningData.metadata || screeningData.parsedJson || {},
-        parsedSkills: screeningData.parsed_skills || [],
-        parsedExperience: screeningData.parsed_experience || null,
-        parsedEducation: screeningData.parsed_education || null,
-      }),
+          source: "UPLOAD",
+          // Pass full screeningData so backend can store it
+          screeningData: screeningData, // ← direct pass (full object)
+          parsedJson: screeningData.metadata || screeningData.parsedJson || {},
+          parsedSkills: screeningData.parsed_skills || [],
+          parsedExperience: screeningData.parsed_experience || null,
+          parsedEducation: screeningData.parsed_education || null,
+        }),
     };
 
     try {
@@ -1493,8 +1491,8 @@ const AddCandidateForm = ({
       // Show error toast
       notify.error(
         error.response?.data?.message ||
-        error.message ||
-        "Failed to save candidate",
+          error.message ||
+          "Failed to save candidate",
       );
 
       if (error.response?.data?.errors) {
@@ -1902,7 +1900,7 @@ const AddCandidateForm = ({
       {currentFormStep === 1 && (
         <>
           {source !== "candidate-screening" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
+            <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-6 mb-6">
               {/* Profile Image Upload */}
               <ProfilePhotoUpload
                 imageInputRef={imageInputRef}
@@ -1932,10 +1930,10 @@ const AddCandidateForm = ({
                 {/* v1.0.7 <------------------------------------------------------ */}
                 {/* <h4 className="text-lg font-semibold text-gray-800"> */}
                 <div className="space-y-4">
-                  <h4 className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
+                  <h4 className="sm:text-base md:text-md lg:text-md xl:text-md 2xl:text-lg font-semibold text-gray-800">
                     Personal Details
                   </h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-x-6 gap-y-4">
+                  <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-x-6 gap-y-4">
                     <InputField
                       value={formData.FirstName}
                       onChange={handleChange}
@@ -1956,7 +1954,7 @@ const AddCandidateForm = ({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-x-6 gap-y-4">
+                  <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-x-6 gap-y-4">
                     <DateOfBirthField
                       selectedDate={
                         formData.Date_Of_Birth
@@ -1974,19 +1972,19 @@ const AddCandidateForm = ({
                       // error={errors.Gender}
                       containerRef={fieldRefs.Gender}
                       label="Gender"
-                    // required
+                      // required
                     />
                   </div>
                 </div>
                 {/* v1.0.7 <---------------------------------------------------------------------------------------- */}
                 {/* <p className="text-lg font-semibold col-span-2"> */}
                 <div className="space-y-4">
-                  <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+                  <p className="sm:text-base md:text-md lg:text-md xl:text-md 2xl:text-lg font-semibold col-span-2">
                     {/* v1.0.7 ----------------------------------------------------------------------------------------> */}
                     Contact Details
                   </p>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-x-6 gap-y-4">
+                  <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-x-6 gap-y-4">
                     <EmailField
                       value={formData.Email}
                       onChange={handleChange}
@@ -2041,12 +2039,12 @@ const AddCandidateForm = ({
                 {/* v1.0.7 <-------------------------------------------------------------------------------------- */}
                 {/* <p className="text-lg font-semibold col-span-2"> */}
                 <div className="space-y-4">
-                  <p className="sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+                  <p className="sm:text-base md:text-md lg:text-md xl:text-md 2xl:text-lg font-semibold col-span-2">
                     {/* v1.0.7 --------------------------------------------------------------------------------------> */}
                     Education & Experience Details
                   </p>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-x-6 gap-y-4">
+                  <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-x-6 gap-y-4">
                     <DropdownWithSearchField
                       value={formData.HigherQualification}
                       options={qualificationOptionsRS}
@@ -2093,7 +2091,7 @@ const AddCandidateForm = ({
                   {/* <p className="text-lg font-semibold col-span-2"> */}
 
                   {/* Current Role */}
-                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-x-6 gap-y-4">
+                  <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-x-6 gap-y-4">
                     <DropdownWithSearchField
                       value={formData.CurrentRole}
                       options={roleOptionsRS}
@@ -2311,8 +2309,9 @@ const AddCandidateForm = ({
               type="button"
               onClick={handleClose}
               disabled={isMutationLoading}
-              className={`text-custom-blue border border-custom-blue transition-colors ${isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`text-custom-blue border border-custom-blue transition-colors ${
+                isMutationLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Cancel
             </Button>
@@ -2336,7 +2335,7 @@ const AddCandidateForm = ({
           <div className="space-y-6">
             <div className="grid grid-cols-1 gap-y-4">
               <div className="space-y-4">
-                <p className="mb-4 sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold col-span-2">
+                <p className="mb-4 sm:text-base md:text-md lg:text-md xl:text-md 2xl:text-lg font-semibold text-gray-800 col-span-2">
                   Additional Details
                 </p>
                 <div className="grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2 gap-x-6 gap-y-4">
@@ -2421,7 +2420,7 @@ const AddCandidateForm = ({
                   {/* External ID */}
                   <div>
                     <div className="flex items-center gap-2 mb-1 relative">
-                      <label className="text-sm font-medium text-gray-700">
+                      <label className="sm:text-sm md:text-sm lg:text-sm xl:text-sm 2xl:text-base font-medium text-gray-700">
                         External ID
                       </label>
                       <div className="relative tooltip-container">
@@ -2452,17 +2451,18 @@ const AddCandidateForm = ({
               {/* Certifications Section */}
               <div className="col-span-2" id="certifications-section">
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="sm:text-sm md:text-sm lg:text-sm xl:text-sm 2xl:text-base font-medium text-gray-700">
                     Certifications ({formData?.certifications?.length || 0}/10)
                   </label>
                   <button
                     type="button"
                     onClick={addCertificationRow}
                     disabled={formData?.certifications?.length >= 10}
-                    className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors ${formData?.certifications?.length >= 10
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-custom-blue text-white hover:bg-custom-blue/90"
-                      }`}
+                    className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors ${
+                      formData?.certifications?.length >= 10
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-custom-blue text-white hover:bg-custom-blue/90"
+                    }`}
                   >
                     <Plus className="w-4 h-4" />
                     Add
@@ -2646,24 +2646,40 @@ const AddCandidateForm = ({
                           <input
                             type="text"
                             value={cert?.name || ""}
-                            onChange={(e) => updateCertificationRow(index, "name", e.target.value)}
+                            onChange={(e) =>
+                              updateCertificationRow(
+                                index,
+                                "name",
+                                e.target.value,
+                              )
+                            }
                             placeholder="Certification Name"
-                            className={`w-full px-3 py-2 border ${certificationErrors[index]?.name ? "border-red-500" : "border-gray-300"} rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-custom-blue`}
+                            className={`w-full px-3 py-2 border font-medium placeholder:font-normal text-base ${certificationErrors[index]?.name ? "border-red-500" : "border-gray-300"} rounded-md focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-custom-blue`}
                           />
                           {certificationErrors[index]?.name && (
-                            <p className="text-red-500 text-xs mt-1">Field is required</p>
+                            <p className="text-red-500 text-xs mt-1">
+                              Field is required
+                            </p>
                           )}
                         </div>
                         <div className="w-full">
                           <input
                             type="text"
                             value={cert?.issuingFrom || ""}
-                            onChange={(e) => updateCertificationRow(index, "issuingFrom", e.target.value)}
+                            onChange={(e) =>
+                              updateCertificationRow(
+                                index,
+                                "issuingFrom",
+                                e.target.value,
+                              )
+                            }
                             placeholder="Issuing From"
-                            className={`w-full px-3 py-2 border ${certificationErrors[index]?.issuingFrom ? "border-red-500" : "border-gray-300"} rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-custom-blue`}
+                            className={`w-full px-3 py-2 border font-medium placeholder:font-normal text-base ${certificationErrors[index]?.issuingFrom ? "border-red-500" : "border-gray-300"} rounded-md focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-custom-blue`}
                           />
                           {certificationErrors[index]?.issuingFrom && (
-                            <p className="text-red-500 text-xs mt-1">Field is required</p>
+                            <p className="text-red-500 text-xs mt-1">
+                              Field is required
+                            </p>
                           )}
                         </div>
                         <div className="w-full">
@@ -2672,13 +2688,19 @@ const AddCandidateForm = ({
                             value={cert?.issuingYear || ""}
                             onChange={(e) => {
                               const val = e.target.value.slice(0, 4);
-                              updateCertificationRow(index, "issuingYear", val ? Number(val) : "");
+                              updateCertificationRow(
+                                index,
+                                "issuingYear",
+                                val ? Number(val) : "",
+                              );
                             }}
                             placeholder="Issuing Year"
-                            className={`w-full px-3 py-2 border ${certificationErrors[index]?.issuingYear ? "border-red-500" : "border-gray-300"} rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-custom-blue`}
+                            className={`w-full px-3 py-2 border font-medium placeholder:font-normal text-base ${certificationErrors[index]?.issuingYear ? "border-red-500" : "border-gray-300"} rounded-md focus:outline-none focus:ring-1 focus:ring-custom-blue focus:border-custom-blue`}
                           />
                           {certificationErrors[index]?.issuingYear && (
-                            <p className="text-red-500 text-xs mt-1">Field is required</p>
+                            <p className="text-red-500 text-xs mt-1">
+                              Field is required
+                            </p>
                           )}
                         </div>
                       </div>
@@ -2699,7 +2721,7 @@ const AddCandidateForm = ({
             </div>
             {/* Work Experience Heading */}
             <div className="space-y-4">
-              <p className="mb-4 sm:text-md md:text-lg lg:text-lg xl:text-lg 2xl:text-lg font-semibold text-gray-800">
+              <p className="mb-4 sm:text-base md:text-md lg:text-md xl:text-md 2xl:text-lg font-semibold text-gray-800">
                 Work Experience
               </p>
 
@@ -2723,7 +2745,7 @@ const AddCandidateForm = ({
                 {/* Work Experience Projects */}
                 <div className="col-span-2 mb-4">
                   <div className="flex justify-between items-center mb-4">
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="sm:text-sm md:text-sm lg:text-sm xl:text-sm 2xl:text-base font-medium text-gray-700">
                       Project Details
                     </label>
                     <Button
@@ -2741,7 +2763,7 @@ const AddCandidateForm = ({
                   {/* Project Cards Display */}
                   <div className="grid grid-cols-1 gap-4">
                     {formData?.workExperience &&
-                      formData.workExperience.length > 0 ? (
+                    formData.workExperience.length > 0 ? (
                       formData.workExperience.map((project, index) => (
                         <div
                           key={index}
@@ -2763,13 +2785,13 @@ const AddCandidateForm = ({
                             className="font-medium text-md text-gray-800 truncate max-w-[260px] mb-1"
                             title={project?.projectName}
                           >
-                            {project?.projectName}
+                            {capitalizeFirstLetter(project?.projectName)}
                           </h5>
                           <div className="flex items-center gap-1 mb-1">
                             <div className="flex items-center gap-2">
                               <Briefcase className="text-gray-700 h-4 w-4" />
                               <p className="text-xs text-gray-700 font-semibold truncate max-w-[260px]">
-                                {project?.role}
+                                {capitalizeFirstLetter(project?.role)}
                               </p>
                             </div>
                             <Dot className="w-4 h-4 text-gray-700" />
@@ -2959,23 +2981,23 @@ const AddCandidateForm = ({
         //   title={id ? "Update Candidate" : "Add New Candidate"}
         //   onClose={handleClose}
         // >
-        <div className="fixed sm:px-[4%] pl-[8%] pr-[7%] top-[62px] inset-x-0 bottom-0 z-40 overflow-y-auto bg-white">
+        <div className="fixed sm:px-6 md:px-6 lg:px-8 xl:px-24 2xl:px-24 top-[62px] inset-x-0 bottom-0 z-40 overflow-y-auto bg-white">
           <div className="relative flex flex-col min-h-full items-center justify-start pb-10 pt-4">
             <div className="w-full mb-4">
               <div className="mb-6">
                 <button
                   onClick={handleClose}
                   type="button"
-                  className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                  className="flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
                 >
                   <ArrowLeft className="h-5 w-5 mr-2" /> Back to Candidates
                 </button>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                <h3 className="sm:text-base md:text-md lg:text-xl xl:text-xl 2xl:text-xl font-semibold text-gray-900 mb-1">
                   {id ? "Update Candidate" : "Add New Candidate"}
                 </h3>
-                <p className="text-sm text-gray-500 font-semibold">
+                <p className="sm:text-xs md:text-xs lg:text-sm xl:text-sm 2xl:text-sm text-gray-500 font-semibold">
                   Step {currentFormStep} of 2 -{" "}
                   {currentFormStep === 1
                     ? "Basic Details"
@@ -2993,7 +3015,7 @@ const AddCandidateForm = ({
       {isProjectModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black bg-opacity-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-xl p-6 m-4 overflow-y-auto max-h-[90vh]">
-            <h3 className="text-xl font-bold mb-4">
+            <h3 className="sm:text-base md:text-base lg:text-md xl:text-xl 2xl:text-xl font-bold mb-4 text-custom-blue">
               {editingProjectIndex !== null ? "Edit Project" : "Add Project"}
             </h3>
 
@@ -3130,6 +3152,7 @@ const AddCandidateForm = ({
             <div className="flex justify-end gap-3 mt-6">
               <Button
                 variant="outline"
+                className="border border-custom-blue text-custom-blue"
                 onClick={() => {
                   setIsProjectModalOpen(false);
                   setProjectErrors({});

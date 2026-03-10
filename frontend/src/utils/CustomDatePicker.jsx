@@ -126,6 +126,11 @@ const CustomDatePicker = ({
                 "& .MuiFormHelperText-root": {
                   color: errors ? "#EF4444" : "#6B7280",
                 },
+
+                "& .MuiInputBase-input": {
+                  fontWeight: 500,
+                  color: "#374151",
+                },
               },
             },
 

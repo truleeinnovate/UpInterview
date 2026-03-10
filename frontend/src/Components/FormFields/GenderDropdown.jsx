@@ -4,7 +4,7 @@ import DropdownSelect from "../Dropdowns/DropdownSelect";
 const GenderField = ({ value, options, onChange, error, containerRef, label = "Gender", required = false }) => {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block sm:text-sm md:text-sm lg:text-sm xl:text-sm 2xl:text-base font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <div ref={containerRef}>

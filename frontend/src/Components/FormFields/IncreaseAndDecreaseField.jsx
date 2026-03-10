@@ -173,7 +173,7 @@ const IncreaseAndDecreaseField = ({
     <div>
       <label
         htmlFor={name}
-        className="block text-sm font-medium text-gray-700 mb-1"
+        className="block sm:text-sm md:text-sm lg:text-sm xl:text-sm 2xl:text-base font-medium text-gray-700 mb-1"
       >
         {label} {required && <span className="text-red-500">*</span>}
       </label>
@@ -205,7 +205,7 @@ const IncreaseAndDecreaseField = ({
           //     ? "border-red-500 focus:ring-red-500 focus:outline-red-300"
           //     : "border-gray-300 focus:ring-red-300"
           // } focus:outline-gray-300`}
-          className={`block w-full rounded-md shadow-sm py-2 ${
+          className={`block w-full rounded-md shadow-sm py-2 sm:text-sm md:text-sm text-base font-medium placeholder:font-normal ${
             showCurrencyIcon ? "pr-3 pl-9" : "px-3"
           } sm:text-sm border ${
             error
