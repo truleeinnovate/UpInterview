@@ -3711,35 +3711,1155 @@ async function handleInterviewFiltering(options) {
 }
 
 // Enhanced dashboard stats function with proper date handling
+// async function getInterviewDashboardStats({ filterQuery, DataModel }) {
+//   if (!DataModel) throw new Error("DataModel missing");
+
+//   // Convert tenantId & ownerId to ObjectId
+//   const tenantId = new mongoose.Types.ObjectId(filterQuery.tenantId);
+//   const ownerId = filterQuery.ownerId
+//     ? new mongoose.Types.ObjectId(filterQuery.ownerId)
+//     : null;
+
+//     console.log("tenantId",tenantId)
+//     console.log("ownerId",ownerId)
+
+//   const matchInterview = {
+//     "interview.tenantId": tenantId,
+//     ...(ownerId ? { "interview.ownerId": ownerId } : {}),
+//   };
+
+
+//   console.log("matchInterview",matchInterview)
+//   // If upcomingOnly is true, we'll only return upcoming interviews
+//   const isUpcomingRequest =
+//     filterQuery?.upcomingOnly === true || filterQuery?.type === "upcoming";
+
+//   const now = new Date();
+
+//   // Date ranges for calculations
+//   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+//   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+//   const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+//   const currentWeekStart = new Date(now);
+//   currentWeekStart.setDate(now.getDate() - now.getDay() + 1); // Monday
+//   const currentWeekEnd = new Date(currentWeekStart);
+//   currentWeekEnd.setDate(currentWeekStart.getDate() + 6); // Sunday
+
+//   const lastWeekStart = new Date(currentWeekStart);
+//   lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+//   const lastWeekEnd = new Date(currentWeekEnd);
+//   lastWeekEnd.setDate(lastWeekEnd.getDate() - 7);
+
+//   const next7DaysEnd = new Date();
+//   next7DaysEnd.setDate(now.getDate() + 7);
+
+//   // --------------------------------------------------------------------
+//   // TOTAL INTERVIEWS (All time count)
+//   // --------------------------------------------------------------------
+//   // const totalInterviews = await DataModel.countDocuments({
+//   //   tenantId,
+//   //   ...(ownerId ? { ownerId } : {}),
+//   // });
+
+//   // --------------------------------------------------------------------
+//   // CURRENT MONTH & LAST MONTH INTERVIEWS (Based on rounds)
+//   // --------------------------------------------------------------------
+//   const monthlyRoundsAgg = await InterviewRounds.aggregate([
+//     {
+//       $lookup: {
+//         from: "interviews",
+//         localField: "interviewId",
+//         foreignField: "_id",
+//         as: "interview",
+//       },
+//     },
+//     { $unwind: "$interview" },
+//     { $match: matchInterview },
+//     {
+//       $project: {
+//         createdAt: 1,
+//         // Use createdAt as fallback for date calculations
+//         effectiveDate: {
+//           $cond: {
+//             if: {
+//               $and: [
+//                 { $ne: ["$dateTime", ""] },
+//                 { $ne: ["$dateTime", null] },
+//                 { $ne: ["$dateTime", undefined] },
+//               ],
+//             },
+//             then: {
+//               $cond: {
+//                 if: { $eq: [{ $type: "$dateTime" }, "string"] },
+//                 then: {
+//                   $dateFromString: {
+//                     dateString: "$dateTime",
+//                     onError: "$createdAt", // Fallback to createdAt if parsing fails
+//                   },
+//                 },
+//                 else: "$dateTime",
+//               },
+//             },
+//             else: "$createdAt", // Default to createdAt if dateTime is empty/invalid
+//           },
+//         },
+//       },
+//     },
+//     {
+//       $group: {
+//         _id: null,
+//         currentMonthCount: {
+//           $sum: {
+//             $cond: [{ $gte: ["$effectiveDate", currentMonthStart] }, 1, 0],
+//           },
+//         },
+//         lastMonthCount: {
+//           $sum: {
+//             $cond: [
+//               {
+//                 $and: [
+//                   { $gte: ["$effectiveDate", lastMonthStart] },
+//                   { $lte: ["$effectiveDate", lastMonthEnd] },
+//                 ],
+//               },
+//               1,
+//               0,
+//             ],
+//           },
+//         },
+//         totalRounds: { $sum: 1 },
+//       },
+//     },
+//   ]);
+
+//   const monthlyData = monthlyRoundsAgg[0] || {
+//     currentMonthCount: 0,
+//     lastMonthCount: 0,
+//     totalRounds: 0,
+//   };
+
+//   // Calculate trend for total interviews
+//   const totalTrend =
+//     monthlyData.lastMonthCount === 0
+//       ? "up"
+//       : monthlyData.currentMonthCount >= monthlyData.lastMonthCount
+//         ? "up"
+//         : "down";
+
+//   const totalTrendValue =
+//     monthlyData.lastMonthCount === 0
+//       ? "+100% vs last month"
+//       : `${(
+//         ((monthlyData.currentMonthCount - monthlyData.lastMonthCount) /
+//           monthlyData.lastMonthCount) *
+//         100
+//       ).toFixed(1)}% vs last month`;
+
+//   // --------------------------------------------------------------------
+//   // OUTSOURCED INTERVIEWS
+//   // --------------------------------------------------------------------
+//   const outsourcedAgg = await InterviewRounds.aggregate([
+//     {
+//       $match: {
+//         interviewerType: "External",
+//         ...(matchInterview["interview.tenantId"] ? {} : {}),
+//       },
+//     },
+//     {
+//       $lookup: {
+//         from: "interviews",
+//         localField: "interviewId",
+//         foreignField: "_id",
+//         as: "interview",
+//       },
+//     },
+//     { $unwind: "$interview" },
+//     { $match: matchInterview },
+//     {
+//       $group: {
+//         _id: null,
+//         currentMonthCount: {
+//           $sum: {
+//             $cond: [{ $gte: ["$createdAt", currentMonthStart] }, 1, 0],
+//           },
+//         },
+//         lastMonthCount: {
+//           $sum: {
+//             $cond: [
+//               {
+//                 $and: [
+//                   { $gte: ["$createdAt", lastMonthStart] },
+//                   { $lte: ["$createdAt", lastMonthEnd] },
+//                 ],
+//               },
+//               1,
+//               0,
+//             ],
+//           },
+//         },
+//         totalCount: { $sum: 1 },
+//       },
+//     },
+//   ]);
+
+//   const outsourcedData = outsourcedAgg[0] || {
+//     currentMonthCount: 0,
+//     lastMonthCount: 0,
+//     totalCount: 0,
+//   };
+
+//   // Calculate trend for outsourced interviews
+//   const outsourcedTrend =
+//     outsourcedData.lastMonthCount === 0
+//       ? "up"
+//       : outsourcedData.currentMonthCount >= outsourcedData.lastMonthCount
+//         ? "up"
+//         : "down";
+
+//   const outsourcedTrendValue =
+//     outsourcedData.lastMonthCount === 0
+//       ? "+100% vs last month"
+//       : `${(
+//         ((outsourcedData.currentMonthCount - outsourcedData.lastMonthCount) /
+//           outsourcedData.lastMonthCount) *
+//         100
+//       ).toFixed(1)}% vs last month`;
+
+//   // --------------------------------------------------------------------
+//   // UPCOMING INTERVIEWS (with safe date parsing)
+//   // --------------------------------------------------------------------
+//   const upcomingAgg = await InterviewRounds.aggregate([
+//     {
+//       $match: {
+//         $and: [
+//           { dateTime: { $ne: null, $exists: true } },
+//           { dateTime: { $ne: "" } }, // Exclude empty strings
+//           { dateTime: { $type: "string" } }, // Only consider string dates
+//         ],
+//         status: { $in: ["Draft", "RequestSent", "Scheduled"] },
+//       },
+//     },
+//     {
+//       $lookup: {
+//         from: "interviews",
+//         localField: "interviewId",
+//         foreignField: "_id",
+//         as: "interview",
+//       },
+//     },
+//     { $unwind: "$interview" },
+//     { $match: matchInterview },
+//     {
+//       $project: {
+//         dateTime: 1,
+//         // Safe date parsing with validation
+//         parsedDateTime: {
+//           $cond: {
+//             if: {
+//               $and: [
+//                 { $ne: ["$dateTime", ""] },
+//                 { $ne: ["$dateTime", null] },
+//                 {
+//                   $regexMatch: {
+//                     input: "$dateTime",
+//                     regex: /^\d{4}-\d{2}-\d{2}/,
+//                   },
+//                 }, // Basic date format validation
+//               ],
+//             },
+//             then: {
+//               $dateFromString: {
+//                 dateString: "$dateTime",
+//                 onError: null, // Return null if parsing fails
+//                 onNull: null,
+//               },
+//             },
+//             else: null,
+//           },
+//         },
+//       },
+//     },
+//     {
+//       $match: {
+//         parsedDateTime: { $ne: null }, // Only include documents with valid dates
+//       },
+//     },
+//     {
+//       $group: {
+//         _id: null,
+//         upcoming7Days: {
+//           $sum: {
+//             $cond: [
+//               {
+//                 $and: [
+//                   { $gte: ["$parsedDateTime", now] },
+//                   { $lte: ["$parsedDateTime", next7DaysEnd] },
+//                 ],
+//               },
+//               1,
+//               0,
+//             ],
+//           },
+//         },
+//         currentWeekCount: {
+//           $sum: {
+//             $cond: [
+//               {
+//                 $and: [
+//                   { $gte: ["$parsedDateTime", currentWeekStart] },
+//                   { $lte: ["$parsedDateTime", currentWeekEnd] },
+//                 ],
+//               },
+//               1,
+//               0,
+//             ],
+//           },
+//         },
+//         lastWeekCount: {
+//           $sum: {
+//             $cond: [
+//               {
+//                 $and: [
+//                   { $gte: ["$parsedDateTime", lastWeekStart] },
+//                   { $lte: ["$parsedDateTime", lastWeekEnd] },
+//                 ],
+//               },
+//               1,
+//               0,
+//             ],
+//           },
+//         },
+//       },
+//     },
+//   ]);
+
+//   const upcomingData = upcomingAgg[0] || {
+//     upcoming7Days: 0,
+//     currentWeekCount: 0,
+//     lastWeekCount: 0,
+//   };
+
+//   // Calculate trend for upcoming interviews
+//   const upcomingTrend =
+//     upcomingData.lastWeekCount === 0
+//       ? "up"
+//       : upcomingData.currentWeekCount >= upcomingData.lastWeekCount
+//         ? "up"
+//         : "down";
+
+//   const upcomingTrendValue =
+//     upcomingData.lastWeekCount === 0
+//       ? "+100% vs last week"
+//       : `${(
+//         ((upcomingData.currentWeekCount - upcomingData.lastWeekCount) /
+//           upcomingData.lastWeekCount) *
+//         100
+//       ).toFixed(1)}% vs last week`;
+//   // console.log("upcomingData", {
+//   //   matchInterview,
+//   //   now,
+//   //   limit: 5, // Limit for dashboard display
+//   // });
+
+//   // --------------------------------------------------------------------
+//   // INTERVIEWS OVER TIME CHART (Last 30 Days)
+//   // --------------------------------------------------------------------
+//   const thirtyDaysAgo = new Date(now);
+//   thirtyDaysAgo.setDate(now.getDate() - 30);
+
+//   const chartAgg = await InterviewRounds.aggregate([
+//     {
+//       $lookup: {
+//         from: "interviews",
+//         localField: "interviewId",
+//         foreignField: "_id",
+//         as: "interview",
+//       },
+//     },
+//     { $unwind: "$interview" },
+//     { $match: matchInterview },
+//     {
+//       $project: {
+//         interviewerType: 1,
+//         // Calculate effectiveDate using the same logic as the monthly summary
+//         effectiveDate: {
+//           $cond: {
+//             if: {
+//               $and: [
+//                 { $ne: ["$dateTime", ""] },
+//                 { $ne: ["$dateTime", null] },
+//                 { $ne: ["$dateTime", undefined] },
+//               ],
+//             },
+//             then: {
+//               $cond: {
+//                 if: { $eq: [{ $type: "$dateTime" }, "string"] },
+//                 then: {
+//                   $dateFromString: {
+//                     dateString: "$dateTime",
+//                     onError: "$createdAt", 
+//                   },
+//                 },
+//                 else: "$dateTime",
+//               },
+//             },
+//             else: "$createdAt", 
+//           },
+//         },
+//       },
+//     },
+//     {
+//       $match: {
+//         effectiveDate: { $gte: thirtyDaysAgo, $lte: now },
+//       },
+//     },
+//     {
+//       $group: {
+//         _id: {
+//           $dateToString: { format: "%Y-%m-%d", date: "$effectiveDate" },
+//         },
+//         interviews: { $sum: 1 },
+//         outsourced: {
+//           $sum: {
+//             $cond: [{ $eq: ["$interviewerType", "External"] }, 1, 0],
+//           },
+//         },
+//       },
+//     },
+//     { $sort: { _id: 1 } },
+//     {
+//       $project: {
+//         _id: 0,
+//         date: "$_id",
+//         interviews: 1,
+//         outsourced: 1,
+//       },
+//     },
+//   ]);
+
+//   // Ensure we fill in missing dates for the chart to look continuous
+//   const interviewsOverTime = [];
+//   for (let i = 29; i >= 0; i--) {
+//     const d = new Date(now);
+//     d.setDate(d.getDate() - i);
+//     const dateStr = d.toISOString().split("T")[0];
+//     const existing = chartAgg.find((c) => c.date === dateStr);
+//     interviewsOverTime.push(
+//       existing || { date: dateStr, interviews: 0, outsourced: 0 }
+//     );
+//   }
+
+//   // Get upcoming rounds for dashboard (without filters)
+//   const upcomingRoundsData = await getUpcomingRoundsOnly({
+//     matchInterview,
+//     now,
+//     limit: 5, // Limit for dashboard display
+//   });
+
+//   // console.log("InterviewRounds", InterviewRounds);
+
+//   // --------------------------------------------------------------------
+// // INTERVIEWER UTILIZATION CHART
+// // --------------------------------------------------------------------
+// const utilizationAgg = await InterviewRounds.aggregate([
+//   // only consider rounds that actually have interviewers assigned
+//   {
+//     $match: {
+//       interviewers: { $exists: true, $ne: [], $type: "array" },
+//     },
+//   },
+
+//   {
+//     $lookup: {
+//       from: "interviews",
+//       localField: "interviewId",
+//       foreignField: "_id",
+//       as: "interview",
+//     },
+//   },
+//   { $unwind: "$interview" },
+
+//   // tenant / owner filter
+//   { $match: matchInterview },
+
+//   // expand interviewer array
+//   { $unwind: "$interviewers" },
+
+//   // convert to ObjectId (interviewers may be stored as strings or ObjectIds)
+//   {
+//     $addFields: {
+//       interviewerObjId: {
+//         $convert: {
+//           input: "$interviewers",
+//           to: "objectId",
+//           onError: "$interviewers",
+//           onNull: "$interviewers",
+//         },
+//       },
+//     },
+//   },
+
+//   // join contacts collection using the converted ObjectId
+//   {
+//     $lookup: {
+//       from: "contacts",
+//       localField: "interviewerObjId",
+//       foreignField: "_id",
+//       as: "interviewer",
+//     },
+//   },
+
+//   { $unwind: { path: "$interviewer", preserveNullAndEmptyArrays: true } },
+
+//   {
+//     $group: {
+//       _id: "$interviewerObjId",
+//       interviews: { $sum: 1 },
+
+//       name: {
+//         $first: {
+//           $concat: [
+//             { $ifNull: ["$interviewer.firstName", "Unknown"] },
+//             " ",
+//             { $ifNull: ["$interviewer.lastName", ""] },
+//           ],
+//         },
+//       },
+
+//       type: { $first: "$interviewerType" },
+//     },
+//   },
+
+//   {
+//     $project: {
+//       _id: 0,
+//       name: { $trim: { input: "$name" } },
+//       interviews: 1,
+//       type: { $toLower: "$type" },
+//     },
+//   },
+
+//   { $sort: { interviews: -1 } },
+
+//   { $limit: 10 },
+// ]);
+
+// // console.log("utilizationAgg", utilizationAgg);
+
+// const interviewerUtilization = utilizationAgg ;
+
+// // --------------------------------------------------------------------
+// // ROUND STATUS COUNTS + RATE + TREND
+// // --------------------------------------------------------------------
+// const roundStatusAgg = await InterviewRounds.aggregate([
+//   {
+//     $lookup: {
+//       from: "interviews",
+//       localField: "interviewId",
+//       foreignField: "_id",
+//       as: "interview",
+//     },
+//   },
+//   { $unwind: "$interview" },
+
+//   // tenant / owner filter
+//   { $match: matchInterview },
+
+//   {
+//     $project: {
+//       status: 1,
+//       createdAt: 1,
+//     },
+//   },
+
+//   {
+//     $group: {
+//       _id: null,
+
+//       totalRounds: { $sum: 1 },
+
+//       // Individual status counts
+//       noShowCount: {
+//         $sum: {
+//           $cond: [{ $eq: ["$status", "NoShow"] }, 1, 0],
+//         },
+//       },
+//       cancelledCount: {
+//         $sum: {
+//           $cond: [{ $eq: ["$status", "Cancelled"] }, 1, 0],
+//         },
+//       },
+
+
+//       // Total NoShow + Cancelled
+//       noShowCancelledTotal: {
+//         $sum: {
+//           $cond: [
+//             { $in: ["$status", ["NoShow", "Cancelled"]] },
+//             1,
+//             0,
+//           ],
+//         },
+//       },
+
+//       // Current month NoShow + Cancelled
+//       currentMonthNoShowCancelled: {
+//         $sum: {
+//           $cond: [
+//             {
+//               $and: [
+//                 { $in: ["$status", ["NoShow", "Cancelled"]] },
+//                 { $gte: ["$createdAt", currentMonthStart] },
+//               ],
+//             },
+//             1,
+//             0,
+//           ],
+//         },
+//       },
+
+//       // Last month NoShow + Cancelled
+//       lastMonthNoShowCancelled: {
+//         $sum: {
+//           $cond: [
+//             {
+//               $and: [
+//                 { $in: ["$status", ["NoShow", "Cancelled"]] },
+//                 { $gte: ["$createdAt", lastMonthStart] },
+//                 { $lte: ["$createdAt", lastMonthEnd] },
+//               ],
+//             },
+//             1,
+//             0,
+//           ],
+//         },
+//       },
+//     },
+//   },
+// ]);
+
+// // default fallback
+// const roundStatusData = roundStatusAgg[0] || {
+//   totalRounds: 0,
+//   noShowCount: 0,
+//   cancelledCount: 0,
+//   noShowCancelledTotal: 0,
+//   currentMonthNoShowCancelled: 0,
+//   lastMonthNoShowCancelled: 0,
+// };
+
+// // --------------------------------------------------
+// // NoShow + Cancelled Rate Calculation
+// // --------------------------------------------------
+// const totalRounds = roundStatusData.totalRounds || 0;
+// const totalNoShowCancelled = roundStatusData.noShowCancelledTotal || 0;
+
+// // Rate %
+// const noShowCancelRate =
+//   totalRounds === 0
+//     ? 0
+//     : ((totalNoShowCancelled / totalRounds) * 100).toFixed(0);
+
+// // --------------------------------------------------
+// // Trend Calculation
+// // --------------------------------------------------
+// const lastMonthNoShowCancelled =
+//   roundStatusData.lastMonthNoShowCancelled || 0;
+
+// const currentMonthNoShowCancelled =
+//   roundStatusData.currentMonthNoShowCancelled || 0;
+
+// const noShowTrend =
+//   lastMonthNoShowCancelled === 0
+//     ? "up"
+//     : currentMonthNoShowCancelled >= lastMonthNoShowCancelled
+//     ? "up"
+//     : "down";
+
+// const noShowTrendValue =
+//   lastMonthNoShowCancelled === 0
+//     ? "+100% vs last month"
+//     : `${(
+//         ((currentMonthNoShowCancelled - lastMonthNoShowCancelled) /
+//           lastMonthNoShowCancelled) *
+//         100
+//       ).toFixed(0)}% vs last month`;
+
+//   // --------------------------------------------------------------------
+// // TOTAL ASSESSMENTS & AVERAGE SCORE
+// // Fix: Start from CandidateAssessment, join ScheduledAssessment for tenantId/ownerId
+// // --------------------------------------------------------------------
+// const ScheduledAssessmentModel = mongoose.models.ScheduledAssessment;
+// const CandidateAssessmentModel = mongoose.models.CandidateAssessment;
+
+// let assessmentData = {
+//   totalCompleted: 0,
+//   currentMonthCount: 0,
+//   lastMonthCount: 0,
+//   averageScore: 0,
+//   averageScoreLastMonth: 0,
+//   trend: "up",
+//   trendValue: "+0% vs last month",
+//   averageScoreTrend: "up",
+//   averageScoreTrendValue: "+0 vs last month",
+//   assessmentStats: [
+//     { name: "Passed", value: 0, color: "#22c55e" },
+//     { name: "Failed", value: 0, color: "#ef4444" },
+//     { name: "Pending", value: 0, color: "#f59e0b" },
+//   ],
+// };
+
+// if (CandidateAssessmentModel && ScheduledAssessmentModel) {
+//   try {
+//     // Build scheduled assessment match — tenantId is on ScheduledAssessment
+//     const scheduledAssessmentMatch = {
+//       tenantId: tenantId,           // already an ObjectId from top of function
+//       isActive: true,
+//       ...(ownerId ? { ownerId: ownerId } : {}),  // ownerId filter if present
+//     };
+
+//     const analyticsAggregation = await CandidateAssessmentModel.aggregate([
+//       // 1. Join to ScheduledAssessment to get tenantId / ownerId
+//       {
+//         $lookup: {
+//           from: "scheduledassessments",        // MongoDB collection name (lowercase)
+//           localField: "scheduledAssessmentId",
+//           foreignField: "_id",
+//           as: "scheduledAssessment",
+//         },
+//       },
+//       { $unwind: "$scheduledAssessment" },
+
+//       // 2. Filter by tenant (and owner if present)
+//       {
+//         $match: {
+//           "scheduledAssessment.tenantId": tenantId,
+//           "scheduledAssessment.isActive": true,
+//           ...(ownerId ? { "scheduledAssessment.ownerId": ownerId } : {}),
+//         },
+//       },
+
+//       // 3. Project only what we need
+//       {
+//         $project: {
+//           status: 1,
+//           totalScore: 1,
+//           createdAt: 1,
+//         },
+//       },
+
+//       // 4. Group and compute all stats
+//       {
+//         $group: {
+//           _id: null,
+
+//           // All-time completed (pass/fail/completed statuses)
+//           totalCompleted: {
+//             $sum: {
+//               $cond: [
+//                 { $in: ["$status", ["completed", "pass", "failed"]] },
+//                 1,
+//                 0,
+//               ],
+//             },
+//           },
+
+//           // Current month completed
+//           currentMonthCount: {
+//             $sum: {
+//               $cond: [
+//                 {
+//                   $and: [
+//                     { $in: ["$status", ["completed", "pass", "failed"]] },
+//                     { $gte: ["$createdAt", currentMonthStart] },
+//                   ],
+//                 },
+//                 1,
+//                 0,
+//               ],
+//             },
+//           },
+
+//           // Last month completed
+//           lastMonthCount: {
+//             $sum: {
+//               $cond: [
+//                 {
+//                   $and: [
+//                     { $in: ["$status", ["completed", "pass", "failed"]] },
+//                     { $gte: ["$createdAt", lastMonthStart] },
+//                     { $lte: ["$createdAt", lastMonthEnd] },
+//                   ],
+//                 },
+//                 1,
+//                 0,
+//               ],
+//             },
+//           },
+
+//           // Score sums (all time)
+//           totalScoreSum: {
+//             $sum: {
+//               $cond: [
+//                 { $in: ["$status", ["completed", "pass", "failed"]] },
+//                 { $ifNull: ["$totalScore", 0] },
+//                 0,
+//               ],
+//             },
+//           },
+
+//           // Count of records that have a valid score (all time)
+//           scoredCount: {
+//             $sum: {
+//               $cond: [
+//                 {
+//                   $and: [
+//                     { $in: ["$status", ["completed", "pass", "failed"]] },
+//                     { $gt: ["$totalScore", 0] },   // has a real score
+//                   ],
+//                 },
+//                 1,
+//                 0,
+//               ],
+//             },
+//           },
+
+//           // Score sums (last month)
+//           lastMonthScoreSum: {
+//             $sum: {
+//               $cond: [
+//                 {
+//                   $and: [
+//                     { $in: ["$status", ["completed", "pass", "failed"]] },
+//                     { $gte: ["$createdAt", lastMonthStart] },
+//                     { $lte: ["$createdAt", lastMonthEnd] },
+//                     { $gt: ["$totalScore", 0] },
+//                   ],
+//                 },
+//                 { $ifNull: ["$totalScore", 0] },
+//                 0,
+//               ],
+//             },
+//           },
+
+//           // Count of records that have a valid score (last month)
+//           lastMonthScoredCount: {
+//             $sum: {
+//               $cond: [
+//                 {
+//                   $and: [
+//                     { $in: ["$status", ["completed", "pass", "failed"]] },
+//                     { $gte: ["$createdAt", lastMonthStart] },
+//                     { $lte: ["$createdAt", lastMonthEnd] },
+//                     { $gt: ["$totalScore", 0] },
+//                   ],
+//                 },
+//                 1,
+//                 0,
+//               ],
+//             },
+//           },
+
+//           // Pass = status is "pass" or "completed"
+//           passedCount: {
+//             $sum: {
+//               $cond: [
+//                 { $in: ["$status", ["pass", "completed"]] },
+//                 1,
+//                 0,
+//               ],
+//             },
+//           },
+
+//           // Failed = status is "failed"
+//           failedCount: {
+//             $sum: {
+//               $cond: [{ $eq: ["$status", "failed"] }, 1, 0],
+//             },
+//           },
+
+//           // Pending = not yet done
+//           pendingCount: {
+//             $sum: {
+//               $cond: [
+//                 {
+//                   $in: ["$status", ["pending", "in_progress", "extended"]],
+//                 },
+//                 1,
+//                 0,
+//               ],
+//             },
+//           },
+//         },
+//       },
+//     ]);
+
+//     const result = analyticsAggregation[0] || {
+//       totalCompleted: 0,
+//       currentMonthCount: 0,
+//       lastMonthCount: 0,
+//       totalScoreSum: 0,
+//       scoredCount: 0,
+//       lastMonthScoreSum: 0,
+//       lastMonthScoredCount: 0,
+//       passedCount: 0,
+//       failedCount: 0,
+//       pendingCount: 0,
+//     };
+
+//     const averageScore =
+//       result.scoredCount > 0
+//         ? result.totalScoreSum / result.scoredCount
+//         : 0;
+
+//     const averageScoreLastMonth =
+//       result.lastMonthScoredCount > 0
+//         ? result.lastMonthScoreSum / result.lastMonthScoredCount
+//         : 0;
+
+//     const assessmentTrend =
+//       result.lastMonthCount === 0
+//         ? "up"
+//         : result.currentMonthCount >= result.lastMonthCount
+//           ? "up"
+//           : "down";
+
+//     const assessmentPercentageChange =
+//       result.lastMonthCount === 0
+//         ? 100
+//         : ((result.currentMonthCount - result.lastMonthCount) /
+//             result.lastMonthCount) *
+//           100;
+
+//     const assessmentTrendValue =
+//       result.lastMonthCount === 0
+//         ? "+100% vs last month"
+//         : `${assessmentPercentageChange > 0 ? "+" : ""}${assessmentPercentageChange.toFixed(1)}% vs last month`;
+
+//     const avgScoreTrend =
+//       averageScoreLastMonth === 0
+//         ? "up"
+//         : averageScore >= averageScoreLastMonth
+//           ? "up"
+//           : "down";
+
+//     const difference = averageScore - averageScoreLastMonth;
+//     const avgScoreTrendValue =
+//       averageScoreLastMonth === 0
+//         ? `+${averageScore.toFixed(1)} vs last month`
+//         : `${difference > 0 ? "+" : ""}${difference.toFixed(1)} vs last month`;
+
+//     assessmentData = {
+//       totalCompleted: result.currentMonthCount,   // current month = "this month's completions"
+//       lastMonthCount: result.lastMonthCount,
+//       averageScore,
+//       averageScoreLastMonth,
+//       trend: assessmentTrend,
+//       trendValue: assessmentTrendValue,
+//       averageScoreTrend: avgScoreTrend,
+//       averageScoreTrendValue: avgScoreTrendValue,
+//       totalAllTime: result.totalCompleted,
+//       assessmentStats: [
+//         { name: "Passed",  value: result.passedCount  || 0, color: "#22c55e" },
+//         { name: "Failed",  value: result.failedCount  || 0, color: "#ef4444" },
+//         { name: "Pending", value: result.pendingCount || 0, color: "#f59e0b" },
+//       ],
+//     };
+
+//   } catch (err) {
+//     console.error(
+//       "Error aggregating assessments in getInterviewDashboardStats",
+//       err
+//     );
+//   }
+// }
+
+//   // --------------------------------------------------------------------
+//   // RETURN COMPLETE DASHBOARD DATA
+//   // --------------------------------------------------------------------
+//   return {
+//     // Total Interviews Card Data
+//     upcomingRoundsData: upcomingRoundsData,
+//     totalInterviews: {
+//       value: monthlyData.currentMonthCount,
+//       lastMonth: monthlyData.lastMonthCount,
+//       trend: totalTrend,
+//       trendValue: totalTrendValue,
+//       totalRounds: monthlyData.totalRounds,
+//     },
+
+// // roundStatusCounts: {
+// //   noShow: roundStatusData.noShowCount,
+// //   cancelled: roundStatusData.cancelledCount,
+// //   requestSent: roundStatusData.requestSentCount,
+
+// //   rate: `${noShowCancelRate}%`,
+// //   trend: noShowTrend,
+// //   trendValue: noShowTrendValue,
+// // },
+// roundStatusCounts: {
+//   value: roundStatusData.currentMonthNoShowCancelled,
+//   lastMonth: roundStatusData.lastMonthNoShowCancelled,
+//   trend: noShowTrend,
+//   trendValue: noShowTrendValue,
+//   totalCount: roundStatusData.noShowCancelledTotal,
+//   rate: `${noShowCancelRate}%`,
+
+//   noShow: roundStatusData.noShowCount,
+//   cancelled: roundStatusData.cancelledCount,
+// },
+
+//     // Outsourced Interviews Card Data
+//     outsourcedInterviews: {
+//       value: outsourcedData.currentMonthCount,
+//       lastMonth: outsourcedData.lastMonthCount,
+//       trend: outsourcedTrend,
+//       trendValue: outsourcedTrendValue,
+//       totalCount: outsourcedData.totalCount,
+//     },
+
+//     // Upcoming Interviews Card Data
+//     upcomingInterviews: {
+//       value: upcomingData.upcoming7Days,
+//       lastWeek: upcomingData.lastWeekCount,
+//       trend: upcomingTrend,
+//       trendValue: upcomingTrendValue,
+//       currentWeekCount: upcomingData.currentWeekCount,
+//     },
+
+//     // Chart Data Object
+//     chartData: {
+//       interviewsOverTime,
+//       interviewerUtilization,
+//       assessmentStats: assessmentData.assessmentStats || [],
+//     },
+
+//     // Assessments Data map for the frontend Dashboard card
+//     assessmentsCompleted: {
+//       totalCompleted: assessmentData.totalCompleted,
+//       lastMonth: assessmentData.lastMonthCount,
+//       trend: assessmentData.trend,
+//       trendValue: assessmentData.trendValue,
+//       totalAllTime: assessmentData.totalAllTime,
+//     },
+
+//     // Flattened structure for frontend Assessment Dashboard calculations
+//     totalCompleted: assessmentData.totalCompleted,
+//     lastMonth: assessmentData.lastMonthCount,
+//     trend: assessmentData.trend,
+//     trendValue: assessmentData.trendValue,
+//     averageScore: assessmentData.averageScore,
+//     averageScoreLastMonth: assessmentData.averageScoreLastMonth,
+//     averageScoreTrend: assessmentData.averageScoreTrend,
+//     averageScoreTrendValue: assessmentData.averageScoreTrendValue,
+
+//     // Additional metadata
+//     metadata: {
+//       // totalInterviewsCount: totalInterviews,
+//       calculationDate: now,
+//       dateRanges: {
+//         currentMonth: { start: currentMonthStart, end: now },
+//         lastMonth: { start: lastMonthStart, end: lastMonthEnd },
+//         currentWeek: { start: currentWeekStart, end: currentWeekEnd },
+//         lastWeek: { start: lastWeekStart, end: lastWeekEnd },
+//         next7Days: { start: now, end: next7DaysEnd },
+//       },
+//     },
+//   };
+// }
+
+// Enhanced dashboard stats function
+// FIXES:
+//   1. filterQuery may contain $or structure from permissionQuery — extract tenantId/ownerId safely
+//   2. Interview.tenantId and ScheduledAssessment.tenantId stored as strings in DB → match both forms
+//   3. InterviewRounds.dateTime is "DD-MM-YYYY HH:MM AM/PM - ..." → parse in JS
+
 async function getInterviewDashboardStats({ filterQuery, DataModel }) {
   if (!DataModel) throw new Error("DataModel missing");
 
-  // Convert tenantId & ownerId to ObjectId
-  const tenantId = new mongoose.Types.ObjectId(filterQuery.tenantId);
-  const ownerId = filterQuery.ownerId
-    ? new mongoose.Types.ObjectId(filterQuery.ownerId)
+  console.log("[Dashboard] filterQuery:", JSON.stringify(filterQuery, null, 2));
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SAFELY EXTRACT tenantId and ownerId from filterQuery
+  // filterQuery may be a plain object { tenantId, ownerId }
+  // OR it may have $or structure from permissionQuery — extract from actingAs fields
+  // ─────────────────────────────────────────────────────────────────────────
+  let rawTenantId = filterQuery.tenantId;
+  let rawOwnerId  = filterQuery.ownerId;
+
+  // If tenantId is missing (because filterQuery came from permissionQuery with $or),
+  // try to pull it from the $or array entries
+  if (!rawTenantId && filterQuery.$or && Array.isArray(filterQuery.$or)) {
+    for (const clause of filterQuery.$or) {
+      if (clause.tenantId) { rawTenantId = clause.tenantId; break; }
+    }
+    for (const clause of filterQuery.$or) {
+      if (clause.ownerId) { rawOwnerId = clause.ownerId; break; }
+    }
+  }
+
+  if (!rawTenantId) {
+    throw new Error("[Dashboard] Cannot resolve tenantId from filterQuery: " + JSON.stringify(filterQuery));
+  }
+
+  // Convert to both string and ObjectId forms
+  const tenantIdStr = String(rawTenantId);
+  const tenantIdObj = mongoose.Types.ObjectId.isValid(tenantIdStr)
+    ? new mongoose.Types.ObjectId(tenantIdStr)
     : null;
 
-  const matchInterview = {
-    "interview.tenantId": tenantId,
-    ...(ownerId ? { "interview.ownerId": ownerId } : {}),
+  const ownerIdStr = rawOwnerId ? String(rawOwnerId) : null;
+  const ownerIdObj = ownerIdStr && mongoose.Types.ObjectId.isValid(ownerIdStr)
+    ? new mongoose.Types.ObjectId(ownerIdStr)
+    : null;
+
+  console.log("[Dashboard] tenantIdStr:", tenantIdStr, "tenantIdObj:", tenantIdObj);
+  console.log("[Dashboard] ownerIdStr:", ownerIdStr, "ownerIdObj:", ownerIdObj);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Build interview match — handles string OR ObjectId stored in interview.tenantId
+  // ─────────────────────────────────────────────────────────────────────────
+  const buildMatchInterview = () => {
+    // Base tenant conditions (string + ObjectId)
+    const tenantConditions = [
+      tenantIdObj ? { "interview.tenantId": tenantIdObj } : null,
+      { "interview.tenantId": tenantIdStr },
+    ].filter(Boolean);
+
+    // Owner conditions if ownerId present
+    const ownerConditions = ownerIdStr
+      ? [
+          ownerIdObj ? { "interview.ownerId": ownerIdObj } : null,
+          { "interview.ownerId": ownerIdStr },
+        ].filter(Boolean)
+      : null;
+
+    if (ownerConditions) {
+      // Must match tenant AND owner
+      return {
+        $and: [
+          { $or: tenantConditions },
+          { $or: ownerConditions },
+        ],
+      };
+    }
+
+    return { $or: tenantConditions };
   };
 
-  // If upcomingOnly is true, we'll only return upcoming interviews
-  const isUpcomingRequest =
-    filterQuery?.upcomingOnly === true || filterQuery?.type === "upcoming";
+  const matchInterview = buildMatchInterview();
+  console.log("[Dashboard] matchInterview:", JSON.stringify(matchInterview));
 
   const now = new Date();
-
-  // Date ranges for calculations
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+  const lastMonthStart    = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthEnd      = new Date(now.getFullYear(), now.getMonth(), 0);
 
   const currentWeekStart = new Date(now);
-  currentWeekStart.setDate(now.getDate() - now.getDay() + 1); // Monday
+  currentWeekStart.setDate(now.getDate() - now.getDay() + 1);
   const currentWeekEnd = new Date(currentWeekStart);
-  currentWeekEnd.setDate(currentWeekStart.getDate() + 6); // Sunday
+  currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
 
   const lastWeekStart = new Date(currentWeekStart);
   lastWeekStart.setDate(lastWeekStart.getDate() - 7);
@@ -3748,322 +4868,41 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
 
   const next7DaysEnd = new Date();
   next7DaysEnd.setDate(now.getDate() + 7);
-
-  // --------------------------------------------------------------------
-  // TOTAL INTERVIEWS (All time count)
-  // --------------------------------------------------------------------
-  // const totalInterviews = await DataModel.countDocuments({
-  //   tenantId,
-  //   ...(ownerId ? { ownerId } : {}),
-  // });
-
-  // --------------------------------------------------------------------
-  // CURRENT MONTH & LAST MONTH INTERVIEWS (Based on rounds)
-  // --------------------------------------------------------------------
-  const monthlyRoundsAgg = await InterviewRounds.aggregate([
-    {
-      $lookup: {
-        from: "interviews",
-        localField: "interviewId",
-        foreignField: "_id",
-        as: "interview",
-      },
-    },
-    { $unwind: "$interview" },
-    { $match: matchInterview },
-    {
-      $project: {
-        createdAt: 1,
-        // Use createdAt as fallback for date calculations
-        effectiveDate: {
-          $cond: {
-            if: {
-              $and: [
-                { $ne: ["$dateTime", ""] },
-                { $ne: ["$dateTime", null] },
-                { $ne: ["$dateTime", undefined] },
-              ],
-            },
-            then: {
-              $cond: {
-                if: { $eq: [{ $type: "$dateTime" }, "string"] },
-                then: {
-                  $dateFromString: {
-                    dateString: "$dateTime",
-                    onError: "$createdAt", // Fallback to createdAt if parsing fails
-                  },
-                },
-                else: "$dateTime",
-              },
-            },
-            else: "$createdAt", // Default to createdAt if dateTime is empty/invalid
-          },
-        },
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        currentMonthCount: {
-          $sum: {
-            $cond: [{ $gte: ["$effectiveDate", currentMonthStart] }, 1, 0],
-          },
-        },
-        lastMonthCount: {
-          $sum: {
-            $cond: [
-              {
-                $and: [
-                  { $gte: ["$effectiveDate", lastMonthStart] },
-                  { $lte: ["$effectiveDate", lastMonthEnd] },
-                ],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        totalRounds: { $sum: 1 },
-      },
-    },
-  ]);
-
-  const monthlyData = monthlyRoundsAgg[0] || {
-    currentMonthCount: 0,
-    lastMonthCount: 0,
-    totalRounds: 0,
-  };
-
-  // Calculate trend for total interviews
-  const totalTrend =
-    monthlyData.lastMonthCount === 0
-      ? "up"
-      : monthlyData.currentMonthCount >= monthlyData.lastMonthCount
-        ? "up"
-        : "down";
-
-  const totalTrendValue =
-    monthlyData.lastMonthCount === 0
-      ? "+100% vs last month"
-      : `${(
-        ((monthlyData.currentMonthCount - monthlyData.lastMonthCount) /
-          monthlyData.lastMonthCount) *
-        100
-      ).toFixed(1)}% vs last month`;
-
-  // --------------------------------------------------------------------
-  // OUTSOURCED INTERVIEWS
-  // --------------------------------------------------------------------
-  const outsourcedAgg = await InterviewRounds.aggregate([
-    {
-      $match: {
-        interviewerType: "External",
-        ...(matchInterview["interview.tenantId"] ? {} : {}),
-      },
-    },
-    {
-      $lookup: {
-        from: "interviews",
-        localField: "interviewId",
-        foreignField: "_id",
-        as: "interview",
-      },
-    },
-    { $unwind: "$interview" },
-    { $match: matchInterview },
-    {
-      $group: {
-        _id: null,
-        currentMonthCount: {
-          $sum: {
-            $cond: [{ $gte: ["$createdAt", currentMonthStart] }, 1, 0],
-          },
-        },
-        lastMonthCount: {
-          $sum: {
-            $cond: [
-              {
-                $and: [
-                  { $gte: ["$createdAt", lastMonthStart] },
-                  { $lte: ["$createdAt", lastMonthEnd] },
-                ],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        totalCount: { $sum: 1 },
-      },
-    },
-  ]);
-
-  const outsourcedData = outsourcedAgg[0] || {
-    currentMonthCount: 0,
-    lastMonthCount: 0,
-    totalCount: 0,
-  };
-
-  // Calculate trend for outsourced interviews
-  const outsourcedTrend =
-    outsourcedData.lastMonthCount === 0
-      ? "up"
-      : outsourcedData.currentMonthCount >= outsourcedData.lastMonthCount
-        ? "up"
-        : "down";
-
-  const outsourcedTrendValue =
-    outsourcedData.lastMonthCount === 0
-      ? "+100% vs last month"
-      : `${(
-        ((outsourcedData.currentMonthCount - outsourcedData.lastMonthCount) /
-          outsourcedData.lastMonthCount) *
-        100
-      ).toFixed(1)}% vs last month`;
-
-  // --------------------------------------------------------------------
-  // UPCOMING INTERVIEWS (with safe date parsing)
-  // --------------------------------------------------------------------
-  const upcomingAgg = await InterviewRounds.aggregate([
-    {
-      $match: {
-        $and: [
-          { dateTime: { $ne: null, $exists: true } },
-          { dateTime: { $ne: "" } }, // Exclude empty strings
-          { dateTime: { $type: "string" } }, // Only consider string dates
-        ],
-        status: { $in: ["Draft", "RequestSent", "Scheduled"] },
-      },
-    },
-    {
-      $lookup: {
-        from: "interviews",
-        localField: "interviewId",
-        foreignField: "_id",
-        as: "interview",
-      },
-    },
-    { $unwind: "$interview" },
-    { $match: matchInterview },
-    {
-      $project: {
-        dateTime: 1,
-        // Safe date parsing with validation
-        parsedDateTime: {
-          $cond: {
-            if: {
-              $and: [
-                { $ne: ["$dateTime", ""] },
-                { $ne: ["$dateTime", null] },
-                {
-                  $regexMatch: {
-                    input: "$dateTime",
-                    regex: /^\d{4}-\d{2}-\d{2}/,
-                  },
-                }, // Basic date format validation
-              ],
-            },
-            then: {
-              $dateFromString: {
-                dateString: "$dateTime",
-                onError: null, // Return null if parsing fails
-                onNull: null,
-              },
-            },
-            else: null,
-          },
-        },
-      },
-    },
-    {
-      $match: {
-        parsedDateTime: { $ne: null }, // Only include documents with valid dates
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        upcoming7Days: {
-          $sum: {
-            $cond: [
-              {
-                $and: [
-                  { $gte: ["$parsedDateTime", now] },
-                  { $lte: ["$parsedDateTime", next7DaysEnd] },
-                ],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        currentWeekCount: {
-          $sum: {
-            $cond: [
-              {
-                $and: [
-                  { $gte: ["$parsedDateTime", currentWeekStart] },
-                  { $lte: ["$parsedDateTime", currentWeekEnd] },
-                ],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-        lastWeekCount: {
-          $sum: {
-            $cond: [
-              {
-                $and: [
-                  { $gte: ["$parsedDateTime", lastWeekStart] },
-                  { $lte: ["$parsedDateTime", lastWeekEnd] },
-                ],
-              },
-              1,
-              0,
-            ],
-          },
-        },
-      },
-    },
-  ]);
-
-  const upcomingData = upcomingAgg[0] || {
-    upcoming7Days: 0,
-    currentWeekCount: 0,
-    lastWeekCount: 0,
-  };
-
-  // Calculate trend for upcoming interviews
-  const upcomingTrend =
-    upcomingData.lastWeekCount === 0
-      ? "up"
-      : upcomingData.currentWeekCount >= upcomingData.lastWeekCount
-        ? "up"
-        : "down";
-
-  const upcomingTrendValue =
-    upcomingData.lastWeekCount === 0
-      ? "+100% vs last week"
-      : `${(
-        ((upcomingData.currentWeekCount - upcomingData.lastWeekCount) /
-          upcomingData.lastWeekCount) *
-        100
-      ).toFixed(1)}% vs last week`;
-  // console.log("upcomingData", {
-  //   matchInterview,
-  //   now,
-  //   limit: 5, // Limit for dashboard display
-  // });
-
-  // --------------------------------------------------------------------
-  // INTERVIEWS OVER TIME CHART (Last 30 Days)
-  // --------------------------------------------------------------------
   const thirtyDaysAgo = new Date(now);
   thirtyDaysAgo.setDate(now.getDate() - 30);
 
-  const chartAgg = await InterviewRounds.aggregate([
+  // ─────────────────────────────────────────────────────────────────────────
+  // HELPER: Parse "DD-MM-YYYY HH:MM AM/PM - ..." OR ISO strings
+  // ─────────────────────────────────────────────────────────────────────────
+  function parseDateTimeField(dateTimeStr) {
+    if (!dateTimeStr || typeof dateTimeStr !== "string") return null;
+    try {
+      const str = dateTimeStr.trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+        const d = new Date(str);
+        return isNaN(d.getTime()) ? null : d;
+      }
+      if (/^\d{2}-\d{2}-\d{4}/.test(str)) {
+        const startPart = str.split(" - ")[0].trim();
+        const parts     = startPart.split(" ");
+        const [day, month, year] = parts[0].split("-").map(Number);
+        let [hours, minutes]     = parts[1].split(":").map(Number);
+        const meridiem           = parts[2];
+        if (meridiem) {
+          if (meridiem.toUpperCase() === "PM" && hours !== 12) hours += 12;
+          if (meridiem.toUpperCase() === "AM" && hours === 12) hours  = 0;
+        }
+        const d = new Date(year, month - 1, day, hours, minutes, 0);
+        return isNaN(d.getTime()) ? null : d;
+      }
+      return null;
+    } catch { return null; }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // COMMON PIPELINE STAGES
+  // ─────────────────────────────────────────────────────────────────────────
+  const lookupAndMatchStages = [
     {
       $lookup: {
         from: "interviews",
@@ -4074,297 +4913,247 @@ async function getInterviewDashboardStats({ filterQuery, DataModel }) {
     },
     { $unwind: "$interview" },
     { $match: matchInterview },
+  ];
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // DEBUG: confirm we match any rounds
+  // ─────────────────────────────────────────────────────────────────────────
+  const debugCount = await InterviewRounds.aggregate([
     {
-      $project: {
-        interviewerType: 1,
-        // Calculate effectiveDate using the same logic as the monthly summary
-        effectiveDate: {
-          $cond: {
-            if: {
-              $and: [
-                { $ne: ["$dateTime", ""] },
-                { $ne: ["$dateTime", null] },
-                { $ne: ["$dateTime", undefined] },
-              ],
-            },
-            then: {
-              $cond: {
-                if: { $eq: [{ $type: "$dateTime" }, "string"] },
-                then: {
-                  $dateFromString: {
-                    dateString: "$dateTime",
-                    onError: "$createdAt", 
-                  },
-                },
-                else: "$dateTime",
-              },
-            },
-            else: "$createdAt", 
-          },
-        },
+      $lookup: {
+        from: "interviews",
+        localField: "interviewId",
+        foreignField: "_id",
+        as: "interview",
       },
     },
-    {
-      $match: {
-        effectiveDate: { $gte: thirtyDaysAgo, $lte: now },
-      },
-    },
-    {
-      $group: {
-        _id: {
-          $dateToString: { format: "%Y-%m-%d", date: "$effectiveDate" },
-        },
-        interviews: { $sum: 1 },
-        outsourced: {
-          $sum: {
-            $cond: [{ $eq: ["$interviewerType", "External"] }, 1, 0],
-          },
-        },
-      },
-    },
-    { $sort: { _id: 1 } },
-    {
-      $project: {
-        _id: 0,
-        date: "$_id",
-        interviews: 1,
-        outsourced: 1,
-      },
-    },
+    { $unwind: { path: "$interview", preserveNullAndEmptyArrays: true } },
+    { $match: matchInterview },
+    { $count: "total" },
+  ]);
+  console.log("[Dashboard Debug] Matched InterviewRounds:", debugCount[0]?.total ?? 0);
+
+  // Sample interview to check tenantId format stored in DB
+  const sampleIv = await mongoose.models.Interview?.findOne({}).lean();
+  console.log("[Dashboard Debug] Sample Interview tenantId:", sampleIv?.tenantId, "type:", typeof sampleIv?.tenantId);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // MONTHLY INTERVIEWS (all rounds → filter in JS)
+  // ─────────────────────────────────────────────────────────────────────────
+  const monthlyRaw = await InterviewRounds.aggregate([
+    ...lookupAndMatchStages,
+    { $project: { dateTime: 1, createdAt: 1 } },
   ]);
 
-  // Ensure we fill in missing dates for the chart to look continuous
+  let currentMonthCount = 0, lastMonthCount = 0, totalRoundsAll = 0;
+  for (const r of monthlyRaw) {
+    const dt = parseDateTimeField(r.dateTime) || (r.createdAt ? new Date(r.createdAt) : null);
+    if (!dt) continue;
+    totalRoundsAll++;
+    if (dt >= currentMonthStart) currentMonthCount++;
+    if (dt >= lastMonthStart && dt <= lastMonthEnd) lastMonthCount++;
+  }
+  console.log("[Dashboard Debug] Monthly:", { currentMonthCount, lastMonthCount, totalRoundsAll });
+
+  const totalTrend =
+    lastMonthCount === 0 ? "up"
+      : currentMonthCount >= lastMonthCount ? "up" : "down";
+
+  const totalTrendValue =
+    lastMonthCount === 0
+      ? "+100% vs last month"
+      : `${(((currentMonthCount - lastMonthCount) / lastMonthCount) * 100).toFixed(1)}% vs last month`;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // OUTSOURCED INTERVIEWS
+  // ─────────────────────────────────────────────────────────────────────────
+  const outsourcedRaw = await InterviewRounds.aggregate([
+    { $match: { interviewerType: "External" } },
+    ...lookupAndMatchStages,
+    { $project: { createdAt: 1 } },
+  ]);
+
+  let outsourcedCurrent = 0, outsourcedLast = 0;
+  for (const r of outsourcedRaw) {
+    const dt = r.createdAt ? new Date(r.createdAt) : null;
+    if (!dt) continue;
+    if (dt >= currentMonthStart) outsourcedCurrent++;
+    if (dt >= lastMonthStart && dt <= lastMonthEnd) outsourcedLast++;
+  }
+
+  const outsourcedTrend =
+    outsourcedLast === 0 ? "up" : outsourcedCurrent >= outsourcedLast ? "up" : "down";
+
+  const outsourcedTrendValue =
+    outsourcedLast === 0
+      ? "+100% vs last month"
+      : `${(((outsourcedCurrent - outsourcedLast) / outsourcedLast) * 100).toFixed(1)}% vs last month`;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // UPCOMING INTERVIEWS
+  // ─────────────────────────────────────────────────────────────────────────
+  const upcomingRaw = await InterviewRounds.aggregate([
+    {
+      $match: {
+        dateTime: { $exists: true, $ne: null, $ne: "" },
+        status: { $in: ["Draft", "RequestSent", "Scheduled"] },
+      },
+    },
+    ...lookupAndMatchStages,
+    { $project: { dateTime: 1 } },
+  ]);
+
+  let upcoming7Days = 0, currentWeekCount = 0, lastWeekCount = 0;
+  for (const r of upcomingRaw) {
+    const dt = parseDateTimeField(r.dateTime);
+    if (!dt) continue;
+    if (dt >= now && dt <= next7DaysEnd) upcoming7Days++;
+    if (dt >= currentWeekStart && dt <= currentWeekEnd) currentWeekCount++;
+    if (dt >= lastWeekStart && dt <= lastWeekEnd) lastWeekCount++;
+  }
+
+  const upcomingTrend =
+    lastWeekCount === 0 ? "up" : currentWeekCount >= lastWeekCount ? "up" : "down";
+
+  const upcomingTrendValue =
+    lastWeekCount === 0
+      ? "+100% vs last week"
+      : `${(((currentWeekCount - lastWeekCount) / lastWeekCount) * 100).toFixed(1)}% vs last week`;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // INTERVIEWS OVER TIME (Last 30 Days)
+  // ─────────────────────────────────────────────────────────────────────────
+  const chartRaw = await InterviewRounds.aggregate([
+    ...lookupAndMatchStages,
+    { $project: { interviewerType: 1, dateTime: 1, createdAt: 1 } },
+  ]);
+
+  const dateCountMap = {};
+  for (const r of chartRaw) {
+    const dt = parseDateTimeField(r.dateTime) || (r.createdAt ? new Date(r.createdAt) : null);
+    if (!dt || dt < thirtyDaysAgo || dt > now) continue;
+    const key = dt.toISOString().split("T")[0];
+    if (!dateCountMap[key]) dateCountMap[key] = { interviews: 0, outsourced: 0 };
+    dateCountMap[key].interviews++;
+    if (r.interviewerType === "External") dateCountMap[key].outsourced++;
+  }
+
   const interviewsOverTime = [];
   for (let i = 29; i >= 0; i--) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split("T")[0];
-    const existing = chartAgg.find((c) => c.date === dateStr);
+    const key = d.toISOString().split("T")[0];
     interviewsOverTime.push(
-      existing || { date: dateStr, interviews: 0, outsourced: 0 }
+      dateCountMap[key]
+        ? { date: key, ...dateCountMap[key] }
+        : { date: key, interviews: 0, outsourced: 0 }
     );
   }
 
-  // Get upcoming rounds for dashboard (without filters)
-  const upcomingRoundsData = await getUpcomingRoundsOnly({
-    matchInterview,
-    now,
-    limit: 5, // Limit for dashboard display
-  });
+  // ─────────────────────────────────────────────────────────────────────────
+  // UPCOMING ROUNDS LIST
+  // ─────────────────────────────────────────────────────────────────────────
+  const upcomingRoundsData = await getUpcomingRoundsOnly({ matchInterview, now, limit: 5 });
 
-  console.log("InterviewRounds", InterviewRounds);
-
-  // --------------------------------------------------------------------
-// INTERVIEWER UTILIZATION CHART
-// --------------------------------------------------------------------
-const utilizationAgg = await InterviewRounds.aggregate([
-  {
-    $lookup: {
-      from: "interviews",
-      localField: "interviewId",
-      foreignField: "_id",
-      as: "interview",
-    },
-  },
-  { $unwind: "$interview" },
-
-  // tenant / owner filter
-  { $match: matchInterview },
-
-  // expand interviewer array
-  { $unwind: "$interviewers" },
-
-  // join contacts collection
-  {
-    $lookup: {
-      from: "contacts",
-      localField: "interviewers",
-      foreignField: "_id",
-      as: "interviewer",
-    },
-  },
-
-  { $unwind: { path: "$interviewer", preserveNullAndEmptyArrays: true } },
-
-  {
-    $group: {
-      _id: "$interviewers",
-      interviews: { $sum: 1 },
-
-      name: {
-        $first: {
-          $concat: [
-            { $ifNull: ["$interviewer.firstName", "Unknown"] },
-            " ",
-            { $ifNull: ["$interviewer.lastName", ""] },
-          ],
-        },
-      },
-
-      type: { $first: "$interviewerType" },
-    },
-  },
-
-  {
-    $project: {
-      _id: 0,
-      name: { $trim: { input: "$name" } },
-      interviews: 1,
-      type: { $toLower: "$type" },
-    },
-  },
-
-  { $sort: { interviews: -1 } },
-
-  { $limit: 10 },
-]);
-
-console.log("utilizationAgg", utilizationAgg);
-
-const interviewerUtilization = utilizationAgg ;
-
-// --------------------------------------------------------------------
-// ROUND STATUS COUNTS + RATE + TREND
-// --------------------------------------------------------------------
-const roundStatusAgg = await InterviewRounds.aggregate([
-  {
-    $lookup: {
-      from: "interviews",
-      localField: "interviewId",
-      foreignField: "_id",
-      as: "interview",
-    },
-  },
-  { $unwind: "$interview" },
-
-  // tenant / owner filter
-  { $match: matchInterview },
-
-  {
-    $project: {
-      status: 1,
-      createdAt: 1,
-    },
-  },
-
-  {
-    $group: {
-      _id: null,
-
-      totalRounds: { $sum: 1 },
-
-      // Individual status counts
-      noShowCount: {
-        $sum: {
-          $cond: [{ $eq: ["$status", "NoShow"] }, 1, 0],
-        },
-      },
-      cancelledCount: {
-        $sum: {
-          $cond: [{ $eq: ["$status", "Cancelled"] }, 1, 0],
-        },
-      },
-
-
-      // Total NoShow + Cancelled
-      noShowCancelledTotal: {
-        $sum: {
-          $cond: [
-            { $in: ["$status", ["NoShow", "Cancelled"]] },
-            1,
-            0,
-          ],
-        },
-      },
-
-      // Current month NoShow + Cancelled
-      currentMonthNoShowCancelled: {
-        $sum: {
-          $cond: [
-            {
-              $and: [
-                { $in: ["$status", ["NoShow", "Cancelled"]] },
-                { $gte: ["$createdAt", currentMonthStart] },
-              ],
-            },
-            1,
-            0,
-          ],
-        },
-      },
-
-      // Last month NoShow + Cancelled
-      lastMonthNoShowCancelled: {
-        $sum: {
-          $cond: [
-            {
-              $and: [
-                { $in: ["$status", ["NoShow", "Cancelled"]] },
-                { $gte: ["$createdAt", lastMonthStart] },
-                { $lte: ["$createdAt", lastMonthEnd] },
-              ],
-            },
-            1,
-            0,
-          ],
+  // ─────────────────────────────────────────────────────────────────────────
+  // INTERVIEWER UTILIZATION
+  // ─────────────────────────────────────────────────────────────────────────
+  const utilizationAgg = await InterviewRounds.aggregate([
+    { $match: { interviewers: { $exists: true, $ne: [], $type: "array" } } },
+    ...lookupAndMatchStages,
+    { $unwind: "$interviewers" },
+    {
+      $addFields: {
+        interviewerObjId: {
+          $convert: {
+            input: "$interviewers",
+            to: "objectId",
+            onError: "$interviewers",
+            onNull: "$interviewers",
+          },
         },
       },
     },
-  },
-]);
+    {
+      $lookup: {
+        from: "contacts",
+        localField: "interviewerObjId",
+        foreignField: "_id",
+        as: "interviewer",
+      },
+    },
+    { $unwind: { path: "$interviewer", preserveNullAndEmptyArrays: true } },
+    {
+      $group: {
+        _id: "$interviewerObjId",
+        interviews: { $sum: 1 },
+        name: {
+          $first: {
+            $concat: [
+              { $ifNull: ["$interviewer.firstName", "Unknown"] },
+              " ",
+              { $ifNull: ["$interviewer.lastName", ""] },
+            ],
+          },
+        },
+        type: { $first: "$interviewerType" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        name: { $trim: { input: "$name" } },
+        interviews: 1,
+        type: { $toLower: { $ifNull: ["$type", "internal"] } },
+      },
+    },
+    { $sort: { interviews: -1 } },
+    { $limit: 10 },
+  ]);
 
-// default fallback
-const roundStatusData = roundStatusAgg[0] || {
-  totalRounds: 0,
-  noShowCount: 0,
-  cancelledCount: 0,
-  noShowCancelledTotal: 0,
-  currentMonthNoShowCancelled: 0,
-  lastMonthNoShowCancelled: 0,
-};
+  // ─────────────────────────────────────────────────────────────────────────
+  // ROUND STATUS COUNTS
+  // ─────────────────────────────────────────────────────────────────────────
+  const roundStatusRaw = await InterviewRounds.aggregate([
+    ...lookupAndMatchStages,
+    { $project: { status: 1, createdAt: 1 } },
+  ]);
 
-// --------------------------------------------------
-// NoShow + Cancelled Rate Calculation
-// --------------------------------------------------
-const totalRounds = roundStatusData.totalRounds || 0;
-const totalNoShowCancelled = roundStatusData.noShowCancelledTotal || 0;
+  let totalRoundsStatus = 0, noShowCount = 0, cancelledCount = 0;
+  let noShowCancelledTotal = 0, currentMonthNS = 0, lastMonthNS = 0;
 
-// Rate %
-const noShowCancelRate =
-  totalRounds === 0
-    ? 0
-    : ((totalNoShowCancelled / totalRounds) * 100).toFixed(0);
+  for (const r of roundStatusRaw) {
+    totalRoundsStatus++;
+    const dt = r.createdAt ? new Date(r.createdAt) : null;
+    const isNSC = ["NoShow", "Cancelled"].includes(r.status);
+    if (r.status === "NoShow")    noShowCount++;
+    if (r.status === "Cancelled") cancelledCount++;
+    if (isNSC) {
+      noShowCancelledTotal++;
+      if (dt && dt >= currentMonthStart) currentMonthNS++;
+      if (dt && dt >= lastMonthStart && dt <= lastMonthEnd) lastMonthNS++;
+    }
+  }
 
-// --------------------------------------------------
-// Trend Calculation
-// --------------------------------------------------
-const lastMonthNoShowCancelled =
-  roundStatusData.lastMonthNoShowCancelled || 0;
+  const noShowCancelRate =
+    totalRoundsStatus === 0 ? 0
+      : ((noShowCancelledTotal / totalRoundsStatus) * 100).toFixed(0);
 
-const currentMonthNoShowCancelled =
-  roundStatusData.currentMonthNoShowCancelled || 0;
+  const noShowTrend =
+    lastMonthNS === 0 ? "up" : currentMonthNS >= lastMonthNS ? "up" : "down";
 
-const noShowTrend =
-  lastMonthNoShowCancelled === 0
-    ? "up"
-    : currentMonthNoShowCancelled >= lastMonthNoShowCancelled
-    ? "up"
-    : "down";
+  const noShowTrendValue =
+    lastMonthNS === 0
+      ? "+100% vs last month"
+      : `${(((currentMonthNS - lastMonthNS) / lastMonthNS) * 100).toFixed(0)}% vs last month`;
 
-const noShowTrendValue =
-  lastMonthNoShowCancelled === 0
-    ? "+100% vs last month"
-    : `${(
-        ((currentMonthNoShowCancelled - lastMonthNoShowCancelled) /
-          lastMonthNoShowCancelled) *
-        100
-      ).toFixed(0)}% vs last month`;
+  // ─────────────────────────────────────────────────────────────────────────
+  // ASSESSMENTS
+  // FIX: ScheduledAssessment.tenantId stored as STRING → query both forms
+  // ─────────────────────────────────────────────────────────────────────────
+  const CandidateAssessmentModel = mongoose.models.CandidateAssessment;
+  const ScheduledAssessmentModel  = mongoose.models.ScheduledAssessment;
 
-  // --------------------------------------------------------------------
-  // TOTAL ASSESSMENTS & AVERAGE SCORE
-  // --------------------------------------------------------------------
-  const ScheduledAssessmentSchema = mongoose.models.ScheduledAssessment;
-  
   let assessmentData = {
     totalCompleted: 0,
     currentMonthCount: 0,
@@ -4374,265 +5163,520 @@ const noShowTrendValue =
     trend: "up",
     trendValue: "+0% vs last month",
     averageScoreTrend: "up",
-    averageScoreTrendValue: "+0 vs last month"
+    averageScoreTrendValue: "+0 vs last month",
+    totalAllTime: 0,
+    assessmentStats: [
+      { name: "Passed",  value: 0, color: "#22c55e" },
+      { name: "Failed",  value: 0, color: "#ef4444" },
+      { name: "Pending", value: 0, color: "#f59e0b" },
+    ],
   };
 
-  if (ScheduledAssessmentSchema) {
+  if (CandidateAssessmentModel && ScheduledAssessmentModel) {
     try {
-      const query = {
-        tenantId,
-        ...(ownerId ? { ownerId } : {}),
-      };
+      // Build tenantId query that handles both string and ObjectId stored forms
+      const tenantMatch = tenantIdObj
+        ? { $or: [{ tenantId: tenantIdObj }, { tenantId: tenantIdStr }] }
+        : { tenantId: tenantIdStr };
 
-      const analyticsAggregation = await ScheduledAssessmentSchema.aggregate([
+      // Build ownerId query if present
+      const ownerMatch = ownerIdStr
+        ? ownerIdObj
+          ? { $or: [{ ownerId: ownerIdObj }, { ownerId: ownerIdStr }] }
+          : { ownerId: ownerIdStr }
+        : null;
+
+      const saQuery = ownerMatch
+        ? { $and: [tenantMatch, ownerMatch, { isActive: true }] }
+        : { ...tenantMatch, isActive: true };
+
+      console.log("[Assessment Debug] SA query:", JSON.stringify(saQuery));
+
+      const scheduledAssessments = await ScheduledAssessmentModel.find(saQuery, { _id: 1 }).lean();
+      console.log("[Assessment Debug] ScheduledAssessment found:", scheduledAssessments.length);
+
+      if (scheduledAssessments.length > 0) {
+        const scheduledAssessmentIds = scheduledAssessments.map((sa) => sa._id);
+
+        const linkedCount = await CandidateAssessmentModel.countDocuments({
+          scheduledAssessmentId: { $in: scheduledAssessmentIds },
+        });
+        console.log("[Assessment Debug] Linked CandidateAssessments:", linkedCount);
+
+        const analyticsAgg = await CandidateAssessmentModel.aggregate([
+          { $match: { scheduledAssessmentId: { $in: scheduledAssessmentIds } } },
+          {
+            $group: {
+              _id: null,
+              totalCompleted: {
+                $sum: { $cond: [{ $in: ["$status", ["completed", "pass", "failed"]] }, 1, 0] },
+              },
+              currentMonthCount: {
+                $sum: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $in: ["$status", ["completed", "pass", "failed"]] },
+                        { $gte: ["$createdAt", currentMonthStart] },
+                      ],
+                    },
+                    1, 0,
+                  ],
+                },
+              },
+              lastMonthCount: {
+                $sum: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $in: ["$status", ["completed", "pass", "failed"]] },
+                        { $gte: ["$createdAt", lastMonthStart] },
+                        { $lte: ["$createdAt", lastMonthEnd] },
+                      ],
+                    },
+                    1, 0,
+                  ],
+                },
+              },
+              totalScoreSum: {
+                $sum: {
+                  $cond: [
+                    { $in: ["$status", ["completed", "pass", "failed"]] },
+                    { $ifNull: ["$totalScore", 0] },
+                    0,
+                  ],
+                },
+              },
+              scoredCount: {
+                $sum: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $in: ["$status", ["completed", "pass", "failed"]] },
+                        { $gt: ["$totalScore", 0] },
+                      ],
+                    },
+                    1, 0,
+                  ],
+                },
+              },
+              lastMonthScoreSum: {
+                $sum: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $in: ["$status", ["completed", "pass", "failed"]] },
+                        { $gte: ["$createdAt", lastMonthStart] },
+                        { $lte: ["$createdAt", lastMonthEnd] },
+                        { $gt: ["$totalScore", 0] },
+                      ],
+                    },
+                    { $ifNull: ["$totalScore", 0] },
+                    0,
+                  ],
+                },
+              },
+              lastMonthScoredCount: {
+                $sum: {
+                  $cond: [
+                    {
+                      $and: [
+                        { $in: ["$status", ["completed", "pass", "failed"]] },
+                        { $gte: ["$createdAt", lastMonthStart] },
+                        { $lte: ["$createdAt", lastMonthEnd] },
+                        { $gt: ["$totalScore", 0] },
+                      ],
+                    },
+                    1, 0,
+                  ],
+                },
+              },
+              passedCount: {
+                $sum: { $cond: [{ $in: ["$status", ["pass", "completed"]] }, 1, 0] },
+              },
+              failedCount: {
+                $sum: { $cond: [{ $eq: ["$status", "failed"] }, 1, 0] },
+              },
+              pendingCount: {
+                $sum: {
+                  $cond: [
+                    { $in: ["$status", ["pending", "in_progress", "extended"]] },
+                    1, 0,
+                  ],
+                },
+              },
+            },
+          },
+        ]);
+
+        console.log("[Assessment Debug] analyticsAgg:", JSON.stringify(analyticsAgg, null, 2));
+
+        const result = analyticsAgg[0] || {
+          totalCompleted: 0, currentMonthCount: 0, lastMonthCount: 0,
+          totalScoreSum: 0, scoredCount: 0, lastMonthScoreSum: 0,
+          lastMonthScoredCount: 0, passedCount: 0, failedCount: 0, pendingCount: 0,
+        };
+
+        const averageScore = result.scoredCount > 0
+          ? result.totalScoreSum / result.scoredCount : 0;
+        const averageScoreLastMonth = result.lastMonthScoredCount > 0
+          ? result.lastMonthScoreSum / result.lastMonthScoredCount : 0;
+
+        const assessmentTrend = result.lastMonthCount === 0 ? "up"
+          : result.currentMonthCount >= result.lastMonthCount ? "up" : "down";
+
+        const pct = result.lastMonthCount === 0 ? 100
+          : ((result.currentMonthCount - result.lastMonthCount) / result.lastMonthCount) * 100;
+
+        const assessmentTrendValue = result.lastMonthCount === 0
+          ? "+100% vs last month"
+          : `${pct > 0 ? "+" : ""}${pct.toFixed(1)}% vs last month`;
+
+        const avgScoreTrend = averageScoreLastMonth === 0 ? "up"
+          : averageScore >= averageScoreLastMonth ? "up" : "down";
+
+        const diff = averageScore - averageScoreLastMonth;
+        const avgScoreTrendValue = averageScoreLastMonth === 0
+          ? `+${averageScore.toFixed(1)} vs last month`
+          : `${diff > 0 ? "+" : ""}${diff.toFixed(1)} vs last month`;
+
+        assessmentData = {
+          totalCompleted:         result.currentMonthCount,
+          lastMonthCount:         result.lastMonthCount,
+          averageScore,
+          averageScoreLastMonth,
+          trend:                  assessmentTrend,
+          trendValue:             assessmentTrendValue,
+          averageScoreTrend:      avgScoreTrend,
+          averageScoreTrendValue: avgScoreTrendValue,
+          totalAllTime:           result.totalCompleted,
+          assessmentStats: [
+            { name: "Passed",  value: result.passedCount  || 0, color: "#22c55e" },
+            { name: "Failed",  value: result.failedCount  || 0, color: "#ef4444" },
+            { name: "Pending", value: result.pendingCount || 0, color: "#f59e0b" },
+          ],
+        };
+      }
+    } catch (err) {
+      console.error("[Assessment Debug] Error:", err);
+    }
+  }
+
+
+
+  // ─────────────────────────────────────────────────────────────────────────
+// FEEDBACK RATING DISTRIBUTION
+// Flow: InterviewRounds (filtered by tenant via interview) → feedbackModel by interviewRoundId
+// ─────────────────────────────────────────────────────────────────────────
+const FeedbackModel = mongoose.models.interviewFeedback;
+
+let ratingDistribution = [
+  { rating: "1-2", count: 0 },
+  { rating: "3-4", count: 0 },
+  { rating: "4-5", count: 0 },
+];
+
+if (FeedbackModel) {
+  try {
+    // Step 1: Get all InterviewRound IDs that belong to this tenant
+    // We already have matchInterview which correctly filters by tenant via $lookup on interviews
+    const tenantRoundIds = await InterviewRounds.aggregate([
+      {
+        $lookup: {
+          from: "interviews",
+          localField: "interviewId",
+          foreignField: "_id",
+          as: "interview",
+        },
+      },
+      { $unwind: "$interview" },
+      { $match: matchInterview },          // reuse exact same tenant/owner filter
+      { $project: { _id: 1 } },           // only need the round IDs
+    ]);
+
+    const roundIds = tenantRoundIds.map((r) => r._id);
+    console.log("[Dashboard Debug] Tenant InterviewRound IDs count:", roundIds.length);
+
+    if (roundIds.length > 0) {
+      // Step 2: Aggregate feedback using those round IDs
+      const ratingAgg = await FeedbackModel.aggregate([
         {
           $match: {
-            ...query,
-            isActive: true,
+            interviewRoundId: { $in: roundIds },  // match by round IDs only — no tenant filter needed
+            status: "submitted",
+            "overallImpression.overallRating": { $exists: true, $ne: null, $gt: 0 },
           },
-        },
-        {
-          $lookup: {
-            from: "candidateassessments",
-            localField: "_id",
-            foreignField: "scheduledAssessmentId",
-            as: "ca",
-          },
-        },
-        { $unwind: "$ca" },
-        {
-          $match: {
-            "ca.status": { $in: ["completed", "pass", "failed"] },
-          },
-        },
-        {
-          $project: {
-            "ca.createdAt": 1,
-            "ca.totalScore": 1,
-          }
         },
         {
           $group: {
             _id: null,
-            totalCompleted: { $sum: 1 },
-            totalScoreSum: { $sum: "$ca.totalScore" },
-            scoredCount: {
-              $sum: {
-                $cond: [
-                  { $gt: [{ $type: "$ca.totalScore" }, "missing"] },
-                  1,
-                  0
-                ]
-              }
-            },
-            currentMonthCount: {
-              $sum: {
-                $cond: [
-                  { $gte: ["$ca.createdAt", currentMonthStart] },
-                  1,
-                  0,
-                ],
-              },
-            },
-            lastMonthCount: {
+            oneTo2: {
               $sum: {
                 $cond: [
                   {
                     $and: [
-                      { $gte: ["$ca.createdAt", lastMonthStart] },
-                      { $lte: ["$ca.createdAt", lastMonthEnd] },
+                      { $gte: ["$overallImpression.overallRating", 1] },
+                      { $lt:  ["$overallImpression.overallRating", 3] },
                     ],
                   },
-                  1,
-                  0,
+                  1, 0,
                 ],
               },
             },
-            lastMonthScoreSum: {
+            threeTo4: {
               $sum: {
                 $cond: [
                   {
                     $and: [
-                      { $gte: ["$ca.createdAt", lastMonthStart] },
-                      { $lte: ["$ca.createdAt", lastMonthEnd] },
-                      { $gt: [{ $type: "$ca.totalScore" }, "missing"] }
+                      { $gte: ["$overallImpression.overallRating", 3] },
+                      { $lt:  ["$overallImpression.overallRating", 4] },
                     ],
                   },
-                  "$ca.totalScore",
-                  0,
+                  1, 0,
                 ],
               },
             },
-            lastMonthScoredCount: {
+            fourTo5: {
               $sum: {
                 $cond: [
                   {
                     $and: [
-                      { $gte: ["$ca.createdAt", lastMonthStart] },
-                      { $lte: ["$ca.createdAt", lastMonthEnd] },
-                      { $gt: [{ $type: "$ca.totalScore" }, "missing"] }
+                      { $gte: ["$overallImpression.overallRating", 4] },
+                      { $lte: ["$overallImpression.overallRating", 5] },
                     ],
                   },
-                  1,
-                  0,
+                  1, 0,
                 ],
               },
             },
+            strongHire: {
+              $sum: { $cond: [{ $eq: ["$overallImpression.recommendation", "Strong Hire"] }, 1, 0] },
+            },
+            hire: {
+              $sum: { $cond: [{ $eq: ["$overallImpression.recommendation", "Hire"] }, 1, 0] },
+            },
+            maybe: {
+              $sum: { $cond: [{ $eq: ["$overallImpression.recommendation", "Maybe"] }, 1, 0] },
+            },
+            noHire: {
+              $sum: { $cond: [{ $eq: ["$overallImpression.recommendation", "No Hire"] }, 1, 0] },
+            },
+            strongNoHire: {
+              $sum: { $cond: [{ $eq: ["$overallImpression.recommendation", "Strong No Hire"] }, 1, 0] },
+            },
+            totalFeedbacks:         { $sum: 1 },
+            avgOverallRating:       { $avg: "$overallImpression.overallRating" },
+            avgCommunicationRating: { $avg: "$overallImpression.communicationRating" },
           },
         },
       ]);
 
-      const result = analyticsAggregation[0] || {
-        totalCompleted: 0,
-        currentMonthCount: 0,
-        lastMonthCount: 0,
-        totalScoreSum: 0,
-        scoredCount: 0,
-        lastMonthScoreSum: 0,
-        lastMonthScoredCount: 0,
-      };
+      console.log("[Dashboard Debug] ratingAgg:", JSON.stringify(ratingAgg, null, 2));
 
-      const averageScore = result.scoredCount > 0 
-        ? result.totalScoreSum / result.scoredCount 
-        : 0;
-        
-      const averageScoreLastMonth = result.lastMonthScoredCount > 0 
-        ? result.lastMonthScoreSum / result.lastMonthScoredCount 
-        : 0;
+      const ratingResult = ratingAgg[0];
+      if (ratingResult) {
+        ratingDistribution = [
+          { rating: "1-2", count: ratingResult.oneTo2   || 0 },
+          { rating: "3-4", count: ratingResult.threeTo4 || 0 },
+          { rating: "4-5", count: ratingResult.fourTo5  || 0 },
+        ];
 
-      const assessmentTrend = result.lastMonthCount === 0
-        ? "up"
-        : result.currentMonthCount >= result.lastMonthCount
-          ? "up"
-          : "down";
-
-      const assessmentPercentageChange = result.lastMonthCount === 0
-        ? 100
-        : ((result.currentMonthCount - result.lastMonthCount) / result.lastMonthCount) * 100;
-      
-      const assessmentTrendValue = result.lastMonthCount === 0
-        ? "+100% vs last month"
-        : `${(assessmentPercentageChange > 0 ? '+' : '')}${assessmentPercentageChange.toFixed(1)}% vs last month`;
-
-      const avgScoreTrend = averageScoreLastMonth === 0
-        ? "up"
-        : averageScore >= averageScoreLastMonth
-          ? "up"
-          : "down";
-
-      const difference = averageScore - averageScoreLastMonth;
-      const avgScoreTrendValue = averageScoreLastMonth === 0
-        ? `+${averageScore.toFixed(1)} vs last month`
-        : `${(difference > 0 ? '+' : '')}${difference.toFixed(1)} vs last month`;
-
-      assessmentData = {
-        totalCompleted: result.currentMonthCount,
-        lastMonthCount: result.lastMonthCount,
-        averageScore: averageScore,
-        averageScoreLastMonth: averageScoreLastMonth,
-        trend: assessmentTrend,
-        trendValue: assessmentTrendValue,
-        averageScoreTrend: avgScoreTrend,
-        averageScoreTrendValue: avgScoreTrendValue,
-        totalAllTime: result.totalCompleted
-      };
-    } catch (err) {
-      console.error("Error aggregating assessments in getInterviewDashboardStats", err);
+        assessmentData.feedbackStats = {
+          totalFeedbacks:        ratingResult.totalFeedbacks || 0,
+          avgOverallRating:      ratingResult.avgOverallRating
+            ? parseFloat(ratingResult.avgOverallRating.toFixed(1)) : 0,
+          avgCommunicationRating: ratingResult.avgCommunicationRating
+            ? parseFloat(ratingResult.avgCommunicationRating.toFixed(1)) : 0,
+          recommendations: {
+            strongHire:   ratingResult.strongHire   || 0,
+            hire:         ratingResult.hire         || 0,
+            maybe:        ratingResult.maybe        || 0,
+            noHire:       ratingResult.noHire       || 0,
+            strongNoHire: ratingResult.strongNoHire || 0,
+          },
+        };
+      }
     }
+  } catch (err) {
+    console.error("[Dashboard Debug] ratingDistribution error:", err);
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────
+// NO-SHOW TRENDS (last 30 days — daily, date + noShows)
+// ─────────────────────────────────────────────────────────────────────────
+const noShowTrends = [];
+try {
+  // Build a map for last 30 days
+  const noShowMap = {};
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split("T")[0];
+    noShowMap[key] = 0;
   }
 
-  // --------------------------------------------------------------------
-  // RETURN COMPLETE DASHBOARD DATA
-  // --------------------------------------------------------------------
+  // roundStatusRaw already has tenant-filtered rounds with status + createdAt
+  for (const r of roundStatusRaw) {
+    if (r.status !== "NoShow") continue;
+    const dt = r.createdAt ? new Date(r.createdAt) : null;
+    if (!dt) continue;
+    const key = dt.toISOString().split("T")[0];
+    if (key in noShowMap) noShowMap[key]++;
+  }
+
+  for (const [date, noShows] of Object.entries(noShowMap)) {
+    noShowTrends.push({ date, noShows });
+  }
+} catch (err) {
+  console.error("[Dashboard Debug] noShowTrends error:", err);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// CYCLE TIME TRENDS (last 30 days — daily, date + avgCycleTime in days)
+// ─────────────────────────────────────────────────────────────────────────
+const cycleTimeTrends = [];
+try {
+  const cycleMap = {};
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split("T")[0];
+    cycleMap[key] = { totalDays: 0, count: 0 };
+  }
+
+  // Fetch completed rounds with history for this tenant
+  const completedRoundsRaw = await InterviewRounds.aggregate([
+    {
+      $match: {
+        status: { $in: ["Completed", "Evaluated", "FeedbackSubmitted"] },
+      },
+    },
+    ...lookupAndMatchStages,
+    {
+      $project: {
+        createdAt: 1,
+        // Last history entry createdAt = when round reached terminal state
+        completedAt: { $arrayElemAt: ["$history.createdAt", -1] },
+      },
+    },
+  ]);
+
+  for (const r of completedRoundsRaw) {
+    const startDt = r.createdAt   ? new Date(r.createdAt)   : null;
+    const endDt   = r.completedAt ? new Date(r.completedAt) : null;
+    if (!startDt || !endDt || endDt <= startDt) continue;
+
+    const key = startDt.toISOString().split("T")[0];
+    if (!(key in cycleMap)) continue;
+
+    const diffDays = (endDt - startDt) / (1000 * 60 * 60 * 24);
+    cycleMap[key].totalDays += diffDays;
+    cycleMap[key].count++;
+  }
+
+  for (const [date, val] of Object.entries(cycleMap)) {
+    cycleTimeTrends.push({
+      date,
+      avgCycleTime: val.count > 0
+        ? parseFloat((val.totalDays / val.count).toFixed(1))
+        : 0,
+    });
+  }
+} catch (err) {
+  console.error("[Dashboard Debug] cycleTimeTrends error:", err);
+}
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RETURN
+  // ─────────────────────────────────────────────────────────────────────────
   return {
-    // Total Interviews Card Data
-    upcomingRoundsData: upcomingRoundsData,
+    upcomingRoundsData,
+
     totalInterviews: {
-      value: monthlyData.currentMonthCount,
-      lastMonth: monthlyData.lastMonthCount,
-      trend: totalTrend,
-      trendValue: totalTrendValue,
-      totalRounds: monthlyData.totalRounds,
+      value:       currentMonthCount,
+      lastMonth:   lastMonthCount,
+      trend:       totalTrend,
+      trendValue:  totalTrendValue,
+      totalRounds: totalRoundsAll,
     },
 
-// roundStatusCounts: {
-//   noShow: roundStatusData.noShowCount,
-//   cancelled: roundStatusData.cancelledCount,
-//   requestSent: roundStatusData.requestSentCount,
+    roundStatusCounts: {
+      value:      currentMonthNS,
+      lastMonth:  lastMonthNS,
+      trend:      noShowTrend,
+      trendValue: noShowTrendValue,
+      totalCount: noShowCancelledTotal,
+      rate:       `${noShowCancelRate}%`,
+      noShow:     noShowCount,
+      cancelled:  cancelledCount,
+    },
 
-//   rate: `${noShowCancelRate}%`,
-//   trend: noShowTrend,
-//   trendValue: noShowTrendValue,
-// },
-roundStatusCounts: {
-  value: roundStatusData.currentMonthNoShowCancelled,
-  lastMonth: roundStatusData.lastMonthNoShowCancelled,
-  trend: noShowTrend,
-  trendValue: noShowTrendValue,
-  totalCount: roundStatusData.noShowCancelledTotal,
-  rate: `${noShowCancelRate}%`,
-
-  noShow: roundStatusData.noShowCount,
-  cancelled: roundStatusData.cancelledCount,
-},
-
-    // Outsourced Interviews Card Data
     outsourcedInterviews: {
-      value: outsourcedData.currentMonthCount,
-      lastMonth: outsourcedData.lastMonthCount,
-      trend: outsourcedTrend,
+      value:      outsourcedCurrent,
+      lastMonth:  outsourcedLast,
+      trend:      outsourcedTrend,
       trendValue: outsourcedTrendValue,
-      totalCount: outsourcedData.totalCount,
+      totalCount: outsourcedRaw.length,
     },
 
-    // Upcoming Interviews Card Data
     upcomingInterviews: {
-      value: upcomingData.upcoming7Days,
-      lastWeek: upcomingData.lastWeekCount,
-      trend: upcomingTrend,
-      trendValue: upcomingTrendValue,
-      currentWeekCount: upcomingData.currentWeekCount,
+      value:            upcoming7Days,
+      lastWeek:         lastWeekCount,
+      trend:            upcomingTrend,
+      trendValue:       upcomingTrendValue,
+      currentWeekCount: currentWeekCount,
     },
 
-    // Chart Data Object
     chartData: {
       interviewsOverTime,
-      interviewerUtilization,
+      interviewerUtilization: utilizationAgg,
+      assessmentStats: assessmentData.assessmentStats || [],
+       ratingDistribution,
+  feedbackStats: assessmentData.feedbackStats || {
+    totalFeedbacks: 0,
+    avgOverallRating: 0,
+    avgCommunicationRating: 0,
+    recommendations: { strongHire: 0, hire: 0, maybe: 0, noHire: 0, strongNoHire: 0 },
+  },
+
+   noShowTrends,       // ← add this
+  cycleTimeTrends,    // ← add this
     },
 
-    // Assessments Data map for the frontend Dashboard card
     assessmentsCompleted: {
       totalCompleted: assessmentData.totalCompleted,
-      lastMonth: assessmentData.lastMonthCount,
-      trend: assessmentData.trend,
-      trendValue: assessmentData.trendValue,
-      totalAllTime: assessmentData.totalAllTime,
+      lastMonth:      assessmentData.lastMonthCount,
+      trend:          assessmentData.trend,
+      trendValue:     assessmentData.trendValue,
+      totalAllTime:   assessmentData.totalAllTime,
     },
 
-    // Flattened structure for frontend Assessment Dashboard calculations
-    totalCompleted: assessmentData.totalCompleted,
-    lastMonth: assessmentData.lastMonthCount,
-    trend: assessmentData.trend,
-    trendValue: assessmentData.trendValue,
-    averageScore: assessmentData.averageScore,
-    averageScoreLastMonth: assessmentData.averageScoreLastMonth,
-    averageScoreTrend: assessmentData.averageScoreTrend,
+    totalCompleted:         assessmentData.totalCompleted,
+    lastMonth:              assessmentData.lastMonthCount,
+    trend:                  assessmentData.trend,
+    trendValue:             assessmentData.trendValue,
+    averageScore:           assessmentData.averageScore,
+    averageScoreLastMonth:  assessmentData.averageScoreLastMonth,
+    averageScoreTrend:      assessmentData.averageScoreTrend,
     averageScoreTrendValue: assessmentData.averageScoreTrendValue,
 
-    // Additional metadata
     metadata: {
-      // totalInterviewsCount: totalInterviews,
       calculationDate: now,
       dateRanges: {
         currentMonth: { start: currentMonthStart, end: now },
-        lastMonth: { start: lastMonthStart, end: lastMonthEnd },
-        currentWeek: { start: currentWeekStart, end: currentWeekEnd },
-        lastWeek: { start: lastWeekStart, end: lastWeekEnd },
-        next7Days: { start: now, end: next7DaysEnd },
+        lastMonth:    { start: lastMonthStart,    end: lastMonthEnd },
+        currentWeek:  { start: currentWeekStart,  end: currentWeekEnd },
+        lastWeek:     { start: lastWeekStart,      end: lastWeekEnd },
+        next7Days:    { start: now,                end: next7DaysEnd },
       },
     },
   };
 }
+
+
+
 
 // ==========================================================
 // SIMPLIFIED FUNCTION FOR UPCOMING ROUNDS WITHOUT FILTERS
