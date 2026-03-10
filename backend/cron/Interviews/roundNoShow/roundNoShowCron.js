@@ -93,6 +93,11 @@ async function processNoShow(isMock, Model, roundId) {
             $set: {
                 status: "NoShow",
                 noShowJobId: null,
+                interviewerType: "",
+                participants: [],
+                interviewers: [],
+                meetingId: "",
+                meetPlatform: "",
             },
             $push: {
                 history: {

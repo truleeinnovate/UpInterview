@@ -1006,7 +1006,7 @@ export const getMockInterviewActions = (navigate, options = {}) => {
             show: (row) => !["Scheduled",
                 "InProgress",
                 "Completed",
-                "InCompleted",
+                "Incomplete",
                 "Cancelled",
                 "NoShow",
                 "FeedbackPending",

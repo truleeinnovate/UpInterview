@@ -172,20 +172,23 @@ async function evaluateRoundAfterExpiry(roundId, now) {
     roundId,
     {
       $set: {
-        status: "Rejected",
+        status: "Expired",
         rejectionReason,
         currentAction: "NoInterviewerAccepted",
-        currentActionReason: "Auto-rejected by system – no acceptance received",
+        currentActionReason: "Auto-Expired by system – no acceptance received",
         noShowJobId: null,
         updatedAt: now
       },
       $push: {
         history: {
           scheduledAt: now,
-          action: "Rejected",
+          action: "Expired",
           reasonCode: "SYSTEM_NO_ACCEPTANCE",
-          comment: `${rejectionReason}. Automatically rejected by system.`,
+          comment: `${rejectionReason}. Automatically Expired by system.`,
           participants: [],
+          interviewerType: "",
+          meetingId: "",
+          meetPlatform: "",
           updatedBy: null,
           updatedAt: now
         }
@@ -193,7 +196,7 @@ async function evaluateRoundAfterExpiry(roundId, now) {
     }
   );
 
-  console.log(`[Cron] Round ${roundId} marked as Rejected (no acceptance – real interview)`);
+  console.log(`[Cron] Round ${roundId} marked as Expired (no acceptance – real interview)`);
 
   // Withdraw any lingering inprogress requests (cleanup)
   try {
@@ -256,19 +259,19 @@ async function evaluateMockRoundAfterExpiry(roundId, now) {
     roundId,
     {
       $set: {
-        status: "Rejected",
+        status: "Expired",
         rejectionReason,
         currentAction: "NoInterviewerAccepted",
-        currentActionReason: "Auto-rejected by system – no acceptance received",
+        currentActionReason: "Auto-Expired by system – no acceptance received",
         noShowJobId: null,
         updatedAt: now
       },
       $push: {
         history: {
           scheduledAt: now,
-          action: "Rejected",
+          action: "Expired",
           reasonCode: "SYSTEM_NO_ACCEPTANCE",
-          comment: `${rejectionReason}. Automatically rejected by system.`,
+          comment: `${rejectionReason}. Automatically Expired by system.`,
           interviewers: [],
           createdBy: null,
         }
@@ -276,7 +279,7 @@ async function evaluateMockRoundAfterExpiry(roundId, now) {
     }
   );
 
-  console.log(`[Cron] Mock round ${roundId} marked as Rejected (no acceptance – mock interview)`);
+  console.log(`[Cron] Mock round ${roundId} marked as Expired (no acceptance – mock interview)`);
 
   // Withdraw any lingering inprogress requests
   try {

@@ -140,7 +140,7 @@ const RoundCard = ({
   // Add near other state declarations
   const [cancelReasonModalOpen, setCancelReasonModalOpen] = useState(false);
   const [noShowReasonModalOpen, setNoShowReasonModalOpen] = useState(false);
-  const [rejectReasonModalOpen, setRejectReasonModalOpen] = useState(false);
+  // const [rejectReasonModalOpen, setRejectReasonModalOpen] = useState(false);
   const [completeReasonModalOpen, setCompleteReasonModalOpen] = useState(false);
   const [evaluatedReasonModalOpen, setEvaluatedReasonModalOpen] =
     useState(false);
@@ -432,7 +432,7 @@ const RoundCard = ({
   const handleInCompleteWithReason = async ({ reason, comment }) => {
     setIsInCompletingRound(true);
     try {
-      await handleStatusChange("InComplete", reason, comment || null);
+      await handleStatusChange("Incomplete", reason, comment || null);
       setInCompleteReasonModalOpen(false);
       setActionInProgress(false);
     } catch (error) {
@@ -492,15 +492,15 @@ const RoundCard = ({
   };
 
   // handling Rejection functionlity
-  const handleRejectWithReason = async ({ reason, comment }) => {
-    try {
-      await handleStatusChange("Rejected", reason, comment || null);
-      setRejectReasonModalOpen(false);
-      setActionInProgress(false);
-    } catch (error) {
-      setActionInProgress(false);
-    }
-  };
+  // const handleRejectWithReason = async ({ reason, comment }) => {
+  //   try {
+  //     await handleStatusChange("Rejected", reason, comment || null);
+  //     setRejectReasonModalOpen(false);
+  //     setActionInProgress(false);
+  //   } catch (error) {
+  //     setActionInProgress(false);
+  //   }
+  // };
 
   // handling Completion functionlity
   // setCompletedReasonModalOpen
@@ -1207,7 +1207,7 @@ const RoundCard = ({
       canNoShow: false,
       canSkipped: true,
     },
-    Rejected: {
+    Expired: {
       canEdit: false,
       canDelete: false,
       canMarkScheduled: false,
@@ -2465,7 +2465,7 @@ const RoundCard = ({
       />
 
       {/* Modal for Reject using DateChangeConfirmationModal */}
-      <DateChangeConfirmationModal
+      {/* <DateChangeConfirmationModal
         isOpen={rejectReasonModalOpen}
         onClose={() => {
           setRejectReasonModalOpen(false);
@@ -2477,7 +2477,7 @@ const RoundCard = ({
         combinedDateTime={round?.dateTime}
         actionType="Reject"
         isLoading={false}
-      />
+      /> */}
 
       {/* Modal for Complete using DateChangeConfirmationModal */}
       <DateChangeConfirmationModal

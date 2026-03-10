@@ -831,7 +831,7 @@ const updateInterviewRound = async (req, res) => {
     // 1. Draft → RequestSent (sending new requests)
     if (
       (existingRound.status === "Draft" ||
-        existingRound.status === "Cancelled") &&
+        existingRound.status === "Cancelled" || existingRound.status === "NoShow" || existingRound.status === "Incomplete" ||  existingRound.status === "Expired") &&
       hasselectedInterviewers
     ) {
       updatePayload.$set.status = "RequestSent";
@@ -1005,6 +1005,7 @@ const updateInterviewRound = async (req, res) => {
     if (
       existingRound.status === "Draft" ||
       existingRound.status === "Cancelled"
+      || existingRound.status === "NoShow" || existingRound.status === "Incomplete" ||  existingRound.status === "Expired"
       //  && willBeScheduled
     ) {
       // Decide schedule action based on history
@@ -1371,6 +1372,8 @@ const updateInterviewRoundStatus = async (req, res) => {
         .json({ success: false, message: "Round not found" });
     }
 
+  
+
     let newStatus = null;
 
 
@@ -1423,6 +1426,18 @@ const updateInterviewRoundStatus = async (req, res) => {
       }
     }
 
+      if (existingRound?.status ===  action){
+      
+        return res.status(400).json({
+          success: false,
+          code: "Already in this status",
+          message:
+            "Already in this status",
+          // Optional: you can send more context if frontend needs it
+          // code: "FEEDBACK_REQUIRED_FOR_EXTERNAL"
+        });
+    }
+
     // console.log("req.body isParticipantUpdate", req.body)
 
 
@@ -1439,7 +1454,7 @@ const updateInterviewRoundStatus = async (req, res) => {
         Scheduled: "Scheduled",
         InProgress: "InProgress",
         Completed: "Completed",
-        InCompleted: "InCompleted",
+        // InCompleted: "InCompleted",
         Rescheduled: "Rescheduled",
         Rejected: "Rejected",
         Selected: "Selected",
@@ -1855,6 +1870,13 @@ const updateInterviewRoundStatus = async (req, res) => {
       extraUpdate.$set.meetingId = "";
       extraUpdate.$set.meetPlatform = "";
       extraUpdate.$set.interviewerType = "";
+    }
+
+    if (action === "NoShow"){
+      extraUpdate.$set.interviewers = []; // Clear interviewers
+      extraUpdate.$set.meetingId = "";
+      extraUpdate.$set.meetPlatform = "";
+      extraUpdate.$set.interviewerType = ""; 
     }
 
     // Manual NoShow / InCompleted — NO auto-settlement
