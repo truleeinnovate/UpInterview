@@ -1430,7 +1430,7 @@ const Subscription = () => {
       {showUpdatePaymentModal &&
         createPortal(
           <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full m-4 animate-slide-in" style={{ maxHeight: "90vh", overflowY: "auto" }}>
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-[700px] w-full m-4 animate-slide-in" style={{ maxHeight: "90vh", overflowY: "auto" }}>
               <div className="flex items-center mb-4">
                 <div className="bg-blue-100 rounded-full p-3 mr-3">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-custom-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">

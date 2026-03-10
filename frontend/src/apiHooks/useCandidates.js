@@ -1,6 +1,4 @@
-// v1.0.0 - Ashok - Fixed updating image and resume issue
-
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { fetchFilterData } from "../api";
@@ -17,44 +15,54 @@ export const useCandidates = (filters = {}) => {
   const hasViewPermission = effectivePermissions?.Candidates?.View;
   const hasDeletePermission = effectivePermissions?.Candidates?.Delete;
 
+  // Build query key WITHOUT page (page is managed by useInfiniteQuery)
+  const { page, ...filtersWithoutPage } = filters;
+
   const {
     data: responseData,
     isLoading: isQueryLoading,
     isError,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ["candidates", filters],
-    queryFn: async () => {
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["candidates", filtersWithoutPage],
+    queryFn: async ({ pageParam = 1 }) => {
       const data = await fetchFilterData(
         "candidate",
         effectivePermissions,
-        filters,
+        { ...filtersWithoutPage, page: pageParam, limit: filters.limit || 10 },
       );
-
-      // console.log("data data", data);
       return data;
     },
-    enabled: !!hasViewPermission, // Only fetch if user has permission
+    getNextPageParam: (lastPage, allPages) => {
+      const total = lastPage?.total || 0;
+      const loadedSoFar = allPages.reduce(
+        (sum, p) => sum + (p?.candidate?.length || 0),
+        0
+      );
+      if (loadedSoFar < total) {
+        return allPages.length + 1; // next page number
+      }
+      return undefined; // no more pages
+    },
+    initialPageParam: 1,
+    enabled: !!hasViewPermission,
     retry: 1,
-    staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
-    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    // refetchOnMount: false, // Don't refetch when component mounts if data exists
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
     refetchOnMount: "always",
-    refetchOnReconnect: false, // Don't refetch on network reconnect
+    refetchOnReconnect: false,
   });
 
-  // Extract data and total from response
-  const candidateData = responseData?.candidate || [];
-  const totalCandidates = responseData?.total || 0;
-
-  // In useCandidates hook, change data extraction to:
-  // const candidateDatas = responseData?.data?.candidate || [];
-  // const totalCandidatess = responseData?.data?.total || 0;
-
-  // console.log("candidateDatas", candidateDatas);
-  // console.log("totalCandidatess", totalCandidatess);
+  // Flatten all pages into a single array
+  const candidateData = responseData?.pages?.flatMap(
+    (page) => page?.candidate || []
+  ) || [];
+  const totalCandidates = responseData?.pages?.[0]?.total || 0;
 
   //   console.log("candidateData", candidateData);
   //   console.log("totalCandidates", totalCandidates);
@@ -243,34 +251,7 @@ export const useCandidates = (filters = {}) => {
     },
 
     onSuccess: (data, candidateId) => {
-      // FIXED: Optimistically remove from cache - handle your specific backend structure
-      queryClient.setQueryData(["candidates", filters], (oldData) => {
-        if (!oldData) return oldData;
-
-        // Your backend returns { data: { candidate: [...], total: X } }
-        if (oldData.data && oldData.data.candidate) {
-          // New structure: { data: { candidate: [...], total: X } }
-          const filteredCandidates = oldData.data.candidate.filter(
-            (candidate) => candidate._id !== candidateId,
-          );
-          return {
-            ...oldData,
-            data: {
-              ...oldData.data,
-              candidate: filteredCandidates,
-              total: oldData.data.total - 1,
-            },
-          };
-        } else if (Array.isArray(oldData)) {
-          // Old structure: array of candidates (fallback)
-          return oldData.filter((candidate) => candidate._id !== candidateId);
-        } else {
-          // Unknown structure, return as is
-          return oldData;
-        }
-      });
-
-      // Invalidate queries to ensure consistency
+      // Invalidate queries to ensure consistency (useInfiniteQuery handles refetch)
       queryClient.invalidateQueries(["candidates"]);
     },
     onError: (error, candidateId) => {
@@ -334,6 +315,10 @@ export const useCandidates = (filters = {}) => {
     deleteCandidateData: deleteMutation.mutateAsync,
     refetch,
     useCandidatePositions,
+    // Infinite scroll
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };
 

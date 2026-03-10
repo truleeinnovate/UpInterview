@@ -53,6 +53,87 @@ import {
 } from "../../../../utils/tableColumnAndActionData.jsx";
 import { notify } from "../../../../services/toastService.js";
 
+// v1.0.5 <------------------------------------------------------------------
+const FilterDropdown = ({ label, options, selectedItems, onChange, isRadio }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative flex-shrink-0" ref={dropdownRef}>
+      <div
+        className={`flex items-center justify-between px-3 py-[9px] border rounded-md cursor-pointer bg-white min-w-[160px] text-sm transition-colors ${isOpen ? 'border-custom-blue ring-1 ring-custom-blue' : 'border-gray-300 hover:border-custom-blue'}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className="text-gray-700 whitespace-nowrap">
+          {label} {selectedItems.length > 0 && `(${selectedItems.length})`}
+        </span>
+        <ChevronDown className={`w-4 h-4 ml-2 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-[100] w-full min-w-[200px] mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto custom-scrollbar">
+          <ul className="py-1">
+            <li
+              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => { onChange([]); setIsOpen(false); }}
+            >
+              <input
+                type={isRadio ? "radio" : "checkbox"}
+                checked={selectedItems.length === 0}
+                className="w-4 h-4 rounded cursor-pointer accent-custom-blue min-w-[16px]"
+                readOnly
+              />
+              <span className="text-sm text-gray-700 whitespace-nowrap">All</span>
+            </li>
+            {options.map((opt, idx) => {
+              const valString = String(opt.value || opt.type || opt.level).toLowerCase();
+              const displayString = String(opt.value || opt.type || opt.level);
+              const isChecked = selectedItems.includes(valString);
+
+              return (
+                <li
+                  key={idx}
+                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={(e) => {
+                    if (isRadio) {
+                      onChange([valString]);
+                      setIsOpen(false);
+                    } else {
+                      const newItems = isChecked
+                        ? selectedItems.filter(v => v !== valString)
+                        : [...selectedItems, valString];
+                      onChange(newItems);
+                    }
+                  }}
+                >
+                  <input
+                    type={isRadio ? "radio" : "checkbox"}
+                    checked={isChecked}
+                    className="w-4 h-4 rounded cursor-pointer accent-custom-blue min-w-[16px]"
+                    readOnly
+                  />
+                  <span className="text-sm text-gray-700 whitespace-nowrap">{displayString}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+// v1.0.5 ------------------------------------------------------------------>
+
 // v1.0.6 <-------------------------------------------------------------
 function QuestionHeaderBar({
   type,
@@ -66,9 +147,6 @@ function QuestionHeaderBar({
   openListPopup,
   setShowCheckboxes,
   rangeLabel,
-  searchInput,
-  setSearchInput,
-  onSearchApply,
   currentPage,
   totalPages,
   itemsPerPage,
@@ -215,26 +293,7 @@ function QuestionHeaderBar({
           {/* v1.0.9 --------------------------------------------------------------------------------------------> */}
           <p>{rangeLabel}</p>
         </div>
-        <div className="relative flex items-center rounded-md border">
-          <span className="p-2 text-custom-blue">
-            <Search className="w-5 h-5" />
-          </span>
-          <input
-            type="search"
-            placeholder="Search by Tags, Questions..."
-            className="w-[200px] rounded-md focus:outline-none pr-2"
-            value={searchInput}
-            onChange={(e) => {
-              setSearchInput(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                onSearchApply && onSearchApply(searchInput);
-              }
-            }}
-          />
-        </div>
+
         <div className="flex items-center gap-3">
           <div className="flex items-center">
             <p>
@@ -377,7 +436,8 @@ const MyQuestionsList = ({
   activeTab,
   sidebarOpen,
   setSidebarOpen,
-  customHeight
+  customHeight,
+  isMeetingSidePanel,
 }) => {
   // Server-side search/filter state
   const [appliedSearchTags, setAppliedSearchTags] = useState([]);
@@ -419,6 +479,7 @@ const MyQuestionsList = ({
     type === "assessment" ? "Assessment Questions" : "Interview Questions",
   );
   const [searchInput, setSearchInput] = useState("");
+  const [tempSearchInput, setTempSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -1268,73 +1329,7 @@ const MyQuestionsList = ({
     // ... (unchanged, keep existing implementation)
   };
 
-  const toggleFilterSection = (filterId) => {
-    setTempFiltrationData((prev) =>
-      prev.map((filter) =>
-        filter.id === filterId
-          ? { ...filter, isOpen: !filter.isOpen }
-          : { ...filter, isOpen: false },
-      ),
-    );
-  };
 
-  const onChangeCheckbox = (filterId, optionIndex) => {
-    setTempFiltrationData((prev) =>
-      prev.map((filter) => {
-        if (filter.id === filterId) {
-          const updatedOptions = filter.options.map((option, idx) =>
-            idx === optionIndex
-              ? { ...option, isChecked: !option.isChecked }
-              : option,
-          );
-          return { ...filter, options: updatedOptions };
-        }
-        return filter;
-      }),
-    );
-  };
-
-  const FilterSection = () => (
-    <div className="p-2">
-      {tempFiltrationData.map((filter) => (
-        <div key={filter.id} className="p-2">
-          <div
-            className="flex justify-between items-center cursor-pointer"
-            onClick={() => toggleFilterSection(filter.id)}
-          >
-            <h3 className="font-medium">{filter.filterType}</h3>
-            <button>{filter.isOpen ? <ChevronUp /> : <ChevronDown />}</button>
-          </div>
-          {filter.isOpen && (
-            <ul className="flex flex-col gap-2 pt-2">
-              {filter.options.map((option, index) => (
-                <li key={index} className="flex gap-2 cursor-pointer">
-                  <input
-                    checked={option.isChecked}
-                    className="w-4 cursor-pointer accent-custom-blue"
-                    value={String(
-                      option.type || option.level || option.value || "",
-                    ).toLowerCase()}
-                    id={`${filter.filterType}-${option.type || option.level || option.value
-                      }`}
-                    type="checkbox"
-                    onChange={() => onChangeCheckbox(filter.id, index)}
-                  />
-
-                  <label
-                    htmlFor={`${filter.filterType}-${option.type || option.level || option.value
-                      }`}
-                  >
-                    {option.type || option.level || option.value}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ))}
-    </div>
-  );
 
   const handleApplyFilters = () => {
     setFiltrationData(tempFiltrationData);
@@ -1382,8 +1377,10 @@ const MyQuestionsList = ({
       questionType: qTypeItems,
       questionFrom: questionTypeItems,
     });
+    setSearchInput(tempSearchInput);
     setCurrentPage(1);
-    setIsPopupOpen(false);
+    // User requested not to close the popup on apply
+    // setIsPopupOpen(false);
   };
 
   const handleClearAll = () => {
@@ -1413,7 +1410,7 @@ const MyQuestionsList = ({
     setAppliedSearchTags([]);
     setSearchInput("");
     setCurrentPage(1);
-    setIsPopupOpen(false);
+    // setIsPopupOpen(false);
   };
 
   // Helper to capitalize first letter
@@ -1614,10 +1611,9 @@ const MyQuestionsList = ({
 
   return (
     <>
-      {/* <Toaster /> */}
-      <div className="w-full sm:px-2 px-4 py-2 bg-white">
+      <div className="h-full flex flex-col bg-white overflow-hidden">
         {/* v1.0.6 <---------------------------------------------------------------- */}
-        <div>
+        <div className="w-full sm:px-2 px-4 py-2 flex-shrink-0">
           <QuestionHeaderBar
             type={type}
             dropdownValue={dropdownValue}
@@ -1630,15 +1626,6 @@ const MyQuestionsList = ({
             openListPopup={openListPopup}
             setShowCheckboxes={setShowCheckboxes}
             rangeLabel={rangeLabel}
-            searchInput={searchInput}
-            setSearchInput={setSearchInput}
-            onSearchApply={(val) => {
-              const tag = (typeof val === "string" ? val : searchInput).trim();
-              if (tag) {
-                handleAddSearchTag(tag);
-                setSearchInput("");
-              }
-            }}
             currentPage={currentPage}
             totalPages={totalPages}
             itemsPerPage={itemsPerPage}
@@ -1654,65 +1641,166 @@ const MyQuestionsList = ({
         </div>
         {/* v1.0.6 ----------------------------------------------------------------> */}
 
-        {/* Filters applied chips (matching Suggested Questions UI) */}
-        {([
-          ...appliedSearchTags,
-          ...selectedQuestionTypeFilterItems,
-          ...selectedDifficultyLevelFilterItems,
-          ...selectedTechnologyFilterItems,
-          ...selectedQTypeFilterItems,
-          ...selectedCategoryFilterItems,
-        ].length > 0) && (
-            <div className="flex items-center flex-wrap px-4 pt-2 mb-3 gap-3">
-              <h3 className="font-medium text-gray-700 text-sm">
-                Filters applied:
-              </h3>
-              <ul className="flex gap-2 flex-wrap">
-                {/* Search tag chips */}
-                {appliedSearchTags.map((tag, index) => (
-                  <li
-                    key={`search-${index}`}
-                    className="flex gap-2 items-center border border-custom-blue rounded-full px-3 py-1 text-custom-blue bg-blue-50 text-sm"
-                  >
-                    <span>{tag}</span>
-                    <button
-                      type="button"
-                      className="cursor-pointer hover:text-red-500 transition-colors"
-                      onClick={() => onClickRemoveSearchChip(tag)}
-                    >
-                      <X size={14} />
-                    </button>
-                  </li>
-                ))}
-                {/* Filter chips */}
-                {[
-                  ...selectedQuestionTypeFilterItems,
-                  ...selectedDifficultyLevelFilterItems,
-                  ...selectedTechnologyFilterItems,
-                  ...selectedQTypeFilterItems,
-                  ...selectedCategoryFilterItems,
-                ].map((filterItem, index) => (
-                  <li
-                    key={`filter-${index}`}
-                    className="flex items-center gap-1 rounded-full border border-custom-blue px-3 py-1 text-custom-blue font-medium bg-blue-50 text-sm"
-                  >
-                    <span>{capitalizeFirstLetter(filterItem)}</span>
-                    <button
-                      className="hover:text-red-500 transition-colors"
-                      onClick={() => onClickRemoveSelectedFilterItem(filterItem)}
-                      type="button"
-                    >
-                      <X size={14} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
+        {/* Inline Filters Section */}
+        {isPopupOpen && (
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm transition-shadow px-7 py-4 mx-4 mt-2 mb-4 z-10 relative flex-shrink-0">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-[16px] font-semibold text-gray-800">Filters</h2>
+
+              {/* Action Buttons at the Top */}
+              <div className="flex gap-3 items-center">
+                <button
+                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium mr-2"
+                  onClick={handleClearAll}
+                >
+                  Clear All
+                </button>
+                <button
+                  className="px-4 py-2 text-sm bg-custom-blue text-white rounded-md hover:bg-opacity-90 transition-colors font-medium"
+                  onClick={handleApplyFilters}
+                >
+                  Apply
+                </button>
+              </div>
             </div>
-          )}
+
+            <div className="flex flex-col gap-5">
+              {/* Row 1: Search and Dropdowns */}
+              <div className="flex flex-wrap items-center gap-4">
+                {/* Search Bar */}
+                <div className="relative flex items-center rounded-md border border-gray-300 bg-white w-64 hover:border-custom-blue transition-colors">
+                  <span className="p-[9px] text-custom-blue flex-shrink-0">
+                    <Search className="w-4 h-4" />
+                  </span>
+                  <input
+                    type="search"
+                    placeholder="Search by Tags, Questions..."
+                    className="flex-1 p-[7px] pl-0 rounded-md focus:outline-none text-sm text-gray-700 bg-transparent min-w-[150px]"
+                    value={tempSearchInput}
+                    onChange={(e) => setTempSearchInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && tempSearchInput.trim()) {
+                        e.preventDefault();
+                        handleAddSearchTag(tempSearchInput.trim());
+                        setTempSearchInput("");
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Render FilterDropdowns */}
+                {tempFiltrationData.map((section) => {
+                  if (!section.options) return null;
+
+                  let activeItems = section.options
+                    .filter(o => o.isChecked)
+                    .map(o => String(o.type || o.value || o.level || "").toLowerCase());
+
+                  let isRadio = section.id === 2 || section.id === 3; // Based on previous usage
+
+                  const handleDropdownChange = (newItems) => {
+                    setTempFiltrationData(prev => prev.map(filter => {
+                      if (filter.id === section.id) {
+                        return {
+                          ...filter,
+                          options: filter.options.map(opt => ({
+                            ...opt,
+                            isChecked: newItems.includes(String(opt.type || opt.value || opt.level || "").toLowerCase())
+                          }))
+                        };
+                      }
+                      return filter;
+                    }));
+                  };
+
+                  return (
+                    <FilterDropdown
+                      key={section.id}
+                      label={section.filterType}
+                      options={section.options}
+                      selectedItems={activeItems}
+                      onChange={handleDropdownChange}
+                      isRadio={isRadio}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Row 2: Active Filters */}
+              {([
+                ...appliedSearchTags,
+                ...selectedQuestionTypeFilterItems,
+                ...selectedDifficultyLevelFilterItems,
+                ...selectedTechnologyFilterItems,
+                ...selectedQTypeFilterItems,
+                ...selectedCategoryFilterItems,
+              ].length > 0 || tempFiltrationData.some(section => section.options.some(o => o.isChecked))) && (
+                  <div className="flex flex-col gap-3 mt-2">
+                    <h3 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wider">Active Filters:</h3>
+
+                    <div className="flex flex-wrap items-center gap-2 min-h-[28px]">
+                      {/* Search tag chips */}
+                      {appliedSearchTags.map((tag, index) => (
+                        <div
+                          key={`search-${index}`}
+                          className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+                        >
+                          <span className="font-medium">Search:</span> {tag}
+                          <X
+                            className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                            onClick={() => onClickRemoveSearchChip(tag)}
+                          />
+                        </div>
+                      ))}
+
+                      {/* Filter chips from temp state (before applying) */}
+                      {tempFiltrationData.flatMap(section =>
+                        section.options.filter(o => o.isChecked).map((o, idx) => (
+                          <div key={`${section.id}-${idx}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                            <span className="font-medium">{section.filterType}:</span> {capitalizeFirstLetter(String(o.type || o.value || o.level || ""))}
+                            <X
+                              className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                              onClick={() => {
+                                setTempFiltrationData(prev => prev.map(filter => {
+                                  if (filter.id === section.id) {
+                                    return {
+                                      ...filter,
+                                      options: filter.options.map(opt =>
+                                        opt === o ? { ...opt, isChecked: false } : opt
+                                      )
+                                    };
+                                  }
+                                  return filter;
+                                }));
+                              }}
+                            />
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              {([
+                ...appliedSearchTags,
+                ...selectedQuestionTypeFilterItems,
+                ...selectedDifficultyLevelFilterItems,
+                ...selectedTechnologyFilterItems,
+                ...selectedQTypeFilterItems,
+                ...selectedCategoryFilterItems,
+              ].length === 0 && !tempFiltrationData.some(section => section.options.some(o => o.isChecked))) && (
+                  <div className="flex flex-col gap-3 mt-2">
+                    <h3 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wider">Active Filters:</h3>
+                    <span className="text-sm text-gray-500 italic py-1">No filters currently applied.</span>
+                  </div>
+                )}
+            </div>
+          </div>
+        )}
 
         {/* v1.0.8 <-------------------------------------------------------------------------- */}
         <div
-          className={`${type === "interviewerSection" ||
+          className={`flex-1 min-h-0 flex flex-col overflow-hidden ${type === "interviewerSection" ||
             type === "assessment" ||
             activeTab === "MyQuestionsList"
             ? ""
@@ -1783,19 +1871,10 @@ const MyQuestionsList = ({
                   {Object.entries(groupedQuestions).map(
                     ([listName, items]) =>
                       selectedLabel === listName && (
-                        <div key={listName} className="mt-4">
+                        <div key={listName} className="mt-2 flex-1 min-h-0 overflow-y-auto">
                           {isOpen[listName] && items.length > 0 && (
                             <div
-                              // className={`px-2 ${type === "interviewerSection"
-                              //     ? "h-[62vh]"
-                              //     : "h-[calc(100vh-200px)]"
-                              //   } overflow-y-auto`}
-                              className={`px-2 overflow-y-auto ${!customHeight ? (type === "interviewerSection" ? "h-[62vh]" : "h-[calc(100vh-200px)]") : ""
-                                }`}
-
-                              style={{
-                                height: customHeight ? customHeight : undefined,
-                              }}
+                              className="flex flex-col pb-8 px-4"
                             >
                               {paginatedItems.map((question, index) => (
                                 <div className="flex w-full items-center">
@@ -2287,15 +2366,7 @@ const MyQuestionsList = ({
 
         {/* // Ranjith added these feilds //  v1.0.5  */}
 
-        <FilterPopup
-          isOpen={isPopupOpen}
-          onClose={() => setIsPopupOpen(false)}
-          onApply={handleApplyFilters}
-          onClearAll={handleClearAll}
-          filterIconRef={filterIconRef}
-        >
-          {FilterSection()}
-        </FilterPopup>
+
         <MyQuestionList
           ref={myQuestionsListRef}
           fromcreate={true}
@@ -2326,7 +2397,7 @@ const MyQuestionsList = ({
             isInterviewType={dropdownValue === "Interview Questions"} //<----v1.0.3------
           />
         )}
-      </div>
+      </div >
     </>
   );
 };

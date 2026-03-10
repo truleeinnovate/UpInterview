@@ -94,17 +94,17 @@ const QuestionBank = ({
     //   style={containerStyle}
     // >
     <div
-      className={`${isEmbedded ? "question-bank-embedded" : "h-full bg-white rounded-lg"
+      className={`${isEmbedded ? "question-bank-embedded" : "bg-white rounded-lg overflow-hidden"
         } flex flex-col`}
-      style={containerStyle}
+      style={isEmbedded ? containerStyle : { height: 'calc(100vh - 68px)', ...containerStyle }}
     >
       {/* Tab Navigation - Fixed at top for modal context */}
       <div className="flex sm:gap-6 justify-between bg-white sm:px-0 sm:pl-4 text-center px-4 py-3 flex-shrink-0">
         <div className="flex sm:gap-6">
           <button
             className={`sm:px-0 px-6 py-3 font-medium text-sm ${activeTab === "SuggesstedQuestions"
-                ? "text-custom-blue border-b-2 border-custom-blue"
-                : "text-gray-500 hover:text-gray-700 transition-colors duration-200"
+              ? "text-custom-blue border-b-2 border-custom-blue"
+              : "text-gray-500 hover:text-gray-700 transition-colors duration-200"
               }`}
             onClick={() => handleSuggestedTabClick()}
             type="button"
@@ -119,8 +119,8 @@ const QuestionBank = ({
           </button>
           <button
             className={`sm:px-0 px-6 py-3 font-medium text-sm ${activeTab === "MyQuestionsList"
-                ? "text-custom-blue border-b-2 border-custom-blue"
-                : "text-gray-500 hover:text-gray-700 transition-colors duration-200"
+              ? "text-custom-blue border-b-2 border-custom-blue"
+              : "text-gray-500 hover:text-gray-700 transition-colors duration-200"
               }`}
             onClick={() => handleFavoriteTabClick()}
             type="button"
@@ -155,8 +155,8 @@ const QuestionBank = ({
       </div>
       {/*---v1.0.0----->*/}
 
-      {/* Tab Content - Scrollable area */}
-      <div className="flex-1 overflow-auto transition-all duration-300">
+      {/* Tab Content - Managed scrollable area */}
+      <div className="flex-1 overflow-hidden flex flex-col transition-all duration-300">
         {activeTab === "SuggesstedQuestions" && (
           <SuggesstedQuestions
             sectionName={sectionName}
@@ -204,6 +204,7 @@ const QuestionBank = ({
             sidebarOpen={sidebarOpen} //<---v1.0.0-----
             setSidebarOpen={setSidebarOpen} //<---v1.0.0-----
             customHeight={customHeight}
+            isMeetingSidePanel={isMeetingSidePanel}
           />
         )}
       </div>

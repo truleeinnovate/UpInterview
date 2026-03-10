@@ -57,6 +57,7 @@ import { useMediaQuery } from "react-responsive";
   filterIconRef,
   startContent,
   showFilter = true,
+  hidePagination = false,
 }) => {
   // v1.0.0 <--------------------------------------------------------
   // v1.0.1 <-------------------------------------------------------------------
@@ -131,31 +132,35 @@ import { useMediaQuery } from "react-responsive";
           </div>
         </div>
 
-        {/* Pagination Info */}
-        <div className="flex items-center text-sm text-muted-foreground px-2">
-          {displayCurrentPage}/{safeTotalPages}
-        </div>
+        {/* Pagination Info - hidden when hidePagination is true */}
+        {!hidePagination && (
+          <div className="flex items-center text-sm text-muted-foreground px-2">
+            {displayCurrentPage}/{safeTotalPages}
+          </div>
+        )}
 
-        {/* Pagination Controls */}
-        <div className="flex items-center">
-          <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
-            <span
-              onClick={onPrevPage}
-              className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${currentPage === 0 || safeTotalPages === 0 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
-            >
-              <IoIosArrowBack />
-            </span>
-          </Tooltip>
+        {/* Pagination Controls - hidden when hidePagination is true */}
+        {!hidePagination && (
+          <div className="flex items-center">
+            <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
+              <span
+                onClick={onPrevPage}
+                className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${currentPage === 0 || safeTotalPages === 0 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
+              >
+                <IoIosArrowBack />
+              </span>
+            </Tooltip>
 
-          <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
-            <span
-              onClick={onNextPage}
-              className={`border p-2 text-xl rounded-md cursor-pointer ${safeTotalPages === 0 || currentPage + 1 >= safeTotalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
-            >
-              <IoIosArrowForward />
-            </span>
-          </Tooltip>
-        </div>
+            <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
+              <span
+                onClick={onNextPage}
+                className={`border p-2 text-xl rounded-md cursor-pointer ${safeTotalPages === 0 || currentPage + 1 >= safeTotalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
+              >
+                <IoIosArrowForward />
+              </span>
+            </Tooltip>
+          </div>
+        )}
 
         {/* Filter */}
         {/* {showFilter && (
