@@ -4,8 +4,9 @@
 // v1.0.3  -  Ashok   -  added custom height prop for table container
 // v1.0.4  -  Ashok   -  increased number of loading rows from 5 to 10
 // v1.0.5  -  Ashok   -  fixed outline
+// v1.0.6  -  Venkatesh - added infinite scroll support (onScrollEnd, isLoadingMore, hasMore)
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Menu } from "@headlessui/react";
 import { ReactComponent as FiMoreHorizontal } from "../../../icons/FiMoreHorizontal.svg";
@@ -22,6 +23,11 @@ const TableView = ({
   // ------------------------------v1.0.0 >
   customHeight = "",
   highlightText = "", // Search query to highlight
+  // v1.0.6 <--- infinite scroll props
+  onScrollEnd = null,
+  isLoadingMore = false,
+  hasMore = false,
+  // v1.0.6 --->
 }) => {
   // Helper function to highlight matching text
   const highlightMatch = (text, query) => {
@@ -81,6 +87,27 @@ const TableView = ({
   useEffect(() => {
     setShowEmptyState(!loading && data.length === 0);
   }, [loading, data]);
+
+  // v1.0.6 <--- infinite scroll: detect scroll near bottom
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !onScrollEnd || isLoadingMore || !hasMore) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    // When user is within 100px of bottom, trigger load more
+    if (scrollTop + clientHeight >= scrollHeight - 100) {
+      onScrollEnd();
+    }
+  }, [onScrollEnd, isLoadingMore, hasMore]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !onScrollEnd) return;
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [handleScroll, onScrollEnd]);
+  // v1.0.6 --->
 
   const handleMenuOpen = (rowId, e) => {
     e.stopPropagation();
@@ -231,45 +258,46 @@ const TableView = ({
                   </td>
                 </tr>
               ) : (
-                data?.map((row, index) => {
-                  const baseRowId = row.id || row._id || "row";
-                  const rowKey = `${baseRowId}-${index}`;
-                  const menuRowId = rowKey;
-                  return (
-                    <tr key={rowKey} className="hover:bg-gray-50">
-                      {columns.map((column) => (
-                        <td
-                          key={`${rowKey}-${column.key}`}
-                          className={`px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis ${column.cellClassName || ""
-                            }`}
-                        >
-                          {(() => {
-                            const cellValue = column.render
-                              ? column.render(row[column.key], row)
-                              : row[column.key] || "";
+                <>
+                  {data?.map((row, index) => {
+                    const baseRowId = row.id || row._id || "row";
+                    const rowKey = `${baseRowId}-${index}`;
+                    const menuRowId = rowKey;
+                    return (
+                      <tr key={rowKey} className="hover:bg-gray-50">
+                        {columns.map((column) => (
+                          <td
+                            key={`${rowKey}-${column.key}`}
+                            className={`px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis ${column.cellClassName || ""
+                              }`}
+                          >
+                            {(() => {
+                              const cellValue = column.render
+                                ? column.render(row[column.key], row)
+                                : row[column.key] || "";
 
-                            // Apply highlighting to plain string values
-                            if (highlightText && typeof cellValue === 'string') {
-                              return highlightMatch(cellValue, highlightText);
-                            }
-                            return cellValue;
-                          })()}
+                              // Apply highlighting to plain string values
+                              if (highlightText && typeof cellValue === 'string') {
+                                return highlightMatch(cellValue, highlightText);
+                              }
+                              return cellValue;
+                            })()}
 
-                        </td>
-                      ))}
-                      {actions.length > 0 && (
-                        <td className="px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-visible">
-                          <Menu as="div" className="relative">
-                            <Menu.Button
-                              ref={(el) => {
-                                menuButtonRefs.current[menuRowId] = el;
-                              }}
-                              onClick={(e) => handleMenuOpen(menuRowId, e)}
-                              className="p-1 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
-                            >
-                              <FiMoreHorizontal className="w-5 h-5 text-gray-600" />
-                            </Menu.Button>
-                            {/* {openMenuIndex === menuRowId && (
+                          </td>
+                        ))}
+                        {actions.length > 0 && (
+                          <td className="px-3 py-1 text-sm text-gray-600 whitespace-nowrap overflow-visible">
+                            <Menu as="div" className="relative">
+                              <Menu.Button
+                                ref={(el) => {
+                                  menuButtonRefs.current[menuRowId] = el;
+                                }}
+                                onClick={(e) => handleMenuOpen(menuRowId, e)}
+                                className="p-1 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue"
+                              >
+                                <FiMoreHorizontal className="w-5 h-5 text-gray-600" />
+                              </Menu.Button>
+                              {/* {openMenuIndex === menuRowId && (
                             <Menu.Items
                               static
                               className="absolute left-0 w-48 bg-white rounded-lg shadow-xl border border-gray-300 outline-none py-1 z-50"
@@ -320,54 +348,83 @@ const TableView = ({
                                 ))}
                             </Menu.Items>
                           )} */}
-                            {openMenuIndex === menuRowId &&
-                              createPortal(
-                                <Menu.Items
-                                  static
-                                  className="w-48 bg-white rounded-lg shadow-xl border border-gray-300 outline-none py-1 z-[9999]"
-                                  style={{
-                                    position: "fixed",
-                                    ...getMenuPosition(menuRowId, openUpwards),
-                                  }}
-                                  ref={(el) => {
-                                    menuRefs.current[menuRowId] = el;
-                                  }}
-                                >
-                                  {actions
-                                    .filter((action) =>
-                                      action.show ? action.show(row) : true
-                                    )
-                                    .map((action) => (
-                                      <Menu.Item key={action.key}>
-                                        {({ active }) => (
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              action.onClick(row);
-                                              setOpenMenuIndex(null);
-                                            }}
-                                            className={`${active ? "bg-gray-50" : ""
-                                              } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
-                                          >
-                                            {typeof action.icon === "function"
-                                              ? action.icon(row)
-                                              : action.icon}
-                                            {typeof action.label === "function"
-                                              ? action.label(row)
-                                              : action.label}
-                                          </button>
-                                        )}
-                                      </Menu.Item>
-                                    ))}
-                                </Menu.Items>,
-                                document.body
-                              )}
-                          </Menu>
-                        </td>
-                      )}
+                              {openMenuIndex === menuRowId &&
+                                createPortal(
+                                  <Menu.Items
+                                    static
+                                    className="w-48 bg-white rounded-lg shadow-xl border border-gray-300 outline-none py-1 z-[9999]"
+                                    style={{
+                                      position: "fixed",
+                                      ...getMenuPosition(menuRowId, openUpwards),
+                                    }}
+                                    ref={(el) => {
+                                      menuRefs.current[menuRowId] = el;
+                                    }}
+                                  >
+                                    {actions
+                                      .filter((action) =>
+                                        action.show ? action.show(row) : true
+                                      )
+                                      .map((action) => (
+                                        <Menu.Item key={action.key}>
+                                          {({ active }) => (
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                action.onClick(row);
+                                                setOpenMenuIndex(null);
+                                              }}
+                                              className={`${active ? "bg-gray-50" : ""
+                                                } flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700`}
+                                            >
+                                              {typeof action.icon === "function"
+                                                ? action.icon(row)
+                                                : action.icon}
+                                              {typeof action.label === "function"
+                                                ? action.label(row)
+                                                : action.label}
+                                            </button>
+                                          )}
+                                        </Menu.Item>
+                                      ))}
+                                  </Menu.Items>,
+                                  document.body
+                                )}
+                            </Menu>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                  {/* v1.0.6 <--- Loading more skeleton rows for infinite scroll */}
+                  {isLoadingMore && (
+                    <tr className="bg-gray-50/50">
+                      <td colSpan={totalColumns} className="px-3 py-6 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-3">
+                          <div className="w-6 h-6 border-2 border-custom-blue border-t-transparent rounded-full animate-spin"></div>
+                          <p className="text-sm text-gray-500 font-medium">Loading more data...</p>
+                        </div>
+                      </td>
                     </tr>
-                  );
-                })
+                  )}
+                  {/* Show end of list when no more data and not initially loading */}
+                  {!hasMore && !delayedLoading && data.length > 0 && (
+                    <tr className="bg-transparent">
+                      <td colSpan={totalColumns} className="px-3 py-8 text-center border-t-0">
+                        <div className="flex items-center justify-center space-x-2 text-gray-400">
+                          <div className="h-px w-12 bg-gray-200"></div>
+                          <span className="text-xs font-medium uppercase tracking-wider">End of list</span>
+                          <div className="h-px w-12 bg-gray-200"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {/* Add an empty row for extra padding at the bottom so the last item isn't cut off */}
+                  <tr className="border-transparent">
+                    <td colSpan={totalColumns} className="h-10 border-transparent"></td>
+                  </tr>
+                  {/* v1.0.6 ---> */}
+                </>
               )}
             </tbody>
           </table>

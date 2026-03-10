@@ -183,7 +183,7 @@ function Candidate({
   const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
+  // const [currentPage, setCurrentPage] = useState(0); // Removed: using infinite scroll now
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     tech: [],
@@ -211,7 +211,7 @@ function Candidate({
     min: "",
     max: "",
   });
-  const rowsPerPage = 10;
+  const rowsPerPage = 10; // Used for limit in infinite scroll
 
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [selectedUniversities, setSelectedUniversities] = useState([]);
@@ -224,9 +224,8 @@ function Candidate({
 
   const [showBulkUpload, setShowBulkUpload] = useState(false);
 
-  // NEW: Compute queryFilters for server-side
+  // Compute queryFilters for server-side (no page — handled by useInfiniteQuery)
   const queryFilters = {
-    page: currentPage + 1,
     limit: rowsPerPage,
     search: searchQuery,
     status: selectedFilters.status,
@@ -240,7 +239,7 @@ function Candidate({
     createdDate: selectedFilters.createdDate,
   };
 
-  const { candidateData, totalCandidates, deleteCandidateData, isLoading } =
+  const { candidateData, totalCandidates, deleteCandidateData, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useCandidates(queryFilters);
   const navigate = useNavigate();
   // v1.0.7 <----------------------------------------------------------------------
@@ -488,7 +487,6 @@ function Candidate({
     setCreatedDatePreset("");
     //-----v1.0.4-------->
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -515,8 +513,6 @@ function Candidate({
       //-----v1.0.4-------->
     };
     setSelectedFilters(filters);
-
-    setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 ||
       filters.tech.length > 0 ||
@@ -654,44 +650,24 @@ function Candidate({
     });
   };
 
-  // const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
+  // For assessment/position views, keep the old pagination approach
   const total = isAssessmentView ? candidates?.length || 0 : totalCandidates;
-  const totalPages = Math.ceil(total / rowsPerPage);
+  const totalPages = isAssessmentView ? Math.ceil(total / rowsPerPage) : 0;
 
-  // const nextPage = () => {
-  //   if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
-  //     setCurrentPage((prevPage) => prevPage + 1);
-  //   }
-  // };
-
-  // const prevPage = () => {
-  //   if (currentPage > 0) {
-  //     setCurrentPage((prevPage) => prevPage - 1);
-  //   }
-  // };
-
-  const nextPage = () => {
-    if (currentPage + 1 < totalPages) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prevPage) => prevPage - 1);
-    }
-  };
-
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
-  // const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
+  // Use all accumulated data for main view (infinite scroll), sliced for assessment view
   const currentFilteredRows = isAssessmentView
-    ? FilteredData().slice(startIndex, endIndex)
+    ? FilteredData().slice(0, rowsPerPage) // assessment view keeps old behavior
     : FilteredData();
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0);
+  };
+
+  // Handle infinite scroll - load next page
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
   };
 
   // v2.0.2 <---------------------------------common code for empty state--------------------------------------------
@@ -1203,16 +1179,17 @@ function Candidate({
                   setView={setView}
                   searchQuery={searchQuery}
                   onSearch={handleSearch}
-                  currentPage={currentPage}
+                  currentPage={0}
                   totalPages={totalPages}
-                  onPrevPage={prevPage}
-                  onNextPage={nextPage}
+                  onPrevPage={() => { }}
+                  onNextPage={() => { }}
                   onFilterClick={handleFilterIconClick}
                   isFilterPopupOpen={isFilterPopupOpen}
                   isFilterActive={isFilterActive}
                   dataLength={dataToUse?.length}
                   searchPlaceholder="Search by Name, Email, Contact..."
                   filterIconRef={filterIconRef}
+                  hidePagination={!isAssessmentView && !isPositionView}
                 />
               </div>
             </main>
@@ -1234,16 +1211,35 @@ function Candidate({
               <div className="relative w-full">
                 {/* v1.0.7 ---------------------------------------------------> */}
                 {view === "table" ? (
-                  <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
-                    {/* v1.0.8 ----------------------------------------------------------------------------------------------> */}
-                    <TableView
-                      data={currentFilteredRows}
-                      columns={columnsToUse}
-                      loading={isLoading}
-                      actions={tableActions}
-                      emptyState={emptyStateMessage}
-                      autoHeight={isEmbedded}
-                    />
+                  <div className="w-full">
+                    {/* Candidates count header - outside scroll container */}
+                    {!isEmbedded && (
+                      <div className="flex items-center justify-between px-6 py-2 bg-gray-50 border-b border-gray-200">
+                        <h3 className="text-md font-semibold text-gray-800 tracking-tight">
+                          All Candidates
+                        </h3>
+                        <span className="px-3 py-1 bg-white text-gray-500 rounded-lg text-sm font-medium border border-custom-blue/20">
+                          {currentFilteredRows?.length || 0}
+                          {totalCandidates > 0 && currentFilteredRows?.length < totalCandidates
+                            ? ` of ${totalCandidates}`
+                            : ""
+                          } {totalCandidates === 1 ? "Candidate" : "Candidates"}
+                        </span>
+                      </div>
+                    )}
+                    <div className="overflow-x-auto sm:max-h-[calc(100vh-280px)] md:max-h-[calc(100vh-248px)] lg:max-h-[calc(100vh-232px)]">
+                      <TableView
+                        data={currentFilteredRows}
+                        columns={columnsToUse}
+                        loading={isLoading}
+                        actions={tableActions}
+                        emptyState={emptyStateMessage}
+                        autoHeight={isEmbedded}
+                        onScrollEnd={!isEmbedded ? handleScrollEnd : null}
+                        isLoadingMore={isFetchingNextPage}
+                        hasMore={hasNextPage}
+                      />
+                    </div>
                   </div>
                 ) : (
                   // v1.0.8 <-------------------------------------------------------------------

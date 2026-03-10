@@ -27,7 +27,6 @@ import { ReactComponent as IoIosArrowBack } from "../../../../icons/IoIosArrowBa
 import { ReactComponent as IoIosArrowForward } from "../../../../icons/IoIosArrowForward.svg";
 import { ReactComponent as LuFilterX } from "../../../../icons/LuFilterX.svg";
 import { ReactComponent as FiFilter } from "../../../../icons/FiFilter.svg";
-import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 import { useQuestions } from "../../../../apiHooks/useQuestionBank.js";
 import MyQuestionList from "./MyQuestionsListPopup.jsx";
@@ -39,6 +38,86 @@ import { notify } from "../../../../services/toastService.js";
 // v1.0.5 ------------------------------------------------------->
 
 // v1.0.5 <------------------------------------------------------------------
+const FilterDropdown = ({ label, options, selectedItems, onChange, isRadio }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative flex-shrink-0" ref={dropdownRef}>
+      <div
+        className={`flex items-center justify-between px-3 py-[9px] border rounded-md cursor-pointer bg-white min-w-[160px] text-sm transition-colors ${isOpen ? 'border-custom-blue ring-1 ring-custom-blue' : 'border-gray-300 hover:border-custom-blue'}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className="text-gray-700 whitespace-nowrap">
+          {label} {selectedItems.length > 0 && `(${selectedItems.length})`}
+        </span>
+        <ChevronDown className={`w-4 h-4 ml-2 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-[100] w-full min-w-[200px] mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto custom-scrollbar">
+          <ul className="py-1">
+            <li
+              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => { onChange([]); setIsOpen(false); }}
+            >
+              <input
+                type={isRadio ? "radio" : "checkbox"}
+                checked={selectedItems.length === 0}
+                className="w-4 h-4 rounded cursor-pointer accent-custom-blue min-w-[16px]"
+                readOnly
+              />
+              <span className="text-sm text-gray-700 whitespace-nowrap">All</span>
+            </li>
+            {options.map((opt, idx) => {
+              const valString = String(opt.value || opt.type || opt.level).toLowerCase();
+              const displayString = String(opt.value || opt.type || opt.level);
+              const isChecked = selectedItems.includes(valString);
+
+              return (
+                <li
+                  key={idx}
+                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={(e) => {
+                    // e.stopPropagation();
+                    if (isRadio) {
+                      onChange([valString]);
+                      setIsOpen(false);
+                    } else {
+                      const newItems = isChecked
+                        ? selectedItems.filter(v => v !== valString)
+                        : [...selectedItems, valString];
+                      onChange(newItems);
+                    }
+                  }}
+                >
+                  <input
+                    type={isRadio ? "radio" : "checkbox"}
+                    checked={isChecked}
+                    className="w-4 h-4 rounded cursor-pointer accent-custom-blue min-w-[16px]"
+                    readOnly
+                  />
+                  <span className="text-sm text-gray-700 whitespace-nowrap">{displayString}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function HeaderBar({
   rangeLabel,
   questionsPerPage,
@@ -61,43 +140,16 @@ function HeaderBar({
   // Using DropdownSelect for interview type selection; no manual portal/open-state needed.
 
   return (
-    // <div className="flex items-center sm:justify-start justify-end px-4 py-3 marker:flex-shrink-0 overflow-x-auto">
     <div
-      className={`flex px-7
-        ${
-          isMeetingSidePanel
-            ? "justify-start overflow-auto"
-            : "justify-end sm:justify-start md:justify-start lg:justify-start xl:justify-end 2xl:justify-end overflow-x-auto"
+      className={`flex items-center px-4
+        ${isMeetingSidePanel
+          ? "justify-start overflow-auto"
+          : "justify-between overflow-x-auto"
         }
       `}
     >
-      <div className="flex gap-x-3 whitespace-nowrap">
-        {/* Search */}
-        <div className="relative flex items-center rounded-md border flex-shrink-0 w-64 bg-white">
-          <span className="p-2 text-custom-blue">
-            <Search className="w-5 h-5" />
-          </span>
-          <input
-            type="search"
-            placeholder="Search by Tags, Questions..."
-            className="flex-1 rounded-md focus:outline-none pr-2"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && searchInput.trim()) {
-                e.preventDefault();
-                // onAddSearchTag prop needs to be passed to HeaderBar
-                if (typeof onAddSearchTag === "function") {
-                  onAddSearchTag(searchInput.trim());
-                }
-                setSearchInput("");
-              }
-            }}
-          />
-        </div>
-
-        {/* Dropdown */}
-
+      {/* Left: Interview Type Dropdown */}
+      <div className="flex items-center gap-x-3 whitespace-nowrap">
         {type !== "assessment" && type !== "interviewerSection" && (
           <div className="w-48 flex-shrink-0">
             <DropdownSelect
@@ -121,8 +173,10 @@ function HeaderBar({
             />
           </div>
         )}
+      </div>
 
-        {/* Range Label */}
+      {/* Right: Range, Show/Page, Pagination, Filter */}
+      <div className="flex gap-x-3 whitespace-nowrap">
         <div className="flex items-center">
           <p>{rangeLabel}</p>
         </div>
@@ -176,11 +230,10 @@ function HeaderBar({
             <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
               <span
                 onClick={onClickLeftPaginationIcon}
-                className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${
-                  currentPage === 1
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-gray-100"
-                }`}
+                className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${currentPage === 1
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-gray-100"
+                  }`}
               >
                 <IoIosArrowBack />
               </span>
@@ -188,11 +241,10 @@ function HeaderBar({
             <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
               <span
                 onClick={onClickRightPagination}
-                className={`border p-2 text-xl rounded-md cursor-pointer ${
-                  currentPage === totalPages || totalPages === 0
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-gray-100"
-                }`}
+                className={`border p-2 text-xl rounded-md cursor-pointer ${currentPage === totalPages || totalPages === 0
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-gray-100"
+                  }`}
               >
                 <IoIosArrowForward />
               </span>
@@ -270,6 +322,7 @@ const SuggestedQuestionsComponent = ({
   );
   const [categoryFilterItems, setCategoryFilterItems] = useState([]);
   const [technologyFilterItems, setTechnologyFilterItems] = useState([]);
+  const [areaFilterItems, setAreaFilterItems] = useState([]);
   const [mandatoryStatus, setMandatoryStatus] = useState({});
 
   // Temporary states for filter popup
@@ -281,9 +334,11 @@ const SuggestedQuestionsComponent = ({
   const [tempTechnologyFilterItems, setTempTechnologyFilterItems] = useState(
     [],
   );
+  const [tempAreaFilterItems, setTempAreaFilterItems] = useState([]);
   const [tempSelectedSkills, setTempSelectedSkills] = useState([]);
   const [tempSkillInput, setTempSkillInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [tempSearchInput, setTempSearchInput] = useState("");
   const [debouncedSearchInput, setDebouncedSearchInput] = useState("");
 
   // Debounce search input
@@ -306,6 +361,7 @@ const SuggestedQuestionsComponent = ({
     difficultyLevelFilterItems,
     categoryFilterItems,
     technologyFilterItems,
+    areaFilterItems,
     questionTypeFilterItems,
     selectedQuestionType,
   ]);
@@ -328,6 +384,7 @@ const SuggestedQuestionsComponent = ({
       difficultyLevel: difficultyLevelFilterItems,
       category: categoryFilterItems,
       technology: technologyFilterItems,
+      area: areaFilterItems,
       questionTypes: questionTypeFilterItems,
     }),
     [
@@ -339,6 +396,7 @@ const SuggestedQuestionsComponent = ({
       difficultyLevelFilterItems,
       categoryFilterItems,
       technologyFilterItems,
+      areaFilterItems,
       questionTypeFilterItems,
     ],
   );
@@ -402,6 +460,30 @@ const SuggestedQuestionsComponent = ({
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [suggestedQuestions]);
 
+  const uniqueAreas = useMemo(() => {
+    if (!suggestedQuestions || suggestedQuestions.length === 0) return [];
+    const set = new Set();
+    suggestedQuestions.forEach((q) => {
+      if (q?.area) {
+        const val = String(q.area).trim();
+        if (val) set.add(val);
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [suggestedQuestions]);
+
+  const uniqueTopics = useMemo(() => {
+    if (!suggestedQuestions || suggestedQuestions.length === 0) return [];
+    const set = new Set();
+    suggestedQuestions.forEach((q) => {
+      if (q?.topic) {
+        const val = String(q.topic).trim();
+        if (val) set.add(val);
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [suggestedQuestions]);
+
   // Build default filter section metadata
   const buildDefaultFiltrationData = useCallback(() => {
     const sections = [];
@@ -439,12 +521,23 @@ const SuggestedQuestionsComponent = ({
     });
     sections.push({
       id: 4,
-      filterType: "Skills/Tags",
+      filterType: "Technology",
       isOpen: false,
       options: uniqueTechnologies.map((t) => ({ value: t, isChecked: false })),
     });
+    sections.push({
+      id: 5,
+      filterType: "Area",
+      isOpen: false,
+      options: uniqueAreas.map((a) => ({ value: a, isChecked: false })),
+    });
     return sections;
-  }, [showQuestionTypeFilter, uniqueCategories, uniqueTechnologies]);
+  }, [
+    showQuestionTypeFilter,
+    uniqueCategories,
+    uniqueTechnologies,
+    uniqueAreas,
+  ]);
   //------v1.0.4-------->
 
   const [filtrationData, setFiltrationData] = useState([
@@ -503,6 +596,7 @@ const SuggestedQuestionsComponent = ({
       setTempDifficultyLevelFilterItems(difficultyLevelFilterItems);
       setTempCategoryFilterItems(categoryFilterItems);
       setTempTechnologyFilterItems(technologyFilterItems);
+      setTempAreaFilterItems(areaFilterItems);
       setTempSelectedSkills(selectedSkills);
       setTempSkillInput(skillInput);
     }
@@ -513,6 +607,7 @@ const SuggestedQuestionsComponent = ({
     difficultyLevelFilterItems,
     categoryFilterItems,
     technologyFilterItems,
+    areaFilterItems,
     selectedSkills,
     skillInput,
   ]);
@@ -553,16 +648,13 @@ const SuggestedQuestionsComponent = ({
     totalAvailable === 0
       ? "0/0"
       : beyondAccessible
-        ? `${planAccessibleTotal}/${totalAvailable} ${
-            totalAvailable > 1 ? "Questions" : "Question"
-          }`
+        ? `${planAccessibleTotal}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"
+        }`
         : startIndex === endIndex
-          ? `${endIndex}/${totalAvailable} ${
-              totalAvailable > 1 ? "Questions" : "Question"
-            }`
-          : `${startIndex}-${endIndex}/${totalAvailable} ${
-              totalAvailable > 1 ? "Questions" : "Question"
-            }`;
+          ? `${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"
+          }`
+          : `${startIndex}-${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"
+          }`;
 
   // Update mandatory status
   useEffect(() => {
@@ -687,43 +779,7 @@ const SuggestedQuestionsComponent = ({
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
 
-  // const onChangeCheckboxInQuestionType = (e, id, index) => {
-  //     const { value, checked } = e.target;
-  //     setFiltrationData((prev) =>
-  //         prev.map((category) =>
-  //             category.id === id
-  //                 ? {
-  //                     ...category,
-  //                     options: category.options.map((opt, i) =>
-  //                         i === index ? { ...opt, isChecked: checked } : opt
-  //                     ),
-  //                 }
-  //                 : category
-  //         )
-  //     );
-  //     setQuestionTypeFilterItems((prev) =>
-  //         checked ? [...prev, value] : prev.filter((item) => item !== value)
-  //     );
-  // };
 
-  // const onChangeCheckboxInDifficultyLevel = (e, id, index) => {
-  //     const { value, checked } = e.target;
-  //     setFiltrationData((prev) =>
-  //         prev.map((category) =>
-  //             category.id === id
-  //                 ? {
-  //                     ...category,
-  //                     options: category.options.map((opt, i) =>
-  //                         i === index ? { ...opt, isChecked: checked } : opt
-  //                     ),
-  //                 }
-  //                 : category
-  //         )
-  //     );
-  //     setDifficultyLevelFilterItems((prev) =>
-  //         checked ? [...prev, value] : prev.filter((item) => item !== value)
-  //     );
-  // };
 
   const onClickRemoveSelectedFilterItem = (item) => {
     if (questionTypeFilterItems.includes(item)) {
@@ -732,13 +788,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 1
             ? {
-                ...category,
-                options: category.options.map((opt) =>
-                  opt.type.toLowerCase() === item
-                    ? { ...opt, isChecked: false }
-                    : opt,
-                ),
-              }
+              ...category,
+              options: category.options.map((opt) =>
+                opt.type.toLowerCase() === item
+                  ? { ...opt, isChecked: false }
+                  : opt,
+              ),
+            }
             : category,
         ),
       );
@@ -748,13 +804,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 2
             ? {
-                ...category,
-                options: category.options.map((opt) =>
-                  opt.level.toLowerCase() === item
-                    ? { ...opt, isChecked: false }
-                    : opt,
-                ),
-              }
+              ...category,
+              options: category.options.map((opt) =>
+                opt.level.toLowerCase() === item
+                  ? { ...opt, isChecked: false }
+                  : opt,
+              ),
+            }
             : category,
         ),
       );
@@ -765,13 +821,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 3
             ? {
-                ...category,
-                options: category.options.map((opt) =>
-                  String(opt.value).toLowerCase() === item
-                    ? { ...opt, isChecked: false }
-                    : opt,
-                ),
-              }
+              ...category,
+              options: category.options.map((opt) =>
+                String(opt.value).toLowerCase() === item
+                  ? { ...opt, isChecked: false }
+                  : opt,
+              ),
+            }
             : category,
         ),
       );
@@ -781,13 +837,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 4
             ? {
-                ...category,
-                options: category.options.map((opt) =>
-                  String(opt.value).toLowerCase() === item
-                    ? { ...opt, isChecked: false }
-                    : opt,
-                ),
-              }
+              ...category,
+              options: category.options.map((opt) =>
+                String(opt.value).toLowerCase() === item
+                  ? { ...opt, isChecked: false }
+                  : opt,
+              ),
+            }
             : category,
         ),
       );
@@ -795,23 +851,7 @@ const SuggestedQuestionsComponent = ({
     }
   };
 
-  // const onClickRemoveQuestion = async (id) => {
-  //   if (type === "assessment") {
-  //     // Remove question from assessment sections
-  //     updateQuestionsInAddedSectionFromQuestionBank(sectionName, null, id);
-  //     toast.success("Question removed successfully!");
-  //   }
-  //  else if (
-  //     type === "interviewerSection" ||
-  //     (type === "feedback" && handleRemoveQuestion)
-  //   ) {
-  //     handleRemoveQuestion(id);
-  //     setMandatoryStatus((prev) => ({ ...prev, [id]: false }));
-  //     toast.error("Question removed successfully!");
-  //   } else {
-  //     console.error("Failed to remove");
-  //   }
-  // };
+
 
   const onClickRemoveQuestion = async (id) => {
     // console.log("item ID", id);
@@ -922,60 +962,12 @@ const SuggestedQuestionsComponent = ({
     setTempTechnologyFilterItems(technologyFilterItems);
     setTempSelectedSkills(selectedSkills);
     setTempSkillInput(skillInput);
+    setTempSearchInput(searchInput);
     setTempFiltrationData(JSON.parse(JSON.stringify(filtrationData)));
     setIsPopupOpen(!isPopupOpen);
   };
 
-  // Skeleton Loader
-  //   v1.0.1 <--------------------------------------------------------
-  //   const SkeletonLoader = () => (
-  //     <div className="w-full px-5">
-  //       <div
-  //         className={`fixed flex items-center justify-between ${
-  //           type === "interviewerSection" ||
-  //           type === "feedback" ||
-  //           type === "assessment"
-  //             ? "top-40 left-40 right-40"
-  //             : "top-32 left-5 right-5"
-  //         }`}
-  //       >
-  //         <div className="flex items-center gap-3">
-  //           <div className="h-10 w-64 bg-gray-200 rounded-md animate-pulse"></div>
-  //           <div className="h-10 w-64 bg-gray-200 rounded-md animate-pulse"></div>
-  //         </div>
-  //         <div className="flex items-center gap-3">
-  //           <div className="h-6 w-12 bg-gray-200 rounded animate-pulse"></div>
-  //           <div className="flex gap-2">
-  //             <div className="h-10 w-10 bg-gray-200 rounded-md animate-pulse"></div>
-  //             <div className="h-10 w-10 bg-gray-200 rounded-md animate-pulse"></div>
-  //           </div>
-  //           <div className="h-10 w-10 bg-gray-200 rounded-md animate-pulse"></div>
-  //         </div>
-  //       </div>
-  //       <div className="mt-[110px] space-y-4">
-  //         {Array(3)
-  //           .fill()
-  //           .map((_, idx) => (
-  //             <div
-  //               key={idx}
-  //               className="border border-gray-200 rounded-lg shadow-sm"
-  //             >
-  //               <div className="flex justify-between items-center border-b border-gray-200 px-4 py-2">
-  //                 <div className="h-6 w-3/4 bg-gray-200 rounded animate-pulse"></div>
-  //                 <div className="flex items-center gap-2">
-  //                   <div className="h-6 w-16 bg-gray-200 rounded-md animate-pulse"></div>
-  //                   <div className="h-8 w-16 bg-gray-200 rounded-md animate-pulse"></div>
-  //                 </div>
-  //               </div>
-  //               <div className="px-4 py-2">
-  //                 <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse mb-2"></div>
-  //                 <div className="h-4 w-1/3 bg-gray-200 rounded animate-pulse"></div>
-  //               </div>
-  //             </div>
-  //           ))}
-  //       </div>
-  //     </div>
-  //   );
+
 
   // SkeletonLoader.tsx
   const SkeletonLoader = () => {
@@ -1012,40 +1004,7 @@ const SuggestedQuestionsComponent = ({
     );
   };
 
-  //   v1.0.1 -------------------------------------------------------->
 
-  // <-------v1.0.0 -----
-  // if (isLoading) return <SkeletonLoader />;
-  // ------v1.0.0 ----->
-
-  // if (!suggestedQuestions || suggestedQuestions.length === 0) {
-  //   return (
-  //     <div className="h-full flex flex-col gap-4 justify-center items-center text-center p-8 mt-24">
-  //       <div className="text-gray-400">
-  //         <svg
-  //           xmlns="http://www.w3.org/2000/svg"
-  //           className="h-12 w-12"
-  //           fill="none"
-  //           viewBox="0 0 24 24"
-  //           stroke="currentColor"
-  //         >
-  //           <path
-  //             strokeLinecap="round"
-  //             strokeLinejoin="round"
-  //             strokeWidth={1.5}
-  //             d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-  //           />
-  //         </svg>
-  //       </div>
-  //       <h2 className="text-gray-700 font-semibold text-lg">
-  //         No Questions Available
-  //       </h2>
-  //       <p className="text-gray-500">
-  //         Please try again later or check your data source.
-  //       </p>
-  //     </div>
-  //   );
-  // }
 
   // v1.0.8 <---------------------------------------------
   const capitalizeFirstLetter = (str) =>
@@ -1054,88 +1013,6 @@ const SuggestedQuestionsComponent = ({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Search/Filter Bar */}
-      {/* v1.0.5 <----------------------------------------------------------------- */}
-
-      {/* <div
-        className={`flex items-center justify-end px-4 py-3 bg-white flex-shrink-0 overflow-x-auto`}
-      >
-        <div className="flex gap-x-3 min-w-max whitespace-nowrap">
-          <div className="flex items-center">
-            <p>{rangeLabel}</p>
-          </div>
-          <div className="relative flex items-center rounded-md border">
-            <span className="p-2 text-custom-blue">
-              <Search className="w-5 h-5" />
-            </span>
-            <input
-              type="search"
-              placeholder="Search by Skills & Questions"
-              className="w-[85%] rounded-md focus:outline-none pr-2"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
-          </div>
-
-          <div className="w-48">
-            <DropdownSelect
-              isSearchable={false}
-              value={dropdownValue ? { value: dropdownValue, label: dropdownValue } : null}
-              onChange={(opt) => setDropdownValue(opt?.value || "")}
-              options={[
-                { value: "Interview Questions", label: "Interview Questions" },
-                { value: "Assessment Questions", label: "Assessment Questions" },
-              ]}
-              placeholder="Select Question Type"
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex items-center">
-              <p>
-                {currentPage}/{totalPages || 1}
-              </p>
-            </div>
-            <div className="flex items-center">
-              <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
-                <span
-                  onClick={onClickLeftPaginationIcon}
-                  className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${
-                    currentPage === 1
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-gray-100"
-                  }`}
-                >
-                  <IoIosArrowBack />
-                </span>
-              </Tooltip>
-              <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
-                <span
-                  onClick={onClickRightPagination}
-                  className={`border p-2 text-xl rounded-md cursor-pointer ${
-                    currentPage === totalPages || totalPages === 0
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-gray-100"
-                  }`}
-                >
-                  <IoIosArrowForward />
-                </span>
-              </Tooltip>
-            </div>
-            <div>
-              <div
-                ref={filterIconRef}
-                onClick={openFilterPopup}
-                className="border p-2 text-xl rounded-md cursor-pointer"
-              >
-                {isPopupOpen ? (
-                  <LuFilterX className="text-custom-blue" />
-                ) : (
-                  <FiFilter className="text-custom-blue" />
-                )}
-              </div>
-            </div>
-          </div>
 
       {/* It's Implemented to avoid responsive issues  */}
       <HeaderBar
@@ -1158,84 +1035,225 @@ const SuggestedQuestionsComponent = ({
         onAddSearchTag={handleAddSearchTag}
       />
 
-      {/* v1.0.5 -----------------------------------------------------------------> */}
-      {isLoading ? (
-        <SkeletonLoader />
-      ) : (
-        <>
-          {/* Content */}
-          {/* v1.0.5 <----------------------------------------------------------------- */}
-          {/* v1.0.7 <----------------------------------------------------------------------------------------- */}
-          <div className="flex-1 overflow-y-auto sm:px-2 py-4">
-            {[
-              ...selectedSkills,
-              ...(showQuestionTypeFilter ? questionTypeFilterItems : []),
-              ...difficultyLevelFilterItems,
-              ...categoryFilterItems,
-              ...technologyFilterItems,
-            ].length > 0 && (
-              <div className="flex items-center flex-wrap px-4 pt-2 mb-3 gap-3">
-                <h3 className="font-medium text-gray-700 text-sm">
-                  Filters applied:
-                </h3>
-                <ul className="flex gap-2 flex-wrap">
-                  {/* Render Search Tags */}
-                  {selectedSkills.map((skill, index) => (
-                    <li
-                      key={`skill-${index}`}
-                      className="flex gap-2 items-center border border-custom-blue rounded-full px-3 py-1 text-custom-blue bg-blue-50 text-sm"
-                    >
-                      <span>{skill}</span>
-                      <button
-                        type="button"
-                        className="cursor-pointer hover:text-red-500 transition-colors"
-                        onClick={() => onClickCrossIcon(skill)}
-                      >
-                        <X size={14} />
-                      </button>
-                    </li>
-                  ))}
+      {/* Inline Filters Section */}
+      {isPopupOpen && (
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm transition-shadow px-7 py-4 mx-4 mt-2 mb-4 z-10 relative">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-[16px] font-semibold text-gray-800">Filters</h2>
 
-                  {/* Render Other Filters */}
-                  {[
-                    ...(showQuestionTypeFilter ? questionTypeFilterItems : []),
-                    ...difficultyLevelFilterItems,
-                    ...categoryFilterItems,
-                    ...technologyFilterItems,
-                  ].map((filterItem, index) => (
-                    <li
-                      key={`filter-${index}`}
-                      className="flex items-center gap-1 rounded-full border border-custom-blue px-3 py-1 text-custom-blue font-medium bg-blue-50 text-sm"
-                    >
-                      <span>{capitalizeFirstLetter(filterItem)}</span>
-                      <button
-                        className="hover:text-red-500 transition-colors"
-                        onClick={() =>
-                          onClickRemoveSelectedFilterItem(filterItem)
-                        }
-                        type="button"
-                      >
-                        <X size={14} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+            {/* Action Buttons at the Top */}
+            <div className="flex gap-3 items-center">
+              <button
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium mr-2"
+                onClick={() => {
+                  setTempQuestionTypeFilterItems([]);
+                  setTempDifficultyLevelFilterItems([]);
+                  setTempCategoryFilterItems([]);
+                  setTempTechnologyFilterItems([]);
+                  setTempAreaFilterItems([]);
+                  setTempSelectedSkills([]);
+                  setTempSkillInput("");
+                  setTempSearchInput("");
+                  setTempFiltrationData(buildDefaultFiltrationData());
+
+                  setQuestionTypeFilterItems([]);
+                  setDifficultyLevelFilterItems([]);
+                  setCategoryFilterItems([]);
+                  setTechnologyFilterItems([]);
+                  setAreaFilterItems([]);
+                  setSelectedSkills([]);
+                  setSkillInput("");
+                  setSearchInput("");
+                  setFiltrationData(buildDefaultFiltrationData());
+                }}
+              >
+                Clear All
+              </button>
+              {/* <button
+                className="px-4 py-2 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                onClick={() => setIsPopupOpen(false)}
+              >
+                Cancel
+              </button> */}
+              <button
+                className="px-4 py-2 text-sm bg-custom-blue text-white rounded-md hover:bg-opacity-90 transition-colors font-medium"
+                onClick={() => {
+                  setQuestionTypeFilterItems(tempQuestionTypeFilterItems);
+                  setDifficultyLevelFilterItems(tempDifficultyLevelFilterItems);
+                  setCategoryFilterItems(tempCategoryFilterItems);
+                  setTechnologyFilterItems(tempTechnologyFilterItems);
+                  setAreaFilterItems(tempAreaFilterItems);
+                  setSelectedSkills(tempSelectedSkills);
+                  setSkillInput(tempSkillInput);
+                  setSearchInput(tempSearchInput);
+                  setFiltrationData(tempFiltrationData);
+                  // Do not close the popup string on apply, as requested
+                }}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-5">
+            {/* Row 1: Search and Dropdowns */}
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Search Bar */}
+              <div className="relative flex items-center rounded-md border border-gray-300 bg-white w-64 hover:border-custom-blue transition-colors">
+                <span className="p-[9px] text-custom-blue flex-shrink-0">
+                  <Search className="w-4 h-4" />
+                </span>
+                <input
+                  type="search"
+                  placeholder="Search by Tags, Questions..."
+                  className="flex-1 p-[7px] pl-0 rounded-md focus:outline-none text-sm text-gray-700 bg-transparent min-w-[150px]"
+                  value={tempSearchInput}
+                  onChange={(e) => setTempSearchInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && tempSearchInput.trim()) {
+                      e.preventDefault();
+                      if (typeof handleAddSearchTag === "function") {
+                        handleAddSearchTag(tempSearchInput.trim());
+                      }
+                      setTempSearchInput("");
+                    }
+                  }}
+                />
               </div>
-            )}
-            {/* v1.0.7 <----------------------------------------------------------------------- */}
-            <ul
-              // className="flex flex-col gap-4 pr-2 h-[calc(100vh-362px)] overflow-y-auto"
-              className="flex flex-col overflow-y-auto pb-8 px-4"
-              style={{
-                // height: `calc(100vh - ${isMeetingSidePanel ? 362 : 206}px)`,
-                height: customHeight
-                  ? customHeight
-                  : `calc(100vh - ${isMeetingSidePanel ? 362 : 182}px)`,
-              }}
-            >
-              {/* Render only unlocked cards first */}
-              {unlockedPaginatedData.length > 0
-                ? unlockedPaginatedData.map((item, index) => {
+
+              {/* Render FilterDropdowns */}
+              {tempFiltrationData.map((section) => {
+                if (section.id === 1 && !showQuestionTypeFilter) return null;
+                if (!section.options || section.options.length === 0) return null;
+
+                let activeItems = [];
+                let setTempItems = () => { };
+                let isRadio = false;
+
+                switch (section.id) {
+                  case 1:
+                    activeItems = tempQuestionTypeFilterItems;
+                    setTempItems = setTempQuestionTypeFilterItems;
+                    break;
+                  case 2:
+                    activeItems = tempDifficultyLevelFilterItems;
+                    setTempItems = setTempDifficultyLevelFilterItems;
+                    isRadio = true; // Based on previous user preference
+                    break;
+                  case 3:
+                    activeItems = tempCategoryFilterItems;
+                    setTempItems = setTempCategoryFilterItems;
+                    isRadio = true;
+                    break;
+                  case 4:
+                    activeItems = tempTechnologyFilterItems;
+                    setTempItems = setTempTechnologyFilterItems;
+                    break;
+                  case 5:
+                    activeItems = tempAreaFilterItems;
+                    setTempItems = setTempAreaFilterItems;
+                    break;
+                  default:
+                    break;
+                }
+
+                return (
+                  <FilterDropdown
+                    key={section.id}
+                    label={section.filterType}
+                    options={section.options}
+                    selectedItems={activeItems}
+                    onChange={setTempItems}
+                    isRadio={isRadio}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Row 2: Active Filters */}
+            <div className="flex flex-col gap-3">
+              <h3 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wider">Active Filters:</h3>
+
+              <div className="flex flex-wrap items-center gap-2 min-h-[28px]">
+                {tempCategoryFilterItems.map(c => (
+                  <div key={`cat-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                    <span className="font-medium">Category:</span> {capitalizeFirstLetter(c)}
+                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempCategoryFilterItems(prev => prev.filter(x => x !== c))} />
+                  </div>
+                ))}
+
+                {tempAreaFilterItems.map(c => (
+                  <div key={`area-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                    <span className="font-medium">Area:</span> {capitalizeFirstLetter(c)}
+                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempAreaFilterItems(prev => prev.filter(x => x !== c))} />
+                  </div>
+                ))}
+
+                {tempTechnologyFilterItems.map(c => (
+                  <div key={`tech-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                    <span className="font-medium">Technology:</span> {capitalizeFirstLetter(c)}
+                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempTechnologyFilterItems(prev => prev.filter(x => x !== c))} />
+                  </div>
+                ))}
+
+                {showQuestionTypeFilter && tempQuestionTypeFilterItems.map(c => (
+                  <div key={`type-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                    <span className="font-medium">Type:</span> {capitalizeFirstLetter(c)}
+                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempQuestionTypeFilterItems(prev => prev.filter(x => x !== c))} />
+                  </div>
+                ))}
+
+                {tempDifficultyLevelFilterItems.map(c => (
+                  <div key={`diff-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                    <span className="font-medium">Difficulty:</span> {capitalizeFirstLetter(c)}
+                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempDifficultyLevelFilterItems(prev => prev.filter(x => x !== c))} />
+                  </div>
+                ))}
+
+                {tempSelectedSkills.map(c => (
+                  <div key={`tag-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                    <span className="font-medium">Tag:</span> {c}
+                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempSelectedSkills(prev => prev.filter(x => x !== c))} />
+                  </div>
+                ))}
+
+                {tempSearchInput && (
+                  <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                    <span className="font-medium">Search:</span> "{tempSearchInput}"
+                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempSearchInput("")} />
+                  </div>
+                )}
+
+                {[...tempCategoryFilterItems, ...tempAreaFilterItems, ...tempTechnologyFilterItems, ...(showQuestionTypeFilter ? tempQuestionTypeFilterItems : []), ...tempDifficultyLevelFilterItems, ...tempSelectedSkills].length === 0 && !tempSearchInput && (
+                  <span className="text-sm text-gray-500 italic py-1">No filters currently applied.</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+      }
+
+      {/* v1.0.5 -----------------------------------------------------------------> */}
+      {
+        isLoading ? (
+          <SkeletonLoader />
+        ) : (
+          <>
+            {/* Content */}
+            {/* v1.0.5 <----------------------------------------------------------------- */}
+            {/* v1.0.7 <----------------------------------------------------------------------------------------- */}
+            <div className="flex-1 min-h-0 flex flex-col sm:px-2 py-4">
+              {/* Filters applied section moved to popup */}
+              {/* v1.0.7 <----------------------------------------------------------------------- */}
+              <ul
+                // className="flex flex-col gap-4 pr-2 h-[calc(100vh-362px)] overflow-y-auto"
+                className="flex flex-col flex-1 min-h-0 overflow-y-auto pb-8 px-4"
+                style={customHeight ? { height: customHeight } : {}}
+              >
+                {/* Render only unlocked cards first */}
+                {unlockedPaginatedData.length > 0
+                  ? unlockedPaginatedData.map((item, index) => {
                     // Regular unlocked card
                     return (
                       <div
@@ -1253,13 +1271,12 @@ const SuggestedQuestionsComponent = ({
                           </div>
                           {/* v1.0.6 ----------------------------------------------------------------------------> */}
                           <div
-                            className={`text-xs font-medium flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${
-                              type === "interviewerSection" ||
+                            className={`text-xs font-medium flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${type === "interviewerSection" ||
                               type === "feedback" ||
                               type === "assessment"
-                                ? "w-[15%]"
-                                : "sm:w-[28%] md:w-[20%] w-[10%]"
-                            } ${isMeetingSidePanel && "w-[20%] mx-4"}`}
+                              ? "w-[15%]"
+                              : "sm:w-[28%] md:w-[20%] w-[10%]"
+                              } ${isMeetingSidePanel && "w-[20%] mx-4"}`}
                           >
                             <p
                               className={`w-16 text-center ${getDifficultyStyles(
@@ -1283,19 +1300,17 @@ const SuggestedQuestionsComponent = ({
                                       handleToggle(item._id, item);
                                     }
                                   }}
-                                  className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${
-                                    mandatoryStatus[item._id]
-                                      ? "bg-blue-100 border-custom-blue justify-end"
-                                      : "bg-gray-200 border-gray-300 justify-start"
-                                  }`}
+                                  className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
+                                    ? "bg-blue-100 border-custom-blue justify-end"
+                                    : "bg-gray-200 border-gray-300 justify-start"
+                                    }`}
                                   type="button"
                                 >
                                   <span
-                                    className={`w-3 h-3 rounded-full transition-colors ${
-                                      mandatoryStatus[item._id]
-                                        ? "bg-custom-blue"
-                                        : "bg-gray-400"
-                                    }`}
+                                    className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
+                                      ? "bg-custom-blue"
+                                      : "bg-gray-400"
+                                      }`}
                                   />
                                 </button>
                               </div>
@@ -1303,67 +1318,64 @@ const SuggestedQuestionsComponent = ({
                           )}
                           {(type === "interviewerSection" ||
                             type === "feedback") && (
-                            <div className="p-1 flex justify-center w-[8%]">
-                              {item.isLocked ? (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    navigate("/account-settings/subscription")
-                                  }
-                                  className="text-xs font-medium sm:flex sm:items-center sm:justify-center bg-orange-500 py-1 px-2 text-white rounded-md transition-colors hover:bg-orange-600"
-                                >
-                                  <Lock className="h-4 w-4 mr-1" />
-                                  <span
-                                    className={`${
-                                      isMeetingSidePanel
+                              <div className="p-1 flex justify-center w-[8%]">
+                                {item.isLocked ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      navigate("/account-settings/subscription")
+                                    }
+                                    className="text-xs font-medium sm:flex sm:items-center sm:justify-center bg-orange-500 py-1 px-2 text-white rounded-md transition-colors hover:bg-orange-600"
+                                  >
+                                    <Lock className="h-4 w-4 mr-1" />
+                                    <span
+                                      className={`${isMeetingSidePanel
                                         ? "hidden"
                                         : "sm:hidden inline"
-                                    }`}
-                                  >
-                                    Upgrade
-                                  </span>
-                                </button>
-                              ) : interviewQuestionsLists?.some(
+                                        }`}
+                                    >
+                                      Upgrade
+                                    </span>
+                                  </button>
+                                ) : interviewQuestionsLists?.some(
                                   (q) => q.questionId === item._id,
                                 ) ? (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    onClickRemoveQuestion(item?._id)
-                                  }
-                                  className="text-xs font-medium sm:flex sm:items-center sm:justify-center rounded-md md:ml-4 bg-gray-500 px-2 py-1 text-white hover:bg-gray-600 transition-colors"
-                                >
-                                  <span
-                                    className={`${
-                                      isMeetingSidePanel
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      onClickRemoveQuestion(item?._id)
+                                    }
+                                    className="text-xs font-medium sm:flex sm:items-center sm:justify-center rounded-md md:ml-4 bg-gray-500 px-2 py-1 text-white hover:bg-gray-600 transition-colors"
+                                  >
+                                    <span
+                                      className={`${isMeetingSidePanel
                                         ? "hidden"
                                         : "sm:hidden inline"
-                                    }`}
+                                        }`}
+                                    >
+                                      Remove
+                                    </span>
+                                    <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 px-2 text-white rounded-md transition-colors"
+                                    onClick={() => onClickAddButton(item)}
                                   >
-                                    Remove
-                                  </span>
-                                  <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className="text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 px-2 text-white rounded-md transition-colors"
-                                  onClick={() => onClickAddButton(item)}
-                                >
-                                  <span
-                                    className={`${
-                                      isMeetingSidePanel
+                                    <span
+                                      className={`${isMeetingSidePanel
                                         ? "hidden"
                                         : "sm:hidden inline"
-                                    }`}
-                                  >
-                                    Add
-                                  </span>
-                                  <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
-                                </button>
-                              )}
-                            </div>
-                          )}
+                                        }`}
+                                    >
+                                      Add
+                                    </span>
+                                    <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           {type === "assessment" && (
                             <div className="w-[8%] flex justify-center">
                               {addedSections.some((s) =>
@@ -1379,11 +1391,10 @@ const SuggestedQuestionsComponent = ({
                                   className="text-xs font-medium sm:flex sm:items-center sm:justify-center rounded-md bg-red-500 px-2 py-1 text-white hover:bg-red-600 transition-colors"
                                 >
                                   <span
-                                    className={`${
-                                      isMeetingSidePanel
-                                        ? "hidden"
-                                        : "sm:hidden inline"
-                                    }`}
+                                    className={`${isMeetingSidePanel
+                                      ? "hidden"
+                                      : "sm:hidden inline"
+                                      }`}
                                   >
                                     Remove
                                   </span>
@@ -1397,14 +1408,13 @@ const SuggestedQuestionsComponent = ({
                                 // )
                                 <button
                                   type="button"
-                                  className={`text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${
-                                    addedSections.reduce(
-                                      (acc, s) => acc + s.Questions.length,
-                                      0,
-                                    ) >= questionsLimit
-                                      ? "opacity-50 cursor-not-allowed"
-                                      : ""
-                                  }`}
+                                  className={`text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${addedSections.reduce(
+                                    (acc, s) => acc + s.Questions.length,
+                                    0,
+                                  ) >= questionsLimit
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
+                                    }`}
                                   onClick={() => onClickAddButton(item)}
                                   disabled={
                                     addedSections.reduce(
@@ -1414,11 +1424,10 @@ const SuggestedQuestionsComponent = ({
                                   }
                                 >
                                   <span
-                                    className={`${
-                                      isMeetingSidePanel
-                                        ? "hidden"
-                                        : "sm:hidden inline"
-                                    }`}
+                                    className={`${isMeetingSidePanel
+                                      ? "hidden"
+                                      : "sm:hidden inline"
+                                      }`}
                                   >
                                     Add
                                   </span>
@@ -1437,11 +1446,10 @@ const SuggestedQuestionsComponent = ({
                               >
                                 Add{" "}
                                 <span
-                                  className={`${
-                                    isMeetingSidePanel
-                                      ? "hidden"
-                                      : "sm:hidden md:hidden inline"
-                                  }`}
+                                  className={`${isMeetingSidePanel
+                                    ? "hidden"
+                                    : "sm:hidden md:hidden inline"
+                                    }`}
                                 >
                                   to list
                                 </span>
@@ -1503,11 +1511,10 @@ const SuggestedQuestionsComponent = ({
                                   return item.options.map((option, idx) => (
                                     <li
                                       key={idx}
-                                      className={`${
-                                        isAnyOptionLong
-                                          ? "block w-full"
-                                          : "inline-block w-1/2"
-                                      } mb-2`}
+                                      className={`${isAnyOptionLong
+                                        ? "block w-full"
+                                        : "inline-block w-1/2"
+                                        } mb-2`}
                                     >
                                       <span className="mr-2 text-gray-500">
                                         {String.fromCharCode(97 + idx)})
@@ -1614,7 +1621,7 @@ const SuggestedQuestionsComponent = ({
                       </div>
                     );
                   })
-                : !hasLockedOnPage && (
+                  : !hasLockedOnPage && (
                     <div className="h-full flex flex-col gap-4 justify-center items-center text-center mt-24">
                       <div className="text-gray-400">
                         <svg
@@ -1641,311 +1648,41 @@ const SuggestedQuestionsComponent = ({
                     </div>
                   )}
 
-              {/* Show a single lock banner at the end if any items are locked on this page */}
-              {hasLockedOnPage && (
-                <div
-                  key="locked-banner"
-                  className="border rounded-lg shadow-sm transition-shadow text-sm border-gray-300 bg-gray-50"
-                >
-                  <div className="relative min-h-[200px] flex items-center justify-center p-8">
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <Lock className="w-12 h-12 text-gray-400 mb-3" />
-                      <p className="text-gray-700 font-medium text-lg mb-1">
-                        You’ve reached your plan limit
-                      </p>
-                      <p className="text-gray-500 text-sm mb-4">
-                        {planAccessibleTotal ?? accessibleQuestions ?? 0}{" "}
-                        accessible •{" "}
-                        {totalQuestionsFromAPI - accessibleQuestions ?? 0}{" "}
-                        Questions available
-                      </p>
-                      <button
-                        onClick={() =>
-                          navigate("/account-settings/subscription")
-                        }
-                        className="px-6 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-sm font-medium"
-                      >
-                        Upgrade to unlock
-                      </button>
+                {/* Show a single lock banner at the end if any items are locked on this page */}
+                {hasLockedOnPage && (
+                  <div
+                    key="locked-banner"
+                    className="border rounded-lg shadow-sm transition-shadow text-sm border-gray-300 bg-gray-50"
+                  >
+                    <div className="relative min-h-[200px] flex items-center justify-center p-8">
+                      <div className="flex flex-col items-center justify-center text-center">
+                        <Lock className="w-12 h-12 text-gray-400 mb-3" />
+                        <p className="text-gray-700 font-medium text-lg mb-1">
+                          You’ve reached your plan limit
+                        </p>
+                        <p className="text-gray-500 text-sm mb-4">
+                          {planAccessibleTotal ?? accessibleQuestions ?? 0}{" "}
+                          accessible •{" "}
+                          {totalQuestionsFromAPI - accessibleQuestions ?? 0}{" "}
+                          Questions available
+                        </p>
+                        <button
+                          onClick={() =>
+                            navigate("/account-settings/subscription")
+                          }
+                          className="px-6 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-sm font-medium"
+                        >
+                          Upgrade to unlock
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </ul>
-          </div>
-          {/* v1.0.5 -----------------------------------------------------------------> */}
-        </>
-      )}
-
-      <FilterPopup
-        isOpen={isPopupOpen}
-        onClose={() => setIsPopupOpen(false)}
-        onApply={() => {
-          setQuestionTypeFilterItems(tempQuestionTypeFilterItems);
-          setDifficultyLevelFilterItems(tempDifficultyLevelFilterItems);
-          setCategoryFilterItems(tempCategoryFilterItems);
-          setTechnologyFilterItems(tempTechnologyFilterItems);
-          setSelectedSkills(tempSelectedSkills);
-          setSkillInput(tempSkillInput);
-          setFiltrationData(tempFiltrationData);
-          setIsPopupOpen(false);
-        }}
-        onClearAll={() => {
-          setTempQuestionTypeFilterItems([]);
-          setTempDifficultyLevelFilterItems([]);
-          setTempCategoryFilterItems([]);
-          setTempTechnologyFilterItems([]);
-          setTempSelectedSkills([]);
-          setTempSkillInput("");
-          setTempFiltrationData(buildDefaultFiltrationData());
-          setQuestionTypeFilterItems([]);
-          setDifficultyLevelFilterItems([]);
-          setCategoryFilterItems([]);
-          setTechnologyFilterItems([]);
-          setSelectedSkills([]);
-          setSkillInput("");
-          setFiltrationData(buildDefaultFiltrationData());
-          setIsPopupOpen(false);
-        }}
-        filterIconRef={filterIconRef}
-      >
-        <div>
-          {/*//<------v1.0.4-------- Question Type - only when allowed */}
-          {(() => {
-            const section = tempFiltrationData.find((s) => s.id === 1);
-            if (!showQuestionTypeFilter || !section) return null;
-            return (
-              <div className="p-2">
-                <div
-                  className="flex justify-between items-center cursor-pointer"
-                  onClick={() =>
-                    setTempFiltrationData((prev) =>
-                      prev.map((item) =>
-                        item.id === 1
-                          ? { ...item, isOpen: !item.isOpen }
-                          : item,
-                      ),
-                    )
-                  }
-                >
-                  <h3 className="font-medium">Question Type</h3>
-                  <button type="button">
-                    {section.isOpen ? <ChevronUp /> : <ChevronDown />}
-                  </button>
-                </div>
-                {section.isOpen && (
-                  <ul className="flex flex-col gap-2 pt-2">
-                    {section.options.map((type, index) => (
-                      <li key={index} className="flex gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={tempQuestionTypeFilterItems.includes(
-                            type.type.toLowerCase(),
-                          )}
-                          className="w-4 cursor-pointer accent-custom-blue focus:ring-custom-blue"
-                          value={type.type.toLowerCase()}
-                          id={`question-type-${type.type}`}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            const checked = e.target.checked;
-                            setTempQuestionTypeFilterItems((prev) =>
-                              checked
-                                ? prev.includes(value)
-                                  ? prev
-                                  : [...prev, value]
-                                : prev.filter((item) => item !== value),
-                            );
-                          }}
-                        />
-                        <label htmlFor={`question-type-${type.type}`}>
-                          {type.type}
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
                 )}
-              </div>
-            );
-          })()}
-
-          {/* Difficulty Level */}
-          {(() => {
-            const section = tempFiltrationData.find((s) => s.id === 2);
-            if (!section) return null;
-            return (
-              <div className="p-2">
-                <div
-                  className="flex justify-between items-center cursor-pointer"
-                  onClick={() =>
-                    setTempFiltrationData((prev) =>
-                      prev.map((item) =>
-                        item.id === 2
-                          ? { ...item, isOpen: !item.isOpen }
-                          : item,
-                      ),
-                    )
-                  }
-                >
-                  <h3 className="font-medium">Difficulty Level</h3>
-                  <button type="button">
-                    {section.isOpen ? <ChevronUp /> : <ChevronDown />}
-                  </button>
-                </div>
-                {section.isOpen && (
-                  <ul className="flex flex-col gap-2 pt-2">
-                    {section.options.map((type, index) => (
-                      <li key={index} className="flex gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={tempDifficultyLevelFilterItems.includes(
-                            type.level.toLowerCase(),
-                          )}
-                          className="w-4 cursor-pointer accent-custom-blue focus:ring-custom-blue"
-                          value={type.level.toLowerCase()}
-                          id={`difficulty-${type.level}`}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            const checked = e.target.checked;
-                            setTempDifficultyLevelFilterItems((prev) =>
-                              checked
-                                ? prev.includes(value)
-                                  ? prev
-                                  : [...prev, value]
-                                : prev.filter((item) => item !== value),
-                            );
-                          }}
-                        />
-                        <label htmlFor={`difficulty-${type.level}`}>
-                          {type.level}
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* Category */}
-          {(() => {
-            const section = tempFiltrationData.find((s) => s.id === 3);
-            if (!section || !section.options || section.options.length === 0)
-              return null;
-            return (
-              <div className="p-2">
-                <div
-                  className="flex justify-between items-center cursor-pointer"
-                  onClick={() =>
-                    setTempFiltrationData((prev) =>
-                      prev.map((item) =>
-                        item.id === 3
-                          ? { ...item, isOpen: !item.isOpen }
-                          : item,
-                      ),
-                    )
-                  }
-                >
-                  <h3 className="font-medium">Category</h3>
-                  <button type="button">
-                    {section.isOpen ? <ChevronUp /> : <ChevronDown />}
-                  </button>
-                </div>
-                {section.isOpen && (
-                  <ul className="flex flex-col gap-2 pt-2">
-                    {section.options.map((opt, index) => (
-                      <li key={index} className="flex gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={tempCategoryFilterItems.includes(
-                            String(opt.value).toLowerCase(),
-                          )}
-                          className="w-4 cursor-pointer accent-custom-blue focus:ring-custom-blue"
-                          value={String(opt.value).toLowerCase()}
-                          id={`category-${opt.value}`}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            const checked = e.target.checked;
-                            setTempCategoryFilterItems((prev) =>
-                              checked
-                                ? prev.includes(value)
-                                  ? prev
-                                  : [...prev, value]
-                                : prev.filter((item) => item !== value),
-                            );
-                          }}
-                        />
-                        <label htmlFor={`category-${opt.value}`}>
-                          {opt.value}
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* Technology */}
-          {(() => {
-            const section = tempFiltrationData.find((s) => s.id === 4);
-            if (!section || !section.options || section.options.length === 0)
-              return null;
-            return (
-              <div className="p-2">
-                <div
-                  className="flex justify-between items-center cursor-pointer"
-                  onClick={() =>
-                    setTempFiltrationData((prev) =>
-                      prev.map((item) =>
-                        item.id === 4
-                          ? { ...item, isOpen: !item.isOpen }
-                          : item,
-                      ),
-                    )
-                  }
-                >
-                  <h3 className="font-medium">{section.filterType}</h3>
-                  <button type="button">
-                    {section.isOpen ? <ChevronUp /> : <ChevronDown />}
-                  </button>
-                </div>
-                {section.isOpen && (
-                  <ul className="flex flex-col gap-2 pt-2">
-                    {section.options.map((opt, index) => (
-                      <li key={index} className="flex gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={tempTechnologyFilterItems.includes(
-                            String(opt.value).toLowerCase(),
-                          )}
-                          className="w-4 cursor-pointer accent-custom-blue focus:ring-custom-blue"
-                          value={String(opt.value).toLowerCase()}
-                          id={`technology-${opt.value}`}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            const checked = e.target.checked;
-                            setTempTechnologyFilterItems((prev) =>
-                              checked
-                                ? prev.includes(value)
-                                  ? prev
-                                  : [...prev, value]
-                                : prev.filter((item) => item !== value),
-                            );
-                          }}
-                        />
-                        <label htmlFor={`technology-${opt.value}`}>
-                          {opt.value}
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            );
-          })()}
-          {/*------v1.0.4-------->*/}
-        </div>
-      </FilterPopup>
+              </ul>
+            </div>
+          </>
+        )
+      }
     </div>
   );
 };

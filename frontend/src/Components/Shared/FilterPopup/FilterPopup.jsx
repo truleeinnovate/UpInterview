@@ -39,103 +39,10 @@ export const FilterPopup = ({
   filterIconRef,
   children,
   customHeight = "max-h-[65vh]",
+  customWidth = 320,
+  hideFooter = false,
 }) => {
   const popupRef = useRef(null);
-  // v1.0.0 <------------------------------------------------------------------
-  // Position popup below filter icon and handle window resize
-  // useEffect(() => {
-  //   if (!isOpen || !filterIconRef?.current || !popupRef.current) return;
-
-  //   const updatePopupPosition = () => {
-  //     const rect = filterIconRef.current.getBoundingClientRect();
-  //     const popup = popupRef.current;
-  //     const popupWidth = 320; // 20rem = 320px
-
-  //     // Calculate left position to ensure popup stays in viewport
-  //     let leftPosition = rect.left + window.scrollX;
-  //     if (leftPosition + popupWidth > window.innerWidth) {
-  //       leftPosition = window.innerWidth - popupWidth - 16; // 16px padding
-  //     }
-  //     leftPosition = Math.max(16, leftPosition);
-
-  //     // Calculate top position with viewport boundary check
-  //     const popupHeight = popup.offsetHeight;
-  //     const viewportHeight = window.innerHeight;
-  //     const bottomSpace = viewportHeight - rect.bottom - window.scrollY - 16;
-
-  //     let topPosition;
-  //     if (bottomSpace < popupHeight && rect.top > popupHeight) {
-  //       // Position above if not enough space below
-  //       topPosition = rect.top + window.scrollY - popupHeight - 8;
-  //     } else {
-  //       // Position below
-  //       topPosition = rect.bottom + window.scrollY + 8;
-  //     }
-
-  //     popup.style.position = 'fixed';
-  //     popup.style.top = `${topPosition}px`;
-  //     popup.style.left = `${leftPosition}px`;
-  //     popup.style.width = `${popupWidth}px`;
-  //     popup.style.zIndex = '1000';
-  //   };
-
-  //   // Initial position update
-  //   updatePopupPosition();
-
-  //   // Update on resize
-  //   window.addEventListener('resize', updatePopupPosition);
-
-  //   // Cleanup
-  //   return () => {
-  //     window.removeEventListener('resize', updatePopupPosition);
-  //   };
-  // }, [isOpen, filterIconRef]);
-
-  // useEffect(() => {
-  //   if (!isOpen || !filterIconRef?.current || !popupRef.current) return;
-
-  //   const updatePopupPosition = () => {
-  //     const rect = filterIconRef.current.getBoundingClientRect();
-  //     const popup = popupRef.current;
-  //     const popupWidth = 320; // 20rem = 320px
-
-  //     // Ensure popup fits in viewport horizontally
-  //     let leftPosition = rect.left;
-  //     if (leftPosition + popupWidth > window.innerWidth) {
-  //       leftPosition = window.innerWidth - popupWidth - 16;
-  //     }
-  //     leftPosition = Math.max(16, leftPosition);
-
-  //     const popupHeight = popup.offsetHeight;
-  //     const viewportHeight = window.innerHeight;
-  //     const bottomSpace = viewportHeight - rect.bottom - 16;
-
-  //     let topPosition;
-  //     if (bottomSpace < popupHeight && rect.top > popupHeight) {
-  //       // Not enough space below, open above
-  //       topPosition = rect.top - popupHeight - 8;
-  //     } else {
-  //       // Default: open below
-  //       topPosition = rect.bottom + 8;
-  //     }
-
-  //     popup.style.position = "fixed";
-  //     popup.style.top = `${topPosition}px`;
-  //     popup.style.left = `${leftPosition}px`;
-  //     popup.style.width = `${popupWidth}px`;
-  //     popup.style.zIndex = "1000";
-  //   };
-
-  //   // Initial position
-  //   updatePopupPosition();
-
-  //   // Update on window resize
-  //   window.addEventListener("resize", updatePopupPosition);
-
-  //   return () => {
-  //     window.removeEventListener("resize", updatePopupPosition);
-  //   };
-  // }, [isOpen, filterIconRef]);
 
   useEffect(() => {
     if (!isOpen || !filterIconRef?.current || !popupRef.current) return;
@@ -143,7 +50,7 @@ export const FilterPopup = ({
     const icon = filterIconRef.current;
     const popup = popupRef.current;
 
-    const popupWidth = 320;
+    let popupWidth = customWidth; // Use custom width here
 
     const updatePopupPosition = () => {
       const rect = icon.getBoundingClientRect();
@@ -152,10 +59,25 @@ export const FilterPopup = ({
 
       // Horizontal clamp
       let left = rect.left;
-      if (left + popupWidth > window.innerWidth) {
-        left = window.innerWidth - popupWidth - 16;
+
+      if (customWidth === "full") {
+        popupWidth = window.innerWidth - 32; // 16px padding on both sides
+        left = 16;
+      } else {
+        // If the popup is wide, we might want to align to the right of the icon instead of the left if it overflows
+        // Actually, standard is aligning right side of popup with right side of icon if it's too wide
+        // Let's right-align the popup if it's placed near the right edge.
+        // Often, if rect.right - popupWidth >= 16, we can align its right edge to the icon's right edge.
+        if (left + popupWidth > window.innerWidth) {
+          // If it overflows the right edge, try to right-align it to the icon's right edge
+          left = rect.right - popupWidth;
+          // If still overflowing the left edge of window
+          if (left < 16) {
+            left = window.innerWidth - popupWidth - 16;
+          }
+        }
+        left = Math.max(16, left);
       }
-      left = Math.max(16, left);
 
       // Vertical (above / below)
       const bottomSpace = viewportHeight - rect.bottom - 16;
@@ -183,7 +105,7 @@ export const FilterPopup = ({
       window.removeEventListener("resize", updatePopupPosition);
       window.removeEventListener("scroll", updatePopupPosition, true);
     };
-  }, [isOpen, filterIconRef]);
+  }, [isOpen, filterIconRef, customWidth]);
 
   // v1.0.0 ------------------------------------------------------------------>
 
@@ -200,7 +122,7 @@ export const FilterPopup = ({
       ref={popupRef}
       // className="bg-white rounded-lg shadow-xl z-50 flex flex-col border border-gray-200"
       className={`bg-white rounded-lg shadow-xl z-50 flex flex-col border border-gray-200 ${customHeight}`}
-      // style={{ height: "65vh" }} // Fixed height
+    // style={{ height: "65vh" }} // Fixed height
     >
       {/* Header */}
       <div className="border-b p-3 flex justify-between items-center">
@@ -214,28 +136,30 @@ export const FilterPopup = ({
       <div className="flex-1 p-3 overflow-y-auto">{children}</div>
 
       {/* Footer */}
-      <div className="border-t p-3 flex justify-between">
-        <button
-          onClick={handleClearAllClick}
-          className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900"
-        >
-          Clear All
-        </button>
-        <div className="space-x-2">
+      {!hideFooter && (
+        <div className="border-t p-3 flex justify-between">
           <button
-            onClick={onClose}
+            onClick={handleClearAllClick}
             className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900"
           >
-            Cancel
+            Clear All
           </button>
-          <button
-            onClick={onApply}
-            className="px-3 py-1.5 text-sm font-medium text-white bg-custom-blue rounded-md hover:bg-custom-blue/90"
-          >
-            Apply
-          </button>
+          <div className="space-x-2">
+            <button
+              onClick={onClose}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-gray-900"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onApply}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-custom-blue rounded-md hover:bg-custom-blue/90"
+            >
+              Apply
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
