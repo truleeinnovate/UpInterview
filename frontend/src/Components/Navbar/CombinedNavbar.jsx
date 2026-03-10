@@ -809,6 +809,7 @@ const CombinedNavbar = React.memo(() => {
         }`}
       >
         <div className="mx-auto relative">
+          {/* <div className="sm:px-[4%] md:px-[6%] lg:px-[6%] xl:px-[6%] 2xl:px-[6%] relative"> */}
           <div
             className={`flex justify-between items-center ${
               userType === "superAdmin"
@@ -818,12 +819,12 @@ const CombinedNavbar = React.memo(() => {
           >
             {/* v1.0.0  ----------------------> */}
             {/* Mobile menu button and logo */}
-            <div className="flex items-center">
+            <div className="flex items-center flex-shrink-0">
               <button
                 className={`${
                   userType === "superAdmin"
-                    ? "lg:hidden xl:hidden 2xl:hidden"
-                    : "sidebar-icon12 mr-2 lg:hidden xl:hidden 2xl:hidden"
+                    ? "xl:hidden 2xl:hidden"
+                    : "sidebar-icon12 mr-2 xl:hidden 2xl:hidden"
                 }`}
                 onClick={
                   userType === "superAdmin" ? toggleSidebar : toggleSidebar
@@ -845,17 +846,22 @@ const CombinedNavbar = React.memo(() => {
 
             {/* Desktop navigation */}
             <nav
-              className={`hidden lg:flex xl:flex 2xl:flex ${
+              className={`hidden xl:flex 2xl:flex ${
                 userType === "superAdmin"
                   ? "justify-center flex-1"
                   : "items-center justify-center flex-1"
               }`}
             >
-              <div
+              {/* <div
                 className={`flex items-center ${
                   userType === "superAdmin"
                     ? "gap-x-6 max-w-5xl h-full"
                     : "space-x-8 max-w-3xl"
+                }`}
+              > */}
+              <div
+                className={`flex items-center ${
+                  userType === "superAdmin" ? "gap-x-6 h-full" : "gap-x-6"
                 }`}
               >
                 {/* Super Admin Navigation */}
@@ -1199,10 +1205,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("Candidates") && (
                       <NavLink
                         to="/candidates"
-                        className={`h-full flex items-center relative px-1 ${
+                        className={`h-full flex items-center relative text-base outline-none ${
                           isActive("/candidates")
                             ? "text-custom-blue font-bold"
-                            : "text-gray-600 hover:text-custom-blue"
+                            : "text-gray-800 hover:text-custom-blue"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -1212,7 +1218,7 @@ const CombinedNavbar = React.memo(() => {
                       >
                         Candidates
                         {isActive("/candidates") && (
-                          <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                          <div className="absolute bottom-[-20px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                         )}
                       </NavLink>
                     )}
@@ -1220,10 +1226,10 @@ const CombinedNavbar = React.memo(() => {
                     {enhancedCheckPermission("Positions") && (
                       <NavLink
                         to="/positions"
-                        className={`h-full flex items-center relative px-1 ${
+                        className={`h-full flex items-center relative text-base ${
                           isActive("/positions")
                             ? "text-custom-blue font-bold"
-                            : "text-gray-600 hover:text-custom-blue"
+                            : "text-gray-800 hover:text-custom-blue"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -1233,7 +1239,7 @@ const CombinedNavbar = React.memo(() => {
                       >
                         Positions
                         {isActive("/positions") && (
-                          <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                          <div className="absolute bottom-[-20px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                         )}
                       </NavLink>
                     )}
@@ -1247,31 +1253,41 @@ const CombinedNavbar = React.memo(() => {
                         ref={interviewRef}
                       >
                         <button
-                          className={`flex items-center h-full relative px-1 ${
+                          className={`flex items-center h-full relative px-1 text-base ${
                             isActive("/interviews") ||
                             isActive("/mock-interviews") ||
                             isActive("/interviewers") ||
                             isActive("/interview-templates")
                               ? "text-custom-blue font-bold"
-                              : "text-gray-600 hover:text-custom-blue"
+                              : "text-gray-800 hover:text-custom-blue"
                           }`}
                           onClick={toggleInterviewDropdown}
                         >
                           Interviews
-                          {dropdownState.interviewDropdown ? (
+                          {/* {dropdownState.interviewDropdown ? (
                             <ChevronUp className="h-5 w-5" />
                           ) : (
                             <ChevronDown className="h-5 w-5" />
-                          )}
+                          )} */}
+                          <ChevronDown
+                            className={`ml-1 h-5 w-5 transition-transform duration-200 ease-in-out ${
+                              dropdownState.interviewDropdown
+                                ? "rotate-180"
+                                : "rotate-0"
+                            }`}
+                          />
                           {(isActive("/interviews") ||
                             isActive("/mock-interviews") ||
                             isActive("/interviewers") ||
                             isActive("/interview-templates")) && (
-                            <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                            <div className="absolute bottom-[-20px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                           )}
                         </button>
                         {dropdownState.interviewDropdown && (
-                          <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                          <div
+                            className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border origin-top-left transition-all duration-200 ease-out 
+                              animate-in fade-in zoom-in-95 slide-in-from-top-2"
+                          >
                             <div className="space-y-1">
                               {[
                                 ...(enhancedCheckPermission(
@@ -1311,7 +1327,7 @@ const CombinedNavbar = React.memo(() => {
                               ].map(({ to, label }) => (
                                 <NavLink
                                   key={to}
-                                  className={`block px-3 py-2 hover:bg-gray-100 hover:text-custom-blue rounded-md ${
+                                  className={`block px-3 py-2 text-base hover:bg-gray-100 hover:text-custom-blue rounded-md ${
                                     isActive(to)
                                       ? "bg-gray-100 text-custom-blue"
                                       : ""
@@ -1339,27 +1355,37 @@ const CombinedNavbar = React.memo(() => {
                         ref={assessmentRef}
                       >
                         <button
-                          className={`flex items-center h-full relative px-1 ${
+                          className={`flex items-center text-base h-full relative px-1 ${
                             isActive("/assessments") ||
                             isActive("/assessment-templates")
                               ? "text-custom-blue font-bold"
-                              : "text-gray-600 hover:text-custom-blue"
+                              : "text-gray-800 hover:text-custom-blue"
                           }`}
                           onClick={toggleAssessmentDropdown}
                         >
                           Assessments
-                          {dropdownState.assessmentDropdown ? (
+                          {/* {dropdownState.assessmentDropdown ? (
                             <ChevronUp className="h-5 w-5" />
                           ) : (
                             <ChevronDown className="h-5 w-5" />
-                          )}
+                          )} */}
+                          <ChevronDown
+                            className={`ml-1 h-5 w-5 transition-transform duration-200 ease-in-out ${
+                              dropdownState.assessmentDropdown
+                                ? "rotate-180"
+                                : "rotate-0"
+                            }`}
+                          />
                           {(isActive("/assessments") ||
                             isActive("/assessment-templates")) && (
-                            <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                            <div className="absolute bottom-[-20px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                           )}
                         </button>
                         {dropdownState.assessmentDropdown && (
-                          <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                          <div
+                            className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border origin-top-left transition-all duration-200 ease-out 
+                              animate-in fade-in zoom-in-95 slide-in-from-top-2"
+                          >
                             <div className="space-y-1">
                               {[
                                 ...(enhancedCheckPermission(
@@ -1383,7 +1409,7 @@ const CombinedNavbar = React.memo(() => {
                               ].map(({ to, label }) => (
                                 <NavLink
                                   key={to}
-                                  className={`block px-3 py-2 whitespace-nowrap hover:bg-gray-100 hover:text-custom-blue rounded-md ${
+                                  className={`block px-3 py-2 text-base whitespace-nowrap hover:bg-gray-100 hover:text-custom-blue rounded-md ${
                                     isActive(to)
                                       ? "bg-gray-100 text-custom-blue"
                                       : ""
@@ -1433,19 +1459,33 @@ const CombinedNavbar = React.memo(() => {
                         ref={moreRef}
                       >
                         <button
-                          className={`flex items-center h-full relative px-1 ${
-                            isActive("/analytics") || isActive("/support-desk")
+                          className={`flex items-center text-base h-full relative px-1 ${
+                            isActive("/my-teams") ||
+                            isActive("/interviewer-tags") ||
+                            isActive("/companies") ||
+                            isActive("/support-desk") ||
+                            isActive("/question-bank") ||
+                            isActive("/feedback") ||
+                            isActive("/analytics") ||
+                            isActive("/support-desk")
                               ? "text-custom-blue font-bold"
-                              : "text-gray-600 hover:text-custom-blue"
+                              : "text-gray-800 hover:text-custom-blue"
                           }`}
                           onClick={toggleMoreDropdown}
                         >
                           More
-                          {dropdownState.moreDropdown ? (
+                          {/* {dropdownState.moreDropdown ? (
                             <ChevronUp className="h-5 w-5" />
                           ) : (
                             <ChevronDown className="h-5 w-5" />
-                          )}
+                          )} */}
+                          <ChevronDown
+                            className={`ml-1 h-5 w-5 transition-transform duration-200 ease-in-out ${
+                              dropdownState.moreDropdown
+                                ? "rotate-180"
+                                : "rotate-0"
+                            }`}
+                          />
                           {(isActive("/analytics") ||
                             isActive("/support-desk") ||
                             isActive("/question-bank") ||
@@ -1453,11 +1493,14 @@ const CombinedNavbar = React.memo(() => {
                             isActive("/companies") ||
                             isActive("/my-teams") ||
                             isActive("/interviewer-tags")) && (
-                            <div className="absolute bottom-[-19px] left-0 right-0 h-[3px] bg-custom-blue"></div>
+                            <div className="absolute bottom-[-20px] left-0 right-0 h-[3px] bg-custom-blue"></div>
                           )}
                         </button>
                         {dropdownState.moreDropdown && (
-                          <div className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border">
+                          <div
+                            className="absolute top-full left-0 mt-0 z-50 w-48 rounded-md shadow-lg bg-white ring-1 p-2 ring-black ring-opacity-5 border origin-top-left transition-all duration-200 ease-out 
+                              animate-in fade-in zoom-in-95 slide-in-from-top-2"
+                          >
                             <div className="space-y-1">
                               {[
                                 ...(enhancedCheckPermission("MyTeams")
@@ -1528,7 +1571,7 @@ const CombinedNavbar = React.memo(() => {
 
             {/* Global Search */}
             {userType !== "superAdmin" && (
-              <div className="hidden lg:flex xl:flex 2xl:flex items-center mr-4">
+              <div className="hidden xl:flex 2xl:flex items-center mr-4">
                 <GlobalSearch />
               </div>
             )}
@@ -1552,8 +1595,14 @@ const CombinedNavbar = React.memo(() => {
 
         {/* Mobile sidebar */}
         {dropdownState.isSidebarOpen && (
-          <div className="fixed inset-0 top-12 bg-gray-800 bg-opacity-75 z-40 lg:hidden">
-            <div className="fixed left-0 top-12 w-64 h-[calc(100vh-3rem)] bg-white z-50 overflow-y-auto pb-20">
+          <div
+            className="fixed inset-0 top-12 bg-gray-800 bg-opacity-75 z-40 xl:hidden 2xl:hidden"
+            onClick={toggleSidebar}
+          >
+            <div
+              className="fixed left-0 top-12 w-64 h-[calc(100vh-3rem)] bg-white z-50 overflow-y-auto pb-20"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="p-4 space-y-1">
                 {/* Super Admin Mobile Navigation */}
                 {userType === "superAdmin" && (

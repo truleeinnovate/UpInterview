@@ -23,7 +23,7 @@ const DateOfBirthField = ({
   const computedId = id || name;
   return (
     <div>
-      <label htmlFor={computedId} className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={computedId} className="block sm:text-sm md:text-sm lg:text-sm xl:text-sm 2xl:text-base font-medium text-gray-700 mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <CustomDatePicker
