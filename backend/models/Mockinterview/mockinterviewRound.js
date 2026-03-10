@@ -77,12 +77,14 @@ const MockInterviewRoundSchema = new mongoose.Schema(
         "Rescheduled",
         "InProgress",
         "Completed",
-        "InCompleted",
+       
         "Incomplete",
         "Cancelled",
         "NoShow",
         "FeedbackPending",
         "FeedbackSubmitted",
+    
+        "Expired",
       ],
       default: "Draft",
     },

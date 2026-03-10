@@ -1477,7 +1477,7 @@ exports.updateInterviewRoundStatus = async (req, res) => {
         Scheduled: "Scheduled",
         InProgress: "InProgress",
         Completed: "Completed",
-        InCompleted: "InCompleted",
+        // InCompleted: "InCompleted",
         Rescheduled: "Rescheduled",
         Rejected: "Rejected",
         Selected: "Selected",

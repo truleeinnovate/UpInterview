@@ -131,7 +131,7 @@ const InterviewActions = ({
   // mockInterview?.rounds[0]?.participants ||
   // [];
 
-  // console.log()
+  console.log("interviewData",interviewData)
   const isCandidateJoined = participants.some(
     (p) => p.role === "Candidate" && p.status === "Joined",
   );
@@ -143,11 +143,13 @@ const InterviewActions = ({
   const isInterviewerJoined = (userId) =>
     participants.some(
       (p) =>
-        p.role === "Interviewer" &&
+        p.role === "Interviewer"
+       &&
         p.userId === userId &&
         p.status === "Joined",
     );
 
+    console.log("isInterviewerJoined", isInterviewerJoined);
   // Function to check if a participant is Scheduler Joined
   const isSchedulerJoined = (userId) =>
     participants.some(
@@ -202,7 +204,7 @@ const InterviewActions = ({
 
   const isFinalStatus = [
     "Completed",
-    "InCompleted",
+    "Incomplete",
     "NoShow",
     "Cancelled",
   ].includes(currentStatus);
@@ -252,7 +254,7 @@ const InterviewActions = ({
       if (
         ((newStatus === "Cancelled" ||
           newStatus === "NoShow" ||
-          newStatus === "InCompleted") &&
+          newStatus === "Incomplete") &&
           reasonValue) ||
         null
       ) {
@@ -325,7 +327,7 @@ const InterviewActions = ({
 
   const handleMarkAsIncompleteWithReason = async ({ reason, comment }) => {
     try {
-      await handleStatusChange("InCompleted", reason, comment || null);
+      await handleStatusChange("Incomplete", reason, comment || null);
       setMarkIncompleteModalOpen(false);
       setActionInProgress(false);
     } catch (error) {
@@ -518,8 +520,8 @@ const InterviewActions = ({
                       ? "Feedback Submitted"
                       : interviewData?.status === "NoShow"
                         ? "No Show"
-                        : interviewData?.status === "InCompleted" ?
-                          "In Completed"
+                        : interviewData?.status === "Incomplete" ?
+                          "In Complete"
                           : capitalizeFirstLetter(interviewData?.status)}
             </p>
           </div>
