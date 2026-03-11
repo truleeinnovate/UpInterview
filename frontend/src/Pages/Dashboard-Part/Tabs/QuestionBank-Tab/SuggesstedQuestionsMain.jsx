@@ -1038,6 +1038,28 @@ const SuggestedQuestionsComponent = ({
       {/* Inline Filters Section */}
       {isPopupOpen && (
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm transition-shadow px-7 py-4 mx-4 mt-2 mb-4 z-10 relative">
+          {/* Arrow pointing to filter icon */}
+          <div
+            className="absolute -top-2 right-[14px]"
+            style={{
+              width: 0,
+              height: 0,
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderBottom: '8px solid #e5e7eb',
+            }}
+          />
+          <div
+            className="absolute right-[14px]"
+            style={{
+              top: '-6px',
+              width: 0,
+              height: 0,
+              borderLeft: '7px solid transparent',
+              borderRight: '7px solid transparent',
+              borderBottom: '7px solid white',
+            }}
+          />
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-[16px] font-semibold text-gray-800">Filters</h2>
 
