@@ -10,6 +10,7 @@ import CompletionScreen from "./AssessmentExamComponents/AssessmentExamCompletio
 import QuestionNavigation from "./AssessmentExamComponents/AssessmentExamQuestionNavigation.jsx";
 import { config } from "../../../../../config.js";
 import { useScrollLock } from "../../../../../apiHooks/scrollHook/useScrollLock.js";
+import { Button } from "../../../../../Components/Buttons/Button.jsx";
 
 function AssessmentTest({
   assessment,
@@ -834,26 +835,26 @@ function AssessmentTest({
               <div className="sm:p-4 md:px-4 p-8">
                 <div className="flex sm:flex-col sm:items-start items-center sm:justify-start sm:gap-4 justify-between mb-6">
                   <div className="flex sm:justify-between items-center space-x-4 sm:w-full">
-                    <span className="px-4 py-2 bg-blue-100 text-custom-blue rounded-lg sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm font-medium">
+                    <span className="px-4 py-2 bg-blue-100 text-custom-blue rounded-md sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm font-medium">
                       Question {currentQuestionIndex + 1} of{" "}
                       {currentSectionData?.questions?.length || 0}
                     </span>
-                    <span className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm font-medium">
+                    <span className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm font-medium">
                       {currentQuestion?.snapshot?.questionType}
                     </span>
                   </div>
                   <div className="flex sm:justify-between items-center space-x-2 sm:w-full">
                     {isReviewing ? (
-                      <button
+                      <Button
                         onClick={handleCancelReview}
-                        className="sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-custom-blue bg-gray-100 hover:bg-gray-200 transition-colors"
+                        className="sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm inline-flex items-center text-sm font-medium text-custom-blue bg-gray-100 hover:bg-gray-200 transition-colors"
                       >
                         <XMarkIcon className="sm:h-4 sm:w-4 h-5 w-5 mr-2" />
                         Exit Review
-                      </button>
+                      </Button>
                     ) : (
                       <div
-                        className={`flex items-center px-4 py-2 rounded-lg ${
+                        className={`flex items-center px-4 py-2 rounded-md ${
                           timeLeft < 300
                             ? "bg-red-100 text-red-800"
                             : "bg-blue-100 text-custom-blue"
@@ -865,12 +866,12 @@ function AssessmentTest({
                         </span>
                       </div>
                     )}
-                    <button
+                    <Button
                       onClick={handleSubmit}
-                      className="sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm inline-flex items-center px-4 py-2 rounded-lg font-medium text-white bg-custom-blue hover:bg-custom-blue/80 transition-colors duration-300"
+                      className="sm:text-xs md:text-sm lg:text-sm xl:text-sm 2xl:text-sm inline-flex items-center font-medium text-white bg-custom-blue hover:bg-custom-blue/80 transition-colors duration-300"
                     >
                       {isReviewing ? "Finish Review" : "Review & Submit"}
-                    </button>
+                    </Button>
                   </div>
                 </div>
                 <h3 className="sm:text-sm md:text-md lg:text-md xl:text-md 2xl:text-md font-semibold text-gray-900">
@@ -904,12 +905,12 @@ function AssessmentTest({
             <p className="text-gray-700 mb-6">
               Please answer all questions before submitting.
             </p>
-            <button
+            <Button
               onClick={() => setShowIncompletePopup(false)}
-              className="px-6 py-2 bg-custom-blue text-white rounded-lg hover:bg-custom-blue/80 transition-colors"
+              className="px-6 py-2 bg-custom-blue text-white hover:bg-custom-blue/80 transition-colors"
             >
               OK
-            </button>
+            </Button>
           </div>
         </div>
       )}
