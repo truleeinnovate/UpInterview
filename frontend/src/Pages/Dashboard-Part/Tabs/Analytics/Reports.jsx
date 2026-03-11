@@ -733,27 +733,9 @@ const Reports = () => {
   };
 
   const LoadingViewTable = () => (
-    <>
-      {/* Header shimmer */}
-      <div className="rounded-t-xl w-full flex items-center gap-6 p-6 bg-white shadow-sm border border-gray-200">
-        <div className="h-5 w-32 bg-gray-200 rounded shimmer"></div>
-      </div>
-
-      {/* Rows shimmer */}
-      {Array.from({ length: 6 }).map((_, idx) => (
-        <div
-          key={idx}
-          className="w-full flex items-center gap-6 p-6 bg-white shadow-sm rounded-sm border border-gray-200"
-        >
-          <div className="h-4 w-full bg-gray-200 rounded shimmer p-1.5 mb-1"></div>
-          <div className="h-4 w-full bg-gray-200 rounded shimmer p-1.5 mb-1"></div>
-          <div className="h-4 w-full bg-gray-200 rounded shimmer p-1.5 mb-1"></div>
-          <div className="h-4 w-full bg-gray-200 rounded shimmer p-1.5 mb-1"></div>
-          <div className="h-4 w-full bg-gray-200 rounded shimmer p-1.5 mb-1"></div>
-          <div className="h-4 w-32 bg-gray-200 rounded shimmer p-1.5 mb-1"></div>
-        </div>
-      ))}
-    </>
+    <div className="flex justify-center items-center py-20 w-full">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-custom-blue"></div>
+    </div>
   );
 
   return (
@@ -792,91 +774,82 @@ const Reports = () => {
         />
       </div>
 
-      {/* TABS - Real Categories */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8 overflow-x-auto px-4">
-          {isLoading ? (
-            <>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="py-4 px-1">
-                  <div className="flex items-center gap-2 animate-pulse">
-                    <div className="w-5 h-5 bg-gray-300 rounded"></div>
-                    <div className="w-32 h-4 bg-gray-300 rounded"></div>
-                  </div>
-                </div>
-              ))}
-            </>
-          ) : (
-            tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    if (tab.id === "all") {
-                      searchParams.delete("category");
-                    } else {
-                      searchParams.set("category", tab.name);
-                    }
-                    setSearchParams(searchParams);
-                    setCurrentPage(0);
-                  }}
-                  className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
-                    ? "border-custom-blue text-custom-blue"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  {tab.name}
-                </button>
-              );
-            })
-          )}
-        </nav>
-      </div>
-
-      {/* CONTENT */}
-      <div className="px-6 pt-6">
-        {isLoading ? (
-          <LoadingViewTable />
-        ) : paginatedTemplates.length > 0 ? (
-          viewMode === "table" ? (
-            <ReportsTable
-              data={paginatedTemplates}
-              columns={reportTemplateColumns}
-              type="templates"
-              onGenerate={handleGenerateReport}
-              onShare={(item) => handleShare(item)}
-              loadingId={loadingId}
-            />
-          ) : (
-            <KanbanBoard
-              data={paginatedTemplates}
-              onGenerate={handleGenerateReport}
-              loadingId={loadingId}
-              onShare={(item) => handleShare(item)}
-            />
-          )
-        ) : (
-          <div className="text-center py-20">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No reports found
-            </h3>
-            <p className="text-gray-500">
-              {activeTab === "all"
-                ? "No report templates available."
-                : "No reports in this category."}
-            </p>
+      {isLoading ? (
+        <LoadingViewTable />
+      ) : (
+        <>
+          {/* TABS - Real Categories */}
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8 overflow-x-auto px-4">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      if (tab.id === "all") {
+                        searchParams.delete("category");
+                      } else {
+                        searchParams.set("category", tab.name);
+                      }
+                      setSearchParams(searchParams);
+                      setCurrentPage(0);
+                    }}
+                    className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
+                      ? "border-custom-blue text-custom-blue"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {tab.name}
+                  </button>
+                );
+              })}
+            </nav>
           </div>
-        )}
-      </div>
+
+          {/* CONTENT */}
+          <div className="px-6 pt-6">
+            {paginatedTemplates.length > 0 ? (
+              viewMode === "table" ? (
+                <ReportsTable
+                  data={paginatedTemplates}
+                  columns={reportTemplateColumns}
+                  type="templates"
+                  onGenerate={handleGenerateReport}
+                  onShare={(item) => handleShare(item)}
+                  loadingId={loadingId}
+                />
+              ) : (
+                <KanbanBoard
+                  data={paginatedTemplates}
+                  onGenerate={handleGenerateReport}
+                  loadingId={loadingId}
+                  onShare={(item) => handleShare(item)}
+                />
+              )
+            ) : (
+              <div className="text-center py-20">
+                <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No reports found
+                </h3>
+                <p className="text-gray-500">
+                  {activeTab === "all"
+                    ? "No report templates available."
+                    : "No reports in this category."}
+                </p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
       <ShareReportPopup
         templateId={shareReport?.id}
         isOpen={!!shareReport}
         onClose={() => setShareReport(null)}
       />
-    </div>
+    </div >
   );
 };
 

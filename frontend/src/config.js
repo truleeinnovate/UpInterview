@@ -21,7 +21,7 @@ export const config = {
 
   // API URLs
   REACT_APP_API_URL: process.env.REACT_APP_API_URL,
-  REACT_APP_API_URL_FRONTEND: process.env.REACT_APP_API_URL_FRONTEND,
+  REACT_APP_API_URL_FRONTEND: process.env.REACT_APP_API_URL_FRONTEND ? process.env.REACT_APP_API_URL_FRONTEND.replace(/^https?:\/\//, '').replace(/\/$/, '') : undefined,
 
   // Google OAuth configuration
   REACT_APP_GOOGLE_AUTH_URL: process.env.REACT_APP_GOOGLE_AUTH_URL,
