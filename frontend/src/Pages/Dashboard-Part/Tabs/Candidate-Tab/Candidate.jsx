@@ -211,7 +211,7 @@ function Candidate({
     min: "",
     max: "",
   });
-  const rowsPerPage = 10; // Used for limit in infinite scroll
+  const rowsPerPage = 20; // Used for limit in infinite scroll
 
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [selectedUniversities, setSelectedUniversities] = useState([]);
@@ -1212,18 +1212,23 @@ function Candidate({
                 {/* v1.0.7 ---------------------------------------------------> */}
                 {view === "table" ? (
                   <div className="w-full">
-                    {/* Candidates count header - outside scroll container */}
-                    {!isEmbedded && (
-                      <div className="flex items-center justify-between px-6 py-2 bg-gray-50 border-b border-gray-200">
-                        <h3 className="text-md font-semibold text-gray-800 tracking-tight">
-                          All Candidates
-                        </h3>
-                        <span className="px-3 py-1 bg-white text-gray-500 rounded-lg text-sm font-medium border border-custom-blue/20">
-                          {currentFilteredRows?.length || 0}
-                          {totalCandidates > 0 && currentFilteredRows?.length < totalCandidates
-                            ? ` of ${totalCandidates}`
-                            : ""
-                          } {totalCandidates === 1 ? "Candidate" : "Candidates"}
+                    {/* Candidates count - right aligned */}
+                    {!isEmbedded && totalCandidates > 0 && (
+                      <div className="flex items-center justify-start px-6 py-2">
+                        <span className="text-sm text-gray-500">
+                          Showing{" "}
+                          <span className="font-semibold text-gray-800">{currentFilteredRows?.length || 0}</span>
+                          {" "}of{" "}
+                          <span className="font-semibold text-gray-800">
+                            {(() => {
+                              const total = totalCandidates;
+                              const rounded = Math.floor(total / 100) * 100;
+                              if (rounded === 0) return total;
+                              if (total === rounded) return total;
+                              return `${rounded}+`;
+                            })()}
+                          </span>
+                          {" "}{totalCandidates === 1 ? "candidate" : "candidates"}
                         </span>
                       </div>
                     )}

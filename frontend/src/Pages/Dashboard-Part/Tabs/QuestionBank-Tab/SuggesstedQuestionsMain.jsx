@@ -65,19 +65,13 @@ const FilterDropdown = ({ label, options, selectedItems, onChange, isRadio }) =>
       </div>
 
       {isOpen && (
-        <div className="absolute z-[100] w-full min-w-[200px] mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto custom-scrollbar">
-          <ul className="py-1">
+        <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto custom-scrollbar">
+          <ul className="py-1 flex flex-col gap-1">
             <li
-              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+              className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors rounded-sm mx-1 ${selectedItems.length === 0 ? 'bg-custom-blue text-white' : 'hover:bg-gray-50 text-gray-700'}`}
               onClick={() => { onChange([]); setIsOpen(false); }}
             >
-              <input
-                type={isRadio ? "radio" : "checkbox"}
-                checked={selectedItems.length === 0}
-                className="w-4 h-4 rounded cursor-pointer accent-custom-blue min-w-[16px]"
-                readOnly
-              />
-              <span className="text-sm text-gray-700 whitespace-nowrap">All</span>
+              <span className="text-sm whitespace-nowrap">All</span>
             </li>
             {options.map((opt, idx) => {
               const valString = String(opt.value || opt.type || opt.level).toLowerCase();
@@ -87,9 +81,8 @@ const FilterDropdown = ({ label, options, selectedItems, onChange, isRadio }) =>
               return (
                 <li
                   key={idx}
-                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors rounded-sm mx-1 ${isChecked ? 'bg-custom-blue text-white' : 'hover:bg-gray-50 text-gray-700'}`}
                   onClick={(e) => {
-                    // e.stopPropagation();
                     if (isRadio) {
                       onChange([valString]);
                       setIsOpen(false);
@@ -101,13 +94,7 @@ const FilterDropdown = ({ label, options, selectedItems, onChange, isRadio }) =>
                     }
                   }}
                 >
-                  <input
-                    type={isRadio ? "radio" : "checkbox"}
-                    checked={isChecked}
-                    className="w-4 h-4 rounded cursor-pointer accent-custom-blue min-w-[16px]"
-                    readOnly
-                  />
-                  <span className="text-sm text-gray-700 whitespace-nowrap">{displayString}</span>
+                  <span className="text-sm whitespace-nowrap">{displayString}</span>
                 </li>
               )
             })}
@@ -141,7 +128,7 @@ function HeaderBar({
 
   return (
     <div
-      className={`flex items-center px-4
+      className={`flex items-center px-4 py-2
         ${isMeetingSidePanel
           ? "justify-start overflow-auto"
           : "justify-between overflow-x-auto"
@@ -175,8 +162,31 @@ function HeaderBar({
         )}
       </div>
 
-      {/* Right: Range, Show/Page, Pagination, Filter */}
-      <div className="flex gap-x-3 whitespace-nowrap">
+      {/* Right: Search, Range, Show/Page, Pagination, Filter */}
+      <div className="flex gap-x-3 whitespace-nowrap items-center">
+        {/* Search Bar */}
+        <div className="relative flex items-center rounded-md border border-gray-300 bg-white hover:border-custom-blue transition-colors">
+          <span className="p-[7px] text-custom-blue flex-shrink-0">
+            <Search className="w-4 h-4" />
+          </span>
+          <input
+            type="search"
+            placeholder="Search questions, tags..."
+            className="w-54 px-2 py-2 pl-0 rounded-md focus:outline-none text-sm text-gray-700 bg-transparent"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && searchInput.trim()) {
+                e.preventDefault();
+                if (typeof onAddSearchTag === "function") {
+                  onAddSearchTag(searchInput.trim());
+                }
+                setSearchInput("");
+              }
+            }}
+          />
+        </div>
+
         <div className="flex items-center">
           <p>{rangeLabel}</p>
         </div>
@@ -189,7 +199,7 @@ function HeaderBar({
           <div className="flex items-center gap-1">
             <div className="w-28 flex-shrink-0">
               {(() => {
-                const pageSizeOptions = [10, 20, 30, 50, 100, 150, 200].map(
+                const pageSizeOptions = [20, 30, 50, 100, 150, 200].map(
                   (size) => ({
                     value: size,
                     label: size,
@@ -293,7 +303,7 @@ const SuggestedQuestionsComponent = ({
   const [currentPage, setCurrentPage] = useState(1);
   const filterIconRef = useRef(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [dropdownValue, setDropdownValue] = useState(
     type === "assessment" ? "Assessment Questions" : "Interview Questions",
@@ -503,8 +513,31 @@ const SuggestedQuestionsComponent = ({
         ],
       });
     }
+    const combinedCategories = Array.from(new Set([...uniqueCategories, ...categoryFilterItems, ...tempCategoryFilterItems]));
     sections.push({
       id: 2,
+      filterType: "Category",
+      isOpen: false,
+      options: combinedCategories.map((c) => ({ value: c, isChecked: false })),
+    });
+
+    const combinedAreas = Array.from(new Set([...uniqueAreas, ...areaFilterItems, ...tempAreaFilterItems]));
+    sections.push({
+      id: 3,
+      filterType: "Area",
+      isOpen: false,
+      options: combinedAreas.map((a) => ({ value: a, isChecked: false })),
+    });
+
+    const combinedTechs = Array.from(new Set([...uniqueTechnologies, ...technologyFilterItems, ...tempTechnologyFilterItems]));
+    sections.push({
+      id: 4,
+      filterType: "Technology",
+      isOpen: false,
+      options: combinedTechs.map((t) => ({ value: t, isChecked: false })),
+    });
+    sections.push({
+      id: 5,
       filterType: "Difficulty Level",
       isOpen: false,
       options: [
@@ -513,30 +546,18 @@ const SuggestedQuestionsComponent = ({
         { level: "Hard", isChecked: false },
       ],
     });
-    sections.push({
-      id: 3,
-      filterType: "Category",
-      isOpen: false,
-      options: uniqueCategories.map((c) => ({ value: c, isChecked: false })),
-    });
-    sections.push({
-      id: 4,
-      filterType: "Technology",
-      isOpen: false,
-      options: uniqueTechnologies.map((t) => ({ value: t, isChecked: false })),
-    });
-    sections.push({
-      id: 5,
-      filterType: "Area",
-      isOpen: false,
-      options: uniqueAreas.map((a) => ({ value: a, isChecked: false })),
-    });
     return sections;
   }, [
     showQuestionTypeFilter,
     uniqueCategories,
     uniqueTechnologies,
     uniqueAreas,
+    categoryFilterItems,
+    tempCategoryFilterItems,
+    areaFilterItems,
+    tempAreaFilterItems,
+    technologyFilterItems,
+    tempTechnologyFilterItems,
   ]);
   //------v1.0.4-------->
 
@@ -586,9 +607,16 @@ const SuggestedQuestionsComponent = ({
     showQuestionTypeFilter,
     uniqueCategories.length,
     uniqueTechnologies.length,
+    uniqueAreas.length,
+    categoryFilterItems.length,
+    tempCategoryFilterItems.length,
+    areaFilterItems.length,
+    tempAreaFilterItems.length,
+    technologyFilterItems.length,
+    tempTechnologyFilterItems.length,
   ]);
 
-  // Keep popup temp state in sync when opening the popup or when base sections update
+  // Keep popup temp state in sync when opening the popup
   useEffect(() => {
     if (isPopupOpen) {
       setTempFiltrationData(JSON.parse(JSON.stringify(filtrationData)));
@@ -600,17 +628,8 @@ const SuggestedQuestionsComponent = ({
       setTempSelectedSkills(selectedSkills);
       setTempSkillInput(skillInput);
     }
-  }, [
-    isPopupOpen,
-    filtrationData,
-    questionTypeFilterItems,
-    difficultyLevelFilterItems,
-    categoryFilterItems,
-    technologyFilterItems,
-    areaFilterItems,
-    selectedSkills,
-    skillInput,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPopupOpen]);
 
   const totalItems = suggestedQuestions.length;
   const totalPages = pagination?.totalPages || 1;
@@ -1035,9 +1054,53 @@ const SuggestedQuestionsComponent = ({
         onAddSearchTag={handleAddSearchTag}
       />
 
+      {/* Active Filters - Shown outside when filter card is CLOSED */}
+      {!isPopupOpen && (
+        [...categoryFilterItems, ...areaFilterItems, ...technologyFilterItems, ...(showQuestionTypeFilter ? questionTypeFilterItems : []), ...difficultyLevelFilterItems, ...selectedSkills].length > 0 || searchInput
+      ) && (
+          <div className="flex flex-wrap items-center gap-2 px-6 py-2 flex-shrink-0">
+            {categoryFilterItems.map(c => (
+              <div key={`cat-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                <span className="font-medium">Category:</span> {capitalizeFirstLetter(c)}
+                <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => { setCategoryFilterItems(prev => prev.filter(x => x !== c)); setTempCategoryFilterItems(prev => prev.filter(x => x !== c)); }} />
+              </div>
+            ))}
+            {areaFilterItems.map(c => (
+              <div key={`area-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                <span className="font-medium">Area:</span> {capitalizeFirstLetter(c)}
+                <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => { setAreaFilterItems(prev => prev.filter(x => x !== c)); setTempAreaFilterItems(prev => prev.filter(x => x !== c)); }} />
+              </div>
+            ))}
+            {technologyFilterItems.map(c => (
+              <div key={`tech-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                <span className="font-medium">Technology:</span> {capitalizeFirstLetter(c)}
+                <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => { setTechnologyFilterItems(prev => prev.filter(x => x !== c)); setTempTechnologyFilterItems(prev => prev.filter(x => x !== c)); }} />
+              </div>
+            ))}
+            {showQuestionTypeFilter && questionTypeFilterItems.map(c => (
+              <div key={`type-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                <span className="font-medium">Type:</span> {capitalizeFirstLetter(c)}
+                <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => { setQuestionTypeFilterItems(prev => prev.filter(x => x !== c)); setTempQuestionTypeFilterItems(prev => prev.filter(x => x !== c)); }} />
+              </div>
+            ))}
+            {difficultyLevelFilterItems.map(c => (
+              <div key={`diff-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                <span className="font-medium">Difficulty:</span> {capitalizeFirstLetter(c)}
+                <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => { setDifficultyLevelFilterItems(prev => prev.filter(x => x !== c)); setTempDifficultyLevelFilterItems(prev => prev.filter(x => x !== c)); }} />
+              </div>
+            ))}
+            {selectedSkills.map(c => (
+              <div key={`tag-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                <span className="font-medium">Tag:</span> {c}
+                <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => { setSelectedSkills(prev => prev.filter(x => x !== c)); setTempSelectedSkills(prev => prev.filter(x => x !== c)); }} />
+              </div>
+            ))}
+          </div>
+        )}
+
       {/* Inline Filters Section */}
       {isPopupOpen && (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm transition-shadow px-7 py-4 mx-4 mt-2 mb-4 z-10 relative">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm transition-shadow px-7 py-4 mx-4 mt-1 mb-4 z-10 relative">
           {/* Arrow pointing to filter icon */}
           <div
             className="absolute -top-2 right-[14px]"
@@ -1091,12 +1154,6 @@ const SuggestedQuestionsComponent = ({
               >
                 Clear All
               </button>
-              {/* <button
-                className="px-4 py-2 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium"
-                onClick={() => setIsPopupOpen(false)}
-              >
-                Cancel
-              </button> */}
               <button
                 className="px-4 py-2 text-sm bg-custom-blue text-white rounded-md hover:bg-opacity-90 transition-colors font-medium"
                 onClick={() => {
@@ -1109,7 +1166,6 @@ const SuggestedQuestionsComponent = ({
                   setSkillInput(tempSkillInput);
                   setSearchInput(tempSearchInput);
                   setFiltrationData(tempFiltrationData);
-                  // Do not close the popup string on apply, as requested
                 }}
               >
                 Apply
@@ -1118,35 +1174,12 @@ const SuggestedQuestionsComponent = ({
           </div>
 
           <div className="flex flex-col gap-5">
-            {/* Row 1: Search and Dropdowns */}
+            {/* Row 1: Filter Dropdowns (no search bar) */}
             <div className="flex flex-wrap items-center gap-4">
-              {/* Search Bar */}
-              <div className="relative flex items-center rounded-md border border-gray-300 bg-white w-64 hover:border-custom-blue transition-colors">
-                <span className="p-[9px] text-custom-blue flex-shrink-0">
-                  <Search className="w-4 h-4" />
-                </span>
-                <input
-                  type="search"
-                  placeholder="Search by Tags, Questions..."
-                  className="flex-1 p-[7px] pl-0 rounded-md focus:outline-none text-sm text-gray-700 bg-transparent min-w-[150px]"
-                  value={tempSearchInput}
-                  onChange={(e) => setTempSearchInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && tempSearchInput.trim()) {
-                      e.preventDefault();
-                      if (typeof handleAddSearchTag === "function") {
-                        handleAddSearchTag(tempSearchInput.trim());
-                      }
-                      setTempSearchInput("");
-                    }
-                  }}
-                />
-              </div>
-
               {/* Render FilterDropdowns */}
               {tempFiltrationData.map((section) => {
                 if (section.id === 1 && !showQuestionTypeFilter) return null;
-                if (!section.options || section.options.length === 0) return null;
+                if (!section.options) return null;
 
                 let activeItems = [];
                 let setTempItems = () => { };
@@ -1158,13 +1191,13 @@ const SuggestedQuestionsComponent = ({
                     setTempItems = setTempQuestionTypeFilterItems;
                     break;
                   case 2:
-                    activeItems = tempDifficultyLevelFilterItems;
-                    setTempItems = setTempDifficultyLevelFilterItems;
-                    isRadio = true; // Based on previous user preference
-                    break;
-                  case 3:
                     activeItems = tempCategoryFilterItems;
                     setTempItems = setTempCategoryFilterItems;
+                    isRadio = true;
+                    break;
+                  case 3:
+                    activeItems = tempAreaFilterItems;
+                    setTempItems = setTempAreaFilterItems;
                     isRadio = true;
                     break;
                   case 4:
@@ -1172,8 +1205,9 @@ const SuggestedQuestionsComponent = ({
                     setTempItems = setTempTechnologyFilterItems;
                     break;
                   case 5:
-                    activeItems = tempAreaFilterItems;
-                    setTempItems = setTempAreaFilterItems;
+                    activeItems = tempDifficultyLevelFilterItems;
+                    setTempItems = setTempDifficultyLevelFilterItems;
+                    isRadio = true;
                     break;
                   default:
                     break;
@@ -1272,6 +1306,7 @@ const SuggestedQuestionsComponent = ({
                 // className="flex flex-col gap-4 pr-2 h-[calc(100vh-362px)] overflow-y-auto"
                 className="flex flex-col flex-1 min-h-0 overflow-y-auto pb-8 px-4"
                 style={customHeight ? { height: customHeight } : {}}
+                onScroll={() => { if (isPopupOpen) setIsPopupOpen(false); }}
               >
                 {/* Render only unlocked cards first */}
                 {unlockedPaginatedData.length > 0
