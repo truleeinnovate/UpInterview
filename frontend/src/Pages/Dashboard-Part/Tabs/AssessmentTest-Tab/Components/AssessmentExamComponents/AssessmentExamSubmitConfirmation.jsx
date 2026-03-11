@@ -3,6 +3,7 @@
 
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { capitalizeFirstLetter } from "../../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { Button } from "../../../../../../Components/Buttons/Button";
 
 function SubmitConfirmation({
   questions,
@@ -77,18 +78,19 @@ function SubmitConfirmation({
           </div>
           {/* v1.0.1 <---------------------------------------------------------------------- */}
           <div className="flex justify-center space-x-4">
-            <button
+            <Button
               onClick={handleStartReview}
-              className="sm:px-3 px-4 sm:py-2 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue transition-all duration-200"
+              variant="outline"
+              className="sm:px-3 px-4 sm:py-2 py-4 border border-custom-blue text-custom-blue text-sm font-medium"
             >
               Review Answers
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleConfirmSubmit}
-              className="sm:px-3 px-4 sm:py-2 py-3 rounded-xl text-sm font-medium text-white bg-custom-blue hover:bg-custom-blue/80 transform hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+              className="sm:px-3 px-4 sm:py-2 py-4 text-white bg-custom-blue"
             >
               Submit Assessment
-            </button>
+            </Button>
           </div>
           {/* v1.0.1 ----------------------------------------------------------------------> */}
         </div>

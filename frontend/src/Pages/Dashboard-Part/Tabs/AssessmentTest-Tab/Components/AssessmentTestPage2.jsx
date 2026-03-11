@@ -8,6 +8,7 @@ import {
   UserIcon,
 } from "@heroicons/react/24/outline";
 import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { Button } from "../../../../../Components/Buttons/Button";
 
 const AssessmentTestPage2 = ({
   assessment,
@@ -130,7 +131,7 @@ const AssessmentTestPage2 = ({
                         <h4 className="sm:text-sm md:text-sm lg:text-sm xl:text-lg 2xl:text-lg font-medium text-gray-900">
                           {capitalizeFirstLetter(section.sectionName) || `Section ${index + 1}`}
                         </h4>
-                        <span className="sm:px-2 px-4 py-2 bg-blue-100 text-custom-blue rounded-lg text-sm font-medium group-hover:bg-custom-blue group-hover:text-white transition-colors">
+                        <span className="sm:px-2 px-4 py-2 bg-blue-100 text-custom-blue rounded-md text-sm font-medium transition-colors">
                           {section.questions?.length || 0}
                           <span className="ml-1">Questions</span>
                         </span>
@@ -151,10 +152,10 @@ const AssessmentTestPage2 = ({
           <div className="p-6 bg-gradient-to-b from-transparent to-gray-50/50 border-t border-gray-100">
             <div className="flex justify-between">
               <div></div>
-              <button
+              <Button
                 onClick={handleStartAssessment}
                 // disabled={!isVerified}
-                className={`group inline-flex items-center px-6 py-2 rounded-xl sm:text-sm md:text-sm lg:text-base xl:text-base 2xl:text-base font-medium transition-all duration-300 ${
+                className={`group inline-flex items-center ${
                   true
                     ? "text-white bg-custom-blue hover:bg-custom-blue/80"
                     : "bg-gray-100 text-gray-400 cursor-not-allowed"
@@ -162,7 +163,7 @@ const AssessmentTestPage2 = ({
               >
                 Start Assessment
                 <ChevronRightIcon className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>

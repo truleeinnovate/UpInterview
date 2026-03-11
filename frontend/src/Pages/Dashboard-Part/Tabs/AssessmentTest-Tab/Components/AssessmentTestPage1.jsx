@@ -18,6 +18,7 @@ import {
 import axios from "axios";
 import { config } from "../../../../../config";
 import { capitalizeFirstLetter } from "../../../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { Button } from "../../../../../Components/Buttons/Button"
 
 const AssessmentTestPage1 = ({
   scheduledAssessmentId,
@@ -361,7 +362,7 @@ const AssessmentTestPage1 = ({
                       (line, index) => (
                         <p
                           key={index}
-                          className="text-gray-600 text-base leading-relaxed text-[13px]"
+                          className="text-gray-600 text-base leading-relaxed text-[13px] break-words whitespace-pre-wrap"
                         >
                           {line}
                         </p>
@@ -426,11 +427,11 @@ const AssessmentTestPage1 = ({
           {/* Footer */}
           <div className="px-4 py-3 bg-gradient-to-b from-transparent to-gray-50/50 border-t border-gray-100">
             <div className="flex justify-end">
-              <button
+              <Button
                 onClick={handleProceed}
                 disabled={ !isAgreed}
                 className={`
-                  group inline-flex items-center px-4 py-2 rounded-xl sm:text-sm md:text-sm lg:text-base xl:text-base 2xl:text-base font-medium
+                  group inline-flex items-center font-medium
                   transition-all duration-300 transform
                   ${
                     isAgreed
@@ -441,7 +442,7 @@ const AssessmentTestPage1 = ({
               >
                 Continue to Profile
                 <ChevronRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>

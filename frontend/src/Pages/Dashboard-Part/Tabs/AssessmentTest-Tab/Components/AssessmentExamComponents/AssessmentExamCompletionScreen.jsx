@@ -1,6 +1,7 @@
 // v1.0.0 - Ashok - Improved responsiveness
 
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { Button } from "../../../../../../Components/Buttons/Button";
 
 function CompletionScreen() {
   return (
@@ -40,12 +41,12 @@ function CompletionScreen() {
               </p>
             </div>
           </div>
-          <button
+          <Button
             onClick={() => window.open("", "_self").close()}
-            className="mt-8 inline-flex items-center px-6 py-2 bg-gradient-to-r from-custom-blue to-custom-blue/80 text-white rounded-xl text-sm font-medium hover:from-custom-blue/80 hover:to-custom-blue/80 transform hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:ring-offset-2"
+            className="mt-8 inline-flex items-center px-6 py-2 bg-gradient-to-r from-custom-blue to-custom-blue/80 text-white text-sm font-medium hover:from-custom-blue/80 hover:to-custom-blue/80 transform hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:ring-offset-2"
           >
             <span>Close Assessment</span>
-          </button>
+          </Button>
         </div>
       </div>
     </div>
