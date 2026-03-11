@@ -785,7 +785,7 @@
 // export default ReportsTable;
 
 import React, { useState, useEffect } from "react";
-import { Play, Share2, MoreHorizontal, Crown } from "lucide-react";
+import { Play, Share2, MoreHorizontal, Crown, Group } from "lucide-react";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
 import { formatDateTime } from "../../utils/dateFormatter";
 import StatusBadge from "../SuperAdminComponents/common/StatusBadge";
@@ -808,7 +808,13 @@ const ReportsTable = ({
 }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [popupCoords, setPopupCoords] = useState({ x: 0, y: 0 });
-  // const [sharePopup, setSharePopup] = useState(null);
+  
+  // Column Header Menu State
+  const [openColumnMenu, setOpenColumnMenu] = useState(null);
+  const [columnPopupCoords, setColumnPopupCoords] = useState({ x: 0, y: 0 });
+
+  const [groupByColumn, setGroupByColumn] = useState('');
+  const [expandedGroups, setExpandedGroups] = useState(new Set());
 
   // Global user & permissions
   const { subscriptionData } = useSubscription();
@@ -826,6 +832,29 @@ const ReportsTable = ({
     if (!template.requiredPlans || template.requiredPlans.length === 0)
       return true;
     return template.requiredPlans.includes(subscriptionData.name);
+  };
+
+  const groupDataByColumn = (dataArr, columnKey) => {
+    return dataArr.reduce((groups, item) => {
+      const groupValue = item[columnKey] || "Ungrouped";
+      if (!groups[groupValue]) {
+        groups[groupValue] = [];
+      }
+      groups[groupValue].push(item);
+      return groups;
+    }, {});
+  };
+
+  const groupedData = groupByColumn ? groupDataByColumn(data, groupByColumn) : null;
+
+  const toggleGroupExpansion = (groupKey) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupKey)) {
+      newExpanded.delete(groupKey);
+    } else {
+      newExpanded.add(groupKey);
+    }
+    setExpandedGroups(newExpanded);
   };
 
   // Menu positioning
@@ -854,20 +883,36 @@ const ReportsTable = ({
     setPopupCoords({ x, y });
   }, [openMenuId, data]);
 
-  // Click outside to close menu
+  // Click outside to close menus
   useEffect(() => {
-    if (!openMenuId) return;
+    if (!openMenuId && !openColumnMenu) return;
     const handleClickOutside = (e) => {
-      if (
-        !e.target.closest(".report-menu-btn") &&
-        !e.target.closest(".report-popup-menu")
-      ) {
+      if (openMenuId && !e.target.closest(".report-menu-btn") && !e.target.closest(".report-popup-menu")) {
         setOpenMenuId(null);
+      }
+      if (openColumnMenu && !e.target.closest(".column-menu-btn") && !e.target.closest(".column-popup-menu")) {
+        setColumnMenuOpen(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [openMenuId]);
+  }, [openMenuId, openColumnMenu]);
+
+  const setColumnMenuOpen = (val) => setOpenColumnMenu(val);
+
+  const handleColumnMenuOpen = (e, columnKey) => {
+    e.stopPropagation();
+    if (openColumnMenu === columnKey) {
+        setColumnMenuOpen(null);
+        return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setColumnPopupCoords({ 
+        x: rect.left + window.scrollX, 
+        y: rect.bottom + window.scrollY + 8 
+    });
+    setColumnMenuOpen(columnKey);
+  };
 
   const handleMenuOpen = (itemId, buttonRef) => {
     setOpenMenuId(openMenuId === itemId ? null : itemId);
@@ -882,24 +927,73 @@ const ReportsTable = ({
     <>
       <div className="bg-white shadow-sm rounded-t-xl border border-gray-200 mb-12">
         <div className="px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-custom-blue">
-            {title ||
-              (type === "templates" ? "Report Templates" : "Report Results")}
-          </h3>
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold text-custom-blue">
+              {title ||
+                (type === "templates" ? "Report Templates" : "Report Results")}
+            </h3>
+            {data && data.length > 0 && (
+              <span className="bg-blue-50 text-custom-blue text-xs font-medium px-2.5 py-1rounded-full border border-blue-100">
+                {data.length} {data.length === 1 ? 'record' : 'records'}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-max">
             <thead className="bg-gray-50 border border-gray-200">
               <tr>
-                {propColumns.map((col) => (
-                  <th
-                    key={col.key}
-                    className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase"
+                {/* Dynamically insert grouped column header at the beginning if one is active */}
+                {groupByColumn && propColumns.find(c => c.key === groupByColumn) && (
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase cursor-pointer bg-blue-50"
+                    onClick={() => { setGroupByColumn(""); setExpandedGroups(new Set()); }}
                   >
-                    {col.label}
+                    <div className="flex items-center gap-2">
+                        {propColumns.find(c => c.key === groupByColumn).label}
+                        <span className="text-[10px] bg-custom-blue text-white px-2 py-0.5 rounded-full capitalize">Grouped</span>
+                    </div>
                   </th>
-                ))}
+                )}
+                {propColumns.map((col) => {
+                  if (groupByColumn === col.key) return null; // Skip if it's the grouped column
+                  return (
+                    <th
+                      key={col.key}
+                      className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase cursor-pointer hover:bg-gray-100 transition-colors relative"
+                    >
+                      <div className="flex items-center gap-2 w-full justify-between" onClick={(e) => col.groupable && handleColumnMenuOpen(e, col.key)}>
+                          <span>{col.label}</span>
+                          {col.groupable && (
+                            <button className="p-1 rounded hover:bg-gray-200 text-gray-400 hover:text-custom-blue transition-colors column-menu-btn">
+                                <MoreHorizontal className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                      </div>
+                      
+                      {/* Column Options Menu */}
+                      {openColumnMenu === col.key && (
+                        <div 
+                          className="column-popup-menu fixed z-[9999] w-48 bg-white shadow-lg rounded-lg border border-gray-200 py-1"
+                          style={{ top: columnPopupCoords.y, left: columnPopupCoords.x }}
+                        >
+                          <button
+                            onClick={() => {
+                                setGroupByColumn(col.key);
+                                const groups = groupDataByColumn(data, col.key);
+                                setExpandedGroups(new Set(Object.keys(groups)));
+                                setColumnMenuOpen(null);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                          >
+                            <Group className="w-4 h-4 text-gray-400" />
+                            Group by this line
+                          </button>
+                        </div>
+                      )}
+                    </th>
+                  );
+                })}
                 {type === "templates" && (
                   <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase">
                     Actions
@@ -909,7 +1003,95 @@ const ReportsTable = ({
             </thead>
 
             <tbody className="bg-white">
-              {data.map((item) => {
+              {groupedData ? (
+                  Object.entries(groupedData).map(([groupKey, groupItems]) => {
+                    const isExpanded = expandedGroups.has(groupKey);
+                    // Only show 1 row if collapsed, all rows if expanded
+                    const itemsToShow = isExpanded ? groupItems : [groupItems[0]];
+                    
+                    return (
+                      <React.Fragment key={groupKey}>
+                        {itemsToShow.map((item, index) => {
+                          const access = accessMap[item.id] || { roles: [], users: [] };
+                          const hasRoleAccess = access.roles.some((r) => r.name === effectivePermissions_RoleName || r.label === effectivePermissions_RoleName);
+                          const hasUserAccess = access.users.some((u) => u._id === userProfile?._id);
+                          const hasPlanAccess = canAccessReportByPlan(item);
+                          const canGenerate = isAdmin || hasRoleAccess || hasUserAccess || hasPlanAccess;
+                          
+                          return (
+                            <tr key={item.id} className="hover:bg-gray-50 border-t border-gray-200">
+                              {/* Group Column cell: Rendered only on the first row with rowSpan if expanded */}
+                              {index === 0 && (
+                                <td 
+                                  rowSpan={isExpanded ? groupItems.length : 1}
+                                  className="px-6 py-4 text-sm text-gray-900 border-r border-gray-200 align-top bg-blue-50/30 cursor-pointer"
+                                  onClick={() => toggleGroupExpansion(groupKey)}
+                                >
+                                  <div className="flex items-start gap-2 pt-1 border border-b border-t-0 border-l-0 border-r-0 border-transparent">
+                                    {isExpanded ? (
+                                      <Play className="w-4 h-4 text-custom-blue rotate-90 transition-transform mt-0.5" />
+                                    ) : (
+                                      <Play className="w-4 h-4 text-gray-400 transition-transform mt-0.5 hover:text-custom-blue" />
+                                    )}
+                                    <div className="flex flex-col">
+                                      <span className="font-semibold text-custom-blue">
+                                          {capitalizeFirstLetter(groupKey)}
+                                      </span>
+                                      <span className="text-xs text-gray-500 mt-1">
+                                          {groupItems.length} items
+                                      </span>
+                                    </div>
+                                  </div>
+                                </td>
+                              )}
+
+                              {/* Rest of the columns */}
+                              {propColumns.map((col) => {
+                                if (col.key === groupByColumn) return null; // Already rendered on the left
+                                
+                                let value = item[col.key];
+                                if (col.key === "createdAt") value = formatDateTime(value);
+                                if (col.key === "description") value = value?.length > 80 ? value.substring(0, 80) + "..." : value;
+                                let displayValue;
+                                if (col.key === "status") displayValue = <StatusBadge status={capitalizeFirstLetter(item[col.key])} />;
+                                else if (col.render) displayValue = col.render(value, item);
+                                else displayValue = value != null ? value : "-";
+                                return (
+                                  <td key={col.key} title={col.key === "description" ? value : ""} className={`px-6 py-4 text-sm ${col.key === "description" ? "text-gray-600 max-w-xs truncate" : "text-gray-900"}`}>
+                                    {displayValue}
+                                  </td>
+                                );
+                              })}
+                              {type === "templates" && (
+                                <td className="px-6 py-4 text-right relative">
+                                  <button ref={(el) => (item.buttonRef = el)} onClick={() => handleMenuOpen(item.id)} className="p-2 rounded-md hover:bg-gray-100 transition report-menu-btn">
+                                    <MoreHorizontal className="w-5 h-5 text-gray-600" />
+                                  </button>
+                                  {openMenuId === item.id && (
+                                    <div className="report-popup-menu fixed z-[9999] w-40 bg-white shadow-lg rounded-lg border border-gray-200" style={{ top: popupCoords.y, left: popupCoords.x }}>
+                                      {canGenerate ? (
+                                        <button onClick={() => { onGenerate(item); setOpenMenuId(null); }} className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-custom-blue hover:bg-custom-blue/10 transition-all">
+                                          <Play className="w-4 h-4" />{loadingId === item.id ? "Generating..." : "Generate"}
+                                        </button>
+                                      ) : (
+                                        <button className="flex items-center gap-2 w-full px-4 py-2 text-left text-sm text-amber-600 hover:bg-amber-500/10 transition-all">
+                                          <Crown className="w-4 h-4 text-amber-600" />Go Premier
+                                        </button>
+                                      )}
+                                      <button onClick={() => { onShare?.(item); setOpenMenuId(null); }} className="w-full px-4 py-2 text-left text-custom-blue text-sm hover:bg-custom-blue/10 flex items-center gap-2">
+                                        <Share2 className="w-4 h-4" />Share
+                                      </button>
+                                    </div>
+                                  )}
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </React.Fragment>
+                    );
+                  })
+              ) : data.map((item) => {
                 // Get access for this specific report
                 const access = accessMap[item.id] || { roles: [], users: [] };
 
@@ -1050,6 +1232,13 @@ const ReportsTable = ({
                   </tr>
                 );
               })}
+              {groupedData && Object.keys(groupedData).length === 0 && data.length === 0 && (
+                <tr>
+                    <td colSpan={propColumns.length + (type === "templates" ? 1 : 0)} className="text-center py-12 text-gray-500">
+                        No reports available
+                    </td>
+                </tr>
+              )}
             </tbody>
           </table>
 

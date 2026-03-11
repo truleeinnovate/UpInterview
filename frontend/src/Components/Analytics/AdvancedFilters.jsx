@@ -1356,13 +1356,12 @@ const AdvancedFilters = ({
   availableFields = [],
   initialFilters = {},
   onFiltersChange,
+  onResetDefault,
 }) => {
   const [localFilters, setLocalFilters] = useState({});
 
   useEffect(() => {
-    if (Object.keys(initialFilters).length > 0) {
-      setLocalFilters(initialFilters);
-    }
+    setLocalFilters(initialFilters || {});
   }, [initialFilters]);
 
   const handleFilterChange = useCallback((key, value) => {
@@ -1407,12 +1406,22 @@ const AdvancedFilters = ({
             </span>
           )}
         </div>
-        <button
-          onClick={applyFilters}
-          className="px-5 py-2 bg-custom-blue text-white font-medium rounded-lg hover:bg-custom-blue/90 transition"
-        >
-          Apply Filters
-        </button>
+        <div className="flex items-center gap-3">
+          {onResetDefault && (
+            <button
+              onClick={onResetDefault}
+              className="px-5 py-2 text-custom-blue font-medium rounded-lg hover:bg-custom-blue/5 transition"
+            >
+              Reset to Default
+            </button>
+          )}
+          <button
+            onClick={applyFilters}
+            className="px-5 py-2 bg-custom-blue text-white font-medium rounded-lg hover:bg-custom-blue/90 transition"
+          >
+            Apply Filters
+          </button>
+        </div>
       </div>
 
       {/* Filters Grid */}
