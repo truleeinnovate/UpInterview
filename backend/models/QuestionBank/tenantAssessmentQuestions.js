@@ -12,6 +12,7 @@ const TenantAssessmentQuestionsSchema = new mongoose.Schema(
     isCustom: { type: Boolean, default: false },
     questionText: String,
     category: { type: String }, // NEW FIELD from JSON
+    area: String,
     questionType: String,
     technology: [String],
     skill: [String],

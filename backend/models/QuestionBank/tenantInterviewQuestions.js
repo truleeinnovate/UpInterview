@@ -7,6 +7,7 @@ const TenantInterviewQuestionsSchema = new mongoose.Schema({
     questionText: String,
     questionType: String,
     category: { type: String }, // NEW FIELD from JSON
+    area: String,
     technology: [String],
     skill: [String],
     tags: [String],

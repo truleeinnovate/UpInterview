@@ -219,6 +219,9 @@ const QuestionBankForm = ({
     .filter((opt) => opt.status === "Active")
     .map((opt) => ({ value: opt.CategoryName, label: opt.CategoryName }));
 
+  const areaOptions = ["Administration", "Development", "Architecture", "Integration"];
+  const areaOptionsRS = areaOptions.map((a) => ({ value: a, label: a }));
+
   const [questionNumber, setQuestionNumber] = useState(1);
   const [formData, setFormData] = useState({
     questionText: "",
@@ -228,11 +231,13 @@ const QuestionBankForm = ({
         : "", //<----v1.0.7------
     skill: "",
     category: "",
+    area: "",
     difficultyLevel: "",
     correctAnswer: "",
     options: [],
     tenantListId: [],
     hints: "",
+    tags: [],
     // minexperience: "",
     // maxexperience: "",
   });
@@ -258,6 +263,9 @@ const QuestionBankForm = ({
       : "", //<----v1.0.7------
   );
   const [selectedCategory, setSelectedCategory] = useState([]);
+  const [selectedArea, setSelectedArea] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState([]);
   const [showDropdownQuestionType, setShowDropdownQuestionType] =
     useState(false);
   const [showMcqFields, setShowMcqFields] = useState(false);
@@ -483,6 +491,9 @@ const QuestionBankForm = ({
       setHintContent(question.hints || "");
       setSelectedSkill(question.skill || "");
       setSelectedCategory(question.category || "");
+      setSelectedArea(question.area || "");
+      setTags(question.tags || []);
+      setFormData(prev => ({ ...prev, area: question.area || "", tags: question.tags || [] }));
       setSelectedQuestionType(question.questionType || "");
       setSelectedDifficultyLevel(question.difficultyLevel || "");
       // setMcqOptions(
@@ -567,18 +578,23 @@ const QuestionBankForm = ({
           : "", //<----v1.0.7------
       skill: "",
       category: "",
+      area: "",
       difficultyLevel: "",
       score: "",
       correctAnswer: "",
       options: [],
       //tenantListId: [],
       hints: "",
+      tags: [],
       // minexperience: "",
       // maxexperience: "",
     });
 
     setSelectedSkill("");
     setSelectedCategory("");
+    setSelectedArea("");
+    setTags([]);
+    setTagInput("");
     setSelectedQuestionType(
       isInterviewType && dropdownValue !== "Assessment Questions"
         ? "Interview Questions"
@@ -762,8 +778,9 @@ const QuestionBankForm = ({
       questionType: selectedQuestionType,
       skill: selectedSkill,
       category: formData.category,
-      tags: selectedSkill,
+      tags: tags,
       hints: hintContent || null,
+      area: selectedArea || null,
       createdBy: userId,
       updatedBy: userId,
       ownerId: userId,
@@ -924,6 +941,8 @@ const QuestionBankForm = ({
             correctAnswer: formData.correctAnswer,
             questionType: formData.questionType,
             category: formData.category,
+            area: selectedArea || null,
+            tags: tags || [],
             score: Number(formData.score),
             isInterviewQuestionType: dropdownValue === "Interview Questions",
           },
@@ -1189,6 +1208,30 @@ const QuestionBankForm = ({
       ...prevErrors,
       category: "",
     }));
+  };
+
+  const handleAreaSelect = (value) => {
+    setSelectedArea(value);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      area: value,
+    }));
+  };
+
+  const handleAddTag = (tagValue) => {
+    const trimmed = tagValue.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      const newTags = [...tags, trimmed];
+      setTags(newTags);
+      setFormData((prev) => ({ ...prev, tags: newTags }));
+    }
+    setTagInput("");
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    const newTags = tags.filter((t) => t !== tagToRemove);
+    setTags(newTags);
+    setFormData((prev) => ({ ...prev, tags: newTags }));
   };
 
   const handleAssIntSelect = (value) => {
@@ -1633,6 +1676,17 @@ const QuestionBankForm = ({
                     required
                     onMenuOpen={loadCategory}
                     loading={isCategoryFetching}
+                  />
+                </div>
+
+                {/* Area */}
+                <div className="flex flex-col gap-1 mb-4">
+                  <DropdownWithSearchField
+                    value={selectedArea}
+                    options={areaOptionsRS}
+                    onChange={(e) => handleAreaSelect(e.target.value)}
+                    label="Area"
+                    name="area"
                   />
                 </div>
 
@@ -2346,6 +2400,52 @@ const QuestionBankForm = ({
                         {hintContent.length}/{hintCharLimit}
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div className="flex flex-col gap-1 mb-4">
+                  <div>
+                    <label
+                      htmlFor="Tags"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Tags
+                    </label>
+                  </div>
+                  <div className="flex-grow relative">
+                    <input
+                      type="text"
+                      name="Tags"
+                      id="Tags"
+                      placeholder="Type a tag and press Enter"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddTag(tagInput);
+                        }
+                      }}
+                      className="w-full px-3 py-2 border sm:text-sm rounded-md border-gray-300"
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    {tags.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1 bg-custom-blue/10 text-custom-blue border border-custom-blue/20 px-3 py-1 rounded-full text-sm font-medium"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tag)}
+                          className="ml-1 text-custom-blue hover:text-red-500 transition-colors"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>

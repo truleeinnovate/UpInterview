@@ -11,6 +11,7 @@ const suggestedQuestionSchema = new mongoose.Schema(
     skill: [String],
     tags: [String],
     difficultyLevel: String,
+    area: String,
     correctAnswer: String,
     options: [String],
     hints: [String],

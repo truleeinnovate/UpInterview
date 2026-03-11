@@ -81,19 +81,13 @@ const FilterDropdown = ({ label, options, selectedItems, onChange, isRadio }) =>
       </div>
 
       {isOpen && (
-        <div className="absolute z-[100] w-full min-w-[200px] mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto custom-scrollbar">
-          <ul className="py-1">
+        <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto custom-scrollbar">
+          <ul className="py-1 flex flex-col gap-1">
             <li
-              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+              className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors rounded-sm mx-1 ${selectedItems.length === 0 ? 'bg-custom-blue text-white' : 'hover:bg-gray-50 text-gray-700'}`}
               onClick={() => { onChange([]); setIsOpen(false); }}
             >
-              <input
-                type={isRadio ? "radio" : "checkbox"}
-                checked={selectedItems.length === 0}
-                className="w-4 h-4 rounded cursor-pointer accent-custom-blue min-w-[16px]"
-                readOnly
-              />
-              <span className="text-sm text-gray-700 whitespace-nowrap">All</span>
+              <span className="text-sm whitespace-nowrap">All</span>
             </li>
             {options.map((opt, idx) => {
               const valString = String(opt.value || opt.type || opt.level).toLowerCase();
@@ -103,7 +97,7 @@ const FilterDropdown = ({ label, options, selectedItems, onChange, isRadio }) =>
               return (
                 <li
                   key={idx}
-                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors rounded-sm mx-1 ${isChecked ? 'bg-custom-blue text-white' : 'hover:bg-gray-50 text-gray-700'}`}
                   onClick={(e) => {
                     if (isRadio) {
                       onChange([valString]);
@@ -116,13 +110,7 @@ const FilterDropdown = ({ label, options, selectedItems, onChange, isRadio }) =>
                     }
                   }}
                 >
-                  <input
-                    type={isRadio ? "radio" : "checkbox"}
-                    checked={isChecked}
-                    className="w-4 h-4 rounded cursor-pointer accent-custom-blue min-w-[16px]"
-                    readOnly
-                  />
-                  <span className="text-sm text-gray-700 whitespace-nowrap">{displayString}</span>
+                  <span className="text-sm whitespace-nowrap">{displayString}</span>
                 </li>
               )
             })}
@@ -158,6 +146,9 @@ function QuestionHeaderBar({
   setIsPopupOpen,
   createdLists,
   selectedLabelId,
+  searchInput,
+  setSearchInput,
+  onAddSearchTag,
 }) {
   return (
     <div
@@ -286,6 +277,29 @@ function QuestionHeaderBar({
 
       {/* Search & Pagination Section */}
       <div className="flex items-center gap-3">
+        {/* Search Bar */}
+        <div className="relative flex items-center rounded-md border border-gray-300 bg-white hover:border-custom-blue transition-colors">
+          <span className="p-[7px] text-custom-blue flex-shrink-0">
+            <Search className="w-4 h-4" />
+          </span>
+          <input
+            type="search"
+            placeholder="Search questions, tags..."
+            className="w-54 px-2 py-2 pl-0 rounded-md focus:outline-none text-sm text-gray-700 bg-transparent"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && searchInput.trim()) {
+                e.preventDefault();
+                if (typeof onAddSearchTag === "function") {
+                  onAddSearchTag(searchInput.trim());
+                }
+                setSearchInput("");
+              }
+            }}
+          />
+        </div>
+
         {/* v1.0.9 <-------------------------------------------------------------------------------------------- */}
         {/* v2.0.1 <-------------------------------------------------------------------------------------------- */}
         <div className="flex items-center flex-nowrap whitespace-nowrap sm:w-[120px] md:w-[120px] lg:w-[120px] xl:w-[120px] 2xl:w-[120px]">
@@ -481,7 +495,7 @@ const MyQuestionsList = ({
   const [searchInput, setSearchInput] = useState("");
   const [tempSearchInput, setTempSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
@@ -518,6 +532,30 @@ const MyQuestionsList = ({
     },
     {
       id: 2,
+      filterType: "Category",
+      isOpen: false,
+      options: [],
+    },
+    {
+      id: 3,
+      filterType: "Area",
+      isOpen: false,
+      options: [],
+    },
+    {
+      id: 4,
+      filterType: "Technology",
+      isOpen: false,
+      options: [],
+    },
+    {
+      id: 5,
+      filterType: "Question Type",
+      isOpen: false,
+      options: [],
+    },
+    {
+      id: 6,
       filterType: "Difficulty Level",
       isOpen: false,
       options: [
@@ -541,6 +579,7 @@ const MyQuestionsList = ({
   const [selectedQTypeFilterItems, setSelectedQTypeFilterItems] = useState([]);
   const [selectedCategoryFilterItems, setSelectedCategoryFilterItems] =
     useState([]);
+  const [selectedAreaFilterItems, setSelectedAreaFilterItems] = useState([]);
 
   // Ranjith added these feilds //  v1.0.5
   // Add these state variables after the existing state declarations
@@ -843,6 +882,15 @@ const MyQuestionsList = ({
       ),
     );
 
+    const uniqueAreas = Array.from(
+      new Set(
+        allQuestions
+          .map((q) => q?.area)
+          .filter(Boolean)
+          .map((a) => String(a).trim()),
+      ),
+    );
+
     setFiltrationData((prev) => {
       const findChecked = (section, val) => {
         if (!section || !Array.isArray(section.options)) return false;
@@ -852,16 +900,22 @@ const MyQuestionsList = ({
         return found ? !!found.isChecked : false;
       };
 
+      const getPrevChecked = (section) => section && Array.isArray(section.options) ? section.options.filter(o => o.isChecked).map(o => o.value || o.type || o.level) : [];
+
       const techSection = prev.find((s) => s.filterType === "Technology");
       const qTypeSection = prev.find((s) => s.filterType === "Question Type");
       const categorySection = prev.find((s) => s.filterType === "Category");
+      const areaSection = prev.find((s) => s.filterType === "Area");
 
-      const techOptions = uniqueTechnologies.map((t) => ({
+      const combinedTechs = Array.from(new Set([...uniqueTechnologies, ...getPrevChecked(techSection)]));
+      const techOptions = combinedTechs.map((t) => ({
         value: t,
         isChecked: findChecked(techSection, t),
       }));
+
       // When viewing Assessment Questions, hide any 'Interview Questions' value from the Question Type options
-      const filteredQTypes = uniqueQTypes.filter((t) => {
+      const combinedQTypes = Array.from(new Set([...uniqueQTypes, ...getPrevChecked(qTypeSection)]));
+      const filteredQTypes = combinedQTypes.filter((t) => {
         const name = String(t || "").toLowerCase();
         if (
           String(dropdownValue || "")
@@ -876,12 +930,19 @@ const MyQuestionsList = ({
         value: t,
         isChecked: findChecked(qTypeSection, t),
       }));
-      const categoryOptions = uniqueCategories.map((c) => ({
+
+      const combinedCategories = Array.from(new Set([...uniqueCategories, ...getPrevChecked(categorySection)]));
+      const categoryOptions = combinedCategories.map((c) => ({
         value: c,
         isChecked: findChecked(categorySection, c),
       }));
 
-      let nextId = prev.reduce((max, s) => Math.max(max, s.id), 0) + 1;
+      const combinedAreas = Array.from(new Set([...uniqueAreas, ...getPrevChecked(areaSection)]));
+      const areaOptions = combinedAreas.map((a) => ({
+        value: a,
+        isChecked: findChecked(areaSection, a),
+      }));
+
       let updated = prev.map((s) => {
         if (s.filterType === "Technology")
           return { ...s, options: techOptions };
@@ -889,42 +950,11 @@ const MyQuestionsList = ({
           return { ...s, options: qTypeOptions };
         if (s.filterType === "Category")
           return { ...s, options: categoryOptions };
+        if (s.filterType === "Area")
+          return { ...s, options: areaOptions };
         return s;
       });
 
-      if (!techSection) {
-        updated = [
-          ...updated,
-          {
-            id: nextId++,
-            filterType: "Technology",
-            isOpen: false,
-            options: techOptions,
-          },
-        ];
-      }
-      if (!qTypeSection) {
-        updated = [
-          ...updated,
-          {
-            id: nextId++,
-            filterType: "Question Type",
-            isOpen: false,
-            options: qTypeOptions,
-          },
-        ];
-      }
-      if (!categorySection) {
-        updated = [
-          ...updated,
-          {
-            id: nextId++,
-            filterType: "Category",
-            isOpen: false,
-            options: categoryOptions,
-          },
-        ];
-      }
       return updated;
     });
   }, [myQuestionsList, dropdownValue]);
@@ -1362,18 +1392,25 @@ const MyQuestionsList = ({
     )
       .filter((o) => o.isChecked)
       .map((o) => String(o.value || o.type || o.level || "").toLowerCase());
+    const areaItems = (
+      tempFiltrationData.find((f) => f.filterType === "Area")?.options ?? []
+    )
+      .filter((o) => o.isChecked)
+      .map((o) => String(o.value || o.type || o.level || "").toLowerCase());
 
     setSelectedQuestionTypeFilterItems(questionTypeItems);
     setSelectedDifficultyLevelFilterItems(difficultyItems);
     setSelectedTechnologyFilterItems(technologyItems);
     setSelectedQTypeFilterItems(qTypeItems);
     setSelectedCategoryFilterItems(categoryItems);
+    setSelectedAreaFilterItems(areaItems);
 
     // Apply filters to server-side query
     setAppliedFilters({
       difficultyLevel: difficultyItems,
       technology: technologyItems,
       category: categoryItems,
+      area: areaItems,
       questionType: qTypeItems,
       questionFrom: questionTypeItems,
     });
@@ -1398,12 +1435,14 @@ const MyQuestionsList = ({
     setSelectedTechnologyFilterItems([]);
     setSelectedQTypeFilterItems([]);
     setSelectedCategoryFilterItems([]);
+    setSelectedAreaFilterItems([]);
 
     // Clear server-side filters
     setAppliedFilters({
       difficultyLevel: [],
       technology: [],
       category: [],
+      area: [],
       questionType: [],
       questionFrom: [],
     });
@@ -1637,13 +1676,78 @@ const MyQuestionsList = ({
             setIsPopupOpen={setIsPopupOpen}
             createdLists={createdLists}
             selectedLabelId={selectedLabelId}
+            searchInput={tempSearchInput}
+            setSearchInput={setTempSearchInput}
+            onAddSearchTag={handleAddSearchTag}
           />
         </div>
         {/* v1.0.6 ----------------------------------------------------------------> */}
 
+        {/* Active Filters - Shown outside when filter card is CLOSED */}
+        {!isPopupOpen && (
+          [...appliedSearchTags,
+          ...selectedQuestionTypeFilterItems,
+          ...selectedDifficultyLevelFilterItems,
+          ...selectedTechnologyFilterItems,
+          ...selectedQTypeFilterItems,
+          ...selectedCategoryFilterItems,
+          ...selectedAreaFilterItems,
+          ].length > 0 || filtrationData.some(section => section.options?.some(o => o.isChecked))
+        ) && (
+            <div className="flex flex-wrap items-center gap-2 px-6 py-2 flex-shrink-0">
+              {appliedSearchTags.map((tag, index) => (
+                <div
+                  key={`search-${index}`}
+                  className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+                >
+                  <span className="font-medium">Search:</span> {tag}
+                  <X
+                    className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                    onClick={() => onClickRemoveSearchChip(tag)}
+                  />
+                </div>
+              ))}
+              {filtrationData.flatMap(section =>
+                section.options?.filter(o => o.isChecked).map((o, idx) => (
+                  <div key={`${section.id}-${idx}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                    <span className="font-medium">{section.filterType}:</span> {capitalizeFirstLetter(String(o.type || o.value || o.level || ""))}
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                      onClick={() => {
+                        const val = String(o.type || o.value || o.level || "").toLowerCase();
+                        setFiltrationData(prev => prev.map(filter => {
+                          if (filter.id === section.id) {
+                            return {
+                              ...filter,
+                              options: filter.options.map(opt =>
+                                opt === o ? { ...opt, isChecked: false } : opt
+                              )
+                            };
+                          }
+                          return filter;
+                        }));
+                        setTempFiltrationData(prev => prev.map(filter => {
+                          if (filter.id === section.id) {
+                            return {
+                              ...filter,
+                              options: filter.options.map(opt =>
+                                opt === o ? { ...opt, isChecked: false } : opt
+                              )
+                            };
+                          }
+                          return filter;
+                        }));
+                      }}
+                    />
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
         {/* Inline Filters Section */}
         {isPopupOpen && (
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm transition-shadow px-7 py-4 mx-4 mt-2 mb-4 z-10 relative flex-shrink-0">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm transition-shadow px-7 py-4 mx-4 mt-1 mb-4 z-10 relative flex-shrink-0">
             {/* Arrow pointing to filter icon */}
             <div
               className="absolute -top-2 right-[14px]"
@@ -1687,29 +1791,8 @@ const MyQuestionsList = ({
             </div>
 
             <div className="flex flex-col gap-5">
-              {/* Row 1: Search and Dropdowns */}
+              {/* Row 1: Filter Dropdowns (no search bar) */}
               <div className="flex flex-wrap items-center gap-4">
-                {/* Search Bar */}
-                <div className="relative flex items-center rounded-md border border-gray-300 bg-white w-64 hover:border-custom-blue transition-colors">
-                  <span className="p-[9px] text-custom-blue flex-shrink-0">
-                    <Search className="w-4 h-4" />
-                  </span>
-                  <input
-                    type="search"
-                    placeholder="Search by Tags, Questions..."
-                    className="flex-1 p-[7px] pl-0 rounded-md focus:outline-none text-sm text-gray-700 bg-transparent min-w-[150px]"
-                    value={tempSearchInput}
-                    onChange={(e) => setTempSearchInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && tempSearchInput.trim()) {
-                        e.preventDefault();
-                        handleAddSearchTag(tempSearchInput.trim());
-                        setTempSearchInput("");
-                      }
-                    }}
-                  />
-                </div>
-
                 {/* Render FilterDropdowns */}
                 {tempFiltrationData.map((section) => {
                   if (!section.options) return null;
@@ -1718,7 +1801,7 @@ const MyQuestionsList = ({
                     .filter(o => o.isChecked)
                     .map(o => String(o.type || o.value || o.level || "").toLowerCase());
 
-                  let isRadio = section.id === 2 || section.id === 3; // Based on previous usage
+                  let isRadio = section.id === 2 || section.id === 3 || section.id === 6; // Category, Area, Difficulty = single-select
 
                   const handleDropdownChange = (newItems) => {
                     setTempFiltrationData(prev => prev.map(filter => {
@@ -1893,13 +1976,13 @@ const MyQuestionsList = ({
                   {Object.entries(groupedQuestions).map(
                     ([listName, items]) =>
                       selectedLabel === listName && (
-                        <div key={listName} className="mt-2 flex-1 min-h-0 overflow-y-auto">
+                        <div key={listName} className="mt-2 flex-1 min-h-0 overflow-y-auto" onScroll={() => { if (isPopupOpen) setIsPopupOpen(false); }}>
                           {isOpen[listName] && items.length > 0 && (
                             <div
                               className="flex flex-col pb-8 px-4"
                             >
                               {paginatedItems.map((question, index) => (
-                                <div className="flex w-full items-center">
+                                <div key={question._id || index} className="flex w-full items-center">
                                   {showCheckboxes && (
                                     <div className="left-3 top-3 mr-2">
                                       <label className="inline-flex items-center cursor-pointer">
@@ -1955,7 +2038,6 @@ const MyQuestionsList = ({
                                   )} */}
 
                                   <div
-                                    key={index}
                                     className="border w-full border-gray-300 mb-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
                                   >
                                     <div className="flex flex-col p-4 border-b border-gray-300">
