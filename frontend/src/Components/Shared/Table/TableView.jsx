@@ -408,7 +408,7 @@ const TableView = ({
                     </tr>
                   )}
                   {/* Show end of list when no more data and not initially loading */}
-                  {!hasMore && !delayedLoading && data.length > 0 && (
+                  {!hasMore && !delayedLoading && data.length > 10 && (
                     <tr className="bg-transparent">
                       <td colSpan={totalColumns} className="px-3 py-8 text-center border-t-0">
                         <div className="flex items-center justify-center space-x-2 text-gray-400">
