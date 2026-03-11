@@ -282,13 +282,13 @@ const reportTemplateSchema = new Schema({
 
       columns: {
         lockedColumns: [{
-          key: String, label: String, order: Number, width: { type: String, default: "200px" }
+          key: String, label: String, order: Number, width: { type: String, default: "200px" }, groupable: { type: Boolean, default: false }
         }],
         default: [{
-          key: String, label: String, order: Number, width: { type: String, default: "150px" }
+          key: String, label: String, order: Number, width: { type: String, default: "150px" }, groupable: { type: Boolean, default: false }
         }],
         available: [{
-          key: String, label: String, type: { type: String, enum: ["text", "number", "date", "status", "user", "tag"] }
+          key: String, label: String, type: { type: String, enum: ["text", "number", "date", "status", "user", "tag"] }, groupable: { type: Boolean, default: false }
         }]
       },
 

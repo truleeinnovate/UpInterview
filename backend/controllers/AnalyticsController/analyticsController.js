@@ -150,17 +150,25 @@ const generateReport = async (req, res) => {
     }
 
     finalColumns.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
-    const responseColumns = finalColumns.map(({ order, ...rest }) => rest);
+    const responseColumns = finalColumns.map(({ order, ...rest }) => {
+      const allCols = [...(columnConfig?.lockedColumns || []), ...(columnConfig?.default || []), ...(columnConfig?.available || [])];
+      const tCol = allCols.find(c => c.key === rest.key);
+      return { ...rest, groupable: tCol?.groupable || false };
+    });
 
     // 5. AVAILABLE COLUMNS
     const availableColumns = [
-      ...lockedColumns.map((col) => ({
-        key: col.key,
-        label: col.label,
-        type: columnConfig?.available?.find((a) => a.key === col.key)?.type || "text",
-        locked: true,
-        selected: true,
-      })),
+      ...lockedColumns.map((col) => {
+        const tCol = columnConfig?.lockedColumns?.find(c => c.key === col.key);
+        return {
+          key: col.key,
+          label: col.label,
+          type: columnConfig?.available?.find((a) => a.key === col.key)?.type || "text",
+          locked: true,
+          selected: true,
+          groupable: tCol?.groupable || false,
+        };
+      }),
       ...(columnConfig?.available || []).map((col) => {
         const isVisible = responseColumns.some((c) => c.key === col.key && c.visible);
         return {
@@ -169,6 +177,7 @@ const generateReport = async (req, res) => {
           type: col.type || "text",
           locked: false,
           selected: isVisible,
+          groupable: col.groupable || false,
         };
       }),
     ];
@@ -374,13 +383,29 @@ const generateReport = async (req, res) => {
       const regularRounds = await InterviewRounds.find({ interviewId: { $in: regularIds } }, { _id: 1 }).lean();
       const roundIds = regularRounds.map(r => r._id);
 
+      let orClauses = [];
+      if (roundIds.length > 0) {
+        orClauses.push({ interviewRoundId: { $in: roundIds }, status: "submitted" });
+      }
+
+      if (finalQuery && Object.keys(finalQuery).length > 0) {
+        orClauses.push({ ...finalQuery });
+      }
+
+      const roleType = res.locals.effectivePermissions_RoleType;
+      const roleName = res.locals.effectivePermissions_RoleName;
+      if (
+        roleType === "individual" ||
+        (roleType === "organization" && roleName !== "Admin")
+      ) {
+        orClauses.push({ ownerId: actingAsUserId });
+      }
+
+      let baseQuery = orClauses.length > 0 ? { $or: orClauses } : {};
+      baseQuery.isMockInterview = { $ne: true };
+
       rawData = await FeedbackModel.find(
-        {
-          $or: [
-            { interviewRoundId: { $in: roundIds } },
-            finalQuery
-          ]
-        },
+        baseQuery,
         projection
       )
         .populate("candidateId", "FirstName LastName Email")
@@ -400,19 +425,28 @@ const generateReport = async (req, res) => {
         .populate("interviewerId", "firstName lastName")
         .lean();
 
-      rawData = rawData.map(fb => ({
-        ...fb,
-        candidateName: fb.candidateId ? `${fb.candidateId.FirstName || ''} ${fb.candidateId.LastName || ''}`.trim() : 'Unknown',
-        positionTitle: fb.positionId?.title || 'Unknown',
-        companyName: fb.positionId?.companyname?.name || '—',
-        roundTitle: fb.interviewRoundId?.roundTitle || 'Unknown',
-        interviewerName: fb.interviewerId ? `${fb.interviewerId.firstName || ''} ${fb.interviewerId.lastName || ''}`.trim() : 'Unknown',
-        overallRating: fb.overallImpression?.overallRating || 0,
-        recommendation: fb.overallImpression?.recommendation || 'Maybe',
-        interviewType: fb.interviewRoundId?.interviewId?.interviewType || 'Unknown',
-        interviewCode: fb.interviewRoundId?.interviewId?.interviewCode || '—',
-        interviewStatus: fb.interviewRoundId?.interviewId?.status || 'Unknown',
-      }));
+      rawData = rawData.map(fb => {
+        let formattedStatus = fb.status || 'Unknown';
+        if (formattedStatus && typeof formattedStatus === 'string') {
+          formattedStatus = formattedStatus.replace(/([A-Z])/g, ' $1').trim();
+          formattedStatus = formattedStatus.charAt(0).toUpperCase() + formattedStatus.slice(1);
+        }
+
+        return {
+          ...fb,
+          candidateName: fb.candidateId ? `${fb.candidateId.FirstName || ''} ${fb.candidateId.LastName || ''}`.trim() : 'Unknown',
+          positionTitle: fb.positionId?.title || 'Unknown',
+          companyName: fb.positionId?.companyname?.name || '—',
+          roundTitle: fb.interviewRoundId?.roundTitle || 'Unknown',
+          interviewerName: fb.interviewerId ? `${fb.interviewerId.firstName || ''} ${fb.interviewerId.lastName || ''}`.trim() : 'Unknown',
+          overallRating: fb.overallImpression?.overallRating || 0,
+          recommendation: fb.overallImpression?.recommendation || 'Maybe',
+          interviewType: fb.interviewRoundId?.interviewId?.interviewType || 'Unknown',
+          interviewCode: fb.interviewRoundId?.interviewId?.interviewCode || '—',
+          interviewStatus: fb.interviewRoundId?.interviewId?.status || 'Unknown',
+          status: formattedStatus,
+        };
+      });
 
     }
     else if (collectionName === "scheduledassessments") {
@@ -502,6 +536,36 @@ const generateReport = async (req, res) => {
         ).map(([name, value]) => ({ name, value })),
       };
     }
+    else if (collectionName === "interviews" || collectionName === "interviewrounds") {
+      const interviewData = mappedData;
+      aggregates = {
+        totalInterviews: interviewData.length,
+        totalRounds: interviewData.length,
+        completedInterviews: interviewData.filter(d => (d.status || d.parentStatus)?.toLowerCase() === "completed").length,
+        completedCount: interviewData.filter(d => (d.status || d.parentStatus)?.toLowerCase() === "completed").length,
+        scheduledInterviews: interviewData.filter(d => (d.status || d.parentStatus)?.toLowerCase() === "scheduled").length,
+        noShowCount: interviewData.filter(d => (d.status || d.parentStatus)?.toLowerCase() === "no-show").length,
+        cancelledInterviews: interviewData.filter(d => ["cancelled", "no-show"].includes((d.status || d.parentStatus)?.toLowerCase())).length,
+        internalCount: interviewData.filter(d => (d.interviewerType || d.type)?.toLowerCase() === "internal").length,
+      };
+
+      chartData = {
+        interviewsByStatus: Object.entries(
+          mappedData.reduce((m, d) => {
+            const st = d.status || d.parentStatus || "Unknown";
+            m[st] = (m[st] || 0) + 1;
+            return m;
+          }, {})
+        ).map(([name, value]) => ({ name, value })),
+        interviewsByMonth: Object.entries(
+          mappedData.reduce((m, d) => {
+            const month = new Date(d.createdAt).toLocaleString("default", { month: "short", year: "numeric" });
+            m[month] = (m[month] || 0) + 1;
+            return m;
+          }, {})
+        ).map(([name, value]) => ({ name, value })),
+      };
+    }
     else if (collectionName === "feedback") {
       const totalFeedback = mappedData.length;
       const ratings = mappedData.map(d => Number(d.overallRating) || 0).filter(r => r > 0);
@@ -568,6 +632,7 @@ const generateReport = async (req, res) => {
       defaultFilters: filterPreset?.filters?.length > 0
         ? Object.fromEntries(filterPreset.filters.map(f => [f.key, f.value]))
         : filterConfig?.default || {},
+      templateDefaultFilters: filterConfig?.default || {},
       kpis: templateKpis,
       charts: templateCharts,
       aggregates,

@@ -660,6 +660,7 @@ const ReportDetail = () => {
   const [kpis, setKpis] = useState([]); // KPI config
   const [charts, setCharts] = useState([]); // Chart config
   const [isLoading, setIsLoading] = useState(false);
+  const [templateDefaultFilters, setTemplateDefaultFilters] = useState({}); // Original template defaults
 
   const [reportMeta, setReportMeta] = useState({
     title: "",
@@ -871,6 +872,7 @@ const ReportDetail = () => {
         report = {},
         availableFilters: apiAvailableFilters = [],
         defaultFilters = {},
+        templateDefaultFilters: apiTemplateDefaultFilters = {},
         aggregates = {},
         chartData: apiChartData = {},
         kpis: apiKpis = [],
@@ -910,7 +912,9 @@ const ReportDetail = () => {
       });
 
       setAvailableFilters(apiAvailableFilters);
-      setFilters(Object.keys(defaultFilters).length > 0 ? defaultFilters : {});
+      const initialFilters = Object.keys(defaultFilters).length > 0 ? defaultFilters : {};
+      setFilters(initialFilters);
+      setTemplateDefaultFilters(apiTemplateDefaultFilters); // Save original template defaults for reset
       setAggregates(aggregates);
       setChartData(apiChartData);
       setKpis(apiKpis);
@@ -1019,6 +1023,12 @@ const ReportDetail = () => {
   const handleApplyFilters = (updatedFilters) => {
     setFilters(updatedFilters);
     handleSaveFilters(updatedFilters); // ← save immediately
+  };
+
+  const handleResetFilters = () => {
+    setFilters(templateDefaultFilters);
+    handleSaveFilters(templateDefaultFilters);
+    notify.info("Filters reset to template defaults");
   };
 
   // Helper to get visible columns and clean data
@@ -1221,6 +1231,7 @@ const ReportDetail = () => {
       <AdvancedFilters
         // onFiltersChange={setFilters}
         onFiltersChange={handleApplyFilters}
+        onResetDefault={handleResetFilters}
         initialFilters={filters}
         availableFields={availableFilters}
         showAdvancedFilters={false}
