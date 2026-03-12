@@ -1,5 +1,4 @@
-// src/apiHooks/useSupportTickets.js
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../config";
 import { toast } from "react-toastify";
@@ -62,7 +61,6 @@ axios.defaults.withCredentials = true;
 
 export const useSupportTickets = (filters = {}) => {
   const queryClient = useQueryClient();
-  // const { userRole } = useCustomContext(); // “SuperAdmin”, “Admin”, “Individual”, …
   const impersonationToken = Cookies.get("impersonationToken");
   const impersonationPayload = impersonationToken
     ? decodeJwt(impersonationToken)
@@ -73,128 +71,76 @@ export const useSupportTickets = (filters = {}) => {
     impersonatedUser_roleName,
     effectivePermissions_RoleName,
   } = usePermissions();
-  const userRole = effectivePermissions_RoleName; //need to work on passing role dynamic -ashraf
+  const userRole = effectivePermissions_RoleName;
 
-  /* --------------------------------------------------------------------- */
-  /*  Auth token                                                            */
-  /* --------------------------------------------------------------------- */
   const authToken = Cookies.get("authToken") ?? "";
   const tokenPayload = authToken ? decodeJwt(authToken) : {};
 
   const userId = tokenPayload?.userId;
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
-  // const params = filters
-  const params = {
-    ...filters,
-    userId,
-    tenantId,
-    organization,
-    // userRole,
-    // impersonatedUser_roleName,
-  };
-
-  /* --------------------------------------------------------------------- */
-  /*  QUERY: fetch tickets                                                  */
-  /* --------------------------------------------------------------------- */
-  const fetchTickets = async () => {
-    try {
-      // const { data } = await axios.get(
-      //   `${config.REACT_APP_API_URL}/get-tickets`,
-      //   {params,
-      //    headers: { Authorization: `Bearer ${authToken}` }  // <------------------
-
-      // });
-
-      const { data } = await axios.get(
-        `${config.REACT_APP_API_URL}/get-tickets`,
-        {
-          params,
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-      return data;
-
-      // // const all = data?.tickets ?? [];
-      // const all = data?.tickets ?? [];
-      // const totalCount = data?.totalCount ?? 0;
-      // const page = data?.page ?? 1;
-      // const limit = data?.limit ?? 10;
-
-      // console.log("all---", all)
-      // console.log("data tickets---", data)
-      // console.log("impersonatedUser_roleName---", impersonatedUser_roleName)
-
-      // let filteredTickets = [];
-
-      // if (impersonatedUser_roleName === "Super_Admin" || impersonatedUser_roleName === "Support_Team") {
-      //   filteredTickets = all;
-      // } else if (!userRole) {
-      //   filteredTickets = [];
-      // } else if (!organization) {
-      //   if (userRole === "Admin" && userId) {
-      //     filteredTickets = all.filter((t) => t.ownerId === userId);
-      //   }
-      // } else {
-      //   if (userRole === "Admin" && tenantId) {
-      //     filteredTickets = all.filter((t) => t.tenantId === tenantId);
-      //   }
-      // }
-
-      // if (userRole === "Individual" && userId)
-      //   filteredTickets = all.filter((t) => t.ownerId === userId);
-
-      // return {
-      //   tickets: filteredTickets,
-      //   totalCount,
-      //   page,
-      //   limit,
-      // };
-
-      //       if (impersonatedUser_roleName === "Super_Admin" || impersonatedUser_roleName === "Support_Team") return all;
-      //       // if (impersonatedUser_roleName === "Support_Team") {
-      //       //      // console.log("Support_Team: impersonatedUserId", impersonationPayload.impersonatedUserId);
-      //       //       const supportTickets = all.filter((t) => t.assignedToId === impersonationPayload.impersonatedUserId);
-      //       //       //console.log("Support_Team: tickets", supportTickets);
-      //       //       return supportTickets;
-      //       //   }
-      //  filteredTickets = all;
-      //       // if (!userRole) return [];
-      //       if(!userRole){
-      //  filteredTickets = [];
-      //       }
-      //       if (!organization) {
-      //         if (userRole === "Admin" && userId)
-      //           return all.filter((t) => t.ownerId === userId);
-      //       } else {
-      //         if (userRole === "Admin" && tenantId)
-      //           return all.filter((t) => t.tenantId === tenantId);
-      //       }
-      //       if (userRole === "Individual" && userId)
-      //         return all.filter((t) => t.ownerId === userId);
-
-      //       return [];
-    } catch (err) {
-      console.error("[useSupportTickets] GET /get-tickets failed:", err);
-      throw err; // Let React-Query handle it → isError / error
-    }
-  };
 
   const {
-    data: tickets = [],
+    data: infiniteData,
     isLoading: isQueryLoading,
     isError,
     error,
-  } = useQuery({
-    // queryKey: ["supportTickets", userRole, tenantId, userId, impersonatedUser_roleName],
-    queryKey: ["supportTickets", params],
-    queryFn: fetchTickets,
-    // enabled: !!userRole, // wait until role is known
-    staleTime: 1000 * 60 * 5, // 5 min
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["supportTickets", filters, userId, tenantId, organization],
+    queryFn: async ({ pageParam = 0 }) => {
+      try {
+        const params = {
+          ...filters,
+          userId,
+          tenantId,
+          organization,
+          page: pageParam,
+          limit: filters.limit || 20,
+        };
+
+        const { data } = await axios.get(
+          `${config.REACT_APP_API_URL}/get-tickets`,
+          {
+            params,
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+        return data;
+      } catch (err) {
+        console.error("[useSupportTickets] GET /get-tickets failed:", err);
+        throw err;
+      }
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      const totalCount = lastPage?.totalCount || 0;
+      const loadedSoFar = allPages.reduce(
+        (sum, p) => sum + (p?.tickets?.length || 0),
+        0,
+      );
+      if (loadedSoFar < totalCount) {
+        return allPages.length; // 0-indexed pages
+      }
+      return undefined;
+    },
+    initialPageParam: 0,
+    staleTime: 1000 * 60 * 5,
     retry: 1,
   });
+
+  // Flatten all pages
+  const allTickets = infiniteData?.pages?.flatMap((p) => p?.tickets || []) || [];
+  const totalCount = infiniteData?.pages?.[0]?.totalCount || 0;
+
+  // Build backward-compatible tickets object
+  const tickets = {
+    tickets: allTickets,
+    totalCount,
+  };
 
   /* --------------------------------------------------------------------- */
   /*  MUTATION: create / update ticket                                      */
@@ -264,6 +210,9 @@ export const useSupportTickets = (filters = {}) => {
     isMutationError: submitTicketMutation.isError,
     mutationError: submitTicketMutation.error,
     submitTicket: submitTicketMutation.mutateAsync,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };
 

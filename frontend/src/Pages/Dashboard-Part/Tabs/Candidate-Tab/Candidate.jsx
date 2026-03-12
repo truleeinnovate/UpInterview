@@ -1232,7 +1232,7 @@ function Candidate({
                         </span>
                       </div>
                     )}
-                    <div className="overflow-x-auto sm:max-h-[calc(100vh-280px)] md:max-h-[calc(100vh-248px)] lg:max-h-[calc(100vh-232px)]">
+                    <div className="overflow-x-auto">
                       <TableView
                         data={currentFilteredRows}
                         columns={columnsToUse}
@@ -1269,7 +1269,6 @@ function Candidate({
                           : `/candidates/view-details/${candidate._id}`,
                       }))}
                       columns={kanbanColumns}
-                      // v2.0.1 <-------------------------------------------------
                       renderActions={(item) => (
                         <KanbanActionsMenu
                           item={item}
@@ -1278,6 +1277,9 @@ function Candidate({
                       )}
                       emptyState={emptyStateMessage}
                       kanbanTitle="Candidate"
+                      onScrollEnd={!isEmbedded ? handleScrollEnd : undefined}
+                      isLoadingMore={isFetchingNextPage}
+                      hasMore={hasNextPage}
                     />
                     {/* // v2.0.1 -------------------------------------------------> */}
                   </div>

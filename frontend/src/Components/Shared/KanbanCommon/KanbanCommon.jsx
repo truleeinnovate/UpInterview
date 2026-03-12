@@ -2,7 +2,9 @@
 // v1.0.0 - Ashok - Added ability to click on title to navigate
 // v1.0.1 - Ashok - Improved subtile handling
 // v1.0.2 - Ashok - Updated plurals
+// v1.0.3 - Added infinite scroll support
 
+import { useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { capitalizeFirstLetter } from "../../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
@@ -16,8 +18,13 @@ const KanbanCommon = ({
   kanbanTitle = "",
   onTitleClick,
   customHeight = "calc(100vh - 250px)",
+  // v1.0.3 - Infinite scroll props
+  onScrollEnd,
+  isLoadingMore = false,
+  hasMore = true,
 }) => {
   const navigate = useNavigate();
+  const scrollContainerRef = useRef(null);
 
   const getPluralTitle = (title, count) => {
     // New format (object)
@@ -40,6 +47,25 @@ const KanbanCommon = ({
     return title + "s";
   };
 
+  // v1.0.3 - Scroll detection for infinite scroll
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !onScrollEnd || isLoadingMore || !hasMore) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    if (scrollHeight - scrollTop - clientHeight < 150) {
+      onScrollEnd();
+    }
+  }, [onScrollEnd, isLoadingMore, hasMore]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !onScrollEnd) return;
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [handleScroll, onScrollEnd]);
+
   const count = data?.length || 0;
   const pluralTitle = getPluralTitle(kanbanTitle);
 
@@ -57,14 +83,6 @@ const KanbanCommon = ({
             {/* All {capitalizeFirstLetter(kanbanTitle)}s */}
             All {pluralTitle}
           </h3>
-          {/* <span className="px-3 py-1.5 bg-white text-gray-500 rounded-lg text-sm font-medium border border-custom-blue/20">
-            {data?.length || 0}
-            <span className="ml-1">
-              {data?.length > 1
-                ? `${capitalizeFirstLetter(kanbanTitle)}s`
-                : `${capitalizeFirstLetter(kanbanTitle)}`}
-            </span>
-          </span> */}
           <span className="px-3 py-1.5 bg-white text-gray-500 rounded-lg text-sm font-medium border border-custom-blue/20">
             {count} {count === 1 ? kanbanTitle : pluralTitle}
           </span>
@@ -109,6 +127,7 @@ const KanbanCommon = ({
           </div>
         ) : (
           <div
+            ref={scrollContainerRef}
             className="overflow-y-auto sm:pb-28 md:pb-28 lg:pb-28 xl:pb-16 2xl:pb-16"
             style={{ maxHeight: customHeight }}
           >
@@ -159,11 +178,10 @@ const KanbanCommon = ({
                     <div className="overflow-hidden flex-1 min-w-0 pr-28">
                       <h4 className="text-base font-semibold text-custom-blue truncate">
                         <span
-                          className={`${
-                            item?.navigateTo || onTitleClick
+                          className={`${item?.navigateTo || onTitleClick
                               ? "cursor-pointer"
                               : ""
-                          }`}
+                            }`}
                           onClick={() => {
                             if (onTitleClick) onTitleClick(item);
                             else if (item?.navigateTo)
@@ -203,6 +221,23 @@ const KanbanCommon = ({
                 </motion.div>
               ))}
             </div>
+
+            {/* v1.0.3 - Loading more indicator */}
+            {isLoadingMore && (
+              <div className="flex flex-col items-center justify-center py-6 space-y-3">
+                <div className="w-6 h-6 border-2 border-custom-blue border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-sm text-gray-500 font-medium">Loading more data...</p>
+              </div>
+            )}
+
+            {/* v1.0.3 - End of list indicator */}
+            {!hasMore && !loading && data.length > 20 && (
+              <div className="flex items-center justify-center py-8 space-x-2 text-gray-400">
+                <div className="h-px w-12 bg-gray-200"></div>
+                <span className="text-xs font-medium uppercase tracking-wider">End of list</span>
+                <div className="h-px w-12 bg-gray-200"></div>
+              </div>
+            )}
           </div>
         )}
       </div>

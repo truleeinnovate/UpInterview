@@ -57,10 +57,8 @@ const UsersAccountTab = () => {
   const location = useLocation();
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  // const [selectedFilters, setSelectedFilters] = useState({ roles: [] });
   const [selectedFilters, setSelectedFilters] = useState({ roles: [] });
   const [isRolesOpen, setIsRolesOpen] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState([]);
@@ -68,43 +66,32 @@ const UsersAccountTab = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [newStatus, setNewStatus] = useState("");
   const [showUserManagementPopup, setShowUserManagementPopup] = useState(false);
-  // const [superAdminUsers, setSuperAdminUsers] = useState([]);
-  // const [superAdminLoading, setSuperAdminLoading] = useState(false);
   const filterIconRef = useRef(null);
 
-  // const { usersRes, usersLoading, toggleUserStatus } = useUsers({
-  //   search: searchQuery.trim(),
-  //   role: selectedRoles.join(","),    // MUST BE STRING
-  //   page: currentPage + 1,            // API page starts at 1
-  //   limit: 10,
-  // });
-
-  const { usersRes, usersLoading, toggleUserStatus } = useUsers({
+  const { usersRes, usersLoading, toggleUserStatus, fetchNextPage: fetchNextPageUsers, hasNextPage: hasNextPageUsers, isFetchingNextPage: isFetchingNextPageUsers } = useUsers({
     search: searchQuery.trim(),
-    // role: selectedFilters?.roles.length > 0 ? selectedFilters?.roles.join(",") : "", // Use selectedFilters, not selectedRoles
     role:
       selectedFilters.roles && selectedFilters.roles.length > 0
         ? selectedFilters.roles.join(",")
         : "",
-    page: currentPage + 1, // backend expects 1-based page
-    limit: 10,
+    limit: 20,
   });
 
   // Use the new super admin users hook
   const {
-    // data: superAdminUsers = [],
     data: superAdminData = { users: [], pagination: {} },
     isLoading: superAdminLoading,
     error: superAdminError,
+    fetchNextPage: fetchNextPageSA,
+    hasNextPage: hasNextPageSA,
+    isFetchingNextPage: isFetchingNextPageSA,
   } = useSuperAdminUsers({
     search: searchQuery.trim(),
-    // role: selectedFilters?.roles.length > 0 ? selectedFilters?.roles.join(",") : "", // Use selectedFilters, not selectedRoles
     role:
       selectedFilters.roles && selectedFilters.roles.length > 0
         ? selectedFilters.roles.join(",")
         : "",
-    page: currentPage + 1, // backend expects 1-based page
-    limit: 10,
+    limit: 20,
   });
 
   const users = usersRes?.users || [];
@@ -196,16 +183,14 @@ const UsersAccountTab = () => {
   // };
   const handleClearAll = () => {
     setSelectedRoles([]);
-    setSelectedFilters({ roles: [] }); // Directly set the object
-    setCurrentPage(0);
+    setSelectedFilters({ roles: [] });
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
 
   const handleApplyFilters = () => {
-    const filters = { roles: selectedRoles }; // Use 'roles' key to match initial state
+    const filters = { roles: selectedRoles };
     setSelectedFilters(filters);
-    setCurrentPage(0);
     setIsFilterActive(selectedRoles.length > 0);
     setFilterPopupOpen(false);
   };
@@ -218,7 +203,6 @@ const UsersAccountTab = () => {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0);
   };
   // console.log("dataSource dataSource", dataSource);
   // Unique roles for filter options
@@ -276,36 +260,19 @@ const UsersAccountTab = () => {
   // const rowsPerPage = 10;
   // const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
 
-  // Navigation handlers - FIXED: Use pagination from API
-  const handleNextPage = () => {
-    if (pagination.hasNext) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (pagination.hasPrev) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
-
-  // Navigation handlers - Use pagination from API
-  // const handleNextPage = () => {
-  //   if (pagination?.hasNext) {
-  //     setCurrentPage((prev) => prev + 1);
-  //   }
-  // };
-
-  // const handlePrevPage = () => {
-  //   if (pagination?.hasPrev) {
-  //     setCurrentPage((prev) => prev - 1);
-  //   }
-  // };
-
-  // const startIndex = currentPage * rowsPerPage;
-  // const endIndex = Math.min(startIndex + rowsPerPage, users.length);
-  // const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
   const currentFilteredRows = dataSource;
+
+  // Infinite scroll handlers
+  const fetchNextPage = userType === "superAdmin" ? fetchNextPageSA : fetchNextPageUsers;
+  const hasNextPage = userType === "superAdmin" ? hasNextPageSA : hasNextPageUsers;
+  const isFetchingNextPage = userType === "superAdmin" ? isFetchingNextPageSA : isFetchingNextPageUsers;
+  const totalItems = pagination?.totalItems || 0;
+
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
 
   // Action logic
   const handleStatusToggleAction = (user) => {
@@ -396,9 +363,9 @@ const UsersAccountTab = () => {
               onClick={() => handleView(row)}
             >
               {`${row.firstName
-                  ? row.firstName.charAt(0).toUpperCase().trim() +
-                  row.firstName.slice(1).trim()
-                  : ""
+                ? row.firstName.charAt(0).toUpperCase().trim() +
+                row.firstName.slice(1).trim()
+                : ""
                 } ${row.lastName
                   ? row.lastName.charAt(0).toUpperCase().trim() +
                   row.lastName.slice(1)
@@ -487,9 +454,9 @@ const UsersAccountTab = () => {
   return (
     // v1.0.4 <------------------------------------------------------------------------
     <div className="sm:mt-6 md:mt-6">
-      <div className="h-screen fixed w-full flex">
+      <div className="fixed flex">
         <div className="" />
-        <div className="flex-1 flex flex-col ml-0 h-full">
+        <div className="flex-1 flex flex-col ml-0">
           <div className="fixed top-16 left-64 right-0 bg-background z-10 px-4">
             <motion.div
               className="mb-6"
@@ -576,26 +543,38 @@ const UsersAccountTab = () => {
               setView={setView}
               searchQuery={searchQuery}
               onSearch={handleSearch}
-              // Pass correct total pages
-              // currentPage={usersRes?.pagination?.currentPage}
-              // totalPages={usersRes?.pagination?.totalPages}
-              // onPrevPage={prevPage}
-              // onNextPage={nextPage}
-              totalPages={pagination?.totalPages || 1}
-              currentPage={currentPage} // Convert back to 1-based for display
-              onPrevPage={handlePrevPage}
-              onNextPage={handleNextPage}
               onFilterClick={handleFilterIconClick}
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
-              dataLength={dataSource?.length}
+              dataLength={totalItems || dataSource?.length}
               searchPlaceholder="Search by Name, Email, Phone..."
               filterIconRef={filterIconRef}
+              hidePagination={true}
             />
           </div>
           <div className="fixed top-48 xl:top-56 lg:top-56 left-64 right-0 bg-background">
             <motion.div className="">
               <div className="relative w-full">
+                {/* Users count */}
+                {(totalItems || dataSource?.length) > 0 && (
+                  <div className="flex items-center justify-start px-6 py-2">
+                    <span className="text-sm text-gray-500">
+                      Showing{" "}
+                      <span className="font-semibold text-gray-800">{dataSource?.length || 0}</span>
+                      {" "}of{" "}
+                      <span className="font-semibold text-gray-800">
+                        {(() => {
+                          const t = totalItems || dataSource?.length || 0;
+                          const r = Math.floor(t / 100) * 100;
+                          if (r === 0) return t;
+                          if (t === r) return t;
+                          return `${r}+`;
+                        })()}
+                      </span>
+                      {" "}{(totalItems || dataSource?.length || 0) === 1 ? "user" : "users"}
+                    </span>
+                  </div>
+                )}
                 {view === "table" ? (
                   <div className="w-full">
                     <TableView
@@ -603,12 +582,10 @@ const UsersAccountTab = () => {
                       columns={tableColumns}
                       loading={loading}
                       actions={tableActions}
-                      // emptyState={
-                      //   userType === "superAdmin"
-                      //     ? "No super admins found."
-                      //     : "No users found."
-                      // }
                       emptyState={emptyStateMessage}
+                      onScrollEnd={handleScrollEnd}
+                      isLoadingMore={isFetchingNextPage}
+                      hasMore={hasNextPage}
                     />
                   </div>
                 ) : (
@@ -759,9 +736,9 @@ const UsersAccountTab = () => {
         <ConfirmationModal
           show={showConfirmation}
           userName={`${selectedUser?.firstName
-              ? selectedUser?.firstName.charAt(0).toUpperCase() +
-              selectedUser?.firstName.slice(1)
-              : ""
+            ? selectedUser?.firstName.charAt(0).toUpperCase() +
+            selectedUser?.firstName.slice(1)
+            : ""
             } ${selectedUser?.lastName
               ? selectedUser?.lastName.charAt(0).toUpperCase() +
               selectedUser?.lastName.slice(1)

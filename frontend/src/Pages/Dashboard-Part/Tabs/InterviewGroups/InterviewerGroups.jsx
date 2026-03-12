@@ -739,22 +739,19 @@ const MyTeams = () => {
 
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
 
   const defaultFilters = { status: [] };
   const [selectedFilters, setSelectedFilters] = useState(defaultFilters);
   const [tempFilters, setTempFilters] = useState(defaultFilters);
 
-  const ITEMS_PER_PAGE = 10;
-  const { teams, pagination, isLoading } = usePaginatedTeams({
-    page: currentPage,
+  const ITEMS_PER_PAGE = 20;
+  const { teams, pagination, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = usePaginatedTeams({
     limit: ITEMS_PER_PAGE,
     search: searchQuery,
     status: selectedFilters.status.join(","),
   });
 
-  const totalPages = pagination?.totalPages || 0;
   const totalItems = pagination?.totalItems || 0;
 
   const columns = getTeamColumns(navigate);
@@ -767,7 +764,7 @@ const MyTeams = () => {
   });
 
   return (
-    <div className="w-full">
+    <div className="">
       <div className="mt-4 px-6">
         <InfoGuide
           title="My Teams info"
@@ -801,23 +798,37 @@ const MyTeams = () => {
           searchQuery={searchQuery}
           onSearch={(e) => {
             setSearchQuery(e.target.value);
-            setCurrentPage(0);
           }}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
-          onNextPage={() =>
-            setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
-          }
           onFilterClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
           isFilterActive={selectedFilters.status.length > 0}
           isFilterPopupOpen={isFilterPopupOpen}
           dataLength={totalItems}
           filterIconRef={filterIconRef}
+          hidePagination={true}
         />
       </div>
 
       <div className="bg-background">
+        {/* Teams count */}
+        {totalItems > 0 && (
+          <div className="flex items-center justify-start px-6 py-2">
+            <span className="text-sm text-gray-500">
+              Showing{" "}
+              <span className="font-semibold text-gray-800">{teams?.length || 0}</span>
+              {" "}of{" "}
+              <span className="font-semibold text-gray-800">
+                {(() => {
+                  const t = totalItems;
+                  const r = Math.floor(t / 100) * 100;
+                  if (r === 0) return t;
+                  if (t === r) return t;
+                  return `${r}+`;
+                })()}
+              </span>
+              {" "}{totalItems === 1 ? "team" : "teams"}
+            </span>
+          </div>
+        )}
         {view === "table" ? (
           <TableView
             data={teams || []}
@@ -826,6 +837,9 @@ const MyTeams = () => {
             loading={isLoading}
             emptyState="No Teams found."
             autoHeight={false}
+            onScrollEnd={() => { if (hasNextPage && !isFetchingNextPage) fetchNextPage(); }}
+            isLoadingMore={isFetchingNextPage}
+            hasMore={hasNextPage}
           />
         ) : (
           <KanbanView
@@ -843,6 +857,9 @@ const MyTeams = () => {
             )}
             emptyState="No Teams Found"
             kanbanTitle="Team"
+            onScrollEnd={() => { if (hasNextPage && !isFetchingNextPage) fetchNextPage(); }}
+            isLoadingMore={isFetchingNextPage}
+            hasMore={hasNextPage}
           />
         )}
 

@@ -1,6 +1,6 @@
 // v1.0.0 - Ashok - updated addOrUpdateRound
 // v1.0.1 - Ashok - removed reverse while fetching interview templates
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useMemo } from "react";
 import { config } from "../config";
@@ -23,49 +23,50 @@ export const useInterviewTemplates = (filters = {}) => {
   const organization = tokenPayload?.organization;
   const initialLoad = useRef(true);
 
-  const queryParams = useMemo(
-    () => ({
-      tenantId,
-      userId,
-      organization,
-      authToken,
-    }),
-    [tenantId, userId, organization, authToken]
-  );
+  // Build query key WITHOUT page
+  const { page, ...filtersWithoutPage } = filters;
 
   const {
-    data: responseData = {},
+    data: responseData,
     isLoading: isQueryLoading,
     isError,
     error,
-  } = useQuery({
-    queryKey: ["interviewTemplates", filters],
-    queryFn: async () => {
-      const params = filters;
-
-      const data = await fetchFilterData("interviewtemplate", {}, params); // <- lowercase to match backend
-      // v1.0.1 <------------------------------------------------------
-      //   return data.reverse();
-
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["interviewTemplates", filtersWithoutPage],
+    queryFn: async ({ pageParam = 1 }) => {
+      const params = { ...filtersWithoutPage, page: pageParam, limit: filters.limit || 20 };
+      const data = await fetchFilterData("interviewtemplate", {}, params);
       return data;
-      // v1.0.1 ------------------------------------------------------>
     },
+    getNextPageParam: (lastPage, allPages) => {
+      const totalItems = lastPage?.totalItems || lastPage?.total || 0;
+      const items = lastPage?.data || [];
+      const loadedSoFar = allPages.reduce((sum, p) => {
+        return sum + (Array.isArray(p?.data) ? p.data.length : 0);
+      }, 0);
+      if (loadedSoFar < totalItems) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
     enabled: !!hasViewPermission,
     retry: 1,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     refetchOnMount: "always",
     refetchOnReconnect: false,
-    keepPreviousData: true,
   });
 
-  const templatesData = responseData?.data || [];
-  const totalPages = responseData?.totalPages || 0;
-  const totalCount = responseData?.totalItems || 0;
-  const currentPage = responseData?.currentPage || 1;
-  const itemsPerPage = responseData?.itemsPerPage || 10;
-  const customCount = responseData?.customCount || 0;
-  const standardCount = responseData?.standardCount || 0;
+  const templatesData = responseData?.pages?.flatMap((p) => p?.data || []) || [];
+  const totalCount = responseData?.pages?.[0]?.totalItems || responseData?.pages?.[0]?.total || templatesData.length;
+  const totalPages = Math.ceil(totalCount / (filters.limit || 20));
+  const customCount = responseData?.pages?.[0]?.customCount || 0;
+  const standardCount = responseData?.pages?.[0]?.standardCount || 0;
 
   // Child hook returned from useInterviews
   const useInterviewtemplateDetails = (templateId) => {
@@ -283,8 +284,6 @@ export const useInterviewTemplates = (filters = {}) => {
     standardCount,
     totalPages,
     totalCount,
-    currentPage,
-    itemsPerPage,
     useInterviewtemplateDetails,
     isLoading,
     isQueryLoading,
@@ -302,7 +301,9 @@ export const useInterviewTemplates = (filters = {}) => {
     deleteRound: deleteRoundMutation.mutateAsync,
     deleteInterviewTemplate: deleteInterviewTemplate.mutateAsync,
     isDeleting: deleteInterviewTemplate.isPending,
-    // getTemplatesByTenantId: getTemplatesByTenantId.mutateAsync,
-    // isGetTemplatesLoading: getTemplatesByTenantId.isPending,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };

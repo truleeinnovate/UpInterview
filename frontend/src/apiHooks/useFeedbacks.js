@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchFilterData } from "../api.js";
 import { usePermissions } from "../Context/PermissionsContext";
 import axios from "axios";
@@ -10,19 +10,31 @@ import { useSingleContact } from "./useUsers.js";
 export const useFeedbacks = (filters = {}) => {
   const { effectivePermissions, isInitialized } = usePermissions();
   const hasViewPermission = effectivePermissions?.Feedback?.View;
-  const params = {
-    ...filters,
-    type: filters.type ? filters.type : "feedback",
-  };
 
-  // Convert Infinity to string "infinity" since Infinity can't be serialized as a query param
-  if (params.limit === Infinity || params.limit === "Infinity") {
-    params.limit = "infinity";
-  }
-
-  return useQuery({
+  const {
+    data: infiniteData,
+    isLoading,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useInfiniteQuery({
     queryKey: ["feedbacks", filters],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 1 }) => {
+      const params = {
+        ...filters,
+        type: filters.type ? filters.type : "feedback",
+        page: pageParam,
+        limit: filters.limit || 20,
+      };
+
+      // Convert Infinity to string "infinity" since Infinity can't be serialized as a query param
+      if (params.limit === Infinity || params.limit === "Infinity") {
+        params.limit = "infinity";
+      }
+
       const data = await fetchFilterData(
         "feedback",
         effectivePermissions,
@@ -31,15 +43,49 @@ export const useFeedbacks = (filters = {}) => {
 
       return data;
     },
+    getNextPageParam: (lastPage, allPages) => {
+      const totalItems = lastPage?.pagination?.totalItems || 0;
+      const loadedSoFar = allPages.reduce(
+        (sum, p) => sum + (p?.feedbacks?.length || 0),
+        0,
+      );
+      if (loadedSoFar < totalItems) {
+        return allPages.length + 1; // 1-indexed pages
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
     enabled: !!hasViewPermission && isInitialized,
     retry: 1,
-    staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
-    gcTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    // refetchOnMount: false, // Don't refetch when component mounts if data exists
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
     refetchOnMount: "always",
-    refetchOnReconnect: false, // Don't refetch on network reconnect
+    refetchOnReconnect: false,
   });
+
+  // Flatten all pages
+  const feedbacks = infiniteData?.pages?.flatMap((p) => p?.feedbacks || []) || [];
+  const totalItems = infiniteData?.pages?.[0]?.pagination?.totalItems || 0;
+
+  return {
+    data: {
+      feedbacks,
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems,
+        itemsPerPage: filters.limit || 20,
+      },
+    },
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  };
 };
 
 export const useCreateFeedback = () => {

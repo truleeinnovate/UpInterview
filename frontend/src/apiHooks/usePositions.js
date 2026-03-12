@@ -1,6 +1,6 @@
 // v1.0.0 - Ashok - fixed issue while updating or adding a new round with sequence
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { fetchFilterData } from "../api";
@@ -13,47 +13,55 @@ export const usePositions = (filters = {}) => {
   const hasViewPermission = effectivePermissions?.Positions?.View;
   const hasDeletePermission = effectivePermissions?.Positions?.Delete;
 
-  // console.log("filters", filters);
+  // Build query key WITHOUT page (page is managed by useInfiniteQuery)
+  const { page, ...filtersWithoutPage } = filters;
 
   const {
-    data: responseData = {},
-
+    data: responseData,
     isLoading: isQueryLoading,
     isError,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ["positions", filters],
-
-    queryFn: async () => {
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["positions", filtersWithoutPage],
+    queryFn: async ({ pageParam = 1 }) => {
       const data = await fetchFilterData(
         "position",
         effectivePermissions,
-        filters
+        { ...filtersWithoutPage, page: pageParam, limit: filters.limit || 20 }
       );
       return data;
     },
+    getNextPageParam: (lastPage, allPages) => {
+      const totalItems = lastPage?.data?.total || lastPage?.total || 0;
+      const positions = lastPage?.data?.positions || lastPage?.positions || lastPage?.data || [];
+      const loadedSoFar = allPages.reduce((sum, p) => {
+        const items = p?.data?.positions || p?.positions || p?.data || [];
+        return sum + (Array.isArray(items) ? items.length : 0);
+      }, 0);
+      if (loadedSoFar < totalItems) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
     enabled: !!hasViewPermission,
     retry: 1,
-    staleTime: 1000 * 30, // 30 seconds - data stays fresh, then refetches on next access
-    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    // refetchOnMount: false, // Don't refetch when component mounts if data exists
+    staleTime: 1000 * 30,
+    cacheTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
     refetchOnMount: "always",
-    refetchOnReconnect: false, // Don't refetch on network reconnect
+    refetchOnReconnect: false,
   });
 
-  //   // Then in your component
-  // const positionData = responseData.positions || responseData.data || [];
-  // const totalCount = responseData.total || positionData.length;
-
-  const positionData =
-    responseData.data?.positions ||
-    responseData.positions ||
-    responseData.data ||
-    [];
-  const total =
-    responseData.data?.total || responseData.total || positionData.length;
+  // Flatten all pages into a single array
+  const positionData = responseData?.pages?.flatMap((p) => {
+    return p?.data?.positions || p?.positions || p?.data || [];
+  }) || [];
+  const total = responseData?.pages?.[0]?.data?.total || responseData?.pages?.[0]?.total || positionData.length;
 
   const positionMutation = useMutation({
     mutationFn: async ({ id, data }) => {
@@ -243,6 +251,9 @@ export const usePositions = (filters = {}) => {
     deleteRoundMutation: deleteRoundMutation.mutateAsync,
     deletePositionMutation: deleteMutation.mutateAsync,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };
 

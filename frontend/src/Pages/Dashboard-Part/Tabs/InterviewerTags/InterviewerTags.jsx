@@ -465,12 +465,9 @@ const InterviewerTags = () => {
   // --- STATE ---
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [tagToDelete, setTagToDelete] = useState(null);
-
-  const ITEMS_PER_PAGE = 10;
 
   const categoryLabels = useMemo(
     () => ({
@@ -512,12 +509,6 @@ const InterviewerTags = () => {
     return result;
   }, [tags, searchQuery, selectedFilters]);
 
-  const paginatedData = processedData.slice(
-    currentPage * ITEMS_PER_PAGE,
-    (currentPage + 1) * ITEMS_PER_PAGE,
-  );
-  const totalPages = Math.ceil(processedData.length / ITEMS_PER_PAGE);
-
   // --- ACTIONS ---
   const handleDeleteConfirm = async () => {
     try {
@@ -545,7 +536,7 @@ const InterviewerTags = () => {
   });
 
   return (
-    <div className="flex flex-col w-full min-h-screen overflow-hidden">
+    <div className="flex flex-col w-full h-full">
       <div className="px-6 mt-6">
         <InfoGuide
           title="Interviewer Tags info"
@@ -584,12 +575,6 @@ const InterviewerTags = () => {
           setView={setView}
           searchQuery={searchQuery}
           onSearch={(e) => setSearchQuery(e.target.value)}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
-          onNextPage={() =>
-            setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
-          }
           onFilterClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
           isFilterActive={
             JSON.stringify(selectedFilters) !== JSON.stringify(defaultFilters)
@@ -597,12 +582,33 @@ const InterviewerTags = () => {
           isFilterPopupOpen={isFilterPopupOpen}
           dataLength={processedData.length}
           filterIconRef={filterIconRef}
+          hidePagination={true}
         />
       </div>
       <div className="flex-grow bg-background">
+        {/* Tags count */}
+        {processedData.length > 0 && (
+          <div className="flex items-center justify-start px-6 py-2">
+            <span className="text-sm text-gray-500">
+              Showing{" "}
+              <span className="font-semibold text-gray-800">{processedData.length}</span>
+              {" "}of{" "}
+              <span className="font-semibold text-gray-800">
+                {(() => {
+                  const t = tags?.length || processedData.length;
+                  const r = Math.floor(t / 100) * 100;
+                  if (r === 0) return t;
+                  if (t === r) return t;
+                  return `${r}+`;
+                })()}
+              </span>
+              {" "}{(tags?.length || processedData.length) === 1 ? "tag" : "tags"}
+            </span>
+          </div>
+        )}
         {view === "table" ? (
           <TableView
-            data={paginatedData}
+            data={processedData}
             columns={columns}
             actions={actions}
             emptyState="No Tags found."
@@ -611,7 +617,7 @@ const InterviewerTags = () => {
         ) : (
           <KanbanView
             loading={isLoading}
-            data={paginatedData.map((t) => ({
+            data={processedData.map((t) => ({
               ...t,
               id: t._id,
               title: t.name,

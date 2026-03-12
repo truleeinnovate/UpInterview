@@ -99,7 +99,7 @@ const StandardTemplates = ({ handleClone }) => {
       ? tabFromUrl
       : "standard";
   });
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
   const {
     templatesData,
     standardCount,
@@ -367,6 +367,7 @@ const StandardTemplates = ({ handleClone }) => {
           customCount={customCount}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          hidePagination={true}
         // v1.0.2 ------------------------------------------>
         />
         <FilterPopup
@@ -480,8 +481,30 @@ const StandardTemplates = ({ handleClone }) => {
         </FilterPopup>
       </div>
       <div>
+        {/* Template count */}
+        {totalCount > 0 && (
+          <div className="flex items-center justify-start px-6 py-2">
+            <span className="text-sm text-gray-500">
+              Showing{" "}
+              <span className="font-semibold text-gray-800">{normalizedTemplates?.length || 0}</span>
+              {" "}of{" "}
+              <span className="font-semibold text-gray-800">
+                {(() => {
+                  const t = activeTab === 'standard' ? (standardCount || totalCount) : (customCount || totalCount);
+                  const r = Math.floor(t / 100) * 100;
+                  if (r === 0) return t;
+                  if (t === r) return t;
+                  return `${r}+`;
+                })()}
+              </span>
+              {" "}{(activeTab === 'standard' ? (standardCount || totalCount) : (customCount || totalCount)) === 1 ? "template" : "templates"}
+            </span>
+          </div>
+        )}
         {view === "table" ? (
+
           <div className="w-full overflow-x-auto">
+
             <ErrorBoundary>
               <StandardTemplateTableView
                 templatesData={normalizedTemplates}

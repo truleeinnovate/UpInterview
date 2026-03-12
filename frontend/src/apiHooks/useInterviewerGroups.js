@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../config";
 import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
@@ -42,26 +42,26 @@ export const useTeamsQuery = () => {
 // Backward compatibility alias
 export const useGroupsQuery = useTeamsQuery;
 
-// Paginated & filterable teams hook (used by My Teams list)
+// Paginated & filterable teams hook (used by My Teams list) — now with useInfiniteQuery
 export const usePaginatedTeams = ({
-  page = 0,
-  limit,
+  limit = 20,
   search = "",
   status = "",
 } = {}) => {
   const tenantId = getTenantId();
 
-  // Build query params
-  const queryParams = new URLSearchParams();
-  if (tenantId) queryParams.append("tenantId", tenantId);
-  queryParams.append("page", page.toString());
-  queryParams.append("limit", limit.toString());
-  if (search) queryParams.append("search", search);
-  if (status) queryParams.append("status", status);
-
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["teams-paginated", tenantId, page, limit, search, status],
-    queryFn: async () => {
+  const {
+    data: infiniteData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["teams-paginated", tenantId, limit, search, status],
+    queryFn: async ({ pageParam = 0 }) => {
       if (!tenantId) {
         return {
           data: [],
@@ -76,33 +76,55 @@ export const usePaginatedTeams = ({
         };
       }
 
+      const queryParams = new URLSearchParams();
+      queryParams.append("tenantId", tenantId);
+      queryParams.append("page", pageParam.toString());
+      queryParams.append("limit", limit.toString());
+      if (search) queryParams.append("search", search);
+      if (status) queryParams.append("status", status);
+
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/groups?${queryParams.toString()}`,
       );
 
       return response.data;
     },
+    getNextPageParam: (lastPage, allPages) => {
+      const totalItems = lastPage?.pagination?.totalItems || 0;
+      const loadedSoFar = allPages.reduce((sum, p) => sum + (p?.data?.length || 0), 0);
+      if (loadedSoFar < totalItems) {
+        return allPages.length; // 0-indexed pages
+      }
+      return undefined;
+    },
+    initialPageParam: 0,
     enabled: !!tenantId,
     staleTime: 5 * 60 * 1000,
-    keepPreviousData: true,
   });
 
+  // Flatten all pages into one array
+  const teams = infiniteData?.pages?.flatMap((p) => p?.data || []) || [];
+  const totalItems = infiniteData?.pages?.[0]?.pagination?.totalItems || 0;
+
   return {
-    teams: data?.data || [],
+    teams,
     // Backward compatibility
-    groups: data?.data || [],
-    pagination: data?.pagination || {
-      currentPage: page,
-      totalPages: 0,
-      totalItems: 0,
-      hasNext: false,
-      hasPrev: page > 0,
+    groups: teams,
+    pagination: {
+      currentPage: 0,
+      totalPages: 1,
+      totalItems,
+      hasNext: !!hasNextPage,
+      hasPrev: false,
       itemsPerPage: limit,
     },
     isLoading,
     isError,
     error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };
 

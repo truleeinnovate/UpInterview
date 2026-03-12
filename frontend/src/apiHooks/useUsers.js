@@ -1,6 +1,4 @@
-// v1.0.0 - Ashok - Added new apis for users migrated from Context
-
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../config"; // assuming similar structure
 import AuthCookieManager from "../utils/AuthCookieManager/AuthCookieManager";
@@ -27,11 +25,11 @@ export const useUserProfile = (usersId) => {
 
       return response.data || null;
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes - data stays fresh for 30 minutes
-    cacheTime: 1000 * 60 * 60, // 60 minutes - keep in cache longer
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnMount: false, // Don't refetch when component mounts if data exists
-    refetchOnReconnect: false, // Don't refetch on network reconnect
+    staleTime: 1000 * 60 * 30,
+    cacheTime: 1000 * 60 * 60,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
     enabled: !!currentUser,
   });
 
@@ -56,8 +54,8 @@ export const useSingleContact = () => {
       );
       return response.data || null;
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes
-    cacheTime: 1000 * 60 * 60, // 60 minutes
+    staleTime: 1000 * 60 * 30,
+    cacheTime: 1000 * 60 * 60,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
@@ -91,11 +89,8 @@ export const useUpdateContactDetail = () => {
     onSuccess: (response, { data }) => {
       const ownerId = data?.id;
       if (ownerId) {
-        // ✅ Optimistically update cache with server response
         queryClient.setQueryData(["userProfile", ownerId], response.data);
         queryClient.setQueryData(["singleContact", ownerId], response.data);
-
-        // ✅ Then trigger a server refetch to confirm state
         queryClient.invalidateQueries(["userProfile", ownerId]);
         queryClient.invalidateQueries(["singleContact", ownerId]);
       }
@@ -106,70 +101,79 @@ export const useUpdateContactDetail = () => {
 // ------------------------------ These are moved from ContextFetch -------------------------------
 export const useUsers = (filters = {}) => {
   const queryClient = useQueryClient();
-  // Derive auth and tenant per invocation (avoid stale module-level values)
   const authToken = Cookies.get("authToken");
   const tokenPayload = decodeJwt(authToken);
   const tenantId = tokenPayload?.tenantId;
 
-  // ✅ Build query string properly
   const buildQueryString = (params) => {
     const searchParams = new URLSearchParams();
-
-    // Add all filter parameters
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== "") {
         if (Array.isArray(value)) {
-          // Handle array parameters (like roles)
           value.forEach((item) => searchParams.append(key, item));
         } else {
           searchParams.append(key, value.toString());
         }
       }
     });
-
     return searchParams.toString();
   };
 
-  let queryParams = filters;
-
-  // ✅ Fetch Users
   const {
-    data: usersRes = [],
+    data: infiniteData,
     isLoading: usersLoading,
     refetch: refetchUsers,
-  } = useQuery({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["users", tenantId, filters],
-    queryFn: async () => {
-      if (!tenantId) return []; // Skip fetch if tenantId missing
-      const queryString = buildQueryString(filters);
-      const url = `${config.REACT_APP_API_URL}/users/${tenantId}${queryString ? `?${queryString}` : ""
-        }`;
-
+    queryFn: async ({ pageParam = 1 }) => {
+      if (!tenantId) return { users: [], pagination: { totalItems: 0 } };
+      const queryString = buildQueryString({
+        ...filters,
+        page: pageParam,
+        limit: filters.limit || 20,
+      });
+      const url = `${config.REACT_APP_API_URL}/users/${tenantId}${queryString ? `?${queryString}` : ""}`;
       const response = await axios.get(url);
       return response.data;
-
-      // Process image URLs
-      // const processedUsers = response.data
-      //   .map((contact) => {
-      //     if (contact.imageData?.filename) {
-      //       const imageUrl = `${
-      //         config.REACT_APP_API_URL
-      //       }/${contact.imageData.path.replace(/\\/g, "/")}`;
-      //       return { ...contact, imageUrl };
-      //     }
-      //     return contact;
-      //   })
-      //   .reverse();
-
-      // return response.data;
     },
-    staleTime: 1000 * 60 * 30, // data fresh for 30 minutes
-    cacheTime: 1000 * 60 * 60, // keep cache for 60 minutes
+    getNextPageParam: (lastPage, allPages) => {
+      const totalItems = lastPage?.pagination?.totalItems || lastPage?.totalCount || 0;
+      const loadedSoFar = allPages.reduce(
+        (sum, p) => sum + (p?.users?.length || 0),
+        0,
+      );
+      if (loadedSoFar < totalItems) {
+        return allPages.length + 1; // 1-indexed pages
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+    staleTime: 1000 * 60 * 30,
+    cacheTime: 1000 * 60 * 60,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    enabled: !!tenantId, // fetch only when tenantId exists
+    enabled: !!tenantId,
   });
+
+  // Flatten all pages
+  const users = infiniteData?.pages?.flatMap((p) => p?.users || []) || [];
+  const totalItems = infiniteData?.pages?.[0]?.pagination?.totalItems || infiniteData?.pages?.[0]?.totalCount || 0;
+
+  const usersRes = {
+    users,
+    pagination: {
+      currentPage: 1,
+      totalPages: 1,
+      totalItems,
+      hasNext: !!hasNextPage,
+      hasPrev: false,
+    },
+    totalCount: totalItems,
+  };
 
   // ✅ Add or Update User
   const addOrUpdateUser = useMutation({
@@ -275,5 +279,8 @@ export const useUsers = (filters = {}) => {
     addOrUpdateUser,
     toggleUserStatus,
     deleteUser,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };
