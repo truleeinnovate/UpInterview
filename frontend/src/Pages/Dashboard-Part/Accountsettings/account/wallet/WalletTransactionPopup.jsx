@@ -455,21 +455,32 @@ const WalletTransactionPopup = ({ transaction, onClose }) => {
               )}
 
               {/* Date & Time */}
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <Calendar className="w-4 h-4 text-gray-500 mr-2" />
-                  <span className="text-sm font-medium text-gray-700">Date & Time</span>
+              <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 text-gray-500 mr-2" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {(transaction?.type === 'hold' || transaction?.type === 'hold_adjust') ? 'Created Date' : 'Updated Date'}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {(() => {
+                      const dateToUse = (transaction?.type === 'hold' || transaction?.type === 'hold_adjust')
+                        ? (transaction?.createdAt || transaction?.createdDate || transaction?.updatedAt)
+                        : (transaction?.updatedAt || transaction?.createdAt || transaction?.createdDate);
+                      return dateToUse
+                        ? new Date(dateToUse).toLocaleString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          })
+                        : "N/A";
+                    })()}
+                  </span>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">
-                  {new Date(transaction?.updatedAt || transaction?.createdAt || transaction?.createdDate).toLocaleString('en-IN', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true
-                  })}
-                </span>
               </div>
 
               {/* Reason */}
