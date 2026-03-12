@@ -173,6 +173,10 @@ async function evaluateRoundAfterExpiry(roundId, now) {
     {
       $set: {
         status: "Expired",
+        meetingId: "",
+        meetPlatform: "",
+        interviewerType: "",
+        participants:[],
         rejectionReason,
         currentAction: "NoInterviewerAccepted",
         currentActionReason: "Auto-Expired by system – no acceptance received",
@@ -260,6 +264,10 @@ async function evaluateMockRoundAfterExpiry(roundId, now) {
     {
       $set: {
         status: "Expired",
+       meetingId: "",
+        meetPlatform: "",
+        interviewerType: "",
+        participants:[],
         rejectionReason,
         currentAction: "NoInterviewerAccepted",
         currentActionReason: "Auto-Expired by system – no acceptance received",
