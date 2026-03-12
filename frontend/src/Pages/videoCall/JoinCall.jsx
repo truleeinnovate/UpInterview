@@ -44,7 +44,7 @@ function JoinMeeting() {
   const isMockInterview = urlData?.interviewType === "mockinterview";
 
   useEffect(() => {
-    setDecodedData(urlData);
+    setDecodedData(urlData);  
 
     const effectiveIsInterviewer = urlData.isInterviewer || urlData.isSchedule;
     const roleInfo = {

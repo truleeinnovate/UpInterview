@@ -440,7 +440,8 @@ class AuthCookieManager {
         // AuthCookieManager.clearPermissions('superAdmin');
         // localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_KEY);
         // localStorage.removeItem(SUPER_ADMIN_PERMISSIONS_CACHE_TIMESTAMP);
-        window.location.href = process.env.NODE_ENV === 'production' ? `https://${config.REACT_APP_API_URL_FRONTEND}/organization-login` : "http://localhost:3000/organization-login";
+        const protocol = window.location.protocol;
+        window.location.href = `${protocol}//${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
       } else if (authToken && !impersonationToken) {
         AuthCookieManager.clearCookie(AUTH_TOKEN_KEY);
         localStorage.removeItem(USER_TYPE_KEY);
@@ -472,7 +473,8 @@ class AuthCookieManager {
         localStorage.removeItem(USER_TYPE_KEY);
         navigate("/admin-dashboard");
       } else {
-        window.location.href = `https://${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
+        const protocol = window.location.protocol;
+        window.location.href = `${protocol}//${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
       }
 
       setTimeout(async () => {
@@ -503,7 +505,8 @@ class AuthCookieManager {
       if (setLoading) {
         setLoading(false);
       }
-      window.location.href = `https://${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
+      const protocol = window.location.protocol;
+      window.location.href = `${protocol}//${config.REACT_APP_API_URL_FRONTEND}/organization-login`;
     }
   }
   // ---------------------- v1.0.2 >
