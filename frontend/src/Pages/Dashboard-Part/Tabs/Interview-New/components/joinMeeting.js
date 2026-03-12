@@ -31,9 +31,9 @@ export const createJoinMeetingUrl = (round, interviewData, contactId = null, typ
     // console.log("type interviewData", type, interviewData)
     let base = config.REACT_APP_API_URL_FRONTEND;
 
-    // Force https if missing protocol (very common mistake in env files)
+    // Force protocol if missing (using current window protocol)
     if (!base.startsWith('http://') && !base.startsWith('https://')) {
-        base = 'https://' + base;
+        base = window.location.protocol + '//' + base;
     }
 
     // Remove trailing slash if present
