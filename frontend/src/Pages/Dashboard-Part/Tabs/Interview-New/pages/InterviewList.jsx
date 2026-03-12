@@ -713,6 +713,7 @@ const InterviewList = ({ interviews, isPositionView }) => {
       ]
       : []),
   ];
+  console.log("")
 
   return (
     <div className="bg-background min-h-screen">
@@ -931,7 +932,7 @@ const InterviewList = ({ interviews, isPositionView }) => {
                                 {/* v1.0.3 <----------------------------------------------- */}
                                 <div className="text-sm text-gray-500">
                                   {capitalizeFirstLetter(
-                                    position?.companyname
+                                    position?.companyname?.name || position?.companyname
                                   ) || "No Company"}{" "}
                                   •{" "}
                                   {capitalizeFirstLetter(
@@ -1339,7 +1340,10 @@ const InterviewList = ({ interviews, isPositionView }) => {
                     const uniqueCompanies = [
                       ...new Set(
                         interviewData
-                          ?.map((i) => i.positionId?.companyname)
+                          ?.map((i) => {
+                            const company = i.positionId?.companyname;
+                            return typeof company === "object" ? company?.name : company;
+                          })
                           .filter(Boolean) || []
                       ),
                     ];
