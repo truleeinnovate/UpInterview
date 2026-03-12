@@ -23,6 +23,17 @@ export const useInterviewTemplates = (filters = {}) => {
   const organization = tokenPayload?.organization;
   const initialLoad = useRef(true);
 
+  const queryParams = useMemo(
+    () => ({
+      tenantId,
+      userId,
+      organization,
+      authToken,
+    }),
+    [tenantId, userId, organization, authToken]
+  );
+
+
   // Build query key WITHOUT page
   const { page, ...filtersWithoutPage } = filters;
 
@@ -39,7 +50,7 @@ export const useInterviewTemplates = (filters = {}) => {
     queryKey: ["interviewTemplates", filtersWithoutPage],
     queryFn: async ({ pageParam = 1 }) => {
       const params = { ...filtersWithoutPage, page: pageParam, limit: filters.limit || 20 };
-      const data = await fetchFilterData("interviewtemplate", {}, params);
+      const data = await fetchFilterData("interviewtemplate", {}, params, queryParams);
       return data;
     },
     getNextPageParam: (lastPage, allPages) => {
@@ -184,9 +195,9 @@ export const useInterviewTemplates = (filters = {}) => {
         return oldData.map((template) =>
           template._id === variables.id
             ? {
-                ...template,
-                rounds: data?.data?.rounds || [], // Backend will return ordered rounds
-              }
+              ...template,
+              rounds: data?.data?.rounds || [], // Backend will return ordered rounds
+            }
             : template
         );
       });
