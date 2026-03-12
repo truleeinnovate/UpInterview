@@ -438,21 +438,13 @@ const Wallet = () => {
             {walletTransactions && walletTransactions.length > 0 ? (
               [...walletTransactions]
                 .sort((a, b) => {
-                  const dateA = a.updatedAt
-                    ? new Date(a.updatedAt)
-                    : a.createdAt
-                      ? new Date(a.createdAt)
-                      : a.createdDate
-                        ? new Date(a.createdDate)
-                        : new Date(0);
-                  const dateB = b.updatedAt
-                    ? new Date(b.updatedAt)
-                    : b.createdAt
-                      ? new Date(b.createdAt)
-                      : b.createdDate
-                        ? new Date(b.createdDate)
-                        : new Date(0);
-                  return dateB - dateA; // Sort in descending order (newest first)
+                  const getDate = (txn) => {
+                    if (txn.type === 'hold' || txn.type === 'hold_adjust') {
+                      return new Date(txn.createdAt || txn.createdDate || txn.updatedAt || 0);
+                    }
+                    return new Date(txn.updatedAt || txn.createdAt || txn.createdDate || 0);
+                  };
+                  return getDate(b) - getDate(a); // Sort in descending order (newest first)
                 })
                 .slice(0, 10)
                 .filter((transaction) => {
@@ -527,15 +519,20 @@ const Wallet = () => {
                           )}
                         </div>
                         <span className="text-xs text-gray-500">
-                          {(transaction.updatedAt || transaction.createdAt || transaction.createdDate)
-                            ? new Date(transaction.updatedAt || transaction.createdAt || transaction.createdDate).toLocaleString('en-IN', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })
-                            : "N/A"}
+                          {(() => {
+                            const dateToUse = (transaction.type === 'hold' || transaction.type === 'hold_adjust')
+                              ? (transaction.createdAt || transaction.createdDate || transaction.updatedAt)
+                              : (transaction.updatedAt || transaction.createdAt || transaction.createdDate);
+                            return dateToUse
+                              ? new Date(dateToUse).toLocaleString('en-IN', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })
+                              : "N/A";
+                          })()}
                         </span>
                       </div>
 
@@ -789,9 +786,14 @@ const Wallet = () => {
                           )}
                         </div>
                         <span className="text-xs text-gray-500">
-                          {(transaction.updatedAt || transaction.createdAt || transaction.createdDate)
-                            ? new Date(transaction.updatedAt || transaction.createdAt || transaction.createdDate).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                            : "N/A"}
+                          {(() => {
+                            const dateToUse = (transaction.type === 'hold' || transaction.type === 'hold_adjust')
+                              ? (transaction.createdAt || transaction.createdDate || transaction.updatedAt)
+                              : (transaction.updatedAt || transaction.createdAt || transaction.createdDate);
+                            return dateToUse
+                              ? new Date(dateToUse).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                              : "N/A";
+                          })()}
                         </span>
                       </div>
 

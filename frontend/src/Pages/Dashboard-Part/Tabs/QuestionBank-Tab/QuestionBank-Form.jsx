@@ -215,9 +215,15 @@ const QuestionBankForm = ({
     { value: "Interview Questions", label: "Interview Questions" },
     { value: "Assessment Questions", label: "Assessment Questions" },
   ];
-  const categoryOptionsRS = (category || [])
-    .filter((opt) => opt.status === "Active")
-    .map((opt) => ({ value: opt.CategoryName, label: opt.CategoryName }));
+  // const categoryOptionsRS = (category || [])
+  //   .filter((opt) => opt.status === "Active")
+  //   .map((opt) => ({ value: opt.CategoryName, label: opt.CategoryName }));
+
+  const categoryOptionsRS = [
+    { value: "Technical", label: "Technical" },
+    { value: "Communication", label: "Communication" },
+    { value: "Behavioral", label: "Behavioral" },
+  ];
 
   const areaOptions = ["Administration", "Development", "Architecture", "Integration"];
   const areaOptionsRS = areaOptions.map((a) => ({ value: a, label: a }));

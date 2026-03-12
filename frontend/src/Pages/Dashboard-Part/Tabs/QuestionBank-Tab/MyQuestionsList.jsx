@@ -1841,7 +1841,7 @@ const MyQuestionsList = ({
                 ...selectedCategoryFilterItems,
               ].length > 0 || tempFiltrationData.some(section => section.options.some(o => o.isChecked))) && (
                   <div className="flex flex-col gap-3 mt-2">
-                    <h3 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wider">Active Filters:</h3>
+                    <h3 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wider">Applied Filters:</h3>
 
                     <div className="flex flex-wrap items-center gap-2 min-h-[28px]">
                       {/* Search tag chips */}
