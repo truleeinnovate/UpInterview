@@ -306,10 +306,10 @@ export const InterviewerCard = ({
 const Interviewers = () => {
   const navigate = useNavigate();
   const { effectivePermissions } = usePermissions();
-  const [view, setView] = useState("table"); // 'grid' for kanban, 'table' for table
+  const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
-  const ITEMS_PER_PAGE = 10;
+  // currentPage removed - using infinite scroll
+  const ITEMS_PER_PAGE = 20;
 
   // Title ----------------------------------------
   useTitle("Interviewers");
@@ -326,8 +326,8 @@ const Interviewers = () => {
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const filterIconRef = useRef(null);
 
-  const { data, isLoading, isError, refetch } = usePaginatedInterviewers({
-    page: currentPage,
+  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = usePaginatedInterviewers({
+    page: 0,
     limit: ITEMS_PER_PAGE,
     search: searchQuery,
     ...filters,
@@ -338,7 +338,6 @@ const Interviewers = () => {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0);
   };
 
   const handleEdit = (rowOrId) => {
@@ -380,7 +379,7 @@ const Interviewers = () => {
   };
 
   const handleApplyFilters = () => {
-    setCurrentPage(0);
+    // infinite scroll resets automatically via queryKey change
     setIsFilterPopupOpen(false);
   };
 
@@ -391,11 +390,17 @@ const Interviewers = () => {
       team: "",
       tag: "",
     });
-    setCurrentPage(0);
   };
 
   const interviewers = data?.data || [];
   const pagination = data?.pagination || {};
+  const totalInterviewers = pagination.totalItems || 0;
+
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
 
   // console.log("interviewers", interviewers);
 
@@ -421,7 +426,7 @@ const Interviewers = () => {
   });
 
   return (
-    <div className="mt-6">
+    <div className="">
       <div className="mb-2 px-6">
         <Header
           title="Interviewers"
@@ -434,10 +439,6 @@ const Interviewers = () => {
           setView={setView}
           searchQuery={searchQuery}
           onSearch={handleSearch}
-          currentPage={currentPage}
-          totalPages={pagination.totalPages || 0}
-          onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
-          onNextPage={() => setCurrentPage((p) => p + 1)}
           dataLength={pagination.totalItems || 0}
           searchPlaceholder="Search interviewers..."
           onFilterClick={handleFilterClick}
@@ -446,6 +447,7 @@ const Interviewers = () => {
           isFilterActive={
             filters.type || filters.status || filters.team || filters.tag
           }
+          hidePagination={true}
         />
       </div>
 
@@ -528,14 +530,39 @@ const Interviewers = () => {
         )
       ) : (
         // Table View
-        <TableView
-          data={interviewers}
-          columns={columns}
-          loading={isLoading}
-          actions={actions}
-          emptyState={emptyStateMessage}
-          autoHeight={false}
-        />
+        <div className="w-full">
+          {/* Interviewers count */}
+          {totalInterviewers > 0 && (
+            <div className="flex items-center justify-start px-6 py-2">
+              <span className="text-sm text-gray-500">
+                Showing{" "}
+                <span className="font-semibold text-gray-800">{interviewers?.length || 0}</span>
+                {" "}of{" "}
+                <span className="font-semibold text-gray-800">
+                  {(() => {
+                    const t = totalInterviewers;
+                    const r = Math.floor(t / 100) * 100;
+                    if (r === 0) return t;
+                    if (t === r) return t;
+                    return `${r}+`;
+                  })()}
+                </span>
+                {" "}{totalInterviewers === 1 ? "interviewer" : "interviewers"}
+              </span>
+            </div>
+          )}
+          <TableView
+            data={interviewers}
+            columns={columns}
+            loading={isLoading}
+            actions={actions}
+            emptyState={emptyStateMessage}
+            autoHeight={false}
+            onScrollEnd={handleScrollEnd}
+            isLoadingMore={isFetchingNextPage}
+            hasMore={hasNextPage}
+          />
+        </div>
       )}
     </div>
   );

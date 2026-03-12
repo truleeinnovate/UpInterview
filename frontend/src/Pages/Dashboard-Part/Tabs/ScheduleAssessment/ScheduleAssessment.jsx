@@ -178,8 +178,7 @@ const ScheduleAssessment = () => {
   const { assessmentData, checkExpiredAssessments, updateAllScheduleStatuses } =
     useAssessments();
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
-  const rowsPerPage = 10;
+  const rowsPerPage = 20;
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
   const filterIconRef = useRef(null);
@@ -253,9 +252,9 @@ const ScheduleAssessment = () => {
     return () => clearTimeout(t);
   }, [searchQuery]);
 
-  // Reset page when debounced search or filters change
+  // Reset search-related state when debounced search or filters change
   useEffect(() => {
-    setCurrentPage(0);
+    // no-op: infinite scroll handles reset automatically
   }, [
     debouncedSearch,
     selectedStatus,
@@ -283,9 +282,8 @@ const ScheduleAssessment = () => {
   useScrollLock(viewMode === "kanban");
   // v1.0.8 ------------------------------------------------------------->
 
-  const { scheduleData, total, itemsPerPage, isLoading } =
+  const { scheduleData, total, itemsPerPage, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useScheduleAssessments({
-      page: currentPage + 1,
       limit: rowsPerPage,
       // Search by Assessment Template Name / ID via templates filter
       templates: searchTemplateIds,
@@ -405,7 +403,6 @@ const ScheduleAssessment = () => {
       tempCreatedDatePreset !== ""
     );
     setFilterPopupOpen(false);
-    setCurrentPage(0);
   };
   // ------------------------------v1.0.3 >
   const handleClearFilters = () => {
@@ -420,7 +417,6 @@ const ScheduleAssessment = () => {
     setTempExpiryDatePreset("");
     setTempCreatedDatePreset("");
     setIsFilterActive(false);
-    setCurrentPage(0);
     setFilterPopupOpen(false);
   };
 
@@ -432,18 +428,10 @@ const ScheduleAssessment = () => {
     setSearchQuery(e.target.value);
   };
 
-  const nextPage = () => {
-    const totalPagesFromServer = Math.max(
-      1,
-      Math.ceil((total || 0) / (itemsPerPage || rowsPerPage))
-    );
-    setCurrentPage((prev) =>
-      prev + 1 < totalPagesFromServer ? prev + 1 : prev
-    );
-  };
-
-  const prevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 0));
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
   };
 
   const handleView = (schedule) => {
@@ -617,7 +605,7 @@ const ScheduleAssessment = () => {
   // v1.0.8 --------------------------------------------------------------------------------------->
   // v1.0.5 --------------------------------------------------------------------------------------->
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background">
       <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
         <main className="px-6">
           <div className="sm:px-0">
@@ -634,19 +622,13 @@ const ScheduleAssessment = () => {
               setView={setViewMode}
               searchQuery={searchQuery}
               onSearch={handleSearchInputChange}
-              currentPage={currentPage}
-              totalPages={Math.max(
-                1,
-                Math.ceil((total || 0) / (itemsPerPage || rowsPerPage))
-              )}
-              onPrevPage={prevPage}
-              onNextPage={nextPage}
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
               dataLength={Math.max(1, total || scheduleData?.length || 0)}
               searchPlaceholder="Search by ID, Template Name, Status..."
               filterIconRef={filterIconRef}
+              hidePagination={true}
             />
             {/* <-------------------------------v1.0.3 */}
 
@@ -672,15 +654,40 @@ const ScheduleAssessment = () => {
           <motion.div className="bg-white">
             {viewMode === "table" ? (
               //  v1.0.7 <------------------------------------------------------------------------------
-              <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
-                <TableView
-                  data={currentRows}
-                  columns={tableColumns}
-                  actions={tableActions}
-                  loading={isLoading}
-                  emptyState={emptyStateMessage}
-                  className="table-fixed w-full"
-                />
+              <div>
+                {/* Assessments count */}
+                {total > 0 && (
+                  <div className="flex items-center justify-start px-6 py-2">
+                    <span className="text-sm text-gray-500">
+                      Showing{" "}
+                      <span className="font-semibold text-gray-800">{currentRows?.length || 0}</span>
+                      {" "}of{" "}
+                      <span className="font-semibold text-gray-800">
+                        {(() => {
+                          const t = total;
+                          const r = Math.floor(t / 100) * 100;
+                          if (r === 0) return t;
+                          if (t === r) return t;
+                          return `${r}+`;
+                        })()}
+                      </span>
+                      {" "}{total === 1 ? "assessment" : "assessments"}
+                    </span>
+                  </div>
+                )}
+                <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-280px)] md:max-h-[calc(100vh-248px)] lg:max-h-[calc(100vh-232px)]">
+                  <TableView
+                    data={currentRows}
+                    columns={tableColumns}
+                    actions={tableActions}
+                    loading={isLoading}
+                    emptyState={emptyStateMessage}
+                    className="table-fixed w-full"
+                    onScrollEnd={handleScrollEnd}
+                    isLoadingMore={isFetchingNextPage}
+                    hasMore={hasNextPage}
+                  />
+                </div>
               </div>
             ) : (
               //  v1.0.7 ------------------------------------------------------------------------------>
@@ -704,6 +711,9 @@ const ScheduleAssessment = () => {
                 onTitleClick={handleView}
                 emptyState={emptyStateMessage}
                 kanbanTitle="Assessment"
+                onScrollEnd={handleScrollEnd}
+                isLoadingMore={isFetchingNextPage}
+                hasMore={hasNextPage}
               />
               // v1.0.8 ------------------------------------------------------------------------>
               // v1.0.5 ------------------------------------------------------------------------>

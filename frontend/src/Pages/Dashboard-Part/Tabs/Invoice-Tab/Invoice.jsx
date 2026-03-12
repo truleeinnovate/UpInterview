@@ -158,14 +158,14 @@ const InvoiceTab = () => {
   const tenantId = tokenPayload?.tenantId;
   const organization = tokenPayload?.organization;
   const ownerId = tokenPayload?.userId;
-  // Add this near your other useState declarations
-  const [paginationData, setPaginationData] = useState({
-    total: 0,
-    currentPage: 0,
-    totalPages: 1,
-    limit: 10,
-  });
-  const rowsPerPage = 10; // Keep this as default
+
+  // Infinite scroll state
+  const rowsPerPage = 20;
+  const [currentApiPage, setCurrentApiPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
@@ -247,13 +247,16 @@ const InvoiceTab = () => {
   // }, [ownerId, tenantId, organization, authToken]);
 
   const fetchInvoiceData = useCallback(
-    async (page = 1, appliedFilters = {}) => {
-      setLoading(true);
+    async (page = 1, appliedFilters = {}, append = false) => {
+      if (append) {
+        setIsLoadingMore(true);
+      } else {
+        setLoading(true);
+        setIsInitialLoading(true);
+      }
       try {
-        // Determine the ID and query parameter based on organization flag
         const id = organization ? tenantId : ownerId;
 
-        // Build query parameters
         const queryParams = new URLSearchParams({
           isOrganization: organization,
           page: page,
@@ -275,17 +278,13 @@ const InvoiceTab = () => {
 
         const endpoint = `${config.REACT_APP_API_URL}/invoices/get-invoice/${id}?${queryParams}`;
 
-        // Fetch invoice data from API
         const Invoice_res = await axios.get(endpoint, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
 
         const { invoices: invoiceData, pagination } = Invoice_res?.data || {};
 
-        // console.log("Invoice Data:", invoiceData, pagination);
-
-        // Transform the data into a more usable structure
-        const formattedData = invoiceData.map((invoice) => {
+        const formattedData = (invoiceData || []).map((invoice) => {
           const paymentId =
             invoice.paymentId ||
             `PMT-${invoice._id.toString().substring(18, 24)}-${Date.now()
@@ -333,32 +332,42 @@ const InvoiceTab = () => {
           };
         });
 
-        setBillingData(formattedData);
+        if (append) {
+          setBillingData((prev) => [...prev, ...formattedData]);
+        } else {
+          setBillingData(formattedData);
+        }
 
-        // Update pagination state
-        setPaginationData({
-          total: pagination?.total || 0,
-          currentPage: pagination?.page || 1,
-          totalPages: pagination?.totalPages || 1,
-          limit: pagination?.limit || rowsPerPage,
-        });
+        const total = pagination?.total || 0;
+        setTotalCount(total);
+        setCurrentApiPage(page);
+
+        // Check if there are more pages
+        const totalLoaded = append
+          ? billingData.length + formattedData.length
+          : formattedData.length;
+        setHasMore(totalLoaded < total);
       } catch (error) {
         console.error("Error fetching invoice data:", error);
-        setBillingData([]);
-        setPaginationData({
-          total: 0,
-          currentPage: 1,
-          totalPages: 1,
-          limit: rowsPerPage,
-        });
+        if (!append) {
+          setBillingData([]);
+          setTotalCount(0);
+          setHasMore(false);
+        }
       }
       setLoading(false);
+      setIsLoadingMore(false);
+      setIsInitialLoading(false);
     },
     [ownerId, tenantId, organization, authToken, searchQuery]
   );
+
   useEffect(() => {
-    // Reset to page 1 when filters or search changes
-    fetchInvoiceData(1, selectedFilters);
+    // Reset and fetch from page 1 when filters or search changes
+    setBillingData([]);
+    setCurrentApiPage(1);
+    setHasMore(true);
+    fetchInvoiceData(1, selectedFilters, false);
   }, [fetchInvoiceData, selectedFilters]);
 
   // Remove or modify the existing fetchInvoiceData useEffect
@@ -432,8 +441,11 @@ const InvoiceTab = () => {
     );
     setFilterPopupOpen(false);
 
-    // Reset to first page and fetch with new filters
-    fetchInvoiceData(1, filters);
+    // Reset and fetch with new filters
+    setBillingData([]);
+    setCurrentApiPage(1);
+    setHasMore(true);
+    fetchInvoiceData(1, filters, false);
   };
 
   const handleFilterIconClick = () => {
@@ -496,48 +508,14 @@ const InvoiceTab = () => {
   // const totalPages = Math.ceil(FilteredData().length / rowsPerPage);
   // const [currentPage, setCurrentPage] = useState(0);
 
-  const nextPage = () => {
-    if (paginationData.currentPage < paginationData.totalPages) {
-      const nextPageNum = paginationData.currentPage + 1;
-      fetchInvoiceData(nextPageNum, selectedFilters);
+  // Infinite scroll handler
+  const handleScrollEnd = () => {
+    if (hasMore && !isLoadingMore) {
+      fetchInvoiceData(currentApiPage + 1, selectedFilters, true);
     }
   };
 
-  const prevPage = () => {
-    if (paginationData.currentPage > 1) {
-      const prevPageNum = paginationData.currentPage - 1;
-      fetchInvoiceData(prevPageNum, selectedFilters);
-    }
-  };
-
-  // const nextPage = () => {
-  //   if ((currentPage + 1) * rowsPerPage < FilteredData().length) {
-  //     setCurrentPage(currentPage + 1);
-  //   }
-  // };
-
-  // const prevPage = () => {
-  //   if (currentPage > 0) {
-  //     setCurrentPage(currentPage - 1);
-  //   }
-  // };
-
-  // const startIndex = currentPage * rowsPerPage;
-  // const endIndex = Math.min(startIndex + rowsPerPage, FilteredData().length);
-  // const currentFilteredRows = FilteredData()
-  //   .slice(startIndex, endIndex)
-  //   .sort((a, b) => {
-  //     const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
-  //     const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
-  //     return dateB - dateA;
-  //   });
-
-  // Remove this entire function:
-
-  // Update the component to use billingData directly:
-  const totalPages = paginationData.totalPages;
-  // const currentPage = paginationData.currentPage - 1; // For display purposes
-  const currentFilteredRows = billingData; // Use billingData directly
+  const currentFilteredRows = billingData;
 
   // v1.0.6 <----------------------------------------------------------------------------------
   // const formatDate = (isoString) => {
@@ -555,8 +533,7 @@ const InvoiceTab = () => {
 
   // ------------------------- Dynamic Empty State Messages using Utility -----------------------
   const isSearchActive = searchQuery.length > 0 || isFilterActive;
-  // Use the length of the raw data (before pagination) as the initial count
-  const initialDataCount = billingData.length || 0;
+  const initialDataCount = totalCount || billingData.length || 0;
   const currentFilteredCount = currentFilteredRows?.length || 0;
 
   const emptyStateMessage = getEmptyStateMessage(
@@ -689,7 +666,7 @@ const InvoiceTab = () => {
 
   return (
     // v1.0.4 <-------------------------------------------------------------------------------
-    <div className="w-full min-h-screen border-0">
+    <div className="border-0">
       <div className="fixed top-16 left-0 right-0">
         {/* v1.0.3 <------------------------------------------------- */}
         <main className="px-6 sm:mt-8 md:mt-8">
@@ -710,39 +687,58 @@ const InvoiceTab = () => {
               setView={(newView) => setViewMode(newView)}
               searchQuery={searchQuery}
               onSearch={handleSearchInputChange}
-              currentPage={paginationData.currentPage - 1}
-              totalPages={paginationData.totalPages}
-              onPrevPage={prevPage}
-              onNextPage={nextPage}
               onFilterClick={handleFilterIconClick}
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
-              // dataLength={billingData.length}
-              dataLength={paginationData.total}
+              dataLength={totalCount || billingData.length}
               searchPlaceholder="Search by Status, Inv..."
               filterIconRef={filterIconRef}
+              hidePagination={true}
             />
           </div>
         </main>
       </div>
-      <main className="flex items-center justify-center bg-background w-full">
-        <div className="w-full overflow-auto">
-          <motion.div className="w-full">
-            <div className="relative w-full">
+      <main className="fixed top-48 left-0 right-0 bottom-0 bg-background">
+        <div className="w-full h-full">
+          <motion.div className="w-full h-full">
+            <div className="relative w-full h-full flex flex-col">
+              {/* Invoice count */}
+              {(totalCount || billingData.length) > 0 && (
+                <div className="flex items-center justify-start px-6 py-2">
+                  <span className="text-sm text-gray-500">
+                    Showing{" "}
+                    <span className="font-semibold text-gray-800">{billingData.length}</span>
+                    {" "}of{" "}
+                    <span className="font-semibold text-gray-800">
+                      {(() => {
+                        const t = totalCount || billingData.length;
+                        const r = Math.floor(t / 100) * 100;
+                        if (r === 0) return t;
+                        if (t === r) return t;
+                        return `${r}+`;
+                      })()}
+                    </span>
+                    {" "}{(totalCount || billingData.length) === 1 ? "invoice" : "invoices"}
+                  </span>
+                </div>
+              )}
               {viewMode === "table" ? (
-                <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+                <div className="flex-1 w-full overflow-x-auto overflow-y-auto">
                   <TableView
                     data={currentFilteredRows}
                     columns={tableColumns}
-                    loading={loading}
+                    loading={isInitialLoading && loading}
                     actions={tableActions}
                     emptyState={emptyStateMessage}
+                    onScrollEnd={handleScrollEnd}
+                    isLoadingMore={isLoadingMore}
+                    hasMore={hasMore}
                   />
                 </div>
               ) : (
-                <div className="w-full">
+                <div className="flex-1 w-full overflow-y-auto">
                   <InvoiceKanban
-                    loading={loading}
+                    loading={isInitialLoading && loading}
                     data={currentFilteredRows.map((invoice) => ({
                       ...invoice,
                       id: invoice?._id,
@@ -763,6 +759,9 @@ const InvoiceTab = () => {
                     }}
                     emptyState={emptyStateMessage}
                     kanbanTitle="Invoice"
+                    onScrollEnd={handleScrollEnd}
+                    isLoadingMore={isLoadingMore}
+                    hasMore={hasMore}
                   />
                 </div>
               )}

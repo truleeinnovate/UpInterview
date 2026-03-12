@@ -72,7 +72,6 @@ const Feedback = () => {
   // const { user } = useCustomContext();
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
   const filterIconRef = useRef(null);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
@@ -112,8 +111,7 @@ const Feedback = () => {
   // ------------------------------v1.0.3 >
   // State for filters and pagination
   const [filters, setFilters] = useState({
-    page: 1,
-    limit: 10,
+    limit: 20,
     search: "",
     status: [],
     positions: [],
@@ -129,6 +127,9 @@ const Feedback = () => {
     data: feedbacksResponse,
     isLoading: feedbacksLoading,
     error: feedbacksError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useFeedbacks(filters);
 
   // console.log("feedbacksResponse", feedbacksResponse);
@@ -139,27 +140,27 @@ const Feedback = () => {
   // Extract data from response
   // const feedbacks = feedbacksResponse?.feedbacks || [];
 
-const allFeedbacks = feedbacksResponse?.feedbacks || [];
+  const allFeedbacks = feedbacksResponse?.feedbacks || [];
 
-const feedbacks = allFeedbacks.filter((row) => {
-  // Case 1: feedback is submitted → include
-  if (row?.status?.toLowerCase() === "submitted" && row?.ownerId?._id !== tokenPayload.userId) {
-    // console.log("row submitted", row?.ownerId?._id !== tokenPayload.userId);
-    return true;
+  const feedbacks = allFeedbacks.filter((row) => {
+    // Case 1: feedback is submitted → include
+    if (row?.status?.toLowerCase() === "submitted" && row?.ownerId?._id !== tokenPayload.userId) {
+      // console.log("row submitted", row?.ownerId?._id !== tokenPayload.userId);
+      return true;
 
-  }
+    }
 
-  // Case 2: owner matches → include all
-  if (row?.ownerId?._id === tokenPayload.userId) {
+    // Case 2: owner matches → include all
+    if (row?.ownerId?._id === tokenPayload.userId) {
       console.log("row owner", row?.ownerId?._id === tokenPayload.userId);
-    return true;
-  }
+      return true;
+    }
 
-  // Otherwise, exclude
-  return false;
-});
+    // Otherwise, exclude
+    return false;
+  });
 
-console.log("feedbacks", feedbacks);
+  console.log("feedbacks", feedbacks);
 
 
   const paginationInfo = feedbacksResponse?.pagination || {
@@ -193,7 +194,7 @@ console.log("feedbacks", feedbacks);
   }, [feedbacks]);
   //
   // ------------------------------v1.0.3 >
-  const rowsPerPage = 10;
+  const rowsPerPage = 20;
 
   useEffect(() => {
     const handleResize = () => {
@@ -210,9 +211,7 @@ console.log("feedbacks", feedbacks);
       setFilters((prev) => ({
         ...prev,
         search: searchQuery,
-        page: 1, // Reset to first page when searching
       }));
-      setCurrentPage(0);
     }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
@@ -327,9 +326,9 @@ console.log("feedbacks", feedbacks);
       ratingMin: tempRatingRange.min,
       ratingMax: tempRatingRange.max,
       interviewDate: tempInterviewDatePreset,
-      page: 1, // Reset to first page when applying filters
+      page: 1,
     }));
-    setCurrentPage(0);
+
 
     setIsFilterActive(
       tempSelectedStatus.length > 0 ||
@@ -463,9 +462,7 @@ console.log("feedbacks", feedbacks);
       ratingMin: "",
       ratingMax: "",
       interviewDate: "",
-      page: 1,
     }));
-    setCurrentPage(0);
     setFilterPopupOpen(false);
   };
 
@@ -479,7 +476,6 @@ console.log("feedbacks", feedbacks);
 
   const handleSearchInputChange = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0);
     const normalizedQuery = normalizeSpaces(e.target.value);
 
     // const filtered = feedbacks.filter((f) => {
@@ -530,24 +526,10 @@ console.log("feedbacks", feedbacks);
   //   setCurrentPage((prev) => Math.max(prev - 1, 0));
   // };
 
-  // Pagination handlers (server uses 1-based pages)
-  const nextPage = () => {
-    if (paginationInfo.currentPage < paginationInfo.totalPages) {
-      setFilters((prev) => ({
-        ...prev,
-        page: prev.page + 1,
-      }));
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (paginationInfo.currentPage > 1) {
-      setFilters((prev) => ({
-        ...prev,
-        page: prev.page - 1,
-      }));
-      setCurrentPage((prev) => Math.max(prev - 1, 0));
+  // Pagination handlers removed - using infinite scroll now
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
@@ -649,7 +631,7 @@ console.log("feedbacks", feedbacks);
 
   return (
     <>
-      <div className="bg-background min-h-screen">
+      <div className="bg-background">
         <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
           <main className="px-6">
             <div className="sm:px-0">
@@ -664,16 +646,13 @@ console.log("feedbacks", feedbacks);
                 setView={setViewMode}
                 searchQuery={searchQuery}
                 onSearch={handleSearchInputChange}
-                currentPage={currentPage}
-                totalPages={paginationInfo.totalPages || 1}
-                onPrevPage={prevPage}
-                onNextPage={nextPage}
                 onFilterClick={handleFilterIconClick}
                 isFilterActive={isFilterActive}
                 isFilterPopupOpen={isFilterPopupOpen}
                 dataLength={paginationInfo.totalItems || 0}
                 searchPlaceholder="Search by ID, Name, Position..."
                 filterIconRef={filterIconRef}
+                hidePagination={true}
               />
             </div>
           </main>
@@ -683,6 +662,26 @@ console.log("feedbacks", feedbacks);
         <main className="fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
           <div className="sm:px-0">
             <motion.div className="bg-white">
+              {/* Feedback count */}
+              {paginationInfo.totalItems > 0 && (
+                <div className="flex items-center justify-start px-6 py-2">
+                  <span className="text-sm text-gray-500">
+                    Showing{" "}
+                    <span className="font-semibold text-gray-800">{filteredFeedbacks.length}</span>
+                    {" "}of{" "}
+                    <span className="font-semibold text-gray-800">
+                      {(() => {
+                        const t = paginationInfo.totalItems;
+                        const r = Math.floor(t / 100) * 100;
+                        if (r === 0) return t;
+                        if (t === r) return t;
+                        return `${r}+`;
+                      })()}
+                    </span>
+                    {" "}{paginationInfo.totalItems === 1 ? "feedback" : "feedbacks"}
+                  </span>
+                </div>
+              )}
               {viewMode === "table" ? (
                 <div className="overflow-x-autow-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                   <TableView
@@ -692,6 +691,9 @@ console.log("feedbacks", feedbacks);
                     loading={loading}
                     emptyState={emptyStateMessage}
                     className="table-fixed w-full"
+                    onScrollEnd={handleScrollEnd}
+                    isLoadingMore={isFetchingNextPage}
+                    hasMore={hasNextPage}
                   />
                 </div>
               ) : (

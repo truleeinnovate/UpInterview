@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { config } from '../config';
 import AuthCookieManager from '../utils/AuthCookieManager/AuthCookieManager';
@@ -37,10 +37,10 @@ const getAuthHeaders = () => {
 /*                                INTERVIEWERS                                */
 /* -------------------------------------------------------------------------- */
 
-// Fetch paginated interviewers with filters
+// Fetch paginated interviewers with filters — now uses useInfiniteQuery
 export const usePaginatedInterviewers = ({
     page = 0,
-    limit = 10,
+    limit = 20,
     search = '',
     tag = '',
     type = '',
@@ -48,17 +48,52 @@ export const usePaginatedInterviewers = ({
     team = '',
     sortBy = '-createdAt'
 } = {}) => {
-    return useQuery({
-        queryKey: ['interviewers', { page, limit, search, tag, type, status, team, sortBy }],
-        queryFn: async () => {
+    const filtersWithoutPage = { limit, search, tag, type, status, team, sortBy };
+
+    const result = useInfiniteQuery({
+        queryKey: ['interviewers', filtersWithoutPage],
+        queryFn: async ({ pageParam = 0 }) => {
             const { data } = await axios.get(`${config.REACT_APP_API_URL}/interviewers`, {
                 ...getAuthHeaders(),
-                params: { page, limit, search, tag, type, status, team, sortBy }
+                params: { page: pageParam, limit, search, tag, type, status, team, sortBy }
             });
             return data;
         },
-        keepPreviousData: true,
+        getNextPageParam: (lastPage, allPages) => {
+            const totalItems = lastPage?.pagination?.totalItems || 0;
+            const loadedSoFar = allPages.reduce((sum, p) => {
+                return sum + (Array.isArray(p?.data) ? p.data.length : 0);
+            }, 0);
+            if (loadedSoFar < totalItems) {
+                return allPages.length; // next page (0-indexed)
+            }
+            return undefined;
+        },
+        initialPageParam: 0,
+        retry: 1,
+        staleTime: 1000 * 30,
+        cacheTime: 1000 * 60 * 30,
+        refetchOnWindowFocus: false,
+        refetchOnMount: "always",
+        refetchOnReconnect: false,
     });
+
+    // Flatten all pages into a single array
+    const interviewers = result.data?.pages?.flatMap((p) => p?.data || []) || [];
+    const totalItems = result.data?.pages?.[0]?.pagination?.totalItems || interviewers.length;
+
+    return {
+        ...result,
+        data: {
+            data: interviewers,
+            pagination: {
+                totalItems,
+                totalPages: Math.ceil(totalItems / limit),
+            }
+        },
+        interviewers,
+        totalItems,
+    };
 };
 
 // Fetch all interviewers (for dropdowns mostly)

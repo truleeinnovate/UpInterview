@@ -97,7 +97,6 @@ const Companies = () => {
   const navigate = useNavigate();
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const filterIconRef = useRef(null);
 
@@ -118,10 +117,13 @@ const Companies = () => {
   const { industries } = useMasterData({}, "adminPortal");
   const { getAllCompanies, deleteCompany } = useCompanies();
 
-  // State for server-side pagination
-  const [totalPages, setTotalPages] = useState(0);
+  // State for infinite scroll
   const [totalCount, setTotalCount] = useState(0);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 20;
+  const [currentApiPage, setCurrentApiPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const defaultFilters = {
     status: [],
@@ -131,10 +133,13 @@ const Companies = () => {
   const [selectedFilters, setSelectedFilters] = useState(defaultFilters);
   const [tempFilters, setTempFilters] = useState(defaultFilters);
 
-  const fetchCompanies = async () => {
+  const fetchCompanies = async (page = 0, append = false) => {
     try {
+      if (page === 0) setIsInitialLoading(true);
+      else setIsLoadingMore(true);
+
       const filters = {
-        page: currentPage + 1, // API expects 1-based index
+        page: page + 1, // API expects 1-based index
         limit: ITEMS_PER_PAGE,
         search: searchQuery,
         status: selectedFilters.status.join(","),
@@ -143,26 +148,38 @@ const Companies = () => {
 
       const result = await getAllCompanies(filters);
 
-      // Backend returns { data, totalCount, totalPages, currentPage }
-      setCompanies(result.data || []);
-      setTotalPages(result.totalPages || 0);
-      setTotalCount(result.totalCount || 0);
+      const newData = result.data || [];
+      const total = result.totalCount || 0;
+      setTotalCount(total);
 
-      // Adjust page if current page is out of bounds (e.g., after filtering)
-      if (result.totalPages > 0 && currentPage >= result.totalPages) {
-        setCurrentPage(0);
+      if (append) {
+        setCompanies((prev) => [...prev, ...newData]);
+      } else {
+        setCompanies(newData);
       }
+
+      const totalLoaded = append ? companies.length + newData.length : newData.length;
+      setHasMore(totalLoaded < total);
+      setCurrentApiPage(page);
     } catch (error) {
       console.error("Failed to fetch companies:", error);
-      setCompanies([]);
+      if (!append) setCompanies([]);
+    } finally {
+      setIsInitialLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    fetchCompanies();
-  }, [searchQuery, selectedFilters, currentPage]);
+    setCurrentApiPage(0);
+    fetchCompanies(0, false);
+  }, [searchQuery, selectedFilters]);
 
-  const paginatedData = companies; // Now getting paginated data directly from API
+  const handleScrollEnd = () => {
+    if (hasMore && !isLoadingMore) {
+      fetchCompanies(currentApiPage + 1, true);
+    }
+  };
 
 
   const columns = getCompanyColumns(navigate);
@@ -198,7 +215,7 @@ const Companies = () => {
   };
 
   return (
-    <div className="w-full px-6 py-2">
+    <div className="w-full h-full px-6 py-2">
       <Header
         title="Companies"
         // onAddClick={() => navigate("/companies/new")}
@@ -216,12 +233,6 @@ const Companies = () => {
         setView={setView}
         searchQuery={searchQuery}
         onSearch={(e) => setSearchQuery(e.target.value)}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
-        onNextPage={() =>
-          setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
-        }
         onFilterClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
         isFilterActive={
           JSON.stringify(selectedFilters) !== JSON.stringify(defaultFilters)
@@ -230,9 +241,30 @@ const Companies = () => {
         dataLength={totalCount}
         filterIconRef={filterIconRef}
         searchPlaceholder="Search by Company Name, Industry, Email..."
+        hidePagination={true}
       />
 
       <div className="fixed sm:top-64 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+        {/* Companies count */}
+        {totalCount > 0 && (
+          <div className="flex items-center justify-start px-6 py-2">
+            <span className="text-sm text-gray-500">
+              Showing{" "}
+              <span className="font-semibold text-gray-800">{companies.length}</span>
+              {" "}of{" "}
+              <span className="font-semibold text-gray-800">
+                {(() => {
+                  const t = totalCount;
+                  const r = Math.floor(t / 100) * 100;
+                  if (r === 0) return t;
+                  if (t === r) return t;
+                  return `${r}+`;
+                })()}
+              </span>
+              {" "}{totalCount === 1 ? "company" : "companies"}
+            </span>
+          </div>
+        )}
         {view === "table" ? (
           <TableView
             data={companies}
@@ -240,10 +272,14 @@ const Companies = () => {
             actions={actions}
             emptyState="No Companies found."
             autoHeight={false}
+            loading={isInitialLoading}
+            onScrollEnd={handleScrollEnd}
+            isLoadingMore={isLoadingMore}
+            hasMore={hasMore}
           />
         ) : (
           <KanbanView
-            loading={false}
+            loading={isInitialLoading}
             data={companies.map((c) => ({
               ...c,
               id: c._id,
@@ -257,6 +293,9 @@ const Companies = () => {
             )}
             emptyState="No Companies Found"
             kanbanTitle="Company"
+            onScrollEnd={handleScrollEnd}
+            isLoadingMore={isLoadingMore}
+            hasMore={hasMore}
           />
         )}
 

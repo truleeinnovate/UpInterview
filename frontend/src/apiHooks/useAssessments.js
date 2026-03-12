@@ -6,7 +6,7 @@
 //v1.0.5  -  Ashraf  -  converted fetchScheduledAssessments to use React Query for proper caching,added cancel,extend,check expired,update all schedule statuses api code
 //v1.0.6  -  Ashok   -  added creating and fetching lists apis
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 // <---------------------- v1.0.3
 
@@ -36,49 +36,51 @@ export const useAssessments = (filters = {}) => {
   // const tenantId = tokenPayload.tenantId;
   // const ownerId = tokenPayload.userId;
 
+  // Build query key WITHOUT page
+  const { page, ...filtersWithoutPage } = filters;
+
   const {
-    data: responseData = [],
+    data: responseData,
     isLoading: isQueryLoading,
     isError,
     error,
     refetch,
-  } = useQuery({
-    // <---------------------- v1.0.1
-    // Use a stable representation of filters in the query key so React Query
-    // does not see a new key on every render when callers pass a freshly
-    // created filters object. JSON.stringify is sufficient here because
-    // filters only contains primitives/arrays/objects (no functions).
-    queryKey: ["AssessmentTemplates", JSON.stringify(filters || {})],
-    // ---------------------- v1.0.1 >
-    queryFn: async () => {
-      const params = filters;
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["AssessmentTemplates", JSON.stringify(filtersWithoutPage || {})],
+    queryFn: async ({ pageParam = 0 }) => {
+      const params = { ...filtersWithoutPage, page: pageParam, limit: filters.limit || 20 };
       const data = await fetchFilterData("assessment", {}, params);
-
       return data;
-      // .map((assessment) => ({
-      //   ...assessment,
-      //   // <---------------------- v1.0.4
-      //   // Add any assessment-specific transformations here
-      // }))
-      // .reverse();
-      // ---------------------- v1.0.4 >
     },
+    getNextPageParam: (lastPage, allPages) => {
+      const totalItems = lastPage?.totalCount || 0;
+      const loadedSoFar = allPages.reduce((sum, p) => {
+        return sum + (Array.isArray(p?.data) ? p.data.length : 0);
+      }, 0);
+      if (loadedSoFar < totalItems) {
+        return allPages.length; // next 0-indexed page
+      }
+      return undefined;
+    },
+    initialPageParam: 0,
     enabled: !!hasViewPermission,
     retry: 1,
-    staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
-    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    // refetchOnMount: false, // Don't refetch when component mounts if data exists
-    refetchOnReconnect: false, // Don't refetch on network reconnect
-    refetchOnMount: true, // Change this to true to refetch when component mounts
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: true,
   });
 
   const isLoading = isQueryLoading;
-  const assessmentData = responseData?.data || [];
-  const totalCount = responseData?.totalCount || 0;
-  const totalPages = Math.ceil(totalCount / filters.limit);
-  const customCount = responseData?.customCount || 0;
-  const standardCount = responseData?.standardCount || 0;
+  const assessmentData = responseData?.pages?.flatMap((p) => p?.data || []) || [];
+  const totalCount = responseData?.pages?.[0]?.totalCount || 0;
+  const totalPages = Math.ceil(totalCount / (filters.limit || 20));
+  const customCount = responseData?.pages?.[0]?.customCount || 0;
+  const standardCount = responseData?.pages?.[0]?.standardCount || 0;
 
   // <---------------------- v1.0.0
 
@@ -544,21 +546,18 @@ export const useAssessments = (filters = {}) => {
     upsertQuestionsError: upsertAssessmentQuestions.error,
     addOrUpdateAssessment: addOrUpdateAssessment.mutateAsync,
     upsertAssessmentQuestions: upsertAssessmentQuestions.mutateAsync,
-    fetchAssessmentQuestions, // assessment questions getting
+    fetchAssessmentQuestions,
     fetchAssessmentResults,
-    // ------------------------------ v1.0.5 >
-    // fetchScheduledAssessments, // Keep for backward compatibility
-    // useScheduledAssessments, // New React Query hook
     refetch,
-    // Assessment Actions
     extendAssessment,
     cancelAssessment,
     checkExpiredAssessments,
     updateAllScheduleStatuses,
-    // ------------------------------ v1.0.5 >
     deleteAssessment,
     createAssessmentTemplateList,
-    // assessmentLists,
     useAssessmentList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };

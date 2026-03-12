@@ -165,8 +165,6 @@ function SupportDesk() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [itemsPerPage] = useState(10);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     issueTypes: [],
@@ -184,17 +182,17 @@ function SupportDesk() {
   const [createdDate, setCreatedDate] = useState(""); // '', 'last7', 'last30'
   const navigate = useNavigate();
   const filterIconRef = useRef(null);
-  const { tickets, isLoading } = useSupportTickets({
+  const ITEMS_PER_PAGE = 20;
+  const { tickets, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useSupportTickets({
     search: searchQuery,
     status: selectedFilters.status,
     issueTypes: selectedFilters.issueTypes,
     priorities: selectedFilters.priorities,
     createdDate: selectedFilters.createdDate,
-    page: currentPage, // This is now properly sent to backend
-    limit: itemsPerPage,
+    limit: ITEMS_PER_PAGE,
   });
 
-  const totalPages = Math.ceil(tickets?.totalCount / itemsPerPage);
+  const totalCount = tickets?.totalCount || 0;
   const currentFilteredRows = tickets?.tickets || [];
 
   // Title ----------------------------------------
@@ -224,7 +222,6 @@ function SupportDesk() {
   const handleSearchInputChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
-    setCurrentPage(0); // Reset to first page when searching
   };
 
   // clear all filters
@@ -237,7 +234,6 @@ function SupportDesk() {
     }); //<-------v1.0.3--------
     setIsFilterActive(false);
     setIsFilterPopupOpen(false);
-    setCurrentPage(0);
     // Rest filter popup UI state
     setIsStatusOpen(false);
     setSelectedStatus([]);
@@ -257,17 +253,10 @@ function SupportDesk() {
     }
   };
 
-  //  handling next page pagination
-  const nextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  //  handling prev page pagination
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prev) => prev - 1);
+  // Infinite scroll handler
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
@@ -345,13 +334,12 @@ function SupportDesk() {
       (!!filters?.createdDate && filters?.createdDate !== "");
     setIsFilterActive(active);
     setIsFilterPopupOpen(false);
-    setCurrentPage(0); // Reset page
   };
   // v1.0.6 <----------------------------------------------------------------------
 
   // ------------------- Dynamic Empty State Messages using Utility ---------------------
   const isSearchActive = searchQuery.length > 0 || isFilterActive; // Use totalCount from the API response for the initial count
-  const initialDataCount = tickets?.totalCount || 0;
+  const initialDataCount = totalCount;
   const currentFilteredCount = currentFilteredRows?.length || 0;
 
   const emptyStateMessage = getEmptyStateMessage(
@@ -485,7 +473,7 @@ function SupportDesk() {
   // v1.0.6 ---------------------------------------------------------------------->
 
   return (
-    <div className="bg-background h-screen">
+    <div className="bg-background">
       <div className="fixed md:mt-6 sm:mt-4 top-12 left-0 right-0 bg-background">
         {/*<-------v1.0.0------- */}
         {/* v1.0.4 <----------------------------------------------------- */}
@@ -505,16 +493,13 @@ function SupportDesk() {
               setView={setViewMode}
               searchQuery={searchQuery}
               onSearch={handleSearchInputChange}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPrevPage={prevPage}
-              onNextPage={nextPage}
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
-              dataLength={tickets?.tickets?.length}
+              dataLength={totalCount}
               searchPlaceholder="Search by ID, Contact, Subject, Issue Type, Priority..."
               filterIconRef={filterIconRef}
+              hidePagination={true}
             />
           </div>
         </main>
@@ -533,6 +518,26 @@ function SupportDesk() {
         {/* v1.0.4 ------------------------------------------------------------------------------> */}
         <div className="sm:px-0">
           <motion.div className="bg-white">
+            {/* Tickets count */}
+            {totalCount > 0 && (
+              <div className="flex items-center justify-start px-6 py-2">
+                <span className="text-sm text-gray-500">
+                  Showing{" "}
+                  <span className="font-semibold text-gray-800">{currentFilteredRows.length}</span>
+                  {" "}of{" "}
+                  <span className="font-semibold text-gray-800">
+                    {(() => {
+                      const t = totalCount;
+                      const r = Math.floor(t / 100) * 100;
+                      if (r === 0) return t;
+                      if (t === r) return t;
+                      return `${r}+`;
+                    })()}
+                  </span>
+                  {" "}{totalCount === 1 ? "ticket" : "tickets"}
+                </span>
+              </div>
+            )}
             {viewMode === "table" ? (
               <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                 <TableView
@@ -542,10 +547,12 @@ function SupportDesk() {
                   loading={isLoading}
                   emptyState={emptyStateMessage}
                   className="table-fixed w-full"
+                  onScrollEnd={handleScrollEnd}
+                  isLoadingMore={isFetchingNextPage}
+                  hasMore={hasNextPage}
                 />
               </div>
             ) : (
-              // v1.0.6 <----------------------------------------------------------------
               <KanbanView
                 data={currentFilteredRows.map((ticket) => ({
                   ...ticket,
@@ -574,8 +581,10 @@ function SupportDesk() {
                 }}
                 emptyState={emptyStateMessage}
                 kanbanTitle="Ticket"
+                onScrollEnd={handleScrollEnd}
+                isLoadingMore={isFetchingNextPage}
+                hasMore={hasNextPage}
               />
-              // v1.0.6 ---------------------------------------------------------------->
             )}
             <FilterPopup
               isOpen={isFilterPopupOpen}

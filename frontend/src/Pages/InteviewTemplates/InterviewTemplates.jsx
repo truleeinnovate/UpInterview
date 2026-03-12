@@ -40,7 +40,7 @@ const InterviewTemplates = () => {
   useTitle("Interview Templates");
   // Title ----------------------------------------
 
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
   const [activeTab, setActiveTab] = useState(
     searchParams.get("tab") || "standard"
   );
@@ -48,7 +48,7 @@ const InterviewTemplates = () => {
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
+  // currentPage removed - using infinite scroll
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
 
@@ -86,7 +86,7 @@ const InterviewTemplates = () => {
 
   // Reset states when tab changes
   useEffect(() => {
-    setCurrentPage(1);
+    // currentPage removed - infinite scroll resets automatically
     setSearchQuery("");
     setSelectedStatus([]);
     setSelectedFormats([]);
@@ -102,13 +102,15 @@ const InterviewTemplates = () => {
     standardCount,
     isLoading,
     deleteInterviewTemplate,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useInterviewTemplates({
     search: searchQuery,
     status: selectedFilters.status,
     formats: selectedFilters.formats,
     rounds: selectedFilters.rounds,
     createdDate: selectedFilters.createdDate,
-    page: currentPage,
     limit: itemsPerPage,
     type: activeTab,
   });
@@ -120,7 +122,6 @@ const InterviewTemplates = () => {
     const tab = params.get("tab");
     if (tab === "standard" || tab === "custom") {
       setActiveTab(tab);
-      setCurrentPage(0);
     }
   }, []);
 
@@ -179,7 +180,6 @@ const InterviewTemplates = () => {
       filters.formats.length > 0
     );
     setFilterPopupOpen(false);
-    setCurrentPage(0);
   };
 
   const handleClearAll = () => {
@@ -198,7 +198,6 @@ const InterviewTemplates = () => {
     setSelectedFilters(clearedFilters);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
-    setCurrentPage(0);
     setFilterPopupOpen(false);
   };
 
@@ -222,15 +221,9 @@ const InterviewTemplates = () => {
     }
   }, [isFilterPopupOpen, selectedFilters]);
 
-  const handlePreviousPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage((prev) => prev + 1);
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
@@ -348,26 +341,19 @@ const InterviewTemplates = () => {
                 setView={setView}
                 searchQuery={searchQuery}
                 onSearch={(e) => setSearchQuery(e.target.value)}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPrevPage={handlePreviousPage}
-                onNextPage={handleNextPage}
                 onFilterClick={handleFilterIconClick}
                 isFilterActive={isFilterActive}
                 isFilterPopupOpen={isFilterPopupOpen}
                 dataLength={totalCount}
                 searchPlaceholder="Search by Template Name, Description, Best For..."
                 filterIconRef={filterIconRef}
-                // v1.0.6 <----------------------------------------
                 templatesData={templatesData}
                 customCount={customCount}
                 totalCount={totalCount}
                 standardCount={standardCount}
-                // standardCount={standardCount}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
-                setCurrentPage={setCurrentPage}
-              // v1.0.6 ---------------------------------------->
+                hidePagination={true}
               />
             </div>
             <div className="sm:px-0">
@@ -383,15 +369,41 @@ const InterviewTemplates = () => {
                     emptyState={emptyStateMessage}
                   />
                 ) : (
-                  <div className="overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
-                    <TableView
-                      data={templatesData}
-                      columns={tableColumns}
-                      actions={tableActions}
-                      loading={isLoading}
-                      emptyState={emptyStateMessage}
-                      className="table-fixed w-full"
-                    />
+                  <div className="w-full">
+                    {/* Templates count */}
+                    {totalCount > 0 && (
+                      <div className="flex items-center justify-start px-6 py-2">
+                        <span className="text-sm text-gray-500">
+                          Showing{" "}
+                          <span className="font-semibold text-gray-800">{templatesData?.length || 0}</span>
+                          {" "}of{" "}
+                          <span className="font-semibold text-gray-800">
+                            {(() => {
+                              const t = totalCount;
+                              const r = Math.floor(t / 100) * 100;
+                              if (r === 0) return t;
+                              if (t === r) return t;
+                              return `${r}+`;
+                            })()}
+                          </span>
+                          {" "}{totalCount === 1 ? "template" : "templates"}
+                        </span>
+                      </div>
+                    )}
+                    <div className="overflow-x-auto sm:max-h-[calc(100vh-280px)] md:max-h-[calc(100vh-248px)] lg:max-h-[calc(100vh-232px)]">
+                      <TableView
+                        data={templatesData}
+                        columns={tableColumns}
+                        actions={tableActions}
+                        loading={isLoading}
+                        emptyState={emptyStateMessage}
+                        className="table-fixed w-full"
+                        onScrollEnd={handleScrollEnd}
+                        isLoadingMore={isFetchingNextPage}
+                        hasMore={hasNextPage}
+                        hidePagination={true}
+                      />
+                    </div>
                   </div>
                 )}
                 <FilterPopup

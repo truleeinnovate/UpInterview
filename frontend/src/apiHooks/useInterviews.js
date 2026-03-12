@@ -1,5 +1,5 @@
 // v1.0.0 - Ashraf - added sending interview email link update in rounds api
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useRef } from "react";
 import { config } from "../config";
@@ -18,75 +18,63 @@ export const useInterviews = (
   const queryClient = useQueryClient();
   const { effectivePermissions } = usePermissions();
   const hasViewPermission = effectivePermissions?.Interviews?.View;
-  // const navigate = useNavigate();
   const initialLoad = useRef(true);
 
-  const params =
-  // useMemo(() => (
-  {
+  // Build base params without page (page is managed by useInfiniteQuery)
+  const baseParams = {
     ...filters,
-
-    page: page,
-    limit: limit,
+    limit: limit || 20,
     type: type,
     upcomingOnly: filters?.upcomingOnly ? filters?.upcomingOnly : false,
   };
-  //console.log("params", params);
-
-  // ),
-  //   [filters, page, limit, type]
-  // );
-
-  // FIX: Use state to hold total
-  // const [total, setTotal] = useState(0);
-  // const [totalPages, setTotalPages] = useState(1);
 
   const {
-    // data: interviewData = [],
-    data: responseData = {},
+    data: responseData,
     isLoading: isQueryLoading,
     isError,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ["interviews", params, type],
-    queryFn: async () => {
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["interviews", baseParams, type],
+    queryFn: async ({ pageParam = 1 }) => {
+      const params = { ...baseParams, page: pageParam };
       const response = await fetchFilterData("interview", {}, params);
-      // Enhanced with candidate data
-
-      // FIX: Extract pagination info
-      // const { data: interviews = [], total = 0, totalPages = 1 } = response;
-
-      // Update total state
-      // setTotal(total);
-      // setTotalPages(totalPages);
-      // console.log("interview response", response);
-      // Return both data and total
-      // console.log("response interview", response);
       return {
         data: response,
       };
-
-      // return response?.data
-      // return interviewsWithCandidates;
     },
-    // enabled: !!hasViewPermission && (options?.enabled !== false),
+    getNextPageParam: (lastPage, allPages) => {
+      const totalItems = lastPage?.data?.total ?? 0;
+      const items = lastPage?.data?.data || [];
+      const loadedSoFar = allPages.reduce((sum, p) => {
+        return sum + (Array.isArray(p?.data?.data) ? p.data.data.length : 0);
+      }, 0);
+      if (loadedSoFar < totalItems) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
     retry: 1,
-    staleTime: 1000 * 60 * 10, // 10 minutes - data stays fresh longer
-    cacheTime: 1000 * 60 * 30, // 30 minutes - keep in cache longer
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnMount: "always", // Don't refetch when component mounts if data exists
-    refetchOnReconnect: false, // Don't refetch on network reconnect
-    keepPreviousData: true,
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnMount: "always",
+    refetchOnReconnect: false,
   });
 
-  // Extract data and pagination info from response
-  const interviewData = responseData?.data?.data || [];
-  const total = responseData?.data?.total ?? 0;
-  const currentPage = responseData?.data?.page ?? 1;
-  const totalPages = responseData?.data?.totalPages ?? 0;
+  // Flatten all pages into a single array
+  const interviewData = responseData?.pages?.flatMap(
+    (p) => p?.data?.data || []
+  ) || [];
+  const total = responseData?.pages?.[0]?.data?.total ?? 0;
+  const currentPage = responseData?.pages?.[0]?.data?.page ?? 1;
+  const totalPages = responseData?.pages?.[0]?.data?.totalPages ?? 0;
 
-  const responseDashBoard = responseData?.data || {};
+  const responseDashBoard = responseData?.pages?.[0]?.data || {};
 
   // Child hook returned from useInterviews
   const useInterviewDetails = ({
@@ -613,18 +601,14 @@ export const useInterviews = (
     createError: createInterview.error,
     isSaveRoundError: saveInterviewRound.isError,
     saveRoundError: saveInterviewRound.error,
-    // isUpdateRoundWithMeetingLinksError: updateRoundWithMeetingLinks.isError,
-    // updateRoundWithMeetingLinksError: updateRoundWithMeetingLinks.error,
     isUpdateStatusError: updateInterviewStatus.isError,
     updateStatusError: updateInterviewStatus.error,
-    isDeleteInterviewError: deleteInterviewMutation.isError, // Add this
-    deleteInterviewError: deleteInterviewMutation.error, // Add this
+    isDeleteInterviewError: deleteInterviewMutation.isError,
+    deleteInterviewError: deleteInterviewMutation.error,
     createInterview: createInterview.mutateAsync,
     saveInterviewRound: saveInterviewRound.mutateAsync,
     updateInterviewRound: updateInterviewRound.mutateAsync,
-    // updateRoundWithMeetingLinks: updateRoundWithMeetingLinks.mutateAsync,
     updateInterviewStatus: updateInterviewStatus.mutateAsync,
-    // refetchInterviews,
     deleteRoundMutation: deleteRoundMutation.mutateAsync,
     deleteInterviewMutation: deleteInterviewMutation.mutateAsync,
     updateRoundStatus: updateRoundStatus.mutateAsync,
@@ -632,6 +616,9 @@ export const useInterviews = (
     isValidateRoundStatusLoading: validateRoundStatusMutation.isPending,
     validateRoundStatusError: validateRoundStatusMutation.error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };
 

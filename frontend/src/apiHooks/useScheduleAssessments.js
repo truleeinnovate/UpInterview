@@ -83,7 +83,7 @@
 // };
 
 // hooks/useScheduleAssessments.js
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { fetchFilterData } from "../api";
 
@@ -108,7 +108,7 @@ import { usePermissions } from "../Context/PermissionsContext";
  *
  * @returns {object} -
  *   - For options mode:
- *       { scheduleData, total, page, totalPages, itemsPerPage, isLoading, isError, error }
+ *       { scheduleData, total, page, totalPages, itemsPerPage, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage }
  *   - For legacy mode (string arg or no arg):
  *       { scheduleData, isLoading, isError, error }
  */
@@ -128,7 +128,7 @@ export const useScheduleAssessments = (arg) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const options = isOptionsMode ? arg || {} : {};
 
-  const params = useMemo(() => {
+  const buildParams = useMemo(() => {
     // Legacy mode: hook called with a single assessmentId string
     if (!isOptionsMode) {
       if (legacyAssessmentId) {
@@ -141,7 +141,6 @@ export const useScheduleAssessments = (arg) => {
 
     const {
       assessmentId,
-      page,
       limit,
       searchQuery,
       status,
@@ -155,7 +154,6 @@ export const useScheduleAssessments = (arg) => {
     const p = {};
 
     if (assessmentId) p.assessmentId = assessmentId;
-    if (page) p.page = page;
     if (limit) p.limit = limit;
     if (type) p.type = type;
 
@@ -194,31 +192,28 @@ export const useScheduleAssessments = (arg) => {
   }, [isOptionsMode, legacyAssessmentId, options]);
 
   /* -------------------------------------------------------------------------- */
-  /*                               QUERY: LIST                                  */
+  /*                     INFINITE QUERY: OPTIONS MODE                           */
   /* -------------------------------------------------------------------------- */
   const {
-    data: rawData,
-    isLoading: isQueryLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["scheduleassessment", params],
-    queryFn: async () => {
+    data: infiniteData,
+    isLoading: isInfiniteLoading,
+    isError: isInfiniteError,
+    error: infiniteError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["scheduleassessment-infinite", buildParams],
+    queryFn: async ({ pageParam = 1 }) => {
+      const params = { ...buildParams, page: pageParam, limit: buildParams.limit || 20 };
       const response = await fetchFilterData(
         "scheduleassessment",
         effectivePermissions,
         params
       );
 
-      // When backend advanced params are used, it returns an object
-      //   { data: [...], total, page, totalPages, itemsPerPage }
-      // When not, it returns a plain array.
-
-      // fetchFilterData currently returns `response.data.data || []`.
-      // To support both shapes, we treat array vs object differently:
-
+      // fetchFilterData returns response.data.data which can be array or object
       if (Array.isArray(response)) {
-        // Legacy behavior: array only, no metadata
         return {
           data: response.slice().reverse(),
           total: response.length,
@@ -232,60 +227,105 @@ export const useScheduleAssessments = (arg) => {
       return {
         data: arr.slice().reverse(),
         total: response?.total ?? arr.length,
-        page: response?.page ?? (params.page || 1),
+        page: response?.page ?? pageParam,
         totalPages: response?.totalPages ?? 1,
-        itemsPerPage:
-          response?.itemsPerPage ?? (params.limit || arr.length || 10),
+        itemsPerPage: response?.itemsPerPage ?? (params.limit || arr.length || 20),
         responseAssessmentDashBoard: response?.assessmentsCompleted,
       };
     },
-    enabled: !!hasViewPermission && (isOptionsMode || !!legacyAssessmentId),
+    getNextPageParam: (lastPage, allPages) => {
+      const totalItems = lastPage?.total || 0;
+      const loadedSoFar = allPages.reduce((sum, p) => {
+        return sum + (Array.isArray(p?.data) ? p.data.length : 0);
+      }, 0);
+      if (loadedSoFar < totalItems) {
+        return allPages.length + 1; // 1-indexed pages
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+    enabled: !!hasViewPermission && isOptionsMode,
     retry: 1,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    keepPreviousData: true,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
   });
 
   /* -------------------------------------------------------------------------- */
-  /*                           MUTATION: CREATE / UPDATE                        */
+  /*                       LEGACY QUERY: STRING MODE                            */
   /* -------------------------------------------------------------------------- */
-  // const addOrUpdateSchedule = useMutation({
-  //   mutationFn: async ({ isEditing, id, payload }) => {
-  //     if (isEditing) {
-  //       const { data } = await axios.patch(
-  //         `${config.REACT_APP_API_URL}/schedule-assessment/update/${id}`,
-  //         payload
-  //       );
-  //       return data;
-  //     }
-  //     const { data } = await axios.post(
-  //       `${config.REACT_APP_API_URL}/schedule-assessment/create`,
-  //       payload
-  //     );
-  //     return data;
-  //   },
-  //   onSuccess: () => {
-  //     // Invalidate both general and specific queries
-  //     queryClient.invalidateQueries(['scheduleassessment']);
-  //   },
-  //   onError: (err) => {
-  //     console.error('Schedule save error:', err.message);
-  //   },
-  // });
+  const {
+    data: legacyData,
+    isLoading: isLegacyLoading,
+    isError: isLegacyError,
+    error: legacyError,
+  } = useQuery({
+    queryKey: ["scheduleassessment-legacy", buildParams],
+    queryFn: async () => {
+      const response = await fetchFilterData(
+        "scheduleassessment",
+        effectivePermissions,
+        buildParams
+      );
+
+      if (Array.isArray(response)) {
+        return {
+          data: response.slice().reverse(),
+          total: response.length,
+          page: 1,
+          totalPages: 1,
+          itemsPerPage: response.length,
+        };
+      }
+
+      const arr = Array.isArray(response?.data) ? response.data : [];
+      return {
+        data: arr.slice().reverse(),
+        total: response?.total ?? arr.length,
+        page: response?.page ?? 1,
+        totalPages: response?.totalPages ?? 1,
+        itemsPerPage: (response?.itemsPerPage ?? arr.length) || 10,
+        responseAssessmentDashBoard: response?.assessmentsCompleted,
+      };
+    },
+    enabled: !!hasViewPermission && !isOptionsMode && !!legacyAssessmentId,
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+    keepPreviousData: true,
+  });
 
   /* -------------------------------------------------------------------------- */
   /*                                 RETURN                                     */
   /* -------------------------------------------------------------------------- */
 
-  const scheduleData = rawData?.data || [];
-  const total = rawData?.total ?? scheduleData.length;
-  const page = rawData?.page ?? 1;
-  const totalPages = rawData?.totalPages ?? 1;
-  const itemsPerPage = rawData?.itemsPerPage ?? scheduleData.length;
-  const responseAssessmentDashBoard = rawData?.responseAssessmentDashBoard;
+  if (isOptionsMode) {
+    // Infinite scroll mode: flatten all pages
+    const scheduleData = infiniteData?.pages?.flatMap((p) => p?.data || []) || [];
+    const total = infiniteData?.pages?.[0]?.total ?? scheduleData.length;
+    const responseAssessmentDashBoard = infiniteData?.pages?.[0]?.responseAssessmentDashBoard;
 
-  // Legacy callers (Dashboard, RoundCard, VerticalRoundsView, AssessmentViewAssessmentTab)
-  // only care about scheduleData + isLoading + errors and pass an assessmentId string.
-  // They will ignore the extra fields.
+    return {
+      scheduleData,
+      responseAssessmentDashBoard,
+      total,
+      page: 1,
+      totalPages: 1,
+      itemsPerPage: 20,
+      isLoading: isInfiniteLoading,
+      isError: isInfiniteError,
+      error: infiniteError,
+      fetchNextPage,
+      hasNextPage,
+      isFetchingNextPage,
+    };
+  }
+
+  // Legacy mode
+  const scheduleData = legacyData?.data || [];
+  const total = legacyData?.total ?? scheduleData.length;
+  const page = legacyData?.page ?? 1;
+  const totalPages = legacyData?.totalPages ?? 1;
+  const itemsPerPage = legacyData?.itemsPerPage ?? scheduleData.length;
+  const responseAssessmentDashBoard = legacyData?.responseAssessmentDashBoard;
 
   return {
     scheduleData,
@@ -294,10 +334,8 @@ export const useScheduleAssessments = (arg) => {
     page,
     totalPages,
     itemsPerPage,
-    isLoading: isQueryLoading,
-    isError,
-    error,
-    // addOrUpdateSchedule: addOrUpdateSchedule.mutateAsync,
-    // isMutating: addOrUpdateSchedule.isLoading,
+    isLoading: isLegacyLoading,
+    isError: isLegacyError,
+    error: legacyError,
   };
 };

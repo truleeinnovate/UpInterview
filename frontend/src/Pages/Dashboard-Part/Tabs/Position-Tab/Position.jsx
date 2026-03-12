@@ -182,7 +182,7 @@ const PositionTab = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
+  // currentPage removed - using infinite scroll
   const [selectedFilters, setSelectedFilters] = useState({
     location: [],
     tech: [],
@@ -225,7 +225,7 @@ const PositionTab = () => {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deletePosition, setDeletePosition] = useState(null);
   const [tenantCompanies, setTenantCompanies] = useState([]);
-  const rowsPerPage = 10;
+  const rowsPerPage = 20;
   // Replace the current usePositions call with one that includes filters
   const queryFilters = {
     searchQuery,
@@ -235,9 +235,8 @@ const PositionTab = () => {
     experienceMin: selectedFilters.experience.min,
     experienceMax: selectedFilters.experience.max,
     salaryMin: selectedFilters.salaryMin,
-    salaryMax: selectedFilters.salaryMax, // Add this line
+    salaryMax: selectedFilters.salaryMax,
     createdDate: selectedFilters.createdDate,
-    page: currentPage + 1,
     limit: rowsPerPage,
   };
 
@@ -248,6 +247,9 @@ const PositionTab = () => {
     addOrUpdatePosition,
     deletePositionMutation,
     isMutationLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = usePositions(queryFilters);
 
   // v1.0.8 <------------------------------------------
@@ -421,7 +423,7 @@ const PositionTab = () => {
     setSalaryMax(""); // Add this line
     setCreatedDatePreset("");
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
+    // currentPage removed - infinite scroll resets automatically via queryKey change
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -441,7 +443,7 @@ const PositionTab = () => {
     };
 
     setSelectedFilters(filters);
-    setCurrentPage(0);
+    // currentPage removed - infinite scroll resets automatically via queryKey change
     setIsFilterActive(
       filters.location.length > 0 ||
       filters.tech.length > 0 ||
@@ -466,32 +468,17 @@ const PositionTab = () => {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0);
   };
 
-  const totalPages = Math.ceil(total / rowsPerPage);
-
-  const nextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prevPage) => prevPage - 1);
-    }
-  };
-
-  // const startIndex = currentPage * rowsPerPage;
-  // const endIndex = Math.min(startIndex + rowsPerPage, FilteredData.length);
-  // const currentFilteredRows = FilteredData.slice(startIndex, endIndex);
-
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, positionData.length);
-  // const currentFilteredRows = positionData.slice(startIndex, endIndex);
+  const totalPositions = total || 0;
 
   const currentFilteredRows = positionData || [];
+
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
 
   const statusOptions = STATUS_OPTIONS.map((s) => ({
     value: s,
@@ -734,7 +721,7 @@ const PositionTab = () => {
   }
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background">
       <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
         <main className="px-6">
           <div className="sm:px-0">
@@ -749,16 +736,13 @@ const PositionTab = () => {
               setView={setView}
               searchQuery={searchQuery}
               onSearch={handleSearch}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPrevPage={prevPage}
-              onNextPage={nextPage}
               onFilterClick={handleFilterIconClick}
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
               dataLength={positionData?.length}
               searchPlaceholder="Search by ID, Title, Location..."
               filterIconRef={filterIconRef}
+              hidePagination={true}
             />
           </div>
         </main>
@@ -770,16 +754,39 @@ const PositionTab = () => {
           <motion.div className="bg-white">
             <div className="relative w-full">
               {view === "table" ? (
-                // v1.0.6 <----------------------------------------------------------------------------------------------------------------------------
-                <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
-                  {/* v1.0.6 <---------------------------------------------------------------------------------------------------------------------------- */}
-                  <TableView
-                    data={currentFilteredRows}
-                    columns={tableColumns}
-                    loading={isLoading}
-                    actions={tableActions}
-                    emptyState={emptyStateMessage}
-                  />
+                <div className="w-full">
+                  {/* Positions count */}
+                  {totalPositions > 0 && (
+                    <div className="flex items-center justify-start px-6 py-2">
+                      <span className="text-sm text-gray-500">
+                        Showing{" "}
+                        <span className="font-semibold text-gray-800">{currentFilteredRows?.length || 0}</span>
+                        {" "}of{" "}
+                        <span className="font-semibold text-gray-800">
+                          {(() => {
+                            const t = totalPositions;
+                            const r = Math.floor(t / 100) * 100;
+                            if (r === 0) return t;
+                            if (t === r) return t;
+                            return `${r}+`;
+                          })()}
+                        </span>
+                        {" "}{totalPositions === 1 ? "position" : "positions"}
+                      </span>
+                    </div>
+                  )}
+                  <div className="overflow-x-auto sm:max-h-[calc(100vh-280px)] md:max-h-[calc(100vh-248px)] lg:max-h-[calc(100vh-232px)]">
+                    <TableView
+                      data={currentFilteredRows}
+                      columns={tableColumns}
+                      loading={isLoading}
+                      actions={tableActions}
+                      emptyState={emptyStateMessage}
+                      onScrollEnd={handleScrollEnd}
+                      isLoadingMore={isFetchingNextPage}
+                      hasMore={hasNextPage}
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="w-full">
@@ -803,6 +810,9 @@ const PositionTab = () => {
                     onTitleClick={(item) => handleView(item)}
                     emptyState={emptyStateMessage}
                     kanbanTitle="Position"
+                    onScrollEnd={handleScrollEnd}
+                    isLoadingMore={isFetchingNextPage}
+                    hasMore={hasNextPage}
                   />
                   {/* v1.0.8 ------------------------------------------------------------> */}
                   {/* v1.0.5 ------------------------------------------------------------> */}

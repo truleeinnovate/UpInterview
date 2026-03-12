@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../../config";
 import { notify } from "../../services/toastService";
@@ -19,8 +19,8 @@ export const useContacts = (organizationId, enabled = true) => {
       return res.data || [];
     },
     enabled: !!organizationId && enabled,
-    staleTime: 1000 * 60 * 10, // 10 minutes
-    cacheTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -36,14 +36,35 @@ export const useContacts = (organizationId, enabled = true) => {
   };
 };
 
-// API call function
-// Updated useSuperAdminUsers hook with proper parameter handling
+// Updated useSuperAdminUsers hook with useInfiniteQuery for infinite scroll
 export const useSuperAdminUsers = (filters = {}) => {
-  const { search = "", role = "", page = 1, limit = 10 } = filters;
+  const { search = "", role = "", limit = 20 } = filters;
 
-  return useQuery({
-    queryKey: ["superAdminUsers", { search, role, page, limit }],
-    queryFn: () => fetchSuperAdminUsers({ search, role, page, limit }),
+  const {
+    data: infiniteData,
+    isLoading,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["superAdminUsers", { search, role, limit }],
+    queryFn: async ({ pageParam = 1 }) => {
+      return fetchSuperAdminUsers({ search, role, page: pageParam, limit });
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      const totalItems = lastPage?.pagination?.totalItems || 0;
+      const loadedSoFar = allPages.reduce(
+        (sum, p) => sum + (p?.users?.length || 0),
+        0,
+      );
+      if (loadedSoFar < totalItems) {
+        return allPages.length + 1; // 1-indexed pages
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 2,
@@ -51,6 +72,29 @@ export const useSuperAdminUsers = (filters = {}) => {
       notify.error(error.message);
     },
   });
+
+  // Flatten all pages
+  const users = infiniteData?.pages?.flatMap((p) => p?.users || []) || [];
+  const totalItems = infiniteData?.pages?.[0]?.pagination?.totalItems || 0;
+
+  return {
+    data: {
+      users,
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems,
+        hasNext: !!hasNextPage,
+        hasPrev: false,
+      },
+    },
+    isLoading,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  };
 };
 
 // Updated API call function with proper parameters

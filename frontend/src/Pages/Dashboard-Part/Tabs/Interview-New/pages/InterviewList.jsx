@@ -48,7 +48,7 @@ const InterviewList = ({ interviews, isPositionView }) => {
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
+  // currentPage removed - using infinite scroll
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
 
@@ -56,7 +56,7 @@ const InterviewList = ({ interviews, isPositionView }) => {
   useTitle("Interviews");
   // Title ----------------------------------------
 
-  const rowsPerPage = 10;
+  const rowsPerPage = 20;
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     tech: [],
@@ -76,10 +76,13 @@ const InterviewList = ({ interviews, isPositionView }) => {
     total,
     isLoading,
     deleteInterviewMutation,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useInterviews(
     !isEmbedded
       ? {
-        searchQuery: debouncedSearch, // Debounced search for fewer requests
+        searchQuery: debouncedSearch,
         status: selectedFilters.status,
         tech: selectedFilters.tech,
         experienceMin: selectedFilters.experience.min,
@@ -95,7 +98,7 @@ const InterviewList = ({ interviews, isPositionView }) => {
         interviewDateTo: selectedFilters.interviewDate.to,
       }
       : {},
-    !isEmbedded ? currentPage + 1 : 1,
+    1,
     !isEmbedded ? rowsPerPage : 1000,
     "interviews",
     { enabled: !isEmbedded }
@@ -231,7 +234,6 @@ const InterviewList = ({ interviews, isPositionView }) => {
       filters.interviewDate.from ||
       filters.interviewDate.to
     );
-    setCurrentPage(0); // reset to first page
   }, []);
 
   const handleStatusToggle = (status) => {
@@ -339,7 +341,7 @@ const InterviewList = ({ interviews, isPositionView }) => {
     setCreatedDatePreset("");
     setInterviewDateRange({ from: "", to: "" });
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0); // reset to first page
+    // currentPage removed - infinite scroll resets automatically
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -363,7 +365,6 @@ const InterviewList = ({ interviews, isPositionView }) => {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0); // reset to first page
   };
 
   // Debounce search input to reduce requests
@@ -591,38 +592,15 @@ const InterviewList = ({ interviews, isPositionView }) => {
   //   });
   // };
 
-  // Derive total pages from total count (same pattern as Candidate/Position tabs)
-  const totalCount = isEmbedded ? (interviews?.length || 0) : total;
-  const totalPages = totalCount > 0 ? Math.ceil(totalCount / rowsPerPage) : 0;
-  // const nextPage = () => {
-  //   if (currentPage < totalPages - 1) {
-  //     setCurrentPage((prev) => prev + 1);
-  //   }
-  // };
-
-  // const prevPage = () => {
-  //   if (currentPage > 0) {
-  //     setCurrentPage((prev) => prev - 1);
-  //   }
-  // };
-
-  const nextPage = () => {
-    if (currentPage + 1 < totalPages) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
-
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, isEmbedded ? FilteredData().length : interviewData.length);
-  // const currentFilteredRows = interviewData.slice(startIndex, endIndex);
+  const totalInterviews = isEmbedded ? (interviews?.length || 0) : total;
 
   const currentFilteredRows = isEmbedded ? FilteredData() : interviewData;
+
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
 
   // ------------------------ Dynamic Empty State Messages using Utility ----------------------
   const isSearchActive = searchQuery.length > 0 || isFilterActive;
@@ -715,7 +693,7 @@ const InterviewList = ({ interviews, isPositionView }) => {
   ];
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background">
       {!isEmbedded && <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
         <main className="px-6">
           <div className="sm:px-0">
@@ -730,16 +708,13 @@ const InterviewList = ({ interviews, isPositionView }) => {
               setView={setViewMode}
               searchQuery={searchQuery}
               onSearch={handleSearch}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPrevPage={prevPage}
-              onNextPage={nextPage}
               onFilterClick={handleFilterIconClick}
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
               dataLength={Math.max(1, total)}
               searchPlaceholder="Search by ID, Name, Position..."
               filterIconRef={filterIconRef}
+              hidePagination={true}
             />
           </div>
         </main>
@@ -765,18 +740,40 @@ const InterviewList = ({ interviews, isPositionView }) => {
                 </div>
               ) : (
                 <>
-                  {/* Desktop Table View */}
-                  {/* v1.0.3 <--------------------------------------------------------------------------------------------------------------------- */}
-                  <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
-                    {/* v1.0.3 ---------------------------------------------------------------------------------------------------------------------> */}
-                    <TableView
-                      data={currentFilteredRows}
-                      columns={tableColumns}
-                      actions={tableActions}
-                      loading={isLoading}
-                      emptyState={emptyStateMessage}
-                      className="table-fixed w-full"
-                    />
+                  <div className="w-full">
+                    {/* Interviews count */}
+                    {totalInterviews > 0 && !isEmbedded && (
+                      <div className="flex items-center justify-start px-6 py-2">
+                        <span className="text-sm text-gray-500">
+                          Showing{" "}
+                          <span className="font-semibold text-gray-800">{currentFilteredRows?.length || 0}</span>
+                          {" "}of{" "}
+                          <span className="font-semibold text-gray-800">
+                            {(() => {
+                              const t = totalInterviews;
+                              const r = Math.floor(t / 100) * 100;
+                              if (r === 0) return t;
+                              if (t === r) return t;
+                              return `${r}+`;
+                            })()}
+                          </span>
+                          {" "}{totalInterviews === 1 ? "interview" : "interviews"}
+                        </span>
+                      </div>
+                    )}
+                    <div className="overflow-x-auto sm:max-h-[calc(100vh-280px)] md:max-h-[calc(100vh-248px)] lg:max-h-[calc(100vh-232px)]">
+                      <TableView
+                        data={currentFilteredRows}
+                        columns={tableColumns}
+                        actions={tableActions}
+                        loading={isLoading}
+                        emptyState={emptyStateMessage}
+                        className="table-fixed w-full"
+                        onScrollEnd={!isEmbedded ? handleScrollEnd : undefined}
+                        isLoadingMore={!isEmbedded ? isFetchingNextPage : false}
+                        hasMore={!isEmbedded ? hasNextPage : false}
+                      />
+                    </div>
                   </div>
 
                   {/* Mobile Card View */}

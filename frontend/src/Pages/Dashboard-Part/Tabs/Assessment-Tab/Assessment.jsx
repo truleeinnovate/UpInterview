@@ -112,7 +112,7 @@ const Assessment = () => {
   const [assessmentSections, setAssessmentSections] = useState({});
   const [viewMode, setViewMode] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
+  // currentPage removed - using infinite scroll
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   // const [activeTab, setActiveTab] = useState("standard");
@@ -170,20 +170,23 @@ const Assessment = () => {
     deleteAssessment,
     useAssessmentList,
     createAssessmentTemplateList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useAssessments({
-    search: searchQuery, // ← Must match backend param name
+    search: searchQuery,
     difficultyLevel: selectedFilters.difficultyLevel,
     duration: selectedFilters.duration,
     position: selectedFilters.position,
     totalScore: selectedFilters.totalScore,
     createdDate: selectedFilters.createdDate,
     type: activeTab,
-    page: currentPage,
-    limit: 10,
+    limit: 20,
     selectedOptionId: selectedOption?._id || null,
   });
 
   const totalCount = assessmentData?.length || 0;
+  const totalAssessments = assessmentData?.length || 0;
 
   // <---------------------- v1.0.0
   useEffect(() => {
@@ -309,7 +312,6 @@ const Assessment = () => {
   const handleSearchInputChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
-    setCurrentPage(0);
   };
 
   // const handleSearchInputChange = (e) => {
@@ -323,15 +325,11 @@ const Assessment = () => {
       filters.difficultyLevel.length > 0 ||
       filters.duration.length > 0 ||
       filters.position.length > 0 ||
-      // filters.sections.min !== "" ||
-      // filters.sections.max !== "" ||
-      // filters.questions.min !== "" ||
-      // filters.questions.max !== "" ||
       filters.totalScore.min !== "" ||
       filters.totalScore.max !== "" ||
       filters.createdDate !== ""
     );
-    setCurrentPage(0);
+    // infinite scroll resets automatically via queryKey change
     setFilterPopupOpen(false);
   };
 
@@ -356,7 +354,7 @@ const Assessment = () => {
     setSelectedFilters(clearedFilters);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
-    setCurrentPage(0);
+    // infinite scroll resets automatically via queryKey change
     setIsDifficultyOpen(false);
     setIsDurationOpen(false);
     setIsPositionOpen(false);
@@ -385,15 +383,9 @@ const Assessment = () => {
 
   const currentFilteredRows = assessmentData || [];
 
-  const nextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prev) => prev - 1);
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
@@ -596,7 +588,7 @@ const Assessment = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background">
       <div className="fixed md:mt-6 sm:mt-4 top-16 left-0 right-0 bg-background">
         <main className="px-6">
           <div className="sm:px-0">
@@ -613,14 +605,8 @@ const Assessment = () => {
               setView={setViewMode}
               searchQuery={searchQuery}
               onSearch={handleSearchInputChange}
-              currentPage={currentPage}
-              totalPages={totalPages || 1}
               customCount={customCount}
               standardCount={standardCount}
-              onPrevPage={prevPage}
-              onNextPage={nextPage}
-              // onPrevPage={() => setCurrentPage((prev) => Math.max(0, prev - 1))}
-              // onNextPage={() => setCurrentPage((prev) => prev + 1 )}
               onFilterClick={handleFilterIconClick}
               isFilterActive={isFilterActive}
               isFilterPopupOpen={isFilterPopupOpen}
@@ -633,6 +619,7 @@ const Assessment = () => {
               totalCount={totalCount}
               useAssessmentList={useAssessmentList}
               createAssessmentTemplateList={createAssessmentTemplateList}
+              hidePagination={true}
             />
           </div>
         </main>
@@ -642,17 +629,40 @@ const Assessment = () => {
         <div className="sm:px-0">
           <motion.div className="bg-white">
             {viewMode === "table" ? (
-              <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
-                <TableView
-                  data={currentFilteredRows}
-                  columns={tableColumns}
-                  actions={tableActions}
-                  loading={isLoading}
-                  // <-------------------------------v1.0.4
-                  emptyState={emptyStateMessage}
-                  // ------------------------------v1.0.4 >
-                  className="table-fixed w-full"
-                />
+              <div className="w-full">
+                {/* Assessment count */}
+                {totalAssessments > 0 && (
+                  <div className="flex items-center justify-start px-6 py-2">
+                    <span className="text-sm text-gray-500">
+                      Showing{" "}
+                      <span className="font-semibold text-gray-800">{currentFilteredRows?.length || 0}</span>
+                      {" "}of{" "}
+                      <span className="font-semibold text-gray-800">
+                        {(() => {
+                          const t = totalAssessments;
+                          const r = Math.floor(t / 100) * 100;
+                          if (r === 0) return t;
+                          if (t === r) return t;
+                          return `${r}+`;
+                        })()}
+                      </span>
+                      {" "}{totalAssessments === 1 ? "template" : "templates"}
+                    </span>
+                  </div>
+                )}
+                <div className="overflow-x-auto sm:max-h-[calc(100vh-280px)] md:max-h-[calc(100vh-248px)] lg:max-h-[calc(100vh-232px)]">
+                  <TableView
+                    data={currentFilteredRows}
+                    columns={tableColumns}
+                    actions={tableActions}
+                    loading={isLoading}
+                    emptyState={emptyStateMessage}
+                    className="table-fixed w-full"
+                    onScrollEnd={handleScrollEnd}
+                    isLoadingMore={isFetchingNextPage}
+                    hasMore={hasNextPage}
+                  />
+                </div>
               </div>
             ) : (
               <AssessmentKanban
