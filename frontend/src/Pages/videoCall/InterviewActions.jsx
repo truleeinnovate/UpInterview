@@ -140,14 +140,20 @@ const InterviewActions = ({
   // console.log("interviewData interviewData", interviewData);
 
   // Function to check if a participant is interviewer Joined
-  const isInterviewerJoined = (userId) =>
-    participants.some(
-      (p) =>
-        p.role === "Interviewer"
-       &&
-        p.userId === userId &&
-        p.status === "Joined",
-    );
+  // const isInterviewerJoined = (userId) =>
+  //   participants.some(
+  //     (p) =>
+  //       p.role === "Interviewer"
+  //      &&
+  //       p.userId === userId &&
+  //       p.status === "Joined",
+  //   );
+  const isInterviewerJoined = participants.some(
+  (p) =>
+    p.role === "Interviewer" &&
+    // p.userId === urlData?.interviewerId &&
+    p.status === "Joined"
+);
 
     console.log("isInterviewerJoined", isInterviewerJoined);
   // Function to check if a participant is Scheduler Joined

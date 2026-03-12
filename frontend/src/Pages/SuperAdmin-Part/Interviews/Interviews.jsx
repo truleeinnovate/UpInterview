@@ -342,7 +342,7 @@ const Interviewers = () => {
       render: (value, row) => (
         <div className="truncate max-w-[150px]">
           <div className="text-sm text-gray-700">
-            {capitalizeFirstLetter(row?.organization) || "N/A"}
+              {typeof row?.organization === 'object' ? capitalizeFirstLetter(row.organization.name) : (capitalizeFirstLetter(row?.organization) || "N/A")}
           </div>
         </div>
       ),
@@ -461,7 +461,7 @@ const Interviewers = () => {
       "Scheduled",
       "InProgress",
       "Completed",
-      "InCompleted",
+      "Incomplete",
       "Rescheduled",
       "Rejected",
       "Selected",

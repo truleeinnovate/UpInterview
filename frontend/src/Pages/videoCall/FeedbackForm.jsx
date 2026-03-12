@@ -579,9 +579,14 @@ const FeedbackForm = ({
 
   // Define initial skills derived from position or interview data
   const initialSkillRatings = useMemo(() => {
-    const dSkills = isMockInterview
+    let dSkills = isMockInterview
       ? interviewRoundData?.skills || []
       : positionData?.skills || [];
+
+    // Filter for REQUIRED level if skills are from position data
+    if (!isMockInterview && Array.isArray(dSkills)) {
+      dSkills = dSkills.filter(s => s.requirement_level === "REQUIRED" || !s.requirement_level);
+    }
 
     return (Array.isArray(dSkills) ? dSkills : []).map((s) => ({
       skill: s.skill || s.SkillName || (typeof s === "string" ? s : ""),
@@ -856,9 +861,14 @@ const FeedbackForm = ({
 
       setFormData((prev) => {
         const roundSkills = currentRound?.questions || [];
-        const dataSkills = isMockInterview
+        let dataSkills = isMockInterview
           ? interviewRoundData?.skills || []
           : positionData?.skills || [];
+        
+        // Filter for REQUIRED level if skills are from position data
+        if (!isMockInterview && Array.isArray(dataSkills)) {
+          dataSkills = dataSkills.filter(s => s.requirement_level === "REQUIRED" || !s.requirement_level);
+        }
 
         const technicalSkills = {
           strong: [...(prev.technicalSkills?.strong || [])],

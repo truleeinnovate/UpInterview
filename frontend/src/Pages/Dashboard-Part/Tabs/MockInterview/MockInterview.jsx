@@ -612,7 +612,7 @@ const MockInterview = () => {
       show: (row) => !["Scheduled",
         "InProgress",
         "Completed",
-        "InCompleted",
+        "Incomplete",
         "Cancelled",
         "NoShow",
         "FeedbackPending",

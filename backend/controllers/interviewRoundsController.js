@@ -1426,17 +1426,19 @@ const updateInterviewRoundStatus = async (req, res) => {
       }
     }
 
+    if (!isParticipantUpdate){
       if (existingRound?.status ===  action){
       
-        return res.status(400).json({
-          success: false,
-          code: "Already in this status",
-          message:
-            "Already in this status",
-          // Optional: you can send more context if frontend needs it
-          // code: "FEEDBACK_REQUIRED_FOR_EXTERNAL"
-        });
+        // return res.status(400).json({
+        //   success: false,
+        //   code: "Already in this status",
+        //   message:
+        //     "Already in this status",
+        //   // Optional: you can send more context if frontend needs it
+        //   // code: "FEEDBACK_REQUIRED_FOR_EXTERNAL"
+        // });
     }
+  }
 
     // console.log("req.body isParticipantUpdate", req.body)
 
