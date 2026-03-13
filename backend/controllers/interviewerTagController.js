@@ -1,5 +1,6 @@
 // controllers/interviewerTagController.js - CRUD operations for Interviewer Tags
 const InterviewerTag = require('../models/InterviewerTag');
+const { handleApiError } = require('../utils/errorHandler');
 
 // Get all tags with optional filters
 const getAllTags = async (req, res) => {
@@ -28,7 +29,8 @@ const getAllTags = async (req, res) => {
         res.status(200).json(tags);
     } catch (error) {
         console.error('Error fetching tags:', error);
-        res.status(500).json({ message: 'Error fetching tags', error: error.message });
+        // res.status(500).json({ message: 'Error fetching tags', error: error.message });
+        return handleApiError(res, error, "Fetch Interviewer Tags");
     }
 };
 
@@ -86,7 +88,8 @@ const getPaginatedTags = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching paginated tags:', error);
-        res.status(500).json({ message: 'Error fetching tags', error: error.message });
+        // res.status(500).json({ message: 'Error fetching tags', error: error.message });
+        return handleApiError(res, error, "Fetch Paginated Interviewer Tags");
     }
 };
 
@@ -108,7 +111,8 @@ const getTagById = async (req, res) => {
         res.status(200).json(tag);
     } catch (error) {
         console.error('Error fetching tag:', error);
-        res.status(500).json({ message: 'Error fetching tag', error: error.message });
+        // res.status(500).json({ message: 'Error fetching tag', error: error.message });
+        return handleApiError(res, error, "Fetch Interviewer Tag");
     }
 };
 
@@ -155,7 +159,8 @@ const createTag = async (req, res) => {
         });
     } catch (error) {
         console.error('Error creating tag:', error);
-        res.status(500).json({ message: 'Error creating tag', error: error.message });
+        // res.status(500).json({ message: 'Error creating tag', error: error.message });
+        return handleApiError(res, error, "Create Interviewer Tag");
     }
 };
 
@@ -205,7 +210,8 @@ const updateTag = async (req, res) => {
         });
     } catch (error) {
         console.error('Error updating tag:', error);
-        res.status(500).json({ message: 'Error updating tag', error: error.message });
+        // res.status(500).json({ message: 'Error updating tag', error: error.message });
+        return handleApiError(res, error, "Update Interviewer Tag");
     }
 };
 
@@ -234,7 +240,8 @@ const deleteTag = async (req, res) => {
         res.status(200).json({ message: 'Tag deleted successfully' });
     } catch (error) {
         console.error('Error deleting tag:', error);
-        res.status(500).json({ message: 'Error deleting tag', error: error.message });
+        // res.status(500).json({ message: 'Error deleting tag', error: error.message });
+        return handleApiError(res, error, "Delete Interviewer Tag");
     }
 };
 

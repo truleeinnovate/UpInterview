@@ -1,4 +1,5 @@
 const Feeds = require('../models/Feeds.js');
+const { handleApiError } = require('../utils/errorHandler.js');
 // Create new feed
 exports.createFeed = async (feedDetails) => { 
     try {
@@ -15,7 +16,8 @@ exports.createFeed = async (feedDetails) => {
     } catch (error) { 
         console.error('Error in create  Feed:', error);
         console.error('Stack trace:', error.stack);
-        throw error;
+        // throw error;
+        return handleApiError(res, error, "Create Feed");
     }
 };
 
@@ -25,7 +27,8 @@ exports.getAllFeeds = async (req, res) => {
         res.json(feeds);
     } catch (err) {
         console.error('Error fetching feeds:', err); // Log the error
-        res.status(400).json({ message: 'Invalid model', error: err.message }); // Return more details
+        // res.status(400).json({ message: 'Invalid model', error: err.message }); // Return more details
+        return handleApiError(res, error, "Fetch All Feeds");
     }
 };
 
@@ -40,6 +43,7 @@ exports.getFeedsByParentId = async (req, res) => {
     res.status(200).json({ data: feeds });
   } catch (error) {
     console.error('Error in getFeedsByParentId:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    // res.status(500).json({ message: 'Server error', error: error.message });
+    return handleApiError(res, error, "Fetch Feeds");
   }
 }

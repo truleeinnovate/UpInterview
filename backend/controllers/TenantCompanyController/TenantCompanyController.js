@@ -1,4 +1,5 @@
 const { TenantCompany } = require("../../models/TenantCompany/TenantCompany");
+const { handleApiError } = require("../../utils/errorHandler");
 
 
 
@@ -52,10 +53,11 @@ const createCompany = async (req, res) => {
     // 5. Success response
     res.status(201).json(savedCompany);
   } catch (error) {
-    res.status(400).json({
-      message: "Error creating company",
-      error: error.message,
-    });
+    // res.status(400).json({
+    //   message: "Error creating company",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Create Company");
   }
 };
 
@@ -150,9 +152,10 @@ const getAllCompanies = async (req, res) => {
       currentPage: pageNum,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching companies", error: error.message });
+    // res
+    //   .status(500)
+    //   .json({ message: "Error fetching companies", error: error.message });
+    return handleApiError(res, error, "Fetch Companies");
   }
 };
 
@@ -188,9 +191,10 @@ const getCompanyById = async (req, res) => {
 
     res.status(200).json(company);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching company", error: error.message });
+    // res
+    //   .status(500)
+    //   .json({ message: "Error fetching company", error: error.message });
+    return handleApiError(res, error, "Fetch Company");
   }
 };
 
@@ -240,9 +244,10 @@ const updateCompany = async (req, res) => {
 
     res.status(200).json(updatedCompany);
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error updating company", error: error.message });
+    // res
+    //   .status(400)
+    //   .json({ message: "Error updating company", error: error.message });
+    return handleApiError(res, error, "Update Company");
   }
 };
 
@@ -268,9 +273,10 @@ const deleteCompany = async (req, res) => {
 
     res.status(200).json({ message: "Company deleted successfully" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error deleting company", error: error.message });
+    // res
+    //   .status(500)
+    //   .json({ message: "Error deleting company", error: error.message });
+    return handleApiError(res, error, "Delete Company");
   }
 };
 

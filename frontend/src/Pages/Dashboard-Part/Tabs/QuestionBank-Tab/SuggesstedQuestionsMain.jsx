@@ -38,7 +38,13 @@ import { notify } from "../../../../services/toastService.js";
 // v1.0.5 ------------------------------------------------------->
 
 // v1.0.5 <------------------------------------------------------------------
-const FilterDropdown = ({ label, options, selectedItems, onChange, isRadio }) => {
+const FilterDropdown = ({
+  label,
+  options,
+  selectedItems,
+  onChange,
+  isRadio,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -55,55 +61,64 @@ const FilterDropdown = ({ label, options, selectedItems, onChange, isRadio }) =>
   return (
     <div className="relative flex-shrink-0" ref={dropdownRef}>
       <div
-        className={`flex items-center justify-between px-3 py-[9px] border rounded-md cursor-pointer bg-white min-w-[160px] text-sm transition-colors ${isOpen ? 'border-custom-blue ring-1 ring-custom-blue' : 'border-gray-300 hover:border-custom-blue'}`}
+        className={`flex items-center justify-between px-3 py-[9px] border rounded-md cursor-pointer bg-white min-w-[160px] text-sm transition-colors ${isOpen ? "border-custom-blue ring-1 ring-custom-blue" : "border-gray-300 hover:border-custom-blue"}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className="text-gray-700 whitespace-nowrap">
           {label} {selectedItems.length > 0 && `(${selectedItems.length})`}
         </span>
-        <ChevronDown className={`w-4 h-4 ml-2 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`w-4 h-4 ml-2 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
       </div>
 
       {isOpen && (
         <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto custom-scrollbar">
           <ul className="py-1 flex flex-col gap-1">
             <li
-              className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors rounded-sm mx-1 ${selectedItems.length === 0 ? 'bg-custom-blue text-white' : 'hover:bg-gray-50 text-gray-700'}`}
-              onClick={() => { onChange([]); setIsOpen(false); }}
+              className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors rounded-sm mx-1 ${selectedItems.length === 0 ? "bg-custom-blue text-white" : "hover:bg-gray-50 text-gray-700"}`}
+              onClick={() => {
+                onChange([]);
+                setIsOpen(false);
+              }}
             >
               <span className="text-sm whitespace-nowrap">All</span>
             </li>
             {options.map((opt, idx) => {
-              const valString = String(opt.value || opt.type || opt.level).toLowerCase();
+              const valString = String(
+                opt.value || opt.type || opt.level,
+              ).toLowerCase();
               const displayString = String(opt.value || opt.type || opt.level);
               const isChecked = selectedItems.includes(valString);
 
               return (
                 <li
                   key={idx}
-                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors rounded-sm mx-1 ${isChecked ? 'bg-custom-blue text-white' : 'hover:bg-gray-50 text-gray-700'}`}
+                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors rounded-sm mx-1 ${isChecked ? "bg-custom-blue text-white" : "hover:bg-gray-50 text-gray-700"}`}
                   onClick={(e) => {
                     if (isRadio) {
                       onChange([valString]);
                       setIsOpen(false);
                     } else {
                       const newItems = isChecked
-                        ? selectedItems.filter(v => v !== valString)
+                        ? selectedItems.filter((v) => v !== valString)
                         : [...selectedItems, valString];
                       onChange(newItems);
                     }
                   }}
                 >
-                  <span className="text-sm whitespace-nowrap">{displayString}</span>
+                  <span className="text-sm whitespace-nowrap">
+                    {displayString}
+                  </span>
                 </li>
-              )
+              );
             })}
           </ul>
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 function HeaderBar({
   rangeLabel,
@@ -129,9 +144,10 @@ function HeaderBar({
   return (
     <div
       className={`flex items-center px-4 py-2
-        ${isMeetingSidePanel
-          ? "justify-start overflow-auto"
-          : "justify-between overflow-x-auto"
+        ${
+          isMeetingSidePanel
+            ? "justify-start overflow-auto"
+            : "justify-between overflow-x-auto"
         }
       `}
     >
@@ -240,10 +256,11 @@ function HeaderBar({
             <Tooltip title="Previous" enterDelay={300} leaveDelay={100} arrow>
               <span
                 onClick={onClickLeftPaginationIcon}
-                className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${currentPage === 1
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-gray-100"
-                  }`}
+                className={`border p-2 mr-2 text-xl rounded-md cursor-pointer ${
+                  currentPage === 1
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-gray-100"
+                }`}
               >
                 <IoIosArrowBack />
               </span>
@@ -251,10 +268,11 @@ function HeaderBar({
             <Tooltip title="Next" enterDelay={300} leaveDelay={100} arrow>
               <span
                 onClick={onClickRightPagination}
-                className={`border p-2 text-xl rounded-md cursor-pointer ${currentPage === totalPages || totalPages === 0
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-gray-100"
-                  }`}
+                className={`border p-2 text-xl rounded-md cursor-pointer ${
+                  currentPage === totalPages || totalPages === 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-gray-100"
+                }`}
               >
                 <IoIosArrowForward />
               </span>
@@ -513,7 +531,13 @@ const SuggestedQuestionsComponent = ({
         ],
       });
     }
-    const combinedCategories = Array.from(new Set([...uniqueCategories, ...categoryFilterItems, ...tempCategoryFilterItems]));
+    const combinedCategories = Array.from(
+      new Set([
+        ...uniqueCategories,
+        ...categoryFilterItems,
+        ...tempCategoryFilterItems,
+      ]),
+    );
     sections.push({
       id: 2,
       filterType: "Category",
@@ -521,7 +545,9 @@ const SuggestedQuestionsComponent = ({
       options: combinedCategories.map((c) => ({ value: c, isChecked: false })),
     });
 
-    const combinedAreas = Array.from(new Set([...uniqueAreas, ...areaFilterItems, ...tempAreaFilterItems]));
+    const combinedAreas = Array.from(
+      new Set([...uniqueAreas, ...areaFilterItems, ...tempAreaFilterItems]),
+    );
     sections.push({
       id: 3,
       filterType: "Area",
@@ -529,7 +555,13 @@ const SuggestedQuestionsComponent = ({
       options: combinedAreas.map((a) => ({ value: a, isChecked: false })),
     });
 
-    const combinedTechs = Array.from(new Set([...uniqueTechnologies, ...technologyFilterItems, ...tempTechnologyFilterItems]));
+    const combinedTechs = Array.from(
+      new Set([
+        ...uniqueTechnologies,
+        ...technologyFilterItems,
+        ...tempTechnologyFilterItems,
+      ]),
+    );
     sections.push({
       id: 4,
       filterType: "Technology",
@@ -667,13 +699,16 @@ const SuggestedQuestionsComponent = ({
     totalAvailable === 0
       ? "0/0"
       : beyondAccessible
-        ? `${planAccessibleTotal}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"
-        }`
-        : startIndex === endIndex
-          ? `${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"
+        ? `${planAccessibleTotal}/${totalAvailable} ${
+            totalAvailable > 1 ? "Questions" : "Question"
           }`
-          : `${startIndex}-${endIndex}/${totalAvailable} ${totalAvailable > 1 ? "Questions" : "Question"
-          }`;
+        : startIndex === endIndex
+          ? `${endIndex}/${totalAvailable} ${
+              totalAvailable > 1 ? "Questions" : "Question"
+            }`
+          : `${startIndex}-${endIndex}/${totalAvailable} ${
+              totalAvailable > 1 ? "Questions" : "Question"
+            }`;
 
   // Update mandatory status
   useEffect(() => {
@@ -798,8 +833,6 @@ const SuggestedQuestionsComponent = ({
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
 
-
-
   const onClickRemoveSelectedFilterItem = (item) => {
     if (questionTypeFilterItems.includes(item)) {
       setQuestionTypeFilterItems((prev) => prev.filter((i) => i !== item));
@@ -807,13 +840,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 1
             ? {
-              ...category,
-              options: category.options.map((opt) =>
-                opt.type.toLowerCase() === item
-                  ? { ...opt, isChecked: false }
-                  : opt,
-              ),
-            }
+                ...category,
+                options: category.options.map((opt) =>
+                  opt.type.toLowerCase() === item
+                    ? { ...opt, isChecked: false }
+                    : opt,
+                ),
+              }
             : category,
         ),
       );
@@ -823,13 +856,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 2
             ? {
-              ...category,
-              options: category.options.map((opt) =>
-                opt.level.toLowerCase() === item
-                  ? { ...opt, isChecked: false }
-                  : opt,
-              ),
-            }
+                ...category,
+                options: category.options.map((opt) =>
+                  opt.level.toLowerCase() === item
+                    ? { ...opt, isChecked: false }
+                    : opt,
+                ),
+              }
             : category,
         ),
       );
@@ -840,13 +873,13 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 3
             ? {
-              ...category,
-              options: category.options.map((opt) =>
-                String(opt.value).toLowerCase() === item
-                  ? { ...opt, isChecked: false }
-                  : opt,
-              ),
-            }
+                ...category,
+                options: category.options.map((opt) =>
+                  String(opt.value).toLowerCase() === item
+                    ? { ...opt, isChecked: false }
+                    : opt,
+                ),
+              }
             : category,
         ),
       );
@@ -856,21 +889,19 @@ const SuggestedQuestionsComponent = ({
         prev.map((category) =>
           category.id === 4
             ? {
-              ...category,
-              options: category.options.map((opt) =>
-                String(opt.value).toLowerCase() === item
-                  ? { ...opt, isChecked: false }
-                  : opt,
-              ),
-            }
+                ...category,
+                options: category.options.map((opt) =>
+                  String(opt.value).toLowerCase() === item
+                    ? { ...opt, isChecked: false }
+                    : opt,
+                ),
+              }
             : category,
         ),
       );
       //------v1.0.4-------->
     }
   };
-
-
 
   const onClickRemoveQuestion = async (id) => {
     // console.log("item ID", id);
@@ -986,44 +1017,86 @@ const SuggestedQuestionsComponent = ({
     setIsPopupOpen(!isPopupOpen);
   };
 
-
-
   // SkeletonLoader.tsx
-  const SkeletonLoader = () => {
-    return (
-      <div>
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          <ul className="flex flex-col gap-4 pr-2">
-            {Array(4)
-              .fill(0)
-              .map((_, idx) => (
-                <div
-                  key={idx}
-                  className="border border-gray-200 rounded-lg h-full shadow-sm"
-                >
-                  {/* Header */}
-                  <div className="flex justify-between items-center border-b border-gray-200 px-4 py-2">
-                    <div className="h-5 w-3/4 shimmer rounded"></div>
-                    <div className="flex items-center gap-14">
-                      <div className="h-7 w-16 shimmer rounded"></div>
-                      <div className="h-7 w-16 shimmer rounded"></div>
-                    </div>
-                  </div>
+  // const SkeletonLoader = () => {
+  //   return (
+  //     <div>
+  //       <div className="flex-1 overflow-y-auto px-5 py-4">
+  //         <ul className="flex flex-col gap-4 pr-2">
+  //           {Array(4)
+  //             .fill(0)
+  //             .map((_, idx) => (
+  //               <div
+  //                 key={idx}
+  //                 className="border border-gray-200 rounded-lg h-full shadow-sm"
+  //               >
+  //                 {/* Header */}
+  //                 <div className="flex justify-between items-center border-b border-gray-200 px-4 py-2">
+  //                   <div className="h-5 w-3/4 shimmer rounded"></div>
+  //                   <div className="flex items-center gap-14">
+  //                     <div className="h-7 w-16 shimmer rounded"></div>
+  //                     <div className="h-7 w-16 shimmer rounded"></div>
+  //                   </div>
+  //                 </div>
 
-                  {/* Content */}
-                  <div className="px-4 py-2">
-                    <div className="h-4 w-1/2 shimmer rounded mb-2"></div>
-                    <div className="h-4 w-1/3 shimmer rounded"></div>
+  //                 {/* Content */}
+  //                 <div className="px-4 py-2">
+  //                   <div className="h-4 w-1/2 shimmer rounded mb-2"></div>
+  //                   <div className="h-4 w-1/3 shimmer rounded"></div>
+  //                 </div>
+  //               </div>
+  //             ))}
+  //         </ul>
+  //       </div>
+  //     </div>
+  //   );
+  // };
+  
+  const SkeletonLoader = () => {
+  return (
+    <div className="flex-1 overflow-y-auto px-5 py-4">
+      <ul className="flex flex-col gap-4 pr-2">
+        {Array(4)
+          .fill(0)
+          .map((_, idx) => (
+            <div
+              key={idx}
+              className="border border-gray-200 rounded-md shadow-sm bg-white overflow-hidden"
+            >
+              {/* Top Bar Mirror: Matches your flex justify-between header */}
+              <div className="flex justify-between items-center border-b border-gray-200 px-4 h-12">
+                <div className="h-6 w-24 shimmer rounded-md"></div>
+                <div className="h-6 w-16 shimmer rounded-md"></div>
+              </div>
+
+              {/* Question Content Mirror: Matches index number + question text */}
+              <div className="p-4 border-b">
+                <div className="flex items-start gap-2">
+                  <div className="h-4 w-5 shimmer rounded mt-1"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-full shimmer rounded-md"></div>
+                    <div className="h-4 w-4/6 shimmer rounded-md"></div>
                   </div>
                 </div>
-              ))}
-          </ul>
-        </div>
-      </div>
-    );
-  };
+              </div>
 
-
+              {/* Footer Mirror: Matches Answer and Tags section */}
+              <div className="p-4 space-y-3">
+                <div className="flex gap-2">
+                  <div className="h-4 w-14 shimmer rounded-md"></div>
+                  <div className="h-4 w-3/4 shimmer rounded-md"></div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-4 w-12 shimmer rounded-md"></div>
+                  <div className="h-4 w-1/2 shimmer rounded-md"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+      </ul>
+    </div>
+  );
+};
 
   // v1.0.8 <---------------------------------------------
   const capitalizeFirstLetter = (str) =>
@@ -1032,7 +1105,6 @@ const SuggestedQuestionsComponent = ({
 
   return (
     <div className="h-full flex flex-col">
-
       {/* It's Implemented to avoid responsive issues  */}
       <HeaderBar
         rangeLabel={rangeLabel}
@@ -1055,44 +1127,131 @@ const SuggestedQuestionsComponent = ({
       />
 
       {/* Active Filters - Shown outside when filter card is CLOSED */}
-      {!isPopupOpen && (
-        [...categoryFilterItems, ...areaFilterItems, ...technologyFilterItems, ...(showQuestionTypeFilter ? questionTypeFilterItems : []), ...difficultyLevelFilterItems, ...selectedSkills].length > 0 || searchInput
-      ) && (
+      {!isPopupOpen &&
+        ([
+          ...categoryFilterItems,
+          ...areaFilterItems,
+          ...technologyFilterItems,
+          ...(showQuestionTypeFilter ? questionTypeFilterItems : []),
+          ...difficultyLevelFilterItems,
+          ...selectedSkills,
+        ].length > 0 ||
+          searchInput) && (
           <div className="flex flex-wrap items-center gap-2 px-6 py-2 flex-shrink-0">
-            {categoryFilterItems.map(c => (
-              <div key={`cat-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-                <span className="font-medium">Category:</span> {capitalizeFirstLetter(c)}
-                <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => { setCategoryFilterItems(prev => prev.filter(x => x !== c)); setTempCategoryFilterItems(prev => prev.filter(x => x !== c)); }} />
+            {categoryFilterItems.map((c) => (
+              <div
+                key={`cat-${c}`}
+                className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+              >
+                <span className="font-medium">Category:</span>{" "}
+                {capitalizeFirstLetter(c)}
+                <X
+                  className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                  onClick={() => {
+                    setCategoryFilterItems((prev) =>
+                      prev.filter((x) => x !== c),
+                    );
+                    setTempCategoryFilterItems((prev) =>
+                      prev.filter((x) => x !== c),
+                    );
+                  }}
+                />
               </div>
             ))}
-            {areaFilterItems.map(c => (
-              <div key={`area-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-                <span className="font-medium">Area:</span> {capitalizeFirstLetter(c)}
-                <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => { setAreaFilterItems(prev => prev.filter(x => x !== c)); setTempAreaFilterItems(prev => prev.filter(x => x !== c)); }} />
+            {areaFilterItems.map((c) => (
+              <div
+                key={`area-${c}`}
+                className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+              >
+                <span className="font-medium">Area:</span>{" "}
+                {capitalizeFirstLetter(c)}
+                <X
+                  className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                  onClick={() => {
+                    setAreaFilterItems((prev) => prev.filter((x) => x !== c));
+                    setTempAreaFilterItems((prev) =>
+                      prev.filter((x) => x !== c),
+                    );
+                  }}
+                />
               </div>
             ))}
-            {technologyFilterItems.map(c => (
-              <div key={`tech-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-                <span className="font-medium">Technology:</span> {capitalizeFirstLetter(c)}
-                <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => { setTechnologyFilterItems(prev => prev.filter(x => x !== c)); setTempTechnologyFilterItems(prev => prev.filter(x => x !== c)); }} />
+            {technologyFilterItems.map((c) => (
+              <div
+                key={`tech-${c}`}
+                className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+              >
+                <span className="font-medium">Technology:</span>{" "}
+                {capitalizeFirstLetter(c)}
+                <X
+                  className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                  onClick={() => {
+                    setTechnologyFilterItems((prev) =>
+                      prev.filter((x) => x !== c),
+                    );
+                    setTempTechnologyFilterItems((prev) =>
+                      prev.filter((x) => x !== c),
+                    );
+                  }}
+                />
               </div>
             ))}
-            {showQuestionTypeFilter && questionTypeFilterItems.map(c => (
-              <div key={`type-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-                <span className="font-medium">Type:</span> {capitalizeFirstLetter(c)}
-                <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => { setQuestionTypeFilterItems(prev => prev.filter(x => x !== c)); setTempQuestionTypeFilterItems(prev => prev.filter(x => x !== c)); }} />
+            {showQuestionTypeFilter &&
+              questionTypeFilterItems.map((c) => (
+                <div
+                  key={`type-${c}`}
+                  className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+                >
+                  <span className="font-medium">Type:</span>{" "}
+                  {capitalizeFirstLetter(c)}
+                  <X
+                    className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                    onClick={() => {
+                      setQuestionTypeFilterItems((prev) =>
+                        prev.filter((x) => x !== c),
+                      );
+                      setTempQuestionTypeFilterItems((prev) =>
+                        prev.filter((x) => x !== c),
+                      );
+                    }}
+                  />
+                </div>
+              ))}
+            {difficultyLevelFilterItems.map((c) => (
+              <div
+                key={`diff-${c}`}
+                className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+              >
+                <span className="font-medium">Difficulty:</span>{" "}
+                {capitalizeFirstLetter(c)}
+                <X
+                  className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                  onClick={() => {
+                    setDifficultyLevelFilterItems((prev) =>
+                      prev.filter((x) => x !== c),
+                    );
+                    setTempDifficultyLevelFilterItems((prev) =>
+                      prev.filter((x) => x !== c),
+                    );
+                  }}
+                />
               </div>
             ))}
-            {difficultyLevelFilterItems.map(c => (
-              <div key={`diff-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-                <span className="font-medium">Difficulty:</span> {capitalizeFirstLetter(c)}
-                <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => { setDifficultyLevelFilterItems(prev => prev.filter(x => x !== c)); setTempDifficultyLevelFilterItems(prev => prev.filter(x => x !== c)); }} />
-              </div>
-            ))}
-            {selectedSkills.map(c => (
-              <div key={`tag-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+            {selectedSkills.map((c) => (
+              <div
+                key={`tag-${c}`}
+                className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+              >
                 <span className="font-medium">Tag:</span> {c}
-                <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => { setSelectedSkills(prev => prev.filter(x => x !== c)); setTempSelectedSkills(prev => prev.filter(x => x !== c)); }} />
+                <X
+                  className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                  onClick={() => {
+                    setSelectedSkills((prev) => prev.filter((x) => x !== c));
+                    setTempSelectedSkills((prev) =>
+                      prev.filter((x) => x !== c),
+                    );
+                  }}
+                />
               </div>
             ))}
           </div>
@@ -1107,20 +1266,20 @@ const SuggestedQuestionsComponent = ({
             style={{
               width: 0,
               height: 0,
-              borderLeft: '8px solid transparent',
-              borderRight: '8px solid transparent',
-              borderBottom: '8px solid #e5e7eb',
+              borderLeft: "8px solid transparent",
+              borderRight: "8px solid transparent",
+              borderBottom: "8px solid #e5e7eb",
             }}
           />
           <div
             className="absolute right-[14px]"
             style={{
-              top: '-6px',
+              top: "-6px",
               width: 0,
               height: 0,
-              borderLeft: '7px solid transparent',
-              borderRight: '7px solid transparent',
-              borderBottom: '7px solid white',
+              borderLeft: "7px solid transparent",
+              borderRight: "7px solid transparent",
+              borderBottom: "7px solid white",
             }}
           />
           <div className="flex justify-between items-center mb-4">
@@ -1182,7 +1341,7 @@ const SuggestedQuestionsComponent = ({
                 if (!section.options) return null;
 
                 let activeItems = [];
-                let setTempItems = () => { };
+                let setTempItems = () => {};
                 let isRadio = false;
 
                 switch (section.id) {
@@ -1228,89 +1387,174 @@ const SuggestedQuestionsComponent = ({
 
             {/* Row 2: Active Filters */}
             <div className="flex flex-col gap-3">
-              <h3 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wider">Applied Filters:</h3>
+              <h3 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wider">
+                Applied Filters:
+              </h3>
 
               <div className="flex flex-wrap items-center gap-2 min-h-[28px]">
-                {tempCategoryFilterItems.map(c => (
-                  <div key={`cat-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-                    <span className="font-medium">Category:</span> {capitalizeFirstLetter(c)}
-                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempCategoryFilterItems(prev => prev.filter(x => x !== c))} />
+                {tempCategoryFilterItems.map((c) => (
+                  <div
+                    key={`cat-${c}`}
+                    className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+                  >
+                    <span className="font-medium">Category:</span>{" "}
+                    {capitalizeFirstLetter(c)}
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                      onClick={() =>
+                        setTempCategoryFilterItems((prev) =>
+                          prev.filter((x) => x !== c),
+                        )
+                      }
+                    />
                   </div>
                 ))}
 
-                {tempAreaFilterItems.map(c => (
-                  <div key={`area-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-                    <span className="font-medium">Area:</span> {capitalizeFirstLetter(c)}
-                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempAreaFilterItems(prev => prev.filter(x => x !== c))} />
+                {tempAreaFilterItems.map((c) => (
+                  <div
+                    key={`area-${c}`}
+                    className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+                  >
+                    <span className="font-medium">Area:</span>{" "}
+                    {capitalizeFirstLetter(c)}
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                      onClick={() =>
+                        setTempAreaFilterItems((prev) =>
+                          prev.filter((x) => x !== c),
+                        )
+                      }
+                    />
                   </div>
                 ))}
 
-                {tempTechnologyFilterItems.map(c => (
-                  <div key={`tech-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-                    <span className="font-medium">Technology:</span> {capitalizeFirstLetter(c)}
-                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempTechnologyFilterItems(prev => prev.filter(x => x !== c))} />
+                {tempTechnologyFilterItems.map((c) => (
+                  <div
+                    key={`tech-${c}`}
+                    className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+                  >
+                    <span className="font-medium">Technology:</span>{" "}
+                    {capitalizeFirstLetter(c)}
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                      onClick={() =>
+                        setTempTechnologyFilterItems((prev) =>
+                          prev.filter((x) => x !== c),
+                        )
+                      }
+                    />
                   </div>
                 ))}
 
-                {showQuestionTypeFilter && tempQuestionTypeFilterItems.map(c => (
-                  <div key={`type-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-                    <span className="font-medium">Type:</span> {capitalizeFirstLetter(c)}
-                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempQuestionTypeFilterItems(prev => prev.filter(x => x !== c))} />
+                {showQuestionTypeFilter &&
+                  tempQuestionTypeFilterItems.map((c) => (
+                    <div
+                      key={`type-${c}`}
+                      className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+                    >
+                      <span className="font-medium">Type:</span>{" "}
+                      {capitalizeFirstLetter(c)}
+                      <X
+                        className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                        onClick={() =>
+                          setTempQuestionTypeFilterItems((prev) =>
+                            prev.filter((x) => x !== c),
+                          )
+                        }
+                      />
+                    </div>
+                  ))}
+
+                {tempDifficultyLevelFilterItems.map((c) => (
+                  <div
+                    key={`diff-${c}`}
+                    className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+                  >
+                    <span className="font-medium">Difficulty:</span>{" "}
+                    {capitalizeFirstLetter(c)}
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                      onClick={() =>
+                        setTempDifficultyLevelFilterItems((prev) =>
+                          prev.filter((x) => x !== c),
+                        )
+                      }
+                    />
                   </div>
                 ))}
 
-                {tempDifficultyLevelFilterItems.map(c => (
-                  <div key={`diff-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-                    <span className="font-medium">Difficulty:</span> {capitalizeFirstLetter(c)}
-                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempDifficultyLevelFilterItems(prev => prev.filter(x => x !== c))} />
-                  </div>
-                ))}
-
-                {tempSelectedSkills.map(c => (
-                  <div key={`tag-${c}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                {tempSelectedSkills.map((c) => (
+                  <div
+                    key={`tag-${c}`}
+                    className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
+                  >
                     <span className="font-medium">Tag:</span> {c}
-                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempSelectedSkills(prev => prev.filter(x => x !== c))} />
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                      onClick={() =>
+                        setTempSelectedSkills((prev) =>
+                          prev.filter((x) => x !== c),
+                        )
+                      }
+                    />
                   </div>
                 ))}
 
                 {tempSearchInput && (
                   <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-                    <span className="font-medium">Search:</span> "{tempSearchInput}"
-                    <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => setTempSearchInput("")} />
+                    <span className="font-medium">Search:</span> "
+                    {tempSearchInput}"
+                    <X
+                      className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
+                      onClick={() => setTempSearchInput("")}
+                    />
                   </div>
                 )}
 
-                {[...tempCategoryFilterItems, ...tempAreaFilterItems, ...tempTechnologyFilterItems, ...(showQuestionTypeFilter ? tempQuestionTypeFilterItems : []), ...tempDifficultyLevelFilterItems, ...tempSelectedSkills].length === 0 && !tempSearchInput && (
-                  <span className="text-sm text-gray-500 italic py-1">No filters currently applied.</span>
-                )}
+                {[
+                  ...tempCategoryFilterItems,
+                  ...tempAreaFilterItems,
+                  ...tempTechnologyFilterItems,
+                  ...(showQuestionTypeFilter
+                    ? tempQuestionTypeFilterItems
+                    : []),
+                  ...tempDifficultyLevelFilterItems,
+                  ...tempSelectedSkills,
+                ].length === 0 &&
+                  !tempSearchInput && (
+                    <span className="text-sm text-gray-500 italic py-1">
+                      No filters currently applied.
+                    </span>
+                  )}
               </div>
             </div>
           </div>
         </div>
-      )
-      }
+      )}
 
       {/* v1.0.5 -----------------------------------------------------------------> */}
-      {
-        isLoading ? (
-          <SkeletonLoader />
-        ) : (
-          <>
-            {/* Content */}
-            {/* v1.0.5 <----------------------------------------------------------------- */}
-            {/* v1.0.7 <----------------------------------------------------------------------------------------- */}
-            <div className="flex-1 min-h-0 flex flex-col sm:px-2 py-4">
-              {/* Filters applied section moved to popup */}
-              {/* v1.0.7 <----------------------------------------------------------------------- */}
-              <ul
-                // className="flex flex-col gap-4 pr-2 h-[calc(100vh-362px)] overflow-y-auto"
-                className="flex flex-col flex-1 min-h-0 overflow-y-auto pb-8 px-4"
-                style={customHeight ? { height: customHeight } : {}}
-                onScroll={() => { if (isPopupOpen) setIsPopupOpen(false); }}
-              >
-                {/* Render only unlocked cards first */}
-                {unlockedPaginatedData.length > 0
-                  ? unlockedPaginatedData.map((item, index) => {
+      {isLoading ? (
+        <SkeletonLoader />
+      ) : (
+        <>
+          {/* Content */}
+          {/* v1.0.5 <----------------------------------------------------------------- */}
+          {/* v1.0.7 <----------------------------------------------------------------------------------------- */}
+          <div className="flex-1 min-h-0 flex flex-col sm:px-2 mt-4">
+            {/* Filters applied section moved to popup */}
+            {/* v1.0.7 <----------------------------------------------------------------------- */}
+            <ul
+              // className="flex flex-col gap-4 pr-2 h-[calc(100vh-362px)] overflow-y-auto"
+              className="flex flex-col gap-4 px-4 h-[calc(100vh-0rem)] overflow-y-auto"
+              // className="flex flex-col flex-1 h-[calc(100vh-362p)] overflow-y-auto pb-8 px-4"
+              // style={customHeight ? { height: customHeight } : {}}
+              onScroll={() => {
+                if (isPopupOpen) setIsPopupOpen(false);
+              }}
+            >
+              {/* Render only unlocked cards first */}
+              {unlockedPaginatedData.length > 0
+                ? unlockedPaginatedData.map((item, index) => {
                     // Regular unlocked card
                     return (
                       <div
@@ -1328,12 +1572,13 @@ const SuggestedQuestionsComponent = ({
                           </div>
                           {/* v1.0.6 ----------------------------------------------------------------------------> */}
                           <div
-                            className={`text-xs font-medium flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${type === "interviewerSection" ||
+                            className={`text-xs font-medium flex justify-center text-center p-2 sm:text-xs sm:border-0 border-r border-l border-gray-200 ${
+                              type === "interviewerSection" ||
                               type === "feedback" ||
                               type === "assessment"
-                              ? "w-[15%]"
-                              : "sm:w-[28%] md:w-[20%] w-[10%]"
-                              } ${isMeetingSidePanel && "w-[20%] mx-4"}`}
+                                ? "w-[15%]"
+                                : "sm:w-[28%] md:w-[20%] w-[10%]"
+                            } ${isMeetingSidePanel && "w-[20%] mx-4"}`}
                           >
                             <p
                               className={`w-16 text-center ${getDifficultyStyles(
@@ -1357,17 +1602,19 @@ const SuggestedQuestionsComponent = ({
                                       handleToggle(item._id, item);
                                     }
                                   }}
-                                  className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${mandatoryStatus[item._id]
-                                    ? "bg-blue-100 border-custom-blue justify-end"
-                                    : "bg-gray-200 border-gray-300 justify-start"
-                                    }`}
+                                  className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors ${
+                                    mandatoryStatus[item._id]
+                                      ? "bg-blue-100 border-custom-blue justify-end"
+                                      : "bg-gray-200 border-gray-300 justify-start"
+                                  }`}
                                   type="button"
                                 >
                                   <span
-                                    className={`w-3 h-3 rounded-full transition-colors ${mandatoryStatus[item._id]
-                                      ? "bg-custom-blue"
-                                      : "bg-gray-400"
-                                      }`}
+                                    className={`w-3 h-3 rounded-full transition-colors ${
+                                      mandatoryStatus[item._id]
+                                        ? "bg-custom-blue"
+                                        : "bg-gray-400"
+                                    }`}
                                   />
                                 </button>
                               </div>
@@ -1375,64 +1622,67 @@ const SuggestedQuestionsComponent = ({
                           )}
                           {(type === "interviewerSection" ||
                             type === "feedback") && (
-                              <div className="p-1 flex justify-center w-[8%]">
-                                {item.isLocked ? (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      navigate("/account-settings/subscription")
-                                    }
-                                    className="text-xs font-medium sm:flex sm:items-center sm:justify-center bg-orange-500 py-1 px-2 text-white rounded-md transition-colors hover:bg-orange-600"
-                                  >
-                                    <Lock className="h-4 w-4 mr-1" />
-                                    <span
-                                      className={`${isMeetingSidePanel
+                            <div className="p-1 flex justify-center w-[8%]">
+                              {item.isLocked ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    navigate("/account-settings/subscription")
+                                  }
+                                  className="text-xs font-medium sm:flex sm:items-center sm:justify-center bg-orange-500 py-1 px-2 text-white rounded-md transition-colors hover:bg-orange-600"
+                                >
+                                  <Lock className="h-4 w-4 mr-1" />
+                                  <span
+                                    className={`${
+                                      isMeetingSidePanel
                                         ? "hidden"
                                         : "sm:hidden inline"
-                                        }`}
-                                    >
-                                      Upgrade
-                                    </span>
-                                  </button>
-                                ) : interviewQuestionsLists?.some(
+                                    }`}
+                                  >
+                                    Upgrade
+                                  </span>
+                                </button>
+                              ) : interviewQuestionsLists?.some(
                                   (q) => q.questionId === item._id,
                                 ) ? (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      onClickRemoveQuestion(item?._id)
-                                    }
-                                    className="text-xs font-medium sm:flex sm:items-center sm:justify-center rounded-md md:ml-4 bg-gray-500 px-2 py-1 text-white hover:bg-gray-600 transition-colors"
-                                  >
-                                    <span
-                                      className={`${isMeetingSidePanel
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    onClickRemoveQuestion(item?._id)
+                                  }
+                                  className="text-xs font-medium sm:flex sm:items-center sm:justify-center rounded-md md:ml-4 bg-gray-500 px-2 py-1 text-white hover:bg-gray-600 transition-colors"
+                                >
+                                  <span
+                                    className={`${
+                                      isMeetingSidePanel
                                         ? "hidden"
                                         : "sm:hidden inline"
-                                        }`}
-                                    >
-                                      Remove
-                                    </span>
-                                    <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
-                                  </button>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    className="text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 px-2 text-white rounded-md transition-colors"
-                                    onClick={() => onClickAddButton(item)}
+                                    }`}
                                   >
-                                    <span
-                                      className={`${isMeetingSidePanel
+                                    Remove
+                                  </span>
+                                  <X className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 px-2 text-white rounded-md transition-colors"
+                                  onClick={() => onClickAddButton(item)}
+                                >
+                                  <span
+                                    className={`${
+                                      isMeetingSidePanel
                                         ? "hidden"
                                         : "sm:hidden inline"
-                                        }`}
-                                    >
-                                      Add
-                                    </span>
-                                    <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
-                                  </button>
-                                )}
-                              </div>
-                            )}
+                                    }`}
+                                  >
+                                    Add
+                                  </span>
+                                  <Plus className="h-4 w-4 inline md:hidden lg:hidden xl:hidden 2xl:hidden" />
+                                </button>
+                              )}
+                            </div>
+                          )}
                           {type === "assessment" && (
                             <div className="w-[8%] flex justify-center">
                               {addedSections.some((s) =>
@@ -1448,10 +1698,11 @@ const SuggestedQuestionsComponent = ({
                                   className="text-xs font-medium sm:flex sm:items-center sm:justify-center rounded-md bg-red-500 px-2 py-1 text-white hover:bg-red-600 transition-colors"
                                 >
                                   <span
-                                    className={`${isMeetingSidePanel
-                                      ? "hidden"
-                                      : "sm:hidden inline"
-                                      }`}
+                                    className={`${
+                                      isMeetingSidePanel
+                                        ? "hidden"
+                                        : "sm:hidden inline"
+                                    }`}
                                   >
                                     Remove
                                   </span>
@@ -1465,13 +1716,14 @@ const SuggestedQuestionsComponent = ({
                                 // )
                                 <button
                                   type="button"
-                                  className={`text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${addedSections.reduce(
-                                    (acc, s) => acc + s.Questions.length,
-                                    0,
-                                  ) >= questionsLimit
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : ""
-                                    }`}
+                                  className={`text-xs font-medium sm:flex sm:items-center sm:justify-center bg-custom-blue py-1 sm:px-1 px-3 text-white rounded-md transition-colors ${
+                                    addedSections.reduce(
+                                      (acc, s) => acc + s.Questions.length,
+                                      0,
+                                    ) >= questionsLimit
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : ""
+                                  }`}
                                   onClick={() => onClickAddButton(item)}
                                   disabled={
                                     addedSections.reduce(
@@ -1481,10 +1733,11 @@ const SuggestedQuestionsComponent = ({
                                   }
                                 >
                                   <span
-                                    className={`${isMeetingSidePanel
-                                      ? "hidden"
-                                      : "sm:hidden inline"
-                                      }`}
+                                    className={`${
+                                      isMeetingSidePanel
+                                        ? "hidden"
+                                        : "sm:hidden inline"
+                                    }`}
                                   >
                                     Add
                                   </span>
@@ -1503,10 +1756,11 @@ const SuggestedQuestionsComponent = ({
                               >
                                 Add{" "}
                                 <span
-                                  className={`${isMeetingSidePanel
-                                    ? "hidden"
-                                    : "sm:hidden md:hidden inline"
-                                    }`}
+                                  className={`${
+                                    isMeetingSidePanel
+                                      ? "hidden"
+                                      : "sm:hidden md:hidden inline"
+                                  }`}
                                 >
                                   to list
                                 </span>
@@ -1568,10 +1822,11 @@ const SuggestedQuestionsComponent = ({
                                   return item.options.map((option, idx) => (
                                     <li
                                       key={idx}
-                                      className={`${isAnyOptionLong
-                                        ? "block w-full"
-                                        : "inline-block w-1/2"
-                                        } mb-2`}
+                                      className={`${
+                                        isAnyOptionLong
+                                          ? "block w-full"
+                                          : "inline-block w-1/2"
+                                      } mb-2`}
                                     >
                                       <span className="mr-2 text-gray-500">
                                         {String.fromCharCode(97 + idx)})
@@ -1678,7 +1933,7 @@ const SuggestedQuestionsComponent = ({
                       </div>
                     );
                   })
-                  : !hasLockedOnPage && (
+                : !hasLockedOnPage && (
                     <div className="h-full flex flex-col gap-4 justify-center items-center text-center mt-24">
                       <div className="text-gray-400">
                         <svg
@@ -1705,41 +1960,40 @@ const SuggestedQuestionsComponent = ({
                     </div>
                   )}
 
-                {/* Show a single lock banner at the end if any items are locked on this page */}
-                {hasLockedOnPage && (
-                  <div
-                    key="locked-banner"
-                    className="border rounded-lg shadow-sm transition-shadow text-sm border-gray-300 bg-gray-50"
-                  >
-                    <div className="relative min-h-[200px] flex items-center justify-center p-8">
-                      <div className="flex flex-col items-center justify-center text-center">
-                        <Lock className="w-12 h-12 text-gray-400 mb-3" />
-                        <p className="text-gray-700 font-medium text-lg mb-1">
-                          You’ve reached your plan limit
-                        </p>
-                        <p className="text-gray-500 text-sm mb-4">
-                          {planAccessibleTotal ?? accessibleQuestions ?? 0}{" "}
-                          accessible •{" "}
-                          {totalQuestionsFromAPI - accessibleQuestions ?? 0}{" "}
-                          Questions available
-                        </p>
-                        <button
-                          onClick={() =>
-                            navigate("/account-settings/subscription")
-                          }
-                          className="px-6 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-sm font-medium"
-                        >
-                          Upgrade to unlock
-                        </button>
-                      </div>
+              {/* Show a single lock banner at the end if any items are locked on this page */}
+              {hasLockedOnPage && (
+                <div
+                  key="locked-banner"
+                  className="border rounded-lg shadow-sm transition-shadow text-sm border-gray-300 bg-gray-50"
+                >
+                  <div className="relative min-h-[200px] flex items-center justify-center p-8">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <Lock className="w-12 h-12 text-gray-400 mb-3" />
+                      <p className="text-gray-700 font-medium text-lg mb-1">
+                        You’ve reached your plan limit
+                      </p>
+                      <p className="text-gray-500 text-sm mb-4">
+                        {planAccessibleTotal ?? accessibleQuestions ?? 0}{" "}
+                        accessible •{" "}
+                        {totalQuestionsFromAPI - accessibleQuestions ?? 0}{" "}
+                        Questions available
+                      </p>
+                      <button
+                        onClick={() =>
+                          navigate("/account-settings/subscription")
+                        }
+                        className="px-6 py-2 bg-custom-blue text-white rounded-md hover:bg-custom-blue/90 transition-colors text-sm font-medium"
+                      >
+                        Upgrade to unlock
+                      </button>
                     </div>
                   </div>
-                )}
-              </ul>
-            </div>
-          </>
-        )
-      }
+                </div>
+              )}
+            </ul>
+          </div>
+        </>
+      )}
     </div>
   );
 };

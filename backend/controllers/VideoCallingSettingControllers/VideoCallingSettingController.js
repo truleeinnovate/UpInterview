@@ -1,6 +1,7 @@
 // ✅ Use CommonJS require
 const mongoose = require("mongoose");
 const VideoCallingDetails = require("../../models/VideoCallSettingSchema/VideoCallingSetting.js");
+const { handleApiError } = require("../../utils/errorHandler.js");
 
 // ✅ GET Settings Controller
 const getVideoCallingSettings = async (req, res) => {
@@ -95,10 +96,11 @@ const getVideoCallingSettings = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Error in getVideoCallingSettings:", err);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error: " + err.message,
-    });
+    // res.status(500).json({
+    //   success: false,
+    //   message: "Internal server error: " + err.message,
+    // });
+    return handleApiError(res, error, "Fetch Video Call Settings");
   }
 };
 
@@ -174,10 +176,11 @@ const VideoCallTestConnection = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({
-      success: false,
-      message: "Error testing connection: " + error.message,
-    });
+    // res.status(500).json({
+    //   success: false,
+    //   message: "Error testing connection: " + error.message,
+    // });
+    return handleApiError(res, error, "Video Call Testing");
   }
 };
 
@@ -248,10 +251,11 @@ const VideoCallTestCredentials = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({
-      success: false,
-      message: "Error saving credentials: " + error.message,
-    });
+    // res.status(500).json({
+    //   success: false,
+    //   message: "Error saving credentials: " + error.message,
+    // });
+    return handleApiError(res, error, "Video Call Test Credentials");
   }
 };
 
@@ -347,10 +351,11 @@ const updateVideoCallingSettings = async (req, res) => {
       message: err.message,
     };
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error: " + err.message,
-    });
+    // res.status(500).json({
+    //   success: false,
+    //   message: "Internal server error: " + err.message,
+    // });
+    return handleApiError(res, error, "Update Video Call Settings");
   }
 };
 
@@ -460,9 +465,10 @@ const CreateOrGetVideoCallingSettings = async (tenantId, ownerId) => {
   } catch (error) {
     console.error("❌ Error in createOrGetVideoCallingSettings:", error);
 
-    throw new Error(
-      error.message || "Error creating or fetching video calling settings"
-    );
+    // throw new Error(
+    //   error.message || "Error creating or fetching video calling settings"
+    // );
+    return handleApiError(res, error, "Fetch or Create Video Call Settings");
   }
 };
 

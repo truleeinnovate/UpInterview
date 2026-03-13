@@ -12,7 +12,7 @@ const {
 } = require("../../models/AnalyticSchemas/columnSchemas");
 const { buildPermissionQuery } = require("../../utils/buildPermissionQuery");
 // Import all models directly (safe & simple)
-const { Candidate } = require("../../models/Candidate");
+const { Candidate } = require("../../models/candidate.js");
 const { Position } = require("../../models/Position/position");
 const { Interview } = require("../../models/Interview/Interview");
 const ScheduledAssessment = require("../../models/Assessment/assessmentsSchema");
@@ -23,6 +23,7 @@ const { MockInterview } = require("../../models/Mockinterview/mockinterview");
 const { MockInterviewRound } = require("../../models/Mockinterview/mockinterviewRound");
 const FeedbackModel = require("../../models/feedback");
 const { TenantCompany } = require("../../models/TenantCompany/TenantCompany.js");
+const { handleApiError } = require("../../utils/errorHandler.js")
 
 
 const generateReport = async (req, res) => {
@@ -640,11 +641,14 @@ const generateReport = async (req, res) => {
     });
   } catch (error) {
     console.error("[FATAL ERROR] Generate Report Failed:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: error.message,
-    });
+
+    return handleApiError(res, error, "Generate Report");
+
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Server error",
+    //   error: error.message,
+    // });
   }
 };
 
@@ -733,11 +737,14 @@ const getReportTemplates = async (req, res) => {
     });
   } catch (error) {
     console.error("GET REPORT TEMPLATES ERROR:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error fetching templates",
-      error: error.message,
-    });
+
+    return handleApiError(res, error, "Fetch Report");
+
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Server error fetching templates",
+    //   error: error.message,
+    // });
   }
 };
 
@@ -821,11 +828,13 @@ const saveFilterPreset = async (req, res) => {
     });
   } catch (error) {
     console.error("[ERROR] Save Filter Preset Failed:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to save filter preset",
-      error: error.message,
-    });
+
+    return handleApiError(res, error, "Save Filter Preset");
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Failed to save filter preset",
+    //   error: error.message,
+    // });
   }
 };
 
@@ -861,7 +870,8 @@ const saveColumnConfig = async (req, res) => {
     res.json({ success: true, config: config.selectedColumns });
   } catch (error) {
     console.error("Save column config failed:", error);
-    res.status(500).json({ success: false, message: error.message });
+    // res.status(500).json({ success: false, message: error.message });
+    return handleApiError(res, error, "Save Column Config");
   }
 };
 //sharing report apis
@@ -912,7 +922,8 @@ const getAllReportAccess = async (req, res) => {
     return res.json({ success: true, accessMap });
   } catch (error) {
     console.error("Get all access failed:", error);
-    return res.status(500).json({ success: false });
+    // return res.status(500).json({ success: false });
+    return handleApiError(res, error, "All Report Access");
   }
 };
 
@@ -958,10 +969,12 @@ const shareReport = async (req, res) => {
     });
   } catch (error) {
     console.error("[ERROR] Share Report Failed:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to share report",
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Failed to share report",
+    // });
+
+    return handleApiError(res, error, "Share Report");
   }
 };
 //report usage
@@ -998,10 +1011,11 @@ const getReportUsageStats = async (req, res) => {
 
   } catch (error) {
     console.error('[ERROR] Get report usage failed:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to fetch report usage stats',
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: 'Failed to fetch report usage stats',
+    // });
+    return handleApiError(res, error, "Report Usage Statistics");
   }
 };
 
@@ -1017,11 +1031,12 @@ const createTemplate = async (req, res) => {
       data: template,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Error creating template",
-      error: error.message,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Error creating template",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Report Template Create");
   }
 };
 
@@ -1037,11 +1052,12 @@ const createCategory = async (req, res) => {
       data: category,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Error creating category",
-      error: error.message,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Error creating category",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Creating Category");
   }
 };
 

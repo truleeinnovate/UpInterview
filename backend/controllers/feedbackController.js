@@ -435,11 +435,12 @@ const createFeedback = async (req, res) => {
       message: error.message,
     };
 
-    return res.status(500).json({
-      success: false,
-      message: "Failed to process feedback",
-      error: error.message,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Failed to process feedback",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Create Feedback");
   }
 };
 
@@ -928,11 +929,12 @@ const updateFeedback = async (req, res) => {
       message: error.message,
     };
 
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update feedback",
-      error: error.message,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Failed to update feedback",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Update Feedback");
   }
 };
 
@@ -972,11 +974,12 @@ const getfeedbackById = async (req, res) => {
     });
   } catch (error) {
     console.error("Error getting feedback by ID:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error while getting feedback",
-      error: error.message,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Internal server error while getting feedback",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Fetch Feedback");
   }
 };
 
@@ -1020,11 +1023,12 @@ const getAllFeedback = async (req, res) => {
     });
   } catch (error) {
     console.error("Error getting all feedback:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error while getting feedback",
-      error: error.message,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Internal server error while getting feedback",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Fetch All Feedbacks");
   }
 };
 
@@ -1506,11 +1510,12 @@ const getFeedbackByRoundId = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching feedback:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: error.message,
-    });
+    // res.status(500).json({
+    //   success: false,
+    //   message: "Server error",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Fetch Feedback By Round");
   }
 };
 
@@ -1574,7 +1579,8 @@ const getFeedbackByContactIdRoundId = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Server error" });
+    // res.status(500).json({ error: "Server error" });
+    return handleApiError(res, error, "Feedback Feedback Contact By Round");
   }
 };
 
@@ -1660,11 +1666,12 @@ const getCandidateByRoundId = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in getCandidateByRoundId:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Error fetching candidate/round details",
-      error: error.message,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Error fetching candidate/round details",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Fetch Candidate By Round");
   }
 };
 
@@ -1755,7 +1762,8 @@ const getFeedbackRoundId = async (req, res) => {
     res.json(response);
   } catch (error) {
     console.error("Error fetching round details:", error);
-    res.status(500).json({ message: "Internal server error" });
+    // res.status(500).json({ message: "Internal server error" });
+    return handleApiError(res, error, "Fetch Feedback Round Id");
   }
 };
 
@@ -1805,11 +1813,12 @@ const validateFeedback = async (req, res) => {
     });
   } catch (error) {
     console.error("Error validating feedback:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to validate feedback",
-      error: error.message,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Failed to validate feedback",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Validate Feedback");
   }
 };
 
@@ -1942,11 +1951,12 @@ const updateInterviewRoundFeedbackStatus = async ({
           settlementError,
         );
         // Continue with status update even if settlement fails
-        return {
-          round: roundRes,
-          settlement: null,
-          error: settlementError.message,
-        };
+        // return {
+        //   round: roundRes,
+        //   settlement: null,
+        //   error: settlementError.message,
+        // };
+        return handleApiError(res, error, "Auto Settlement Error");
         // Continue with status update even if settlement fails
       }
       // }
@@ -2681,12 +2691,13 @@ const getPendingFeedbacks = async (req, res) => {
 
   } catch (error) {
     console.error("Error fetching pending feedbacks:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error while fetching pending feedbacks",
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Internal server error while fetching pending feedbacks",
+    //   error: error.message,
+    //   stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    // });
+    return handleApiError(res, error, "Fetch Pending Feedbacks");
   }
 };
 

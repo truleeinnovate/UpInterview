@@ -36,6 +36,7 @@ const {
   handlePasswordEmail,
 } = require("../controllers/EmailsController/signUpEmailController.js");
 const InterviewAvailability = require("../models/InterviewAvailability.js");
+const { handleApiError } = require("../utils/errorHandler.js");
 
 const organizationUserCreation = async (req, res) => {
   res.locals.loggedByController = true;
@@ -235,9 +236,10 @@ const organizationUserCreation = async (req, res) => {
       message: error.message,
     };
 
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    // res
+    //   .status(500)
+    //   .json({ message: "Internal server error", error: error.message });
+    return handleApiError(res, error, "Organization User Creation");
   }
 };
 
@@ -364,7 +366,8 @@ const loginOrganization = async (req, res) => {
     res.status(200).json(responseData);
   } catch (error) {
     // logger.error("[loginOrganization] Error during login:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    // res.status(500).json({ success: false, message: "Internal server error" });
+    return handleApiError(res, error, "Login Organization");
   }
 };
 
@@ -374,7 +377,8 @@ const getRolesByTenant = async (req, res) => {
     const roles = await Role.find({ tenantId });
     res.status(200).json(roles);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    // res.status(500).json({ message: "Server error", error });
+    return handleApiError(res, error, "Get Roles By Tenant");
   }
 };
 
@@ -441,9 +445,10 @@ const resetPassword = async (req, res) => {
     return res.json({ success: true, message: successMessage });
   } catch (error) {
     console.error("Reset Password Error:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Something went wrong" });
+    // return res
+    //   .status(500)
+    //   .json({ success: false, message: "Something went wrong" });
+    return handleApiError(res, error, "Resetting Password");
   }
 };
 
@@ -467,7 +472,8 @@ const getBasedIdOrganizations = async (req, res) => {
     return res.status(200).json(organization);
   } catch (error) {
     console.error("Error fetching organization:", error);
-    return res.status(500).json({ message: "An error occurred.", error });
+    // return res.status(500).json({ message: "An error occurred.", error });
+    return handleApiError(res, error, "Fetch Organizations");
   }
 };
 
@@ -546,9 +552,10 @@ const checkSubdomainAvailability = async (req, res) => {
       message: error.message,
     };
 
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    // return res
+    //   .status(500)
+    //   .json({ message: "Server error", error: error.message });
+    return handleApiError(res, error, "Checking Subdomain Availability");
   }
 };
 
@@ -663,9 +670,10 @@ const updateSubdomain = async (req, res) => {
       message: error.message,
     };
 
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    // return res
+    //   .status(500)
+    //   .json({ message: "Server error", error: error.message });
+    return handleApiError(res, error, "Update Subdomain");
   }
 };
 
@@ -704,9 +712,10 @@ const getOrganizationSubdomain = async (req, res) => {
     });
   } catch (error) {
     console.error("Error getting organization subdomain:", error);
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    // return res
+    //   .status(500)
+    //   .json({ message: "Server error", error: error.message });
+    return handleApiError(res, error, "Fetch Organization Subdomain");
   }
 };
 
@@ -784,9 +793,10 @@ const activateSubdomain = async (req, res) => {
       message: error.message,
     };
 
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    // return res
+    //   .status(500)
+    //   .json({ message: "Server error", error: error.message });
+    return handleApiError(res, error, "Active Subdomain");
   }
 };
 
@@ -867,9 +877,10 @@ const deactivateSubdomain = async (req, res) => {
       message: error.message,
     };
 
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    // return res
+    //   .status(500)
+    //   .json({ message: "Server error", error: error.message });
+    return handleApiError(res, error, "Deactivate Subdomain");
   }
 };
 
@@ -928,10 +939,11 @@ const updateBasedIdOrganizations = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({
-      message: "Error updating organization",
-      error: error.message,
-    });
+    // res.status(500).json({
+    //   message: "Error updating organization",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Update Organization");
   }
 };
 
@@ -1438,11 +1450,12 @@ const getAllOrganizations = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in getAllOrganizations:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-      status: false,
-    });
+    // return res.status(500).json({
+    //   message: "Internal server error",
+    //   error: error.message,
+    //   status: false,
+    // });
+    return handleApiError(res, error, "Get All Organizations");
   }
 };
 
@@ -1767,7 +1780,8 @@ const deleteTenantAndAssociatedData = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting tenant and associated data:", error);
-    res.status(500).json({ error: "Internal server error" });
+    // res.status(500).json({ error: "Internal server error" });
+    return handleApiError(res, error, "Delete Tenant and Associated Data");
   }
 };
 
@@ -1929,7 +1943,8 @@ const getOrganizationById = async (req, res) => {
     // v1.0.0 ---------------------------------------------------------------------------------------->
     return res.status(200).json({ organization: tenant });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error" });
+    // return res.status(500).json({ message: "Internal server error" });
+    return handleApiError(res, error, "Get Organization");
   }
 };
 // v1.0.0 -------------------------------------------------------------------------------------------->
@@ -2005,7 +2020,8 @@ const superAdminLoginAsUser = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({ success: false, message: "Internal server error" });
+    // res.status(500).json({ success: false, message: "Internal server error" });
+    return handleApiError(res, error, "Super Admin Login User");
   }
 };
 // ------------------------------------------------------------------------------->
@@ -2225,9 +2241,10 @@ const registerOrganization = async (req, res) => {
     if (savedTenant) {
       await Tenant.deleteOne({ _id: savedTenant._id });
     }
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    // res
+    //   .status(500)
+    //   .json({ message: "Internal server error", error: error.message });
+    return handleApiError(res, error, "Register Organization");
   }
 };
 
@@ -2263,7 +2280,8 @@ const getOrganizationRequestStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error getting organization request status:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    // res.status(500).json({ success: false, message: "Internal server error" });
+    return handleApiError(res, error, "Get Organization Request Status");
   }
 };
 
