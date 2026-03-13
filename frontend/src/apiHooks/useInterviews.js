@@ -58,6 +58,7 @@ export const useInterviews = (
       return undefined;
     },
     initialPageParam: 1,
+    enabled: !!hasViewPermission,
     retry: 1,
     staleTime: 1000 * 60 * 10,
     cacheTime: 1000 * 60 * 30,
