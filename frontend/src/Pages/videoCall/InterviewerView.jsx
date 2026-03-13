@@ -84,6 +84,22 @@ const InterviewerView = ({
 
   const candidateData = interviewData?.candidateId || mockinterview || {};
 
+  // Check if both interviewer and candidate have joined from round data
+  const roundParticipants = useMemo(() => {
+    const rounds = interviewData?.rounds || mockinterview?.rounds || [];
+    return rounds[0]?.participants || [];
+  }, [interviewData, mockinterview]);
+
+  const bothParticipantsJoined = useMemo(() => {
+    const hasInterviewer = roundParticipants.some(
+      (p) => p.role === "Interviewer" && p.status === "Joined"
+    );
+    const hasCandidate = roundParticipants.some(
+      (p) => p.role === "Candidate" && p.status === "Joined"
+    );
+    return hasInterviewer && hasCandidate;
+  }, [roundParticipants]);
+
   // Question Bank State Management
   const initialQuestions = feedbackData?.questionFeedback || [];
   // const [interviewerSectionData, setInterviewerSectionData] = useState(
@@ -206,6 +222,19 @@ const InterviewerView = ({
     // { id: 'management', label: 'Feedback Management', icon: Users }
   ];
 
+  // Waiting message component for when both participants haven't joined
+  const WaitingForParticipants = ({ feature }) => (
+    <div className="flex flex-col items-center justify-center p-8 text-center h-64">
+      <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+        <User className="w-7 h-7 text-amber-600" />
+      </div>
+      <h3 className="text-base font-semibold text-gray-800 mb-2">Waiting for Participants</h3>
+      <p className="text-sm text-gray-500">
+        Both the interviewer and candidate must join before {feature} becomes available.
+      </p>
+    </div>
+  );
+
   return (
     // v1.0.0 <------------------------------------------------------------------------------
     <div className="flex-1 flex flex-col overflow-hidden mt-1">
@@ -303,25 +332,8 @@ const InterviewerView = ({
                   interviewData={selectedCandidate}
                   isAddMode={true}
                   interviewRoundId={decodedData?.interviewRoundId}
-                  // interviewerSectionData={interviewerSectionData}
-                  // setInterviewerSectionData={setInterviewerSectionData}
-                  // removedQuestionIds={removedQuestionIds}
-                  // setRemovedQuestionIds={setRemovedQuestionIds}
-                  // isQuestionBankOpen={isQuestionBankOpen}
-                  // setIsQuestionBankOpen={setIsQuestionBankOpen}
-                  // handleAddQuestionToRound={handleAddQuestionToRound}
-                  // handleRemoveQuestion={handleRemoveQuestion}
-                  // handleToggleMandatory={handleToggleMandatory}
-                  // preselectedQuestionsResponses={preselectedQuestionsResponses}
-                  // setPreselectedQuestionsResponses={
-                  //   setPreselectedQuestionsResponses
-                  // }
-                  // handlePreselectedQuestionResponse={
-                  //   handlePreselectedQuestionResponse
-                  // }
                   decodedData={decodedData}
-                // autoSaveQuestions={autoSaveQuestions}
-                // triggerAutoSave={triggerAutoSave}
+                  bothParticipantsJoined={bothParticipantsJoined}
                 />
               )}
               {activeTab === "interviewActions" && (
@@ -332,24 +344,16 @@ const InterviewerView = ({
                 />
               )}
               {activeTab === "feedback" && (
-                <FeedbackForm
-                  // interviewerSectionData={interviewerSectionData}
-                  // setInterviewerSectionData={setInterviewerSectionData}
-                  interviewRoundId={decodedData?.interviewRoundId}
-                  // candidateId={selectedCandidate?.candidate?._id}
-                  // positionId={selectedCandidate?.position?._id}
-                  // interviewerId={decodedData?.interviewerId}
-                  // feedbackCandidate={selectedCandidate}
-                  // tenantId={decodedData?.tenantId}
-                  // isEditMode={false}
-                  // feedbackId={null}
-                  // preselectedQuestionsResponses={preselectedQuestionsResponses}
-                  decodedData={decodedData}
-                  isAddMode={true}
-                  // isScheduler={isScheduler}
-                  schedulerFeedbackData={schedulerFeedbackData}
-                // triggerAutoSave={triggerAutoSave}
-                />
+                bothParticipantsJoined ? (
+                  <FeedbackForm
+                    interviewRoundId={decodedData?.interviewRoundId}
+                    decodedData={decodedData}
+                    isAddMode={true}
+                    schedulerFeedbackData={schedulerFeedbackData}
+                  />
+                ) : (
+                  <WaitingForParticipants feature="the feedback form" />
+                )
               )}
               {/* {activeTab === 'management' && <FeedbackManagement />} */}
             </div>

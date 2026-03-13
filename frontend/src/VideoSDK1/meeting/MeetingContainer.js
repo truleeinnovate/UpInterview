@@ -118,6 +118,18 @@ export function MeetingContainer({
     useMeetingAppContext();
   const { participants } = useMeeting();
 
+  // Check from interviewRoundData.participants — only Candidate + Interviewer roles count (not Scheduler)
+  const bothParticipantsJoined = React.useMemo(() => {
+    const roundParticipants = interviewRoundData?.participants || [];
+    const hasInterviewer = roundParticipants.some(
+      (p) => p.role === "Interviewer" && p.status === "Joined"
+    );
+    const hasCandidate = roundParticipants.some(
+      (p) => p.role === "Candidate" && p.status === "Joined"
+    );
+    return hasInterviewer && hasCandidate;
+  }, [interviewRoundData?.participants]);
+
   // Keep sideBarModeRef always in sync with sideBarMode
   useEffect(() => {
     sideBarModeRef.current = sideBarMode;
@@ -802,10 +814,20 @@ export function MeetingContainer({
                         : sideBarMode === "POSITION" ? (
                           <PositionDetails />
                         ) : sideBarMode === "FEEDBACK" ? (
-                          <FeedbackForm
-                            custom={true}
-                            isAddMode={true}
-                            onClose={() => setSideBarMode(null)} />
+                          bothParticipantsJoined ? (
+                            <FeedbackForm
+                              custom={true}
+                              isAddMode={true}
+                              onClose={() => setSideBarMode(null)} />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center p-8 text-center h-64">
+                              <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+                                <Users className="w-6 h-6 text-amber-600" />
+                              </div>
+                              <h3 className="text-base font-semibold text-gray-800 mb-2">Waiting for Participants</h3>
+                              <p className="text-sm text-gray-500">Both the interviewer and candidate must join the call before the feedback form becomes available.</p>
+                            </div>
+                          )
                         ) : sideBarMode === "INTERVIEWACTIONS" ? (
                           <div className="p-4">
                             <InterviewActions
@@ -829,8 +851,8 @@ export function MeetingContainer({
                               custom={true}
                               isAddMode={true}
                               isMeetingSidePanel={sideBarMode === "QUESTIONBANK"}
+                              bothParticipantsJoined={bothParticipantsJoined}
                             />
-
                           </div>
                         ) : null}
                   </div>
