@@ -10,7 +10,7 @@
 // v1.0.4  -  mansoor  -  added the buttons visibility based on the statuses
 // v1.0.5  -  Ashok    -  Improved responsiveness
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useMemo } from "react";
 import {
   Calendar,
   Clock,
@@ -603,14 +603,16 @@ const RoundCard = ({
 
   // Always call hooks unconditionally at the top level
   // For non-assessment rounds, pass null so the hook disables the API call
-  let { scheduleData, isLoading } = useScheduleAssessments(
+  const assessmentOptions = useMemo(() => (
     round.roundTitle === "Assessment"
       ? {
         assessmentId: round?.assessmentId,
         type: "scheduled",
       }
-      : null,
-  );
+      : null
+  ), [round.roundTitle, round?.assessmentId]);
+
+  let { scheduleData, isLoading } = useScheduleAssessments(assessmentOptions);
 
   // Filter scheduled assessments for Assessment rounds
   // useEffect(() => {
