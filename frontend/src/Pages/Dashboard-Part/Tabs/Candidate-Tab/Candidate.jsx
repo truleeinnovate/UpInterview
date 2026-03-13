@@ -1243,6 +1243,7 @@ function Candidate({
                         onScrollEnd={!isEmbedded ? handleScrollEnd : null}
                         isLoadingMore={isFetchingNextPage}
                         hasMore={hasNextPage}
+                        customHeight="h-[calc(100vh-14rem)]"
                       />
                     </div>
                   </div>
