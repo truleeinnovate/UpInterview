@@ -643,6 +643,68 @@ import * as Icons from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+/**
+ * Common formatting logic for report values to match other tabs.
+ * Adds spaces to CamelCase, handles status badges, and formats numbers/dates.
+ */
+const formatDisplayValue = (value, key, col) => {
+  if (value == null || value === "") return "-";
+
+  const lowerKey = key.toLowerCase();
+  const stringValue = String(value);
+
+  // 1. STATUS, TYPE, MODE, ROUND OUTCOME -> StatusBadge + CamelCase Formatting
+  if (
+    lowerKey.includes("status") ||
+    lowerKey.includes("type") ||
+    lowerKey.includes("mode") ||
+    lowerKey.includes("outcome") ||
+    lowerKey.includes("recommendation")
+  ) {
+    // Add spaces before capital letters for CamelCase (e.g. InProgress -> In Progress)
+    const formattedText = stringValue
+      .replace(/([A-Z])/g, " $1")
+      .trim()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+
+    return <StatusBadge status={stringValue} text={formattedText} />;
+  }
+
+  // 2. SCORE / RATING -> Number formatting
+  if (lowerKey.includes("score") || lowerKey.includes("rating")) {
+    const num = Number(value);
+    return isNaN(num) ? stringValue : num.toString();
+  }
+
+  // 3. SALARY -> 'k' formatting
+  if (lowerKey.includes("salary")) {
+    const numValue = Number(value);
+    if (!isNaN(numValue) && numValue >= 1000) {
+      return `${(numValue / 1000).toFixed(0)}k`;
+    }
+  }
+
+  // 4. DATE -> Handled by formatDateTime where possible, but here as fallback
+  if (lowerKey.includes("date") || lowerKey.includes("at")) {
+    // If it looks like an ISO string
+    if (stringValue.includes("-") && stringValue.includes("T")) {
+      try {
+        const date = new Date(stringValue);
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleDateString();
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }
+
+  // 5. DEFAULT -> Capitalize first letter + trim
+  return stringValue.charAt(0).toUpperCase() + stringValue.slice(1);
+};
+
 const ReportDetail = () => {
   const { reportId } = useParams();
   const navigate = useNavigate();
@@ -888,15 +950,7 @@ const ReportDetail = () => {
           width: col.width || "180px",
           order: col.order ?? i,
           locked: col.locked === true,
-          render: (value) => {
-            if (value == null) return "-";
-            // Format salary values to 'k'
-            if (["minSalary", "maxSalary"].includes(col.key)) {
-              const numValue = Number(value);
-              return numValue >= 1000 ? `${(numValue / 1000).toFixed(0)}k` : String(value);
-            }
-            return String(value);
-          },
+          render: (value) => formatDisplayValue(value, col.key, col),
         }))
       );
 
