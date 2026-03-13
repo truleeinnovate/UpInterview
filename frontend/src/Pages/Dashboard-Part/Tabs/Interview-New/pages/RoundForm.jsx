@@ -976,7 +976,6 @@ const RoundFormInterviews = () => {
     // groups,
     hasManuallyClearedInterviewers,
     editingAssessment,
-    assessmentData,
   ]);
 
   useEffect(() => {

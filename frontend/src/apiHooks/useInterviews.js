@@ -1,7 +1,7 @@
 // v1.0.0 - Ashraf - added sending interview email link update in rounds api
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useEffect, useRef,useMemo  } from "react";
+import { useEffect, useRef,useMemo,useCallback  } from "react";
 import { config } from "../config";
 import Cookies from "js-cookie";
 import { fetchFilterData } from "../api";
@@ -586,7 +586,7 @@ export const useInterviews = (
     }
   }, [interviewData.length, isLoading, isQueryLoading, isMutationLoading]);
 
-  return {
+  return useMemo(() => ({
     useInterviewDetails,
     interviewData,
     responseDashBoard,
@@ -620,7 +620,41 @@ export const useInterviews = (
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  };
+  }), [
+    useInterviewDetails,
+    interviewData,
+    responseDashBoard,
+    total,
+    currentPage,
+    totalPages,
+    isLoading,
+    isQueryLoading,
+    isMutationLoading,
+    isError,
+    error,
+    createInterview.isError,
+    createInterview.error,
+    saveInterviewRound.isError,
+    saveInterviewRound.error,
+    updateInterviewStatus.isError,
+    updateInterviewStatus.error,
+    deleteInterviewMutation.isError,
+    deleteInterviewMutation.error,
+    createInterview.mutateAsync,
+    saveInterviewRound.mutateAsync,
+    updateInterviewRound.mutateAsync,
+    updateInterviewStatus.mutateAsync,
+    deleteRoundMutation.mutateAsync,
+    deleteInterviewMutation.mutateAsync,
+    updateRoundStatus.mutateAsync,
+    validateRoundStatusMutation.mutateAsync,
+    validateRoundStatusMutation.isPending,
+    validateRoundStatusMutation.error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  ]);
 };
 
 
