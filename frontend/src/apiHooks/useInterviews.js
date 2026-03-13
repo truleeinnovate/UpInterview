@@ -1,7 +1,7 @@
 // v1.0.0 - Ashraf - added sending interview email link update in rounds api
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef,useMemo  } from "react";
 import { config } from "../config";
 import Cookies from "js-cookie";
 import { fetchFilterData } from "../api";
@@ -38,7 +38,7 @@ export const useInterviews = (
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["interviews", baseParams, type],
+    queryKey: ["interviews", JSON.stringify(baseParams), type],
     queryFn: async ({ pageParam = 1 }) => {
       const params = { ...baseParams, page: pageParam };
       const response = await fetchFilterData("interview", {}, params);
@@ -68,9 +68,9 @@ export const useInterviews = (
   });
 
   // Flatten all pages into a single array
-  const interviewData = responseData?.pages?.flatMap(
+  const interviewData = useMemo(() => responseData?.pages?.flatMap(
     (p) => p?.data?.data || []
-  ) || [];
+  ) || [], [responseData?.pages]);
   const total = responseData?.pages?.[0]?.data?.total ?? 0;
   const currentPage = responseData?.pages?.[0]?.data?.page ?? 1;
   const totalPages = responseData?.pages?.[0]?.data?.totalPages ?? 0;

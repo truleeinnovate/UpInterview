@@ -1,87 +1,3 @@
-// import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-// import axios from 'axios';
-// import { useRef } from 'react';
-// import { fetchFilterData } from "../api";
-// import { config } from '../config';
-// import { usePermissions } from '../Context/PermissionsContext';
-
-// /**
-//  * useScheduleAssessments – React-Query hook for CRUD operations on Scheduled Assessments.
-//  *
-//  * The implementation purposefully mirrors `useAssessments` so that the existing
-//  * Assessment Template UI can be reused with minimal changes: simply swap the hook
-//  * and table column definitions.
-//  */
-// export const useScheduleAssessments = () => {
-//   const queryClient = useQueryClient();
-//   const { effectivePermissions } = usePermissions();
-
-//   // Scheduled Assessments visibility is tied to the generic Assessments → View permission
-//   const hasViewPermission = effectivePermissions?.Assessments?.View;
-//   const initialLoad = useRef(true);
-
-//   /* -------------------------------------------------------------------------- */
-//   /*                               QUERY:  LIST                                */
-//   /* -------------------------------------------------------------------------- */
-//   const {
-//     data: scheduleData = [],
-//     isLoading: isQueryLoading,
-//     isError,
-//     error,
-//   } = useQuery({
-//     queryKey: ['Assessments'],
-//     queryFn: async () => {
-//       // `scheduleassessment` matches the backend collection name; adjust if needed.
-//       const data = await fetchFilterData('scheduleassessment');
-//       return data.map(scheduleassessment => ({
-//         ...scheduleassessment,
-//         // Add any assessment-specific transformations here
-//       })).reverse(); // Latest first
-//     },
-//     enabled: !!hasViewPermission,
-//     retry: 1,
-//     staleTime: 1000 * 60 * 5,
-//   });
-//  // Remove console.log to prevent loops
-//  // console.log("scheduleData------",scheduleData);
-//   /* -------------------------------------------------------------------------- */
-//   /*                           MUTATION:  CREATE / UPDATE                       */
-//   /* -------------------------------------------------------------------------- */
-// //   const addOrUpdateSchedule = useMutation({
-// //     mutationFn: async ({ isEditing, id, payload }) => {
-// //       if (isEditing) {
-// //         const { data } = await axios.patch(
-// //           `${config.REACT_APP_API_URL}/schedule-assessment/update/${id}`,
-// //           payload,
-// //         );
-// //         return data;
-// //       }
-// //       const { data } = await axios.post(
-// //         `${config.REACT_APP_API_URL}/schedule-assessment/create`,
-// //         payload,
-// //       );
-// //       return data;
-// //     },
-// //     onSuccess: () => {
-// //       queryClient.invalidateQueries(['Assessments']);
-// //     },
-// //     onError: (err) => {
-// //       console.error('Schedule save error:', err.message);
-// //     },
-// //   });
-
-//   /* -------------------------------------------------------------------------- */
-//   /*                                 RETURN                                     */
-//   /* -------------------------------------------------------------------------- */
-//   return {
-//     scheduleData,
-//     isLoading: isQueryLoading,
-//     isError,
-//     error,
-//    // addOrUpdateSchedule: addOrUpdateSchedule.mutateAsync,
-//   };
-// };
-
 // hooks/useScheduleAssessments.js
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
@@ -203,7 +119,7 @@ export const useScheduleAssessments = (arg) => {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["scheduleassessment-infinite", buildParams],
+    queryKey: ["scheduleassessment-infinite", JSON.stringify(buildParams)],
     queryFn: async ({ pageParam = 1 }) => {
       const params = { ...buildParams, page: pageParam, limit: buildParams.limit || 20 };
       const response = await fetchFilterData(
@@ -259,7 +175,7 @@ export const useScheduleAssessments = (arg) => {
     isError: isLegacyError,
     error: legacyError,
   } = useQuery({
-    queryKey: ["scheduleassessment-legacy", buildParams],
+    queryKey: ["scheduleassessment-legacy", JSON.stringify(buildParams)],
     queryFn: async () => {
       const response = await fetchFilterData(
         "scheduleassessment",
@@ -293,49 +209,69 @@ export const useScheduleAssessments = (arg) => {
     keepPreviousData: true,
   });
 
+  const infiniteScheduleData = useMemo(() => infiniteData?.pages?.flatMap((p) => p?.data || []) || [], [infiniteData?.pages]);
+  const legacyScheduleData = useMemo(() => legacyData?.data || [], [legacyData?.data]);
+
   /* -------------------------------------------------------------------------- */
   /*                                 RETURN                                     */
   /* -------------------------------------------------------------------------- */
 
-  if (isOptionsMode) {
-    // Infinite scroll mode: flatten all pages
-    const scheduleData = infiniteData?.pages?.flatMap((p) => p?.data || []) || [];
-    const total = infiniteData?.pages?.[0]?.total ?? scheduleData.length;
-    const responseAssessmentDashBoard = infiniteData?.pages?.[0]?.responseAssessmentDashBoard;
+  const finalResult = useMemo(() => {
+    if (isOptionsMode) {
+      const scheduleData = infiniteScheduleData;
+      const total = infiniteData?.pages?.[0]?.total ?? scheduleData.length;
+      const responseAssessmentDashBoard = infiniteData?.pages?.[0]?.responseAssessmentDashBoard;
+
+      return {
+        scheduleData,
+        responseAssessmentDashBoard,
+        total,
+        page: 1,
+        totalPages: 1,
+        itemsPerPage: 20,
+        isLoading: isInfiniteLoading,
+        isError: isInfiniteError,
+        error: infiniteError,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+      };
+    }
+
+    const scheduleData = legacyScheduleData;
+    const total = legacyData?.total ?? scheduleData.length;
+    const page = legacyData?.page ?? 1;
+    const totalPages = legacyData?.totalPages ?? 1;
+    const itemsPerPage = legacyData?.itemsPerPage ?? scheduleData.length;
+    const responseAssessmentDashBoard = legacyData?.responseAssessmentDashBoard;
 
     return {
       scheduleData,
       responseAssessmentDashBoard,
       total,
-      page: 1,
-      totalPages: 1,
-      itemsPerPage: 20,
-      isLoading: isInfiniteLoading,
-      isError: isInfiniteError,
-      error: infiniteError,
-      fetchNextPage,
-      hasNextPage,
-      isFetchingNextPage,
+      page,
+      totalPages,
+      itemsPerPage,
+      isLoading: isLegacyLoading,
+      isError: isLegacyError,
+      error: legacyError,
     };
-  }
+  }, [
+    isOptionsMode,
+    infiniteScheduleData,
+    infiniteData,
+    isInfiniteLoading,
+    isInfiniteError,
+    infiniteError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    legacyScheduleData,
+    legacyData,
+    isLegacyLoading,
+    isLegacyError,
+    legacyError,
+  ]);
 
-  // Legacy mode
-  const scheduleData = legacyData?.data || [];
-  const total = legacyData?.total ?? scheduleData.length;
-  const page = legacyData?.page ?? 1;
-  const totalPages = legacyData?.totalPages ?? 1;
-  const itemsPerPage = legacyData?.itemsPerPage ?? scheduleData.length;
-  const responseAssessmentDashBoard = legacyData?.responseAssessmentDashBoard;
-
-  return {
-    scheduleData,
-    responseAssessmentDashBoard,
-    total,
-    page,
-    totalPages,
-    itemsPerPage,
-    isLoading: isLegacyLoading,
-    isError: isLegacyError,
-    error: legacyError,
-  };
+  return finalResult;
 };

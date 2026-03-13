@@ -97,7 +97,7 @@ export const useAssessments = (filters = {}) => {
         "AssessmentTemplates",
         "single",
         assessmentId,
-        additionalFilters,
+        JSON.stringify(additionalFilters || {}),
       ],
       queryFn: async () => {
         if (!assessmentId) {

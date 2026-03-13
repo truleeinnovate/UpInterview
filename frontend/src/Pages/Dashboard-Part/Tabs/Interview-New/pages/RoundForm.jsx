@@ -5,7 +5,7 @@
 //<-----v1.0.4----Venkatesh-----default and enforce scheduledDate when switching to "scheduled" after 2 hours from now
 // v1.0.5 - Ashok - Improved responsiveness
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Breadcrumb from "../../CommonCode-AllTabs/Breadcrumb";
 
@@ -182,6 +182,12 @@ const RoundFormInterviews = () => {
     ASSESSMENT_DROPDOWN_LIMIT,
   );
   const [assessmentSearch, setAssessmentSearch] = useState("");
+  
+  const assessmentFilters = useMemo(() => ({
+    page: 0,
+    limit: assessmentLimit,
+    ...(assessmentSearch && { search: assessmentSearch.trim() }),
+  }), [assessmentLimit, assessmentSearch]);
 
   const {
     assessmentData,
@@ -189,11 +195,7 @@ const RoundFormInterviews = () => {
     isQueryLoading: isAssessmentQueryLoading,
     fetchAssessmentQuestions,
     useAssessmentById,
-  } = useAssessments({
-    page: 0,
-    limit: assessmentLimit,
-    ...(assessmentSearch && { search: assessmentSearch.trim() }),
-  });
+  } = useAssessments(assessmentFilters);
   // const { groups } = useCustomContext();
   // Get groups data and mutations from TanStack Query
   // const { data: groups = [] } = useGroupsQuery();
@@ -201,7 +203,7 @@ const RoundFormInterviews = () => {
   // const { data: teamsData = [] } = useTeamsQuery();
   const { checkInternalInterviewUsage, isChecking } =
     useInternalInterviewUsage();
-  // v1.0.2 <-----------------------------------------
+// console.log("assessmentData",assessmentData)
 
   const {
     data,
@@ -734,9 +736,10 @@ const RoundFormInterviews = () => {
       ? roundEditData.assessmentId
       : null;
 
+  const emptyFilters = useMemo(() => ({}), []);
   const { assessmentById: editingAssessment } = useAssessmentById(
     editingAssessmentId,
-    {},
+    emptyFilters,
   );
 
   useEffect(() => {
@@ -989,8 +992,8 @@ const RoundFormInterviews = () => {
     }
   }, []);
 
-  const [validAssessments, setValidAssessments] = useState([]);
-  const [isValidatingAssessments, setIsValidatingAssessments] = useState(false);
+  // const [validAssessments, setValidAssessments] = useState([]);
+  // const [isValidatingAssessments, setIsValidatingAssessments] = useState(false);
 
   // const assessmentOptions = React.useMemo(() => {
   //   const baseOptions = Array.isArray(assessmentData)
@@ -1089,71 +1092,71 @@ const RoundFormInterviews = () => {
   // Simplified shouldDisable function with all conditions
 
   // Validate which assessments have sections
-  useEffect(() => {
-    const validateAssessments = async () => {
-      if (!Array.isArray(assessmentData) || assessmentData.length === 0) {
-        setValidAssessments([]);
-        return;
-      }
+  // useEffect(() => {
+  //   const validateAssessments = async () => {
+  //     if (!Array.isArray(assessmentData) || assessmentData.length === 0) {
+  //       setValidAssessments([]);
+  //       return;
+  //     }
 
-      setIsValidatingAssessments(true);
+  //     setIsValidatingAssessments(true);
 
-      try {
-        const validIds = [];
+  //     try {
+  //       const validIds = [];
 
-        // Process in batches to avoid too many concurrent requests
-        const batchSize = 5;
-        for (let i = 0; i < assessmentData.length; i += batchSize) {
-          const batch = assessmentData.slice(i, i + batchSize);
+  //       // Process in batches to avoid too many concurrent requests
+  //       const batchSize = 5;
+  //       for (let i = 0; i < assessmentData.length; i += batchSize) {
+  //         const batch = assessmentData.slice(i, i + batchSize);
 
-          const promises = batch.map(async (assessment) => {
-            try {
-              const { data } = await fetchAssessmentQuestions(assessment._id);
-              if (
-                data?.sections &&
-                Array.isArray(data.sections) &&
-                data.sections.length > 0
-              ) {
-                // Store the sections data
-                setSectionQuestions((prev) => ({
-                  ...prev,
-                  [assessment._id]: data,
-                }));
-                return assessment._id;
-              }
-            } catch (error) {
-              console.error(
-                `Error validating assessment ${assessment._id}:`,
-                error,
-              );
-            }
-            return null;
-          });
+  //         const promises = batch.map(async (assessment) => {
+  //           try {
+  //             const { data } = await fetchAssessmentQuestions(assessment._id);
+  //             if (
+  //               data?.sections &&
+  //               Array.isArray(data.sections) &&
+  //               data.sections.length > 0
+  //             ) {
+  //               // Store the sections data
+  //               setSectionQuestions((prev) => ({
+  //                 ...prev,
+  //                 [assessment._id]: data,
+  //               }));
+  //               return assessment._id;
+  //             }
+  //           } catch (error) {
+  //             console.error(
+  //               `Error validating assessment ${assessment._id}:`,
+  //               error,
+  //             );
+  //           }
+  //           return null;
+  //         });
 
-          const results = await Promise.all(promises);
-          validIds.push(...results.filter((id) => id !== null));
-        }
+  //         const results = await Promise.all(promises);
+  //         validIds.push(...results.filter((id) => id !== null));
+  //       }
 
-        // Filter the original assessmentData to only include valid ones
-        const validAssessmentsList = assessmentData.filter((a) =>
-          validIds.includes(a._id),
-        );
+  //       // Filter the original assessmentData to only include valid ones
+  //       const validAssessmentsList = assessmentData.filter((a) =>
+  //         validIds.includes(a._id),
+  //       );
 
-        setValidAssessments(validAssessmentsList);
-      } catch (error) {
-        console.error("Error validating assessments:", error);
-      } finally {
-        setIsValidatingAssessments(false);
-      }
-    };
+  //       setValidAssessments(validAssessmentsList);
+  //     } catch (error) {
+  //       console.error("Error validating assessments:", error);
+  //     } finally {
+  //       setIsValidatingAssessments(false);
+  //     }
+  //   };
 
-    validateAssessments();
-  }, [assessmentData]); // Re-run when assessmentData changes
+  //   validateAssessments();
+  // }, [assessmentData]); // Re-run when assessmentData changes
 
   const assessmentOptions = React.useMemo(() => {
-    // Use validAssessments instead of assessmentData
-    const baseOptions = Array.isArray(validAssessments)
-      ? validAssessments.map((a) => {
+    // Use assessmentData directly instead of validAssessments
+    const baseOptions = Array.isArray(assessmentData)
+      ? assessmentData.map((a) => {
         const titleLabel = a.AssessmentTitle || "Untitled Assessment";
         const typeLabel = a.type
           ? a.type.charAt(0).toUpperCase() + a.type.slice(1)
@@ -1246,7 +1249,7 @@ const RoundFormInterviews = () => {
 
     return baseOptions;
   }, [
-    validAssessments, // Use validAssessments instead of assessmentData
+    assessmentData, // Use validAssessments instead of assessmentData
     editingAssessmentId,
     editingAssessment,
     assessmentTemplate?.assessmentName,
