@@ -26,6 +26,7 @@ import {
 } from "@heroicons/react/24/outline";
 import ToggleSwitch from "../../../../Components/Buttons/ToggleButton";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
+import { useUsers } from "../../../../apiHooks/useUsers";
 
 // Team color options with hex values
 const TEAM_COLORS = [
@@ -56,6 +57,20 @@ const DEPARTMENT_OPTIONS = [
 const TeamFormPopup = () => {
   const { id } = useParams();
   const { interviewers } = useInterviewers();
+
+ const { usersRes, usersLoading, toggleUserStatus } = useUsers({
+    // search: searchQuery.trim(),
+    // // role: selectedFilters?.roles.length > 0 ? selectedFilters?.roles.join(",") : "", // Use selectedFilters, not selectedRoles
+    // role:
+    //   selectedFilters.roles && selectedFilters.roles.length > 0
+    //     ? selectedFilters.roles.join(",")
+    //     : "",
+    page: 1, // backend expects 1-based page
+    limit: 1000,
+  });
+
+  
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -106,24 +121,20 @@ const TeamFormPopup = () => {
 
   // Build member options from interviewers
   useEffect(() => {
-    const interviewersArray = Array.isArray(interviewers) ? interviewers : [];
+    const interviewersArray = Array.isArray(usersRes?.users) ? usersRes.users : [];
 
     if (interviewersArray.length > 0) {
       const options = interviewersArray
         .filter(
           (interviewer) =>
-            interviewer.type === "internal" ||
-            interviewer.roleLabel === "Admin",
+            interviewer.status === "active"
+          //  &&
+          //   (interviewer.roleName === "Admin" || interviewer.roleName === "Internal")
         )
         .map((interviewer) => ({
-          value: String(interviewer?.contact?._id || interviewer?._id),
-          label:
-            `${interviewer?.contact?.firstName || ""} ${interviewer?.contact?.lastName || ""}`.trim() ||
-            "Unknown",
-          role:
-            interviewer?.roleLabel ||
-            interviewer?.contact?.CurrentRole ||
-            "Team Member",
+          value: String(interviewer?.contactId || interviewer?._id),
+          label: `${interviewer?.firstName || ""} ${interviewer?.lastName || ""}`.trim() || "Unknown",
+          role: interviewer?.roleName || "Team Member",
         }))
         .filter((opt) => opt.value);
 
@@ -131,7 +142,7 @@ const TeamFormPopup = () => {
     } else {
       setMemberOptions([]);
     }
-  }, [interviewers]);
+  }, [usersRes]);
 
   // Lead options (same as members)
   const leadOptions = memberOptions;
