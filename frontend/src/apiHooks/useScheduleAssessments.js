@@ -120,7 +120,7 @@ export const useScheduleAssessments = (arg) => {
 
   // Determine call mode: either new options object or legacy assessmentId string
   const isOptionsMode =
-    arg && typeof arg === "object" && !Array.isArray(arg);
+    !!(arg && typeof arg === "object" && !Array.isArray(arg));
   const legacyAssessmentId =
     !isOptionsMode && typeof arg === "string" ? arg : undefined;
 
