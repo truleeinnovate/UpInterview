@@ -143,6 +143,7 @@ const RoundStatusReasonModal = ({
   roundData = null,
   showPolicyInfo = false,
   isLoading = false, // Loading state for confirm button
+  warningMessage = "", // Context-specific warning message
 }) => {
   const [selectedReason, setSelectedReason] = useState("");
   const [otherText, setOtherText] = useState("");
@@ -208,6 +209,15 @@ const RoundStatusReasonModal = ({
             interviewerType={roundData.interviewerType}
           />
         )} */}
+
+        {warningMessage && (
+          <div className="flex items-start gap-3 bg-red-50 border border-red-200 p-3 rounded-lg mb-4">
+            <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-red-800 font-medium">
+              {warningMessage}
+            </p>
+          </div>
+        )}
 
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">

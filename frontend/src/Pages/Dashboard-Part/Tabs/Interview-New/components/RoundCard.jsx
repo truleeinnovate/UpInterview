@@ -2017,7 +2017,8 @@ const RoundCard = ({
                     round?.interviewerType === "External" &&
                     !isInterviewCompleted &&
                     round?.roundTitle !== "Assessment" &&
-                    round?.interviewType !== "instant" && (
+                    round?.interviewType !== "instant" && 
+                    (
                       <button
                         onClick={() => onEdit(round, { isRequestSent: true })}
                         className="inline-flex items-center px-3 py-2 border border-yellow-500 text-sm rounded-md text-yellow-800 bg-yellow-50 hover:bg-yellow-100"

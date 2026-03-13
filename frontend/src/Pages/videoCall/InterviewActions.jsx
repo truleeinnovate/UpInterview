@@ -31,6 +31,7 @@ import {
   useUpdateRoundStatus,
 } from "../../apiHooks/useMockInterviews";
 import { capitalizeFirstLetter } from "../../utils/CapitalizeFirstLetter/capitalizeFirstLetter";
+import { useMeeting } from "@videosdk.live/react-sdk";
 const InterviewActions = ({
   // interviewData,
   isAddMode,
@@ -58,13 +59,14 @@ const InterviewActions = ({
   ] = useState(false);
 
   const location = useLocation();
-
+ const { leave,end } = useMeeting();
   // Extract URL data once
   const urlData = useMemo(
     () => extractUrlData(location.search),
     [location.search],
   );
-
+const [isMeetingLeft, setIsMeetingLeft] = useState(false);
+const [leftStatus, setLeftStatus] = useState("");
   const isMockInterview = urlData?.interviewType === "mockinterview";
 
 
@@ -126,7 +128,7 @@ const InterviewActions = ({
   const interviewData = isMockInterview
     ? mockInterview?.rounds[0]
     : interview?.rounds[0] || {};
-  const participants = interviewData?.participants;
+  const participants = interviewData?.participants || [];
   // interviewData?.rounds[0]?.participants ||
   // mockInterview?.rounds[0]?.participants ||
   // [];
@@ -283,7 +285,7 @@ const InterviewActions = ({
       } else {
         response = await updateRoundStatus(payload);
       }
-      // console.log("response updateRoundStatus", response);
+      console.log("response updateRoundStatus", response);
 
       // await updateRoundStatus({
       //   roundId: round?._id,
@@ -291,9 +293,22 @@ const InterviewActions = ({
       //   status: newStatus, // or any other status
       //   ...(cancellationReason && { cancellationReason }),
       // });
-      // Show success toast
-      notify.success(`Round Status updated to ${newStatus}`, {});
-
+      if (newStatus !== "NoShow" && newStatus !== "Incomplete" && newStatus !== "Completed" && newStatus !== "Cancelled") {
+        // Show success toast
+        notify.success(`Round Status updated to ${newStatus}`, {});
+      } else {
+        // Leave the meeting cleanly — don't use end() as it triggers internal
+        // mediasoup "queue stopped" errors. leave() disconnects gracefully.
+        try {
+          end();
+          setLeftStatus(newStatus);
+          setIsMeetingLeft(true);
+        } catch (e) {
+          console.log("[MeetingTimer] Leave cleanup:", e?.message || e);
+          setLeftStatus(newStatus);
+          setIsMeetingLeft(true);
+        }
+      }
       // Invalidate interview-details queries to update status in real-time
       queryClient.invalidateQueries({ queryKey: ["interview-details"] });
       // Also invalidate mock interview queries for mock interviews
@@ -474,6 +489,63 @@ const InterviewActions = ({
     );
   }
 
+  console.log("isMeetingLeft", isMeetingLeft);
+
+
+  // Determine if we should show the "Meeting Ended" overlay
+  const showEndedScreen = isMeetingLeft || isFinalStatus;
+  const effectiveLeftStatus = leftStatus || currentStatus;
+
+  if (showEndedScreen) {
+    return (
+      /* Meeting Ended Screen - blocks all rejoining */
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm z-[9999]">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-2xl max-w-md mx-4 transform animate-in fade-in zoom-in duration-300">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg
+              className="w-8 h-8 text-red-500"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            Meeting Has Ended
+          </h2>
+          <p className="text-gray-500 mb-6 font-medium">
+            {effectiveLeftStatus === "NoShow"
+              ? "The round has been marked as a No Show."
+              : effectiveLeftStatus === "Incomplete"
+                ? "The round has been marked as Incomplete."
+                : effectiveLeftStatus === "Completed"
+                  ? "The round has been marked as Completed."
+                  : effectiveLeftStatus === "Cancelled"
+                    ? "The round has been cancelled."
+                    : "This meeting has ended."}{" "}
+            You can no longer join this call.
+          </p>
+          <button
+            onClick={() => window.close()}
+            className="w-full px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors font-semibold shadow-lg active:scale-95"
+          >
+            Close Window
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+
+
+
+
   return (
     // v1.0.1 <----------------------------------------------------------------------------
     <div className="mb-10">
@@ -628,7 +700,7 @@ const InterviewActions = ({
               ready={completionActionEnabled}
             />
           )}
-
+ {urlData?.isSchedule && (
           <ActionCard
             icon={AlertTriangle}
             title="Mark Incomplete"
@@ -643,6 +715,7 @@ const InterviewActions = ({
             variant="warning"
           // timeUntil={!completionActionEnabled ? getTimeUntilEnabled(new Date(endTime.getTime() - 15 * 60000)) : null}
           />
+ )}
 
           {/* Technical Issues */}
           <ActionCard
@@ -696,6 +769,7 @@ const InterviewActions = ({
         }}
         onConfirm={handleNoShowWithReason}
         confirmLabel="Confirm No Show"
+        warningMessage="Warning: Marking this round as No Show will end the meeting immediately. You and the candidate will not be able to join this call again."
       />
 
       {(completedReasonModalOpen ||
@@ -770,7 +844,8 @@ const InterviewActions = ({
           setActionInProgress(false);
         }}
         onConfirm={handleMarkAsIncompleteWithReason}
-        confirmLabel="Confirm No Show"
+        confirmLabel="Confirm Incomplete"
+        warningMessage="Warning: Marking this round as Incomplete will end the meeting immediately. You and the candidate will not be able to join this call again."
       />
 
       {/* Shared reason modal for No Show */}

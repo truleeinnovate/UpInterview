@@ -249,6 +249,9 @@ const FeedbackForm = ({
 
   const positionData = useMemo(() => isMockInterview ? {} : interviewData?.positionId || {}, [isMockInterview, interviewData]);
 
+
+    const participants = interviewRoundData?.participants || [];
+
   // console.log("candidateData", candidateData)
 
   // console.log("positionData", positionData)

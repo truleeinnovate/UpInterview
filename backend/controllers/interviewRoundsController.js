@@ -734,10 +734,7 @@ const updateInterviewRound = async (req, res) => {
     });
   }
 
-  const hasAccepted = await InterviewRequest.exists({
-    roundId: existingRound._id,
-    status: "accepted",
-  });
+ 
 
   const changes = await detectRoundChanges({
     existingRound,
@@ -747,6 +744,31 @@ const updateInterviewRound = async (req, res) => {
     },
     selectedInterviewers: req?.body?.round?.selectedInterviewers || [],
   });
+
+  // let hasAccepted = false
+
+  // let CurrentDate = new Date();
+
+  // // if (!changes?.dateTimeChanged){
+  //  let hasAccepted = await InterviewRequest.exists({
+  //   roundId: existingRound._id,
+  //   status: "accepted",
+  //   dateTime: existingRound.dateTime,
+  //   requestedAt: CurrentDate
+  // });
+  // // }
+
+
+  const currentDate = new Date();
+
+const hasAccepted = await InterviewRequest.exists({
+  roundId: existingRound._id,
+  status: "accepted",
+  dateTime: existingRound.dateTime,
+  requestedAt: { $lte: currentDate }
+});
+
+
 
   // console.log("changesDone", changes);
 
@@ -874,7 +896,7 @@ const updateInterviewRound = async (req, res) => {
     ) {
       // PROTECT: Check if any request was already accepted
 
-      if (hasAccepted) {
+      if (hasAccepted ) {
         return res.status(400).json({
           message:
             "Cannot cancel requests: At least one outsource interviewer has already accepted this round.",
@@ -1873,11 +1895,12 @@ const updateInterviewRoundStatus = async (req, res) => {
       extraUpdate.$set.meetPlatform = "";
       extraUpdate.$set.interviewerType = "";
     }
+    console.log("action",action)
 
-    if (action === "NoShow"){
+    if (action === "NoShow" || action === "Incomplete"){
       extraUpdate.$set.interviewers = []; // Clear interviewers
-      extraUpdate.$set.meetingId = "";
-      extraUpdate.$set.meetPlatform = "";
+      // extraUpdate.$set.meetingId = "";
+      // extraUpdate.$set.meetPlatform = "";
       extraUpdate.$set.interviewerType = ""; 
     }
 

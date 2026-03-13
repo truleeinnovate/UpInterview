@@ -698,7 +698,7 @@ const Dashboard = () => {
           theme="light"
         />
         <MeetingAppProvider>
-          {isMeetingExpired ? (
+          {isMeetingExpired || interviewRoundData?.status === "NoShow" || interviewRoundData?.status === "Incomplete" ? (
             /* Meeting Ended Screen - blocks all rejoining */
             <div className="flex items-center justify-center h-full">
               <div className="text-center p-8 bg-white rounded-2xl shadow-2xl max-w-md mx-4">
@@ -709,8 +709,10 @@ const Dashboard = () => {
                   </svg>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">Meeting Has Ended</h2>
-                <p className="text-gray-500 mb-6">
-                  This meeting's scheduled time and grace period have expired. You can no longer join this call.
+                <p className="text-gray-500 mb-6">{
+                  isMeetingExpired ? "This meeting's scheduled time and grace period have expired. You can no longer join this call." :
+                   "This meeting has been cancelled by the scheduler." 
+                  }
                 </p>
                 <button
                   onClick={() => window.close()}
@@ -781,7 +783,7 @@ const Dashboard = () => {
                 />
               </MeetingProvider>
             </>
-          ) : isMeetingLeft ? (
+          ) : isMeetingLeft  ? (
             <>
               <LeaveScreen
                 setIsMeetingLeft={setIsMeetingLeft}
