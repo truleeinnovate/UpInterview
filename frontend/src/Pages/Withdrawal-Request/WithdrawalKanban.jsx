@@ -19,8 +19,9 @@ const WithdrawalKanban = ({
   onCardClick,
   isLoading,
   refetch,
-  currentPage = 0,
-  itemsPerPage = 10
+  onScrollEnd,
+  isLoadingMore,
+  hasMore,
 }) => {
   const [hoveredCard, setHoveredCard] = useState(null);
 
@@ -67,19 +68,8 @@ const WithdrawalKanban = ({
       (request) => request.status?.toLowerCase() === status
     );
 
-    // When itemsPerPage <= 0, disable local pagination and return all for this page
-    if (!itemsPerPage || itemsPerPage <= 0) {
-      return {
-        paginatedRequests: allRequests,
-        totalRequests: allRequests.length,
-      };
-    }
-
-    // Apply pagination - get only the items for current page
-    const startIndex = currentPage * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
     return {
-      paginatedRequests: allRequests.slice(startIndex, endIndex),
+      paginatedRequests: allRequests,
       totalRequests: allRequests.length
     };
   };
@@ -112,41 +102,24 @@ const WithdrawalKanban = ({
 
   // Calculate the actual number of pages needed
   const getTotalPages = () => {
-    if (!itemsPerPage || itemsPerPage <= 0) return 1;
-    const statusCounts = columns.map(col => {
-      const requests = withdrawalRequests.filter(
-        (request) => request.status?.toLowerCase() === col.id
-      );
-      return requests.length;
-    });
-    const maxItems = Math.max(...statusCounts, 0);
-    return maxItems > 0 ? Math.ceil(maxItems / itemsPerPage) : 1;
+    return 1;
   };
 
   const totalPages = getTotalPages();
 
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollHeight - scrollTop <= clientHeight + 50) {
+      if (hasMore && !isLoadingMore && onScrollEnd) {
+        onScrollEnd();
+      }
+    }
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen p-4">
       {/* Header with Refresh and Pagination Info */}
-      <div className="flex justify-between items-center mb-4">
-        {/* Page Info - Only show if there are items */}
-        {totalPages > 1 && (
-          <div className="bg-white px-4 py-2 rounded-lg border border-gray-200">
-            <span className="text-sm text-gray-600">
-              Page {currentPage + 1} of {totalPages}
-              <span className="ml-2 text-gray-400">
-                (Showing up to {itemsPerPage} items per status)
-              </span>
-            </span>
-          </div>
-        )}
-        {totalPages <= 1 && (
-          <div className="bg-white px-4 py-2 rounded-lg border border-gray-200">
-            <span className="text-sm text-gray-600">
-              All items displayed
-            </span>
-          </div>
-        )}
+      <div className="flex justify-end items-center mb-4">
 
         {/* Refresh Button */}
         <button
@@ -177,13 +150,16 @@ const WithdrawalKanban = ({
             </div>
 
             {/* Column Content */}
-            <div className="p-3 space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto">
+            <div 
+              className="p-3 space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto"
+              onScroll={handleScroll}
+            >
               {(() => {
                 const { paginatedRequests, totalRequests } = getRequestsByStatus(column.id);
                 if (paginatedRequests.length === 0) {
                   return (
                     <p className="text-center text-gray-500 py-8">
-                      {totalRequests === 0 ? "No requests" : `No requests on page ${currentPage + 1}`}
+                      No requests
                     </p>
                   );
                 }
@@ -320,6 +296,12 @@ const WithdrawalKanban = ({
                   </motion.div>
                 ));
               })()}
+              
+              {isLoadingMore && hasMore && (
+                <div className="py-4 flex justify-center items-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-custom-blue"></div>
+                </div>
+              )}
             </div>
           </div>
         ))}

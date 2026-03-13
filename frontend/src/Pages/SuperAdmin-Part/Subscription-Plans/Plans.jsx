@@ -162,7 +162,6 @@ export default function Plans() {
   // UI state
   const [view, setView] = useState("table"); // 'table' | 'kanban'
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState(defaultFilters);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [tempFilters, setTempFilters] = useState(defaultFilters);
@@ -193,14 +192,22 @@ export default function Plans() {
     updatePlan,
     deletePlan,
     isMutating,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useSubscriptionPlansAdmin({
-    page: currentPage + 1,
     limit: ITEMS_PER_PAGE,
     search: (searchQuery || "").trim(), // debounced below
     subscriptionTypes: (selectedFilters.subscriptionTypes || []).join(","),
     activeStates: (selectedFilters.activeStates || []).join(","),
     createdDate: selectedFilters.createdDate || "",
   });
+
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
 
   // Debounce search input
   useEffect(() => {
@@ -213,7 +220,8 @@ export default function Plans() {
 
   // Reset page when search/filter changes
   useEffect(() => {
-    setCurrentPage(0);
+    // Rely on React Query or component key to handle reset if necessary, 
+    // but the infinite query auto-resets when query keys (search/filters) change
   }, [debouncedSearch, selectedFilters]);
 
   // Route-driven modal control
@@ -273,15 +281,6 @@ export default function Plans() {
     );
   }, [selectedFilters]);
 
-  // Server pagination metadata
-  const totalPages = Math.max(1, Math.ceil((total || 0) / ITEMS_PER_PAGE));
-  const nextPage = () => {
-    if (currentPage + 1 < totalPages) setCurrentPage((p) => p + 1);
-  };
-  const prevPage = () => {
-    if (currentPage > 0) setCurrentPage((p) => p - 1);
-  };
-
   // Actions
   const handleCreateClick = () => {
     navigate("/sub-plans/new");
@@ -336,12 +335,10 @@ export default function Plans() {
   const clearAllFilters = () => {
     setTempFilters(defaultFilters);
     setSelectedFilters(defaultFilters);
-    setCurrentPage(0);
   };
   const applyFilters = () => {
     setSelectedFilters(tempFilters);
     setIsFilterPopupOpen(false);
-    setCurrentPage(0);
   };
 
   const columns = [
@@ -430,15 +427,12 @@ export default function Plans() {
           setView={setView}
           searchQuery={searchQuery}
           onSearch={(e) => setSearchQuery(e.target.value)}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrevPage={prevPage}
-          onNextPage={nextPage}
           onFilterClick={isFilterPopupOpen ? closeFilterPopup : openFilterPopup}
           isFilterActive={isFilterActive}
           isFilterPopupOpen={isFilterPopupOpen}
-          dataLength={Math.max(1, total)}
           filterIconRef={filterIconRef}
+          dataLength={total}
+          hidePagination={true}
         />
 
         {/* Filters Popup */}
@@ -583,6 +577,25 @@ export default function Plans() {
       </div>
       {/* Views */}
       <div className="fixed sm:top-64 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+        {total > 0 && (
+          <div className="flex items-center justify-start px-6 py-2 bg-white">
+            <span className="text-sm text-gray-500">
+              Showing{" "}
+              <span className="font-semibold text-gray-800">{plans.length}</span>
+              {" "}of{" "}
+              <span className="font-semibold text-gray-800">
+                {(() => {
+                  const t = total || 0;
+                  const r = Math.floor(t / 100) * 100;
+                  if (r === 0) return t;
+                  if (t === r) return t;
+                  return `${r}+`;
+                })()}
+              </span>
+              {" "}{total === 1 ? "plan" : "plans"}
+            </span>
+          </div>
+        )}
         {view === "table" ? (
           <TableView
             data={plans}
@@ -595,6 +608,9 @@ export default function Plans() {
                 : "No plans found."
             }
             autoHeight={false}
+            onScrollEnd={handleScrollEnd}
+            hasMore={hasNextPage}
+            isLoadingMore={isFetchingNextPage}
           />
         ) : (
           // <PlanKanbanView
@@ -622,6 +638,9 @@ export default function Plans() {
             )}
             emptyState="No Active Plans Found"
             kanbanTitle="Subscription Plan"
+            onScrollEnd={handleScrollEnd}
+            hasMore={hasNextPage}
+            isLoadingMore={isFetchingNextPage}
           />
         )}
       </div>

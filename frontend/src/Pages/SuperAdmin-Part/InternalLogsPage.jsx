@@ -134,44 +134,37 @@ function InternalLogsPage() {
   // const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     severity: [],
   });
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const ITEMS_PER_PAGE = 10;
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
-  const filterIconRef = useRef(null); // Ref for filter icon
-  // const [isLoading, setIsLoading] = useState(false);
+  const filterIconRef = useRef(null);
 
   useEffect(() => {
     document.title = "Internal Logs | Admin Portal";
   }, []);
 
-  // const [selectedLog, setSelectedLog] = useState(null);
   const [selectedLogId, setSelectedLogId] = useState(null);
-  // const [logs, setLogs] = useState([]);
 
-  // Debounce search for better performance
+  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setCurrentPage(0); // Reset to first page on search
     }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Get logs with pagination and filters
-  const { logs, pagination, stats, isLoading, refetch } = useInternalLogs({
-    page: currentPage,
-    limit: ITEMS_PER_PAGE,
+  // Get logs with infinite scroll
+  const { logs, pagination, stats, isLoading, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInternalLogs({
+    limit: 20,
     search: debouncedSearch,
     status: selectedFilters.status.join(","),
     severity: selectedFilters.severity.join(","),
   });
-  const { log: selectedLog } = useInternalLogById(selectedLogId); // from apiHooks
+  const { log: selectedLog } = useInternalLogById(selectedLogId);
 
   const handleCurrentStatusToggle = (status) => {
     setSelectedStatus((prev) =>
@@ -214,7 +207,6 @@ function InternalLogsPage() {
     setSelectedStatus([]);
     setSelectedSeverity([]);
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -225,7 +217,6 @@ function InternalLogsPage() {
       severity: selectedSeverity,
     };
     setSelectedFilters(filters);
-    setCurrentPage(0);
     setIsFilterActive(filters.status.length > 0 || filters.severity.length > 0);
     setFilterPopupOpen(false);
   };
@@ -294,25 +285,17 @@ function InternalLogsPage() {
     }
   };
 
-  // Use server-side paginated data directly
   const currentFilteredRows = logs || [];
-  const totalPages = pagination?.totalPages || 0;
 
-  const nextPage = () => {
-    if (pagination?.hasNext) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (pagination?.hasPrev) {
-      setCurrentPage((prevPage) => prevPage - 1);
+  // Infinite scroll handler
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
   const handleSearch = (value) => {
     setSearchQuery(value);
-    // Pagination reset is handled in debounce effect
   };
 
   const formatDate = (dateString) => {
@@ -830,16 +813,13 @@ function InternalLogsPage() {
             setView={setView}
             searchQuery={searchQuery}
             onSearch={(e) => handleSearch(e.target.value)}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrevPage={prevPage}
-            onNextPage={nextPage}
             onFilterClick={handleFilterIconClick}
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
-            dataLength={logs?.length || 0}
+            dataLength={pagination?.totalItems || logs?.length || 0}
             searchPlaceholder="Search logs..."
             filterIconRef={filterIconRef}
+            hidePagination={true}
           />
         </div>
 
@@ -848,8 +828,28 @@ function InternalLogsPage() {
           <div className="sm:px-0">
             <motion.div className="bg-white">
               <div className="relative w-full">
+                {/* Log count */}
+                {(pagination?.totalItems || logs?.length) > 0 && (
+                  <div className="flex items-center justify-start px-6 py-2">
+                    <span className="text-sm text-gray-500">
+                      Showing{" "}
+                      <span className="font-semibold text-gray-800">{currentFilteredRows?.length || 0}</span>
+                      {" "}of{" "}
+                      <span className="font-semibold text-gray-800">
+                        {(() => {
+                          const t = pagination?.totalItems || logs?.length || 0;
+                          const r = Math.floor(t / 100) * 100;
+                          if (r === 0) return t;
+                          if (t === r) return t;
+                          return `${r}+`;
+                        })()}
+                      </span>
+                      {" "}{(pagination?.totalItems || logs?.length || 0) === 1 ? "log" : "logs"}
+                    </span>
+                  </div>
+                )}
                 {view === "table" ? (
-                  <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+                  <div className="w-full overflow-x-auto">
                     <TableView
                       data={currentFilteredRows}
                       columns={tableColumns}
@@ -857,6 +857,9 @@ function InternalLogsPage() {
                       actions={tableActions}
                       emptyState="No logs found."
                       customHeight="h-[calc(100vh-16.5rem)]"
+                      onScrollEnd={handleScrollEnd}
+                      isLoadingMore={isFetchingNextPage}
+                      hasMore={hasNextPage}
                     />
                   </div>
                 ) : (
@@ -873,7 +876,6 @@ function InternalLogsPage() {
                       logs={logs}
                       columns={kanbanColumns}
                       loading={isLoading}
-                      // renderActions={renderKanbanActions}
                       renderActions={(item) => (
                         <KanbanActionsMenu
                           item={item}
@@ -887,6 +889,9 @@ function InternalLogsPage() {
                       }}
                       kanbanTitle="Internal Log"
                       customHeight="calc(100vh - 320px)"
+                      onScrollEnd={handleScrollEnd}
+                      isLoadingMore={isFetchingNextPage}
+                      hasMore={hasNextPage}
                     />
                   </div>
                 )}

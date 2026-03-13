@@ -125,98 +125,88 @@ const Interviewers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     currentStatus: "",
   });
-  // const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null);
 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [selectedInterview, setSelectedInterview] = useState(null); // For view details
-  // console.log("interviewData--", selectedInterview);
+  const [selectedInterview, setSelectedInterview] = useState(null);
   const [interviews, setInterviews] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // Loading state
-  const [listType, setListType] = useState("interviews"); // interviews | mock
-  const ITEMS_PER_PAGE = 10;
-  const [pagination, setPagination] = useState({
-    currentPage: 0,
-    totalPages: 1,
-    totalItems: 0,
-    hasNext: false,
-    hasPrev: false,
-    itemsPerPage: ITEMS_PER_PAGE,
-  });
-  // Debounced search
+  const [isLoading, setIsLoading] = useState(true);
+  const [listType, setListType] = useState("interviews");
+  const ITEMS_PER_PAGE = 20;
+  const [currentApiPage, setCurrentApiPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+
   const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
-    // When search is cleared, update immediately (no debounce) so results reset right away
     if (!searchQuery) {
       setDebouncedSearch("");
       return;
     }
-
-    // For non-empty queries, keep a small debounce to avoid spamming the API while typing
     const t = setTimeout(() => setDebouncedSearch(searchQuery), 500);
     return () => clearTimeout(t);
   }, [searchQuery]);
 
-  // v1.0.0 <---------------------------------------------
-  const [selectedType, setSelectedType] = useState("all"); // Show all by default
-  // v1.0.0 --------------------------------------------->
+  const [selectedType, setSelectedType] = useState("all");
+
+  const fetchInterviews = async (page = 0, append = false) => {
+    try {
+      if (page === 0) setIsLoading(true);
+      else setIsLoadingMore(true);
+
+      if (listType === "mock") {
+        setSelectedType("all");
+      }
+
+      const params = {
+        type: listType === "mock" ? "mock" : "interview",
+        page,
+        limit: ITEMS_PER_PAGE,
+        search: debouncedSearch,
+        status: (selectedFilters.status || []).join(","),
+        organizationType: selectedType === "all" ? "" : selectedType,
+      };
+
+      const response = await axios.get(
+        `${config.REACT_APP_API_URL}/interview/interview-rounds`,
+        { params }
+      );
+
+      if (response.data?.success) {
+        const data = response.data?.data || [];
+        const pag = response.data?.pagination || {};
+        if (append) {
+          setInterviews((prev) => [...prev, ...data]);
+        } else {
+          setInterviews(data);
+        }
+        setTotalCount(pag.totalItems || data.length);
+        setHasMore(pag.hasNext || false);
+      } else {
+        if (!append) setInterviews([]);
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error("Error fetching interview rounds:", err);
+      if (!append) setInterviews([]);
+      setHasMore(false);
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
-    const getInterviews = async () => {
-      try {
-        setIsLoading(true);
-        if (listType === "mock") {
-          setSelectedType("all");
-        }
-
-        const params = {
-          type: listType === "mock" ? "mock" : "interview",
-          page: currentPage,
-          limit: ITEMS_PER_PAGE,
-          search: debouncedSearch,
-          status: (selectedFilters.status || []).join(","),
-          organizationType: selectedType === "all" ? "" : selectedType,
-        };
-
-        const response = await axios.get(
-          `${config.REACT_APP_API_URL}/interview/interview-rounds`,
-          { params }
-        );
-
-        if (response.data?.success) {
-          const data = response.data?.data || [];
-          const pag = response.data?.pagination || {
-            currentPage,
-            totalPages: Math.ceil((data.length || 0) / ITEMS_PER_PAGE) || 1,
-            totalItems: data.length || 0,
-            hasNext: false,
-            hasPrev: currentPage > 0,
-            itemsPerPage: ITEMS_PER_PAGE,
-          };
-          setInterviews(data);
-          setPagination(pag);
-        } else {
-          setInterviews([]);
-          setPagination((p) => ({ ...p, totalItems: 0, totalPages: 1 }));
-        }
-      } catch (err) {
-        console.error("Error fetching interview rounds:", err);
-        setInterviews([]);
-        setPagination((p) => ({ ...p, totalItems: 0, totalPages: 1 }));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getInterviews();
-  }, [listType, currentPage, debouncedSearch, selectedFilters, selectedType]);
-  // v1.0.0 --------------------------------------------->
+    setCurrentApiPage(0);
+    setInterviews([]);
+    fetchInterviews(0, false);
+  }, [listType, debouncedSearch, selectedFilters, selectedType]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -256,7 +246,6 @@ const Interviewers = () => {
     setSelectedStatus([]);
     setCurrentStatus("");
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -267,7 +256,6 @@ const Interviewers = () => {
       currentStatus: selectedCurrentStatus,
     };
     setSelectedFilters(filters);
-    setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 || filters.currentStatus.length > 0
     );
@@ -294,14 +282,16 @@ const Interviewers = () => {
     }
   };
 
-  // Server-side filtering/pagination handled by API; `interviews` already current page.
-  const totalPages = pagination?.totalPages || 1;
-  const nextPage = () => setCurrentPage((p) => Math.min(totalPages - 1, p + 1));
-  const prevPage = () => setCurrentPage((p) => Math.max(0, p - 1));
+  const handleScrollEnd = () => {
+    if (hasMore && !isLoadingMore) {
+      const nextPage = currentApiPage + 1;
+      setCurrentApiPage(nextPage);
+      fetchInterviews(nextPage, true);
+    }
+  };
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0);
   };
 
   const tableColumns = [
@@ -569,16 +559,13 @@ const Interviewers = () => {
             setView={setView}
             searchQuery={searchQuery}
             onSearch={handleSearch}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrevPage={prevPage}
-            onNextPage={nextPage}
             onFilterClick={handleFilterIconClick}
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
-            dataLength={pagination?.totalItems ?? dataToUse?.length}
+            dataLength={totalCount || interviews?.length}
             searchPlaceholder="Search interviews..."
-            filterIconRef={filterIconRef} // Pass ref to Toolbar
+            filterIconRef={filterIconRef}
+            hidePagination={true}
             startContent={
               <div style={{ minWidth: 220 }}>
                 <DropdownSelect
@@ -603,6 +590,26 @@ const Interviewers = () => {
         <div className="fixed left-0 right-0 mx-auto z-10 sm:top-44 md:top-52 lg:top-48 xl:top-48 2xl:top-48">
           <div className="sm:px-0">
             <motion.div className="bg-white">
+              {/* Interview count */}
+              {(totalCount || interviews?.length) > 0 && (
+                <div className="flex items-center justify-start px-6 py-2">
+                  <span className="text-sm text-gray-500">
+                    Showing{" "}
+                    <span className="font-semibold text-gray-800">{interviews?.length || 0}</span>
+                    {" "}of{" "}
+                    <span className="font-semibold text-gray-800">
+                      {(() => {
+                        const t = totalCount || interviews?.length || 0;
+                        const r = Math.floor(t / 100) * 100;
+                        if (r === 0) return t;
+                        if (t === r) return t;
+                        return `${r}+`;
+                      })()}
+                    </span>
+                    {" "}{(totalCount || interviews?.length || 0) === 1 ? "interview" : "interviews"}
+                  </span>
+                </div>
+              )}
               {view === "table" ? (
                 <div className="w-full mb-8 bg-red">
                   <TableView
@@ -611,6 +618,9 @@ const Interviewers = () => {
                     loading={isLoading}
                     actions={tableActions}
                     emptyState="No Interviews found."
+                    onScrollEnd={handleScrollEnd}
+                    isLoadingMore={isLoadingMore}
+                    hasMore={hasMore}
                   />
                 </div>
               ) : (
@@ -631,7 +641,6 @@ const Interviewers = () => {
                     interviews={interviews}
                     columns={kanbanColumns}
                     loading={isLoading}
-                    // renderActions={renderKanbanActions}
                     emptyState="No interview rounds found."
                     renderActions={(item) => (
                       <KanbanActionsMenu
@@ -645,6 +654,9 @@ const Interviewers = () => {
                     }}
                     kanbanTitle="Internal Log"
                     customHeight="calc(100vh - 320px)"
+                    onScrollEnd={handleScrollEnd}
+                    isLoadingMore={isLoadingMore}
+                    hasMore={hasMore}
                   />
                 </div>
               )}

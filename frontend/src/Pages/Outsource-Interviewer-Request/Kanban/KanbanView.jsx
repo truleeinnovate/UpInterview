@@ -12,7 +12,18 @@ const KanbanView = ({
   loading = false,
   renderActions = () => null,
   emptyState = "No Data Found",
+  onScrollEnd,
+  isLoadingMore,
+  hasMore,
 }) => {
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollHeight - scrollTop <= clientHeight + 50) {
+      if (hasMore && !isLoadingMore && onScrollEnd) {
+        onScrollEnd();
+      }
+    }
+  };
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -35,7 +46,10 @@ const KanbanView = ({
         ) : outsourceInterviewers?.length === 0 ? (
           <div className="text-center py-10 text-gray-500">{emptyState}</div>
         ) : (
-          <div className="overflow-y-auto max-h-[calc(100vh-16.4rem)] px-6 pb-16">
+          <div 
+            className="overflow-y-auto max-h-[calc(100vh-16.4rem)] px-6 pb-16"
+            onScroll={handleScroll}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
               {data.map((item, index) => (
                 <motion.div
@@ -80,6 +94,12 @@ const KanbanView = ({
                 </motion.div>
               ))}
             </div>
+            
+            {isLoadingMore && hasMore && (
+              <div className="py-4 flex justify-center items-center w-full mt-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-custom-blue"></div>
+              </div>
+            )}
           </div>
         )}
       </div>

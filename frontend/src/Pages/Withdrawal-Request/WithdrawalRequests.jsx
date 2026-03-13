@@ -33,7 +33,6 @@ const WithdrawalRequests = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     mode: [],
@@ -41,7 +40,7 @@ const WithdrawalRequests = () => {
     dateRange: { start: "", end: "" },
   });
   const filterIconRef = useRef(null);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 20;
 
   // Debounced search to avoid frequent requests
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -68,8 +67,10 @@ const WithdrawalRequests = () => {
     isLoading,
     refetch,
     stats,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useWithdrawalRequests({
-    page: currentPage,
     limit: ITEMS_PER_PAGE,
     search: debouncedSearch,
     status: (selectedFilters.status || []).join(","),
@@ -460,21 +461,16 @@ const WithdrawalRequests = () => {
 
   const handleSearch = (query) => {
     setSearchQuery(query);
-    setCurrentPage(0); // Reset to first page when searching
   };
-
-  // Server-side search and filters are applied via the hook; current page data is returned
 
   // Calculate total pages based on view type
   const totalPages = pagination?.totalPages || 1;
 
-  // Reset page if current page exceeds total pages
-  useEffect(() => {
-    if (currentPage >= totalPages && totalPages > 0) {
-      setCurrentPage(Math.max(0, totalPages - 1));
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalPages, view]); // Reset when totalPages changes or view changes - currentPage intentionally excluded
+  };
 
   return (
     <>
@@ -695,18 +691,13 @@ const WithdrawalRequests = () => {
           setView={setView}
           searchQuery={searchQuery}
           onSearch={(e) => handleSearch(e.target.value)}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrevPage={() => setCurrentPage(Math.max(0, currentPage - 1))}
-          onNextPage={() =>
-            setCurrentPage(Math.min(totalPages - 1, currentPage + 1))
-          }
           onFilterClick={() => setFilterPopupOpen(!isFilterPopupOpen)}
           isFilterActive={isFilterActive}
           isFilterPopupOpen={isFilterPopupOpen}
           dataLength={pagination?.totalItems ?? withdrawalRequests.length}
           showViewToggles={true}
           searchPlaceholder="Search By User, Bank..."
+          hidePagination={true}
         />
       </div>
 
@@ -714,16 +705,36 @@ const WithdrawalRequests = () => {
 
       {view === "table" ? (
         <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
+          {(pagination?.totalItems || 0) > 0 && (
+            <div className="flex items-center justify-start px-6 py-2">
+              <span className="text-sm text-gray-500">
+                Showing{" "}
+                <span className="font-semibold text-gray-800">{withdrawalRequests?.length || 0}</span>
+                {" "}of{" "}
+                <span className="font-semibold text-gray-800">
+                  {(() => {
+                    const t = pagination?.totalItems || 0;
+                    const r = Math.floor(t / 100) * 100;
+                    if (r === 0) return t;
+                    if (t === r) return t;
+                    return `${r}+`;
+                  })()}
+                </span>
+                {" "}{(pagination?.totalItems || 0) === 1 ? "request" : "requests"}
+              </span>
+            </div>
+          )}
           <TableView
             data={withdrawalRequests}
             actions={tableActions}
             columns={columns}
             onRowClick={handleRowClick}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
             loading={isLoading}
             itemsPerPage={ITEMS_PER_PAGE}
             customHeight="h-[calc(100vh-20.8rem)]"
+            onScrollEnd={handleScrollEnd}
+            isLoadingMore={isFetchingNextPage}
+            hasMore={hasNextPage}
           />
         </div>
       ) : (
@@ -735,8 +746,10 @@ const WithdrawalRequests = () => {
           }}
           isLoading={isLoading}
           refetch={refetch}
-          currentPage={currentPage}
-          itemsPerPage={withdrawalRequests.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onScrollEnd={handleScrollEnd}
+          isLoadingMore={isFetchingNextPage}
+          hasMore={hasNextPage}
         />
       )}
 
@@ -776,7 +789,6 @@ const WithdrawalRequests = () => {
               dateRange.start ||
               dateRange.end
             );
-            setCurrentPage(0); // Reset to first page when filters are applied
           }}
           onClearAll={handleClearAll}
         >

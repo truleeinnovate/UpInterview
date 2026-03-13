@@ -32,24 +32,23 @@ const ContactUsPage = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     dateRange: { start: "", end: "" },
   });
   const filterIconRef = useRef(null);
-  const ITEMS_PER_PAGE = 10;
 
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
 
-  // Get data from backend with server-side pagination/search/filters
+  // Get data from backend with infinite scroll
   const {
     contactMessages = [],
     total = 0,
     isLoading,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useContactUs({
-    page: currentPage + 1,
-    limit: ITEMS_PER_PAGE,
     search: debouncedSearch,
     startDate: selectedFilters?.dateRange?.start,
     endDate: selectedFilters?.dateRange?.end,
@@ -138,12 +137,10 @@ const ContactUsPage = () => {
     const filters = { dateRange };
     setSelectedFilters(filters);
     setFilterPopupOpen(false);
-    setCurrentPage(0);
   };
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0);
   };
 
   // Debounce search input
@@ -255,70 +252,61 @@ const ContactUsPage = () => {
     },
   ];
 
-  // Calculate total pages from server total
-  const totalPages = Math.max(1, Math.ceil((total || 0) / ITEMS_PER_PAGE));
-
-  const nextPage = () => {
-    if (currentPage + 1 < totalPages) setCurrentPage((p) => p + 1);
-  };
-
-  const prevPage = () => {
-    if (currentPage > 0) setCurrentPage((p) => p - 1);
-  };
-
-  // Auto-reset current page when filters reduce available pages
-  useEffect(() => {
-    if (currentPage >= totalPages && totalPages > 0) {
-      setCurrentPage(Math.max(0, totalPages - 1));
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  }, [currentPage, totalPages]);
+  };
 
   return (
     <>
       <div className="px-4">
-        {/* Header */}
         <Header
           title="Contact Us"
-          //onAddClick={() => ()}
-          // addButtonText=""
           canCreate={false}
         />
 
-        {/* Toolbar */}
         <Toolbar
           view={view}
           setView={setView}
           searchQuery={searchQuery}
           onSearch={handleSearch}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrevPage={prevPage}
-          onNextPage={nextPage}
           onFilterClick={() => setFilterPopupOpen(!isFilterPopupOpen)}
           filterIconRef={filterIconRef}
-          dataLength={Math.max(1, total)}
+          dataLength={total || contactMessages?.length || 0}
           isFilterPopupOpen={isFilterPopupOpen}
           searchPlaceholder="Search By Name, Email, Message..."
           showAddButton={false}
+          hidePagination={true}
         />
       </div>
 
-      {/* Table/Kanban View */}
+      {/* Count text */}
+      {(total || contactMessages?.length) > 0 && (
+        <div className="flex items-center justify-start px-6 py-2">
+          <span className="text-sm text-gray-500">
+            Showing{" "}
+            <span className="font-semibold text-gray-800">{contactMessages?.length || 0}</span>
+            {" "}of{" "}
+            <span className="font-semibold text-gray-800">{total || contactMessages?.length || 0}</span>
+            {" "}{(total || contactMessages?.length || 0) === 1 ? "message" : "messages"}
+          </span>
+        </div>
+      )}
+
       {view === "table" ? (
         <TableView
           data={contactMessages}
           columns={columns}
           actions={tableActions}
           loading={isLoading}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          setCurrentPage={setCurrentPage}
-          itemsPerPage={ITEMS_PER_PAGE}
+          onScrollEnd={handleScrollEnd}
+          isLoadingMore={isFetchingNextPage}
+          hasMore={hasNextPage}
         />
       ) : (
         <ContactUsKanban
           contactMessages={contactMessages}
-          currentPage={currentPage}
           itemsPerPage={0}
           totalItems={total}
           onView={handleView}

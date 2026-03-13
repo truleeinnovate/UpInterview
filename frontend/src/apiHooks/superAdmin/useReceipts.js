@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../../config";
 import { usePermissions } from "../../Context/PermissionsContext";
@@ -40,10 +40,12 @@ export const useReceipts = ({
     isError,
     error,
     refetch,
-  } = useQuery({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery({
     queryKey: [
       "receipts",
-      page,
       limit,
       search,
       status,
@@ -56,12 +58,22 @@ export const useReceipts = ({
       maxAmount,
       organizationId
     ],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 0 }) => {
+      const currentParams = new URLSearchParams(queryParams);
+      currentParams.set("page", String(pageParam));
+      
       const endpoint = organizationId
-        ? `${config.REACT_APP_API_URL}/receipts/${organizationId}`
-        : `${config.REACT_APP_API_URL}/receipts?${queryParams.toString()}`;
+        ? `${config.REACT_APP_API_URL}/receipts/${organizationId}?${currentParams.toString()}`
+        : `${config.REACT_APP_API_URL}/receipts?${currentParams.toString()}`;
       const response = await axios.get(endpoint);
       return response.data;
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      const pagination = lastPage.pagination;
+      if (pagination && pagination.hasNext) {
+        return allPages.length; // Returns the next page index (since API is 0-indexed: page 0, page 1...)
+      }
+      return undefined;
     },
     enabled: isInitialized && !!hasViewPermission,
     staleTime: 1000 * 60 * 10, // 10 minutes
@@ -73,21 +85,18 @@ export const useReceipts = ({
     keepPreviousData: true,
   });
 
+  const receipts = data?.pages.flatMap((page) => page.data || page.receipts || []) || [];
+
   return {
-    receipts: data?.data || data?.receipts || [],
-    pagination: data?.pagination || {
-      currentPage: page,
-      totalPages: 0,
-      totalItems: 0,
-      hasNext: false,
-      hasPrev: false,
-      itemsPerPage: limit,
-    },
-    stats: data?.stats,
+    receipts,
+    stats: data?.pages?.[0]?.stats,
     isLoading,
     isError,
     error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
   };
 };
 

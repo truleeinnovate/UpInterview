@@ -62,8 +62,8 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
           action.key === "view"
             ? "text-custom-blue hover:bg-custom-blue/10"
             : action.key === "edit"
-            ? "text-green-600 hover:bg-green-600/10"
-            : "text-blue-600 bg-green-600/10";
+              ? "text-green-600 hover:bg-green-600/10"
+              : "text-blue-600 bg-green-600/10";
 
         return (
           <button
@@ -138,7 +138,6 @@ const OutsourceInterviewers = () => {
   // const [editModeOn, setEditModeOn] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     currentStatus: "",
@@ -153,11 +152,10 @@ const OutsourceInterviewers = () => {
   const [selectedInterviewer, setSelectedInterviewer] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 20;
   // eslint-disable-next-line no-unused-vars
-  const { outsourceInterviewers, pagination, isLoading } =
+  const { outsourceInterviewers, pagination, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useOutsourceInterviewers({
-      page: currentPage,
       limit: ITEMS_PER_PAGE,
       search: debouncedSearch,
       status: selectedFilters.status.join(","),
@@ -187,7 +185,6 @@ const OutsourceInterviewers = () => {
   useEffect(() => {
     const t = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setCurrentPage(0);
     }, 500);
     return () => clearTimeout(t);
   }, [searchQuery]);
@@ -221,7 +218,6 @@ const OutsourceInterviewers = () => {
     setSelectedStatus([]);
     setCurrentStatus("");
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -232,7 +228,6 @@ const OutsourceInterviewers = () => {
       currentStatus: selectedCurrentStatus,
     };
     setSelectedFilters(filters);
-    setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 || filters.currentStatus.length > 0
     );
@@ -259,16 +254,12 @@ const OutsourceInterviewers = () => {
     }
   };
 
-  // Server-side pagination
+  // Server-side pagination and infinite scroll
   const totalPages = pagination?.totalPages || 0;
-  const nextPage = () => {
-    if (pagination?.hasNext) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-  const prevPage = () => {
-    if (pagination?.hasPrev) {
-      setCurrentPage((prev) => Math.max(0, prev - 1));
+
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
@@ -276,7 +267,6 @@ const OutsourceInterviewers = () => {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0); // Reset to first page on search
   };
 
   // if (isLoading) {
@@ -311,11 +301,10 @@ const OutsourceInterviewers = () => {
       render: (vale, row) => (
         <span
           // v1.0.0 <---------------------------------------------------------
-          className={`font-medium ${
-            superAdminPermissions?.OutsourceInterviewerRequest.View
+          className={`font-medium ${superAdminPermissions?.OutsourceInterviewerRequest.View
               ? "text-custom-blue cursor-pointer"
               : "text-gray-900"
-          }`}
+            }`}
           onClick={(e) => {
             e.stopPropagation(); // Prevents row-level handlers (if any)
             if (
@@ -338,19 +327,17 @@ const OutsourceInterviewers = () => {
       header: "Name",
       render: (vale, row) => (
         <span
-          title={`${capitalizeFirstLetter(row?.contactId?.firstName)}${
-            row?.contactId?.lastName
+          title={`${capitalizeFirstLetter(row?.contactId?.firstName)}${row?.contactId?.lastName
               ? ` ${capitalizeFirstLetter(row?.contactId?.lastName)}`
               : ""
-          }`}
+            }`}
           className="block cursor-default truncate max-w-[160px]"
         >
           {row?.contactId?.firstName
-            ? `${capitalizeFirstLetter(row?.contactId?.firstName)}${
-                row?.contactId?.lastName
-                  ? ` ${capitalizeFirstLetter(row?.contactId?.lastName)}`
-                  : ""
-              }`
+            ? `${capitalizeFirstLetter(row?.contactId?.firstName)}${row?.contactId?.lastName
+              ? ` ${capitalizeFirstLetter(row?.contactId?.lastName)}`
+              : ""
+            }`
             : "N/A"}
         </span>
       ),
@@ -403,10 +390,9 @@ const OutsourceInterviewers = () => {
         // </span>
         <span>
           {row?.contactId?.yearsOfExperience ||
-          row?.contactId?.yearsOfExperience === 0
-            ? `${row?.contactId?.yearsOfExperience} ${
-                row?.contactId?.yearsOfExperience === "1" ? "Year" : "Years"
-              }`
+            row?.contactId?.yearsOfExperience === 0
+            ? `${row?.contactId?.yearsOfExperience} ${row?.contactId?.yearsOfExperience === "1" ? "Year" : "Years"
+            }`
             : "N/A"}
         </span>
       ),
@@ -466,16 +452,16 @@ const OutsourceInterviewers = () => {
   const tableActions = [
     ...(superAdminPermissions?.OutsourceInterviewerRequest?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => {
-              setSelectedInterviewerId(row._id);
-              setIsPopupOpen(true);
-            },
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (row) => {
+            setSelectedInterviewerId(row._id);
+            setIsPopupOpen(true);
           },
-        ]
+        },
+      ]
       : []),
     // {
     //   key: "360-view",
@@ -514,19 +500,17 @@ const OutsourceInterviewers = () => {
         //     : row?.contactId?.lastName}
         // </span>
         <span
-          title={`${capitalizeFirstLetter(row?.contactId?.firstName)}${
-            row?.contactId?.lastName
+          title={`${capitalizeFirstLetter(row?.contactId?.firstName)}${row?.contactId?.lastName
               ? ` ${capitalizeFirstLetter(row?.contactId?.lastName)}`
               : ""
-          }`}
+            }`}
           className="block cursor-default truncate max-w-[160px]"
         >
           {row?.contactId?.firstName
-            ? `${capitalizeFirstLetter(row?.contactId?.firstName)}${
-                row?.contactId?.lastName
-                  ? ` ${capitalizeFirstLetter(row?.contactId?.lastName)}`
-                  : ""
-              }`
+            ? `${capitalizeFirstLetter(row?.contactId?.firstName)}${row?.contactId?.lastName
+              ? ` ${capitalizeFirstLetter(row?.contactId?.lastName)}`
+              : ""
+            }`
             : "N/A"}
         </span>
       ),
@@ -542,10 +526,9 @@ const OutsourceInterviewers = () => {
         // </span>
         <span>
           {row?.contactId?.yearsOfExperience ||
-          row?.contactId?.yearsOfExperience === 0
-            ? `${row?.contactId?.yearsOfExperience} ${
-                row?.contactId?.yearsOfExperience === "1" ? "Year" : "Years"
-              }`
+            row?.contactId?.yearsOfExperience === 0
+            ? `${row?.contactId?.yearsOfExperience} ${row?.contactId?.yearsOfExperience === "1" ? "Year" : "Years"
+            }`
             : "N/A"}
         </span>
       ),
@@ -600,16 +583,16 @@ const OutsourceInterviewers = () => {
   const kanbanActions = [
     ...(superAdminPermissions?.OutsourceInterviewerRequest?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => {
-              handleOpenPopup(row);
-              setIsPopupOpen(true);
-            },
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (row) => {
+            handleOpenPopup(row);
+            setIsPopupOpen(true);
           },
-        ]
+        },
+      ]
       : []),
 
     // ...(superAdminPermissions?.OutsourceInterviewerRequest?.Edit
@@ -749,16 +732,13 @@ const OutsourceInterviewers = () => {
           setView={setView}
           searchQuery={searchQuery}
           onSearch={handleSearch}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrevPage={prevPage}
-          onNextPage={nextPage}
           onFilterClick={handleFilterIconClick}
           isFilterPopupOpen={isFilterPopupOpen}
           isFilterActive={isFilterActive}
           dataLength={pagination?.totalItems || dataToUse?.length || 0}
           searchPlaceholder="Search interviewers..."
           filterIconRef={filterIconRef}
+          hidePagination={true}
         />
       </div>
 
@@ -767,12 +747,34 @@ const OutsourceInterviewers = () => {
           <motion.div className="bg-white">
             {view === "table" ? (
               <div className="w-full mb-8 bg-red">
+                {(pagination?.totalItems || 0) > 0 && (
+                  <div className="flex items-center justify-start px-6 py-2">
+                    <span className="text-sm text-gray-500">
+                      Showing{" "}
+                      <span className="font-semibold text-gray-800">{currentFilteredRows?.length || 0}</span>
+                      {" "}of{" "}
+                      <span className="font-semibold text-gray-800">
+                        {(() => {
+                          const t = pagination?.totalItems || 0;
+                          const r = Math.floor(t / 100) * 100;
+                          if (r === 0) return t;
+                          if (t === r) return t;
+                          return `${r}+`;
+                        })()}
+                      </span>
+                      {" "}{(pagination?.totalItems || 0) === 1 ? "interviewer" : "interviewers"}
+                    </span>
+                  </div>
+                )}
                 <TableView
                   data={currentFilteredRows}
                   columns={tableColumns}
                   loading={isLoading}
                   actions={tableActions}
                   emptyState="No Outsource Interviewers found."
+                  onScrollEnd={handleScrollEnd}
+                  isLoadingMore={isFetchingNextPage}
+                  hasMore={hasNextPage}
                 />
               </div>
             ) : (
@@ -800,6 +802,9 @@ const OutsourceInterviewers = () => {
                   }}
                   emptyState="No interviewer requests found."
                   kanbanTitle="Outsource Interviewer"
+                  onScrollEnd={handleScrollEnd}
+                  isLoadingMore={isFetchingNextPage}
+                  hasMore={hasNextPage}
                 />
               </div>
             )}

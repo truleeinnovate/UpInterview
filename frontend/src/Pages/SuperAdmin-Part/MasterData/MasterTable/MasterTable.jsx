@@ -29,7 +29,7 @@ import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock";
 // v1.0.0 <------------------------------------------------------------------------
 import toast from "react-hot-toast";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { notify } from "../../../../services/toastService";
 import { useMasterData } from "../../../../apiHooks/useMasterData";
@@ -196,57 +196,75 @@ const MasterTable = ({ permissions = {} }) => {
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [filters, setFilters] = useState({ status: [] });
   const [isFilterActive, setIsFilterActive] = useState(false);
   const navigate = useNavigate();
   const filterIconRef = useRef(null);
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
 
-  // const [masterData, setMasterData] = useState([]);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
   const [selectedMaster, setSelectedMaster] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [popupMode, setPopupMode] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
-  const rowsPerPage = 10;
-  // const [totalPages, setTotalPages] = useState(0);
-  // const [totalItems, setTotalItems] = useState(0);
-  // const authToken = Cookies.get("authToken"); // Kept for future authentication needs
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const rowsPerPage = 20;
   const impersonationToken = Cookies.get("impersonationToken");
 
   const impersonatedTokenPayload = decodeJwt(impersonationToken);
   const ownerId = impersonatedTokenPayload?.impersonatedUserId;
-  // const tenantId = tokenPayload?.tenantId;
 
-  // console.log("ownerId",ownerId);
-  // console.log("impersonatedTokenPayload",impersonatedTokenPayload);
-  // console.log("impersonationToken",impersonationToken);
-
-  // Used to disable outer scrollbar
   useScrollLock(isPopupOpen || isDeletePopupOpen);
 
-  // Build paramsData dynamically based on UI state
-  const paramsData = {
-    page: currentPage + 1,
-    limit: rowsPerPage,
-    search: searchQuery,
-    sortBy: "createdAt",
-    sortOrder: "desc",
-    ...(filters.status.length > 0 && {
-      status: filters.status.map((s) => s.toLowerCase()).join(","),
-    }),
+  // Fetch Data using Infinite Query
+  const fetchMasterData = async ({ pageParam = 1 }) => {
+    const params = {
+      page: pageParam,
+      limit: rowsPerPage,
+      search: debouncedSearch,
+      sortBy: "createdAt",
+      sortOrder: "desc",
+      ...(filters.status.length > 0 && {
+        status: filters.status.map((s) => s.toLowerCase()).join(","),
+      }),
+      pageType: "Super Admin",
+    };
+    const res = await axios.get(
+      `${config.REACT_APP_API_URL}/master-data/${type}`,
+      { params }
+    );
+    return res?.data;
   };
-  // const path = type;
-  // 🚀 Call master data TanQuery Hook
+
   const {
-    masterData,
-    isMasterDataLoading,
-    isMasterDataError,
-    loadQualifications,
-    loadLocations,
-  } = useMasterData(paramsData, "Super Admin", type);
+    data: masterDataObj,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isMasterDataLoading,
+  } = useInfiniteQuery({
+    queryKey: ["masterDataInfinite", type, debouncedSearch, filters.status],
+    queryFn: fetchMasterData,
+    getNextPageParam: (lastPage, allPages) => {
+      const totalPages = lastPage?.pagination?.totalPages || 0;
+      return allPages.length < totalPages ? allPages.length + 1 : undefined;
+    },
+    enabled: !!type,
+  });
+
+  const currentFilteredRows = masterDataObj?.pages?.flatMap(
+    (page) => page?.data || []
+  ) || [];
+  const pagination = masterDataObj?.pages?.[0]?.pagination || {};
+  const totalItems = pagination?.totalItems || currentFilteredRows.length;
+  const isLoading = isMasterDataLoading;
+
 
   // Fetch Data
   // useEffect(() => {
@@ -382,7 +400,7 @@ const MasterTable = ({ permissions = {} }) => {
   // Delete
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    setIsLoading(true);
+    setIsDeleteLoading(true);
     try {
       const res = await axios.delete(
         `${config.REACT_APP_API_URL}/master-data/${type}/${deleteTarget._id}`,
@@ -403,7 +421,7 @@ const MasterTable = ({ permissions = {} }) => {
       console.error("Error deleting master:", err);
       toast.error(`Failed to delete master`);
     } finally {
-      setIsLoading(false);
+      setIsDeleteLoading(false);
     }
   };
   // v1.0.0 ----------------------------------------------------------------->
@@ -453,11 +471,9 @@ const MasterTable = ({ permissions = {} }) => {
 
   // console.log("masterData?.[type]", masterData?.[type]);
 
-  // console.log("getMasterDataKeys(type)", getMasterDataKeys(type));
-  const currentFilteredRows = masterData?.[getMasterDataKeys(type)]?.data || [];
-  const pagination = masterData?.[getMasterDataKeys(type)]?.pagination || {};
-  const totalPages = pagination.totalPages || 1;
-  const totalItems = pagination.totalItems || currentFilteredRows.length;
+  // ... Pagination & Search handlers
+  // The filtered rows and pagination are handled by infinite query above.
+
 
   //  FilteredData().slice(
   //   startIndex,
@@ -466,8 +482,14 @@ const MasterTable = ({ permissions = {} }) => {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0);
   };
+
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
 
   const handleFilterIconClick = () => {
     if (currentFilteredRows?.length !== 0) {
@@ -528,159 +550,159 @@ const MasterTable = ({ permissions = {} }) => {
     // },
     ...(type !== "roles"
       ? [
-          {
-            key: "name",
-            header: "Master Name",
-            render: (value, row) => {
-              let displayName;
-              switch (type) {
-                case "industries":
-                  displayName = row.IndustryName;
-                  break;
-                case "technology":
-                  displayName = row.TechnologyMasterName;
-                  break;
-                case "skills":
-                  displayName = row.SkillName;
-                  break;
-                case "locations":
-                  displayName = row.LocationName;
-                  break;
-                case "qualification":
-                  displayName = row.QualificationName;
-                  break;
-                case "universitycollege":
-                  displayName = row.University_CollegeName;
-                  break;
-                case "company":
-                  displayName = row.CompanyName;
-                  break;
-                case "category":
-                  displayName = row.CategoryName;
-                  break;
-                default:
-                  displayName = null;
-              }
+        {
+          key: "name",
+          header: "Master Name",
+          render: (value, row) => {
+            let displayName;
+            switch (type) {
+              case "industries":
+                displayName = row.IndustryName;
+                break;
+              case "technology":
+                displayName = row.TechnologyMasterName;
+                break;
+              case "skills":
+                displayName = row.SkillName;
+                break;
+              case "locations":
+                displayName = row.LocationName;
+                break;
+              case "qualification":
+                displayName = row.QualificationName;
+                break;
+              case "universitycollege":
+                displayName = row.University_CollegeName;
+                break;
+              case "company":
+                displayName = row.CompanyName;
+                break;
+              case "category":
+                displayName = row.CategoryName;
+                break;
+              default:
+                displayName = null;
+            }
 
-              return (
-                <span
-                  className="block font-medium text-gray-900 truncate cursor-default max-w-[160px]"
-                  title={capitalizeFirstLetter(displayName)}
-                >
-                  {capitalizeFirstLetter(displayName) || "N/A"}
-                </span>
-              );
-            },
+            return (
+              <span
+                className="block font-medium text-gray-900 truncate cursor-default max-w-[160px]"
+                title={capitalizeFirstLetter(displayName)}
+              >
+                {capitalizeFirstLetter(displayName) || "N/A"}
+              </span>
+            );
           },
-        ]
+        },
+      ]
       : []),
     ...(type === "technology"
       ? [
-          {
-            key: "Category",
-            header: "Category",
-            render: (value, row) => (
-              <span>
-                {row.Category ? capitalizeFirstLetter(row.Category) : "N/A"}
-              </span>
-            ),
-          },
-        ]
+        {
+          key: "Category",
+          header: "Category",
+          render: (value, row) => (
+            <span>
+              {row.Category ? capitalizeFirstLetter(row.Category) : "N/A"}
+            </span>
+          ),
+        },
+      ]
       : []),
     ...(type === "category"
       ? [
-          {
-            key: "isActive",
-            header: "Status",
-            render: (value, row) => (
-              <span>
-                {row.isActive !== undefined && row.isActive !== null
-                  ? capitalizeFirstLetter(row.isActive.toString())
-                  : "N/A"}
-              </span>
-            ),
-          },
-        ]
+        {
+          key: "isActive",
+          header: "Status",
+          render: (value, row) => (
+            <span>
+              {row.isActive !== undefined && row.isActive !== null
+                ? capitalizeFirstLetter(row.isActive.toString())
+                : "N/A"}
+            </span>
+          ),
+        },
+      ]
       : []),
     ...(type === "roles"
       ? [
-          {
-            key: "roleLabel",
-            header: "Label",
-            render: (value, row) => (
-              <span
-                className="block truncate cursor-default max-w-[160px]"
-                title={capitalizeFirstLetter(row?.roleLabel)}
-              >
-                {row.roleLabel ? capitalizeFirstLetter(row.roleLabel) : "N/A"}
-              </span>
-            ),
-          },
-          {
-            key: "roleLabel",
-            header: "Name",
-            render: (value, row) => (
-              <span
-                className="block truncate cursor-default max-w-[160px]"
-                title={capitalizeFirstLetter(row?.roleName)}
-              >
-                {row.roleName ? capitalizeFirstLetter(row.roleName) : "N/A"}
-              </span>
-            ),
-          },
-          {
-            key: "roleCategory",
-            header: "Category",
-            render: (value, row) => (
-              <span
-                className="block truncate cursor-default max-w-[160px]"
-                title={row?.roleCategory}
-              >
-                {row.roleCategory
-                  ? capitalizeFirstLetter(row.roleCategory)
-                  : "N/A"}
-              </span>
-            ),
-          },
-          {
-            key: "relatedRoles",
-            header: "Related Roles",
-            render: (value, row) => {
-              const roles = row.relatedRoles || [];
+        {
+          key: "roleLabel",
+          header: "Label",
+          render: (value, row) => (
+            <span
+              className="block truncate cursor-default max-w-[160px]"
+              title={capitalizeFirstLetter(row?.roleLabel)}
+            >
+              {row.roleLabel ? capitalizeFirstLetter(row.roleLabel) : "N/A"}
+            </span>
+          ),
+        },
+        {
+          key: "roleLabel",
+          header: "Name",
+          render: (value, row) => (
+            <span
+              className="block truncate cursor-default max-w-[160px]"
+              title={capitalizeFirstLetter(row?.roleName)}
+            >
+              {row.roleName ? capitalizeFirstLetter(row.roleName) : "N/A"}
+            </span>
+          ),
+        },
+        {
+          key: "roleCategory",
+          header: "Category",
+          render: (value, row) => (
+            <span
+              className="block truncate cursor-default max-w-[160px]"
+              title={row?.roleCategory}
+            >
+              {row.roleCategory
+                ? capitalizeFirstLetter(row.roleCategory)
+                : "N/A"}
+            </span>
+          ),
+        },
+        {
+          key: "relatedRoles",
+          header: "Related Roles",
+          render: (value, row) => {
+            const roles = row.relatedRoles || [];
 
-              return roles.length > 0 ? (
-                <div
-                  className="flex items-center gap-1 cursor-default"
-                  title={roles
-                    .map((role) => capitalizeFirstLetter(role))
-                    .join(", ")}
-                >
-                  <div className="flex items-center gap-1">
-                    <span className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue text-xs rounded-full font-medium">
-                      {roles[0].length > 15
-                        ? capitalizeFirstLetter(roles[0].slice(0, 15)) + "..."
-                        : capitalizeFirstLetter(roles[0])}
+            return roles.length > 0 ? (
+              <div
+                className="flex items-center gap-1 cursor-default"
+                title={roles
+                  .map((role) => capitalizeFirstLetter(role))
+                  .join(", ")}
+              >
+                <div className="flex items-center gap-1">
+                  <span className="px-2 py-0.5 bg-custom-blue/10 text-custom-blue text-xs rounded-full font-medium">
+                    {roles[0].length > 15
+                      ? capitalizeFirstLetter(roles[0].slice(0, 15)) + "..."
+                      : capitalizeFirstLetter(roles[0])}
+                  </span>
+
+                  {roles.length > 1 && (
+                    <span
+                      className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full cursor-default font-medium"
+                      title={roles
+                        .slice(1)
+                        .map((r) => capitalizeFirstLetter(r))
+                        .join(", ")}
+                    >
+                      +{roles.length - 1}
                     </span>
-
-                    {roles.length > 1 && (
-                      <span
-                        className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full cursor-default font-medium"
-                        title={roles
-                          .slice(1)
-                          .map((r) => capitalizeFirstLetter(r))
-                          .join(", ")}
-                      >
-                        +{roles.length - 1}
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </div>
-              ) : (
-                <span className="text-gray-400 text-xs italic">N/A</span>
-              );
-            },
+              </div>
+            ) : (
+              <span className="text-gray-400 text-xs italic">N/A</span>
+            );
           },
-        ]
+        },
+      ]
       : []),
     {
       key: "createdBy",
@@ -688,8 +710,7 @@ const MasterTable = ({ permissions = {} }) => {
       render: (value, row) => (
         <span>
           {row?.createdBy
-            ? `${capitalizeFirstLetter(row.createdBy.firstName) || ""} ${
-                capitalizeFirstLetter(row.createdBy.lastName) || ""
+            ? `${capitalizeFirstLetter(row.createdBy.firstName) || ""} ${capitalizeFirstLetter(row.createdBy.lastName) || ""
               }`.trim() || "N/A"
             : "N/A"}
         </span>
@@ -712,8 +733,7 @@ const MasterTable = ({ permissions = {} }) => {
       render: (value, row) => (
         <span>
           {row?.updatedBy
-            ? `${capitalizeFirstLetter(row.updatedBy.firstName) || ""} ${
-                capitalizeFirstLetter(row.updatedBy.lastName) || ""
+            ? `${capitalizeFirstLetter(row.updatedBy.firstName) || ""} ${capitalizeFirstLetter(row.updatedBy.lastName) || ""
               }`.trim() || "N/A"
             : "N/A"}
         </span>
@@ -772,56 +792,56 @@ const MasterTable = ({ permissions = {} }) => {
   const kanbanColumns = [
     ...(type === "technology"
       ? [
-          {
-            key: "name",
-            header: "Name",
-            render: (value, row) => (
-              <span>{row.name ? capitalizeFirstLetter(row.name) : "N/A"}</span>
-            ),
-          },
-        ]
+        {
+          key: "name",
+          header: "Name",
+          render: (value, row) => (
+            <span>{row.name ? capitalizeFirstLetter(row.name) : "N/A"}</span>
+          ),
+        },
+      ]
       : []),
     ...(type === "roles"
       ? [
-          {
-            key: "roleName",
-            header: "Role",
-            render: (value, row) => (
-              <span
-                className="block truncate cursor-default max-w-[160px]"
-                title={capitalizeFirstLetter(row?.roleName)}
-              >
-                {row.roleName ? capitalizeFirstLetter(row.roleName) : "N/A"}
-              </span>
-            ),
-          },
-          {
-            key: "roleLabel",
-            header: "Label",
-            render: (value, row) => (
-              <span
-                className="block truncate cursor-default max-w-[160px]"
-                title={capitalizeFirstLetter(row?.roleLabel)}
-              >
-                {row.roleLabel ? capitalizeFirstLetter(row.roleLabel) : "N/A"}
-              </span>
-            ),
-          },
-          {
-            key: "roleCategory",
-            header: "Category",
-            render: (value, row) => (
-              <span
-                className="block truncate cursor-default max-w-[160px]"
-                title={row?.roleCategory}
-              >
-                {row.roleCategory
-                  ? capitalizeFirstLetter(row.roleCategory)
-                  : "N/A"}
-              </span>
-            ),
-          },
-        ]
+        {
+          key: "roleName",
+          header: "Role",
+          render: (value, row) => (
+            <span
+              className="block truncate cursor-default max-w-[160px]"
+              title={capitalizeFirstLetter(row?.roleName)}
+            >
+              {row.roleName ? capitalizeFirstLetter(row.roleName) : "N/A"}
+            </span>
+          ),
+        },
+        {
+          key: "roleLabel",
+          header: "Label",
+          render: (value, row) => (
+            <span
+              className="block truncate cursor-default max-w-[160px]"
+              title={capitalizeFirstLetter(row?.roleLabel)}
+            >
+              {row.roleLabel ? capitalizeFirstLetter(row.roleLabel) : "N/A"}
+            </span>
+          ),
+        },
+        {
+          key: "roleCategory",
+          header: "Category",
+          render: (value, row) => (
+            <span
+              className="block truncate cursor-default max-w-[160px]"
+              title={row?.roleCategory}
+            >
+              {row.roleCategory
+                ? capitalizeFirstLetter(row.roleCategory)
+                : "N/A"}
+            </span>
+          ),
+        },
+      ]
       : []),
     {
       key: "createdBy",
@@ -829,8 +849,7 @@ const MasterTable = ({ permissions = {} }) => {
       render: (value, row) => (
         <span>
           {row?.createdBy
-            ? `${capitalizeFirstLetter(row.createdBy.firstName) || ""} ${
-                capitalizeFirstLetter(row.createdBy.lastName) || ""
+            ? `${capitalizeFirstLetter(row.createdBy.firstName) || ""} ${capitalizeFirstLetter(row.createdBy.lastName) || ""
               }`.trim() || "N/A"
             : "N/A"}
         </span>
@@ -853,8 +872,7 @@ const MasterTable = ({ permissions = {} }) => {
       render: (value, row) => (
         <span>
           {row?.updatedBy
-            ? `${capitalizeFirstLetter(row.updatedBy.firstName) || ""} ${
-                capitalizeFirstLetter(row.updatedBy.lastName) || ""
+            ? `${capitalizeFirstLetter(row.updatedBy.firstName) || ""} ${capitalizeFirstLetter(row.updatedBy.lastName) || ""
               }`.trim() || "N/A"
             : "N/A"}
         </span>
@@ -927,28 +945,37 @@ const MasterTable = ({ permissions = {} }) => {
           setView={setView}
           searchQuery={searchQuery}
           onSearch={handleSearch}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
-          onNextPage={() =>
-            setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
-          }
-          // onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
-          // onNextPage={() =>
-          //   setCurrentPage((p) => (p + 1 < totalPages ? p + 1 : p))
-          // }
-          // onFilterClick={() =>
-          //   masterData?.length && setFilterPopupOpen((p) => !p)
-          // }
           onFilterClick={handleFilterIconClick}
           isFilterPopupOpen={isFilterPopupOpen}
           isFilterActive={isFilterActive}
           dataLength={totalItems}
           searchPlaceholder={`Search ${type}...`}
           filterIconRef={filterIconRef}
+          hidePagination={true}
         />
+
       </div>
-      <motion.div className="fixed top-56 left-0 right-0 bg-background">
+      <motion.div className="bg-white mt-4 rounded-lg shadow-sm">
+        {/* Count text */}
+        {totalItems > 0 && (
+          <div className="flex items-center justify-start px-6 py-2 bg-white">
+            <span className="text-sm text-gray-500">
+              Showing{" "}
+              <span className="font-semibold text-gray-800">{currentFilteredRows?.length || 0}</span>
+              {" "}of{" "}
+              <span className="font-semibold text-gray-800">
+                {(() => {
+                  const t = totalItems || 0;
+                  const r = Math.floor(t / 100) * 100;
+                  if (r === 0) return t;
+                  if (t === r) return t;
+                  return `${r}+`;
+                })()}
+              </span>
+              {" "}{totalItems === 1 ? "record" : "records"}
+            </span>
+          </div>
+        )}
         {view === "table" ? (
           <TableView
             data={currentFilteredRows}
@@ -956,7 +983,10 @@ const MasterTable = ({ permissions = {} }) => {
             actions={actions}
             loading={isLoading}
             emptyState="No Master data found."
-            customHeight="h-[calc(100vh-14rem)]"
+            customHeight="h-[calc(100vh-17.5rem)]"
+            onScrollEnd={handleScrollEnd}
+            isLoadingMore={isFetchingNextPage}
+            hasMore={hasNextPage}
           />
         ) : (
           <div className="">
@@ -977,7 +1007,7 @@ const MasterTable = ({ permissions = {} }) => {
                   "N/A",
                 // subtitle: row.status || "Unknown",
               }))}
-              masterData={masterData}
+              masterData={currentFilteredRows}
               columns={kanbanColumns}
               // renderActions={(item) =>
               //   tableActions.map((action) => (
@@ -1006,6 +1036,9 @@ const MasterTable = ({ permissions = {} }) => {
               emptyState="No master data found."
               kanbanTitle={getMasterTitles(type)}
               customHeight="calc(100vh - 282px)"
+              onScrollEnd={handleScrollEnd}
+              isLoadingMore={isFetchingNextPage}
+              hasMore={hasNextPage}
             />
           </div>
         )}
@@ -1017,7 +1050,6 @@ const MasterTable = ({ permissions = {} }) => {
           onApply={() => {
             setIsFilterActive(filters.status.length > 0);
             setFilterPopupOpen(false);
-            setCurrentPage(0);
           }}
           onClearAll={() => {
             setFilters({ status: [] });
@@ -1077,16 +1109,16 @@ const MasterTable = ({ permissions = {} }) => {
                 <button
                   onClick={() => setIsDeletePopupOpen(false)}
                   className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
-                  disabled={isLoading}
+                  disabled={isDeleteLoading}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDelete}
                   className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white shadow hover:bg-red-700 transition"
-                  disabled={isLoading}
+                  disabled={isDeleteLoading}
                 >
-                  {isLoading ? "Deleting..." : "Delete"}
+                  {isDeleteLoading ? "Deleting..." : "Delete"}
                 </button>
               </div>
             </div>

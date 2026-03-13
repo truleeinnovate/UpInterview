@@ -1,6 +1,6 @@
 // v1.0.0 - Super Admin subscription plans hook (list/create/update/delete)
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { config } from '../config';
 import { decodeJwt } from '../utils/AuthCookieManager/jwtDecode';
@@ -30,11 +30,11 @@ export const useSubscriptionPlansAdmin = (options = {}) => {
 
   const { page, limit, search, subscriptionTypes, activeStates, createdDate } = options || {};
 
-  const plansQuery = useQuery({
-    queryKey: ['subscriptionPlansAdmin', { page: page || 1, limit: limit || 10, search: search || '', subscriptionTypes: subscriptionTypes || '', activeStates: activeStates || '', createdDate: createdDate || '' }],
-    queryFn: async () => {
+  const plansQuery = useInfiniteQuery({
+    queryKey: ['subscriptionPlansAdmin', { limit: limit || 10, search: search || '', subscriptionTypes: subscriptionTypes || '', activeStates: activeStates || '', createdDate: createdDate || '' }],
+    queryFn: async ({ pageParam = 1 }) => {
       const params = {};
-      if (page) params.page = page;
+      params.page = pageParam;
       if (limit) params.limit = limit;
       if (typeof search === 'string' && search.trim()) params.search = search.trim();
       if (subscriptionTypes) params.subscriptionTypes = subscriptionTypes;
@@ -46,14 +46,21 @@ export const useSubscriptionPlansAdmin = (options = {}) => {
       const data = res?.data;
       // Legacy array response fallback
       if (Array.isArray(data)) {
-        return { plans: data, total: data.length, page: page || 1, itemsPerPage: limit || data.length };
+        return { plans: data, total: data.length, page: pageParam, itemsPerPage: limit || data.length };
       }
       return {
         plans: Array.isArray(data?.plans) ? data.plans : [],
         total: data?.total ?? 0,
-        page: data?.page ?? (page || 1),
+        page: data?.page ?? pageParam,
         itemsPerPage: data?.itemsPerPage ?? (limit || 10),
       };
+    },
+    getNextPageParam: (lastPage) => {
+      const totalPages = Math.ceil((lastPage.total || 0) / (lastPage.itemsPerPage || 10));
+      if (lastPage.page < totalPages) {
+        return lastPage.page + 1;
+      }
+      return undefined;
     },
     staleTime: 1000 * 60 * 5,
     cacheTime: 1000 * 60 * 30,
@@ -110,13 +117,15 @@ export const useSubscriptionPlansAdmin = (options = {}) => {
     },
   });
 
-  const normalized = plansQuery.data || { plans: [], total: 0, page: page || 1, itemsPerPage: limit || 10 };
+  const normalizedPlans = plansQuery.data?.pages?.flatMap(p => p.plans) || [];
+  const normalizedTotal = plansQuery.data?.pages?.[0]?.total || 0;
 
   return {
-    plans: normalized.plans,
-    total: normalized.total,
-    currentPage: normalized.page,
-    itemsPerPage: normalized.itemsPerPage,
+    plans: normalizedPlans,
+    total: normalizedTotal,
+    fetchNextPage: plansQuery.fetchNextPage,
+    hasNextPage: plansQuery.hasNextPage,
+    isFetchingNextPage: plansQuery.isFetchingNextPage,
     isLoading: plansQuery.isLoading,
     isError: plansQuery.isError,
     error: plansQuery.error,

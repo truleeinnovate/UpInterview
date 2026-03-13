@@ -93,7 +93,7 @@ export default function InterviewPolicy() {
   // UI state
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
+  const [displayedCount, setDisplayedCount] = useState(20);
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const filterIconRef = useRef(null);
 
@@ -117,8 +117,6 @@ export default function InterviewPolicy() {
   useEffect(() => {
     fetchPolicies();
   }, []);
-
-  const ITEMS_PER_PAGE = 10;
 
   const defaultFilters = {
     categories: [],
@@ -162,11 +160,14 @@ export default function InterviewPolicy() {
   }, [policies, debouncedSearch, selectedFilters]);
 
   // Pagination Logic
-  const totalPages = Math.ceil(processedData.length / ITEMS_PER_PAGE);
-  const paginatedData = processedData.slice(
-    currentPage * ITEMS_PER_PAGE,
-    (currentPage + 1) * ITEMS_PER_PAGE
-  );
+  const paginatedData = processedData.slice(0, displayedCount);
+  const hasMore = displayedCount < processedData.length;
+
+  const handleScrollEnd = () => {
+    if (hasMore) {
+      setDisplayedCount((prev) => Math.min(prev + 20, processedData.length));
+    }
+  };
 
   // Debounce Search Logic
   useEffect(() => {
@@ -174,9 +175,9 @@ export default function InterviewPolicy() {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  // Reset to page 1 when searching or filtering
+  // Reset to initial count when searching or filtering
   useEffect(() => {
-    setCurrentPage(0);
+    setDisplayedCount(20);
   }, [debouncedSearch, selectedFilters]);
 
   const handleDeleteConfirm = async () => {
@@ -319,20 +320,27 @@ export default function InterviewPolicy() {
         setView={setView}
         searchQuery={searchQuery}
         onSearch={(e) => setSearchQuery(e.target.value)}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
-        onNextPage={() =>
-          setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
-        }
         onFilterClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
         isFilterActive={isFilterActive}
         isFilterPopupOpen={isFilterPopupOpen}
         dataLength={processedData.length}
         filterIconRef={filterIconRef}
+        hidePagination={true}
       />
 
       <div className="fixed sm:top-64 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+        {/* Count text */}
+        {processedData?.length > 0 && (
+          <div className="flex items-center justify-start px-6 py-2">
+            <span className="text-sm text-gray-500">
+              Showing{" "}
+              <span className="font-semibold text-gray-800">{paginatedData?.length || 0}</span>
+              {" "}of{" "}
+              <span className="font-semibold text-gray-800">{processedData?.length || 0}</span>
+              {" "}{processedData?.length === 1 ? "policy" : "policies"}
+            </span>
+          </div>
+        )}
         {view === "table" ? (
           <TableView
             data={paginatedData}
@@ -340,6 +348,9 @@ export default function InterviewPolicy() {
             actions={actions}
             emptyState="No Policies found."
             autoHeight={false}
+            onScrollEnd={handleScrollEnd}
+            isLoadingMore={false}
+            hasMore={hasMore}
           />
         ) : (
           <KanbanView
@@ -357,6 +368,9 @@ export default function InterviewPolicy() {
             )}
             emptyState="No Active Policies Found"
             kanbanTitle="Interview Policy"
+            onScrollEnd={handleScrollEnd}
+            isLoadingMore={false}
+            hasMore={hasMore}
           />
         )}
 

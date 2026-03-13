@@ -77,8 +77,8 @@ const KanbanActionsMenu = ({ item, kanbanActions }) => {
           action.key === "view"
             ? "text-custom-blue hover:bg-custom-blue/10"
             : action.key === "edit"
-            ? "text-green-600 hover:bg-green-600/10"
-            : "text-blue-600 bg-green-600/10";
+              ? "text-green-600 hover:bg-green-600/10"
+              : "text-blue-600 bg-green-600/10";
 
         return (
           <button
@@ -150,7 +150,6 @@ const InternalRequest = () => {
   // const [editModeOn, setEditModeOn] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     currentStatus: "",
@@ -170,12 +169,11 @@ const InternalRequest = () => {
   const [selectedRequestId, setSelectedRequestId] = useState(null);
   // const [selectedRequest, setSelectedRequest] = useState(null);
 
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 20;
   // v1.0.0 <------------------------------------------------------------------------
   const [selectedType] = useState("all");
   // v1.0.0 ------------------------------------------------------------------------>
-  const { interviewRequests, pagination, isLoading } = useInterviewRequests({
-    page: currentPage,
+  const { interviewRequests, pagination, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInterviewRequests({
     limit: ITEMS_PER_PAGE,
     search: debouncedSearch,
     status: selectedFilters.status.join(","),
@@ -201,7 +199,6 @@ const InternalRequest = () => {
   useEffect(() => {
     const t = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setCurrentPage(0);
     }, 500);
     return () => clearTimeout(t);
   }, [searchQuery]);
@@ -231,7 +228,6 @@ const InternalRequest = () => {
     setSelectedStatus([]);
     setCurrentStatus("");
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -242,7 +238,6 @@ const InternalRequest = () => {
       currentStatus: selectedCurrentStatus,
     };
     setSelectedFilters(filters);
-    setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 || filters.currentStatus.length > 0
     );
@@ -270,17 +265,12 @@ const InternalRequest = () => {
     }
   };
 
-  // Server-side pagination
+  // Server-side pagination and infinite scrolling
   const totalPages = pagination?.totalPages || 0;
-  const nextPage = () => {
-    if (pagination?.hasNext) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
 
-  const prevPage = () => {
-    if (pagination?.hasPrev) {
-      setCurrentPage((prevPage) => Math.max(0, prevPage - 1));
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
@@ -288,14 +278,13 @@ const InternalRequest = () => {
     selectedType === "all"
       ? dataToUse
       : dataToUse.filter(
-          (request) =>
-            request.interviewerType?.toLowerCase() ===
-            selectedType.toLowerCase()
-        );
+        (request) =>
+          request.interviewerType?.toLowerCase() ===
+          selectedType.toLowerCase()
+      );
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0); // Reset to first page on search (debounced fetch)
   };
 
   const formatDate = (dateString) => {
@@ -321,11 +310,10 @@ const InternalRequest = () => {
       header: "Interview Request ID",
       render: (vale, row) => (
         <span
-          className={`font-medium ${
-            superAdminPermissions?.InterviewRequest?.View
+          className={`font-medium ${superAdminPermissions?.InterviewRequest?.View
               ? "text-custom-blue cursor-pointer"
               : "text-gray-900"
-          }`}
+            }`}
           onClick={(e) => {
             e.stopPropagation(); // Prevents row-level handlers (if any)
             if (superAdminPermissions?.InterviewRequest?.View && row?._id) {
@@ -343,11 +331,10 @@ const InternalRequest = () => {
       header: "Interviewer ID",
       render: (vale, row) => (
         <span
-          className={`font-medium ${
-            superAdminPermissions?.InterviewRequest?.View
+          className={`font-medium ${superAdminPermissions?.InterviewRequest?.View
               ? "text-custom-blue cursor-pointer"
               : "text-gray-900"
-          }`}
+            }`}
           onClick={(e) => {
             e.stopPropagation(); // Prevents row-level handlers (if any)
             if (superAdminPermissions?.InterviewRequest?.View && row?._id) {
@@ -366,15 +353,12 @@ const InternalRequest = () => {
       render: (value, row) => (
         <span
           className="block cursor-default truncate max-w-[160px]"
-          title={`${
-            capitalizeFirstLetter(row?.interviewerId?.lastName) || ""
-          } ${
-            capitalizeFirstLetter(row?.interviewerId?.firstName) || ""
-          }`.trim()}
+          title={`${capitalizeFirstLetter(row?.interviewerId?.lastName) || ""
+            } ${capitalizeFirstLetter(row?.interviewerId?.firstName) || ""
+            }`.trim()}
         >
           {row?.interviewerId?.firstName || row?.interviewerId?.lastName
-            ? `${capitalizeFirstLetter(row?.interviewerId?.lastName) || ""} ${
-                capitalizeFirstLetter(row?.interviewerId?.firstName) || ""
+            ? `${capitalizeFirstLetter(row?.interviewerId?.lastName) || ""} ${capitalizeFirstLetter(row?.interviewerId?.firstName) || ""
               }`.trim()
             : "N/A"}
         </span>
@@ -420,16 +404,16 @@ const InternalRequest = () => {
   const tableActions = [
     ...(superAdminPermissions?.InterviewRequest?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => {
-              setSelectedRequestId(row._id);
-              setIsPopupOpen(true);
-            },
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (row) => {
+            setSelectedRequestId(row._id);
+            setIsPopupOpen(true);
           },
-        ]
+        },
+      ]
       : []),
     // {
     //   key: "360-view",
@@ -463,15 +447,12 @@ const InternalRequest = () => {
       render: (value, row) => (
         <span
           className="block cursor-default truncate max-w-[160px]"
-          title={`${
-            capitalizeFirstLetter(row?.interviewerId?.lastName) || ""
-          } ${
-            capitalizeFirstLetter(row?.interviewerId?.firstName) || ""
-          }`.trim()}
+          title={`${capitalizeFirstLetter(row?.interviewerId?.lastName) || ""
+            } ${capitalizeFirstLetter(row?.interviewerId?.firstName) || ""
+            }`.trim()}
         >
           {row?.interviewerId?.firstName || row?.interviewerId?.lastName
-            ? `${capitalizeFirstLetter(row?.interviewerId?.lastName) || ""} ${
-                capitalizeFirstLetter(row?.interviewerId?.firstName) || ""
+            ? `${capitalizeFirstLetter(row?.interviewerId?.lastName) || ""} ${capitalizeFirstLetter(row?.interviewerId?.firstName) || ""
               }`.trim()
             : "N/A"}
         </span>
@@ -511,16 +492,16 @@ const InternalRequest = () => {
   const kanbanActions = [
     ...(superAdminPermissions?.InterviewRequest?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-custom-blue" />,
-            onClick: (row) => {
-              setSelectedRequestId(row._id);
-              setIsPopupOpen(true);
-            },
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-custom-blue" />,
+          onClick: (row) => {
+            setSelectedRequestId(row._id);
+            setIsPopupOpen(true);
           },
-        ]
+        },
+      ]
       : []),
 
     // ...(superAdminPermissions?.InterviewRequest?.Edit
@@ -680,9 +661,8 @@ const InternalRequest = () => {
                             {/* v1.0.0 <---------------------------------------------------- */}
                             <p className="text-gray-700">
                               {request?.interviewerId?.firstName ||
-                              request?.interviewerId?.lastName
-                                ? `${request?.interviewerId?.firstName || ""} ${
-                                    request?.interviewerId?.lastName || ""
+                                request?.interviewerId?.lastName
+                                ? `${request?.interviewerId?.firstName || ""} ${request?.interviewerId?.lastName || ""
                                   }`.trim()
                                 : "N/A"}
                             </p>
@@ -892,16 +872,13 @@ const InternalRequest = () => {
             setView={setView}
             searchQuery={searchQuery}
             onSearch={handleSearch}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrevPage={prevPage}
-            onNextPage={nextPage}
             onFilterClick={handleFilterIconClick}
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
             dataLength={pagination?.totalItems || dataToUse?.length || 0}
             searchPlaceholder="Search requests..."
             filterIconRef={filterIconRef} // Pass ref to Toolbar
+            hidePagination={true}
           />
         </div>
         <div className="fixed sm:top-60 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
@@ -909,12 +886,34 @@ const InternalRequest = () => {
             <motion.div className="bg-white">
               {view === "table" ? (
                 <div className="w-full mb-8 bg-red">
+                  {(pagination?.totalItems || 0) > 0 && (
+                    <div className="flex items-center justify-start px-6 py-2">
+                      <span className="text-sm text-gray-500">
+                        Showing{" "}
+                        <span className="font-semibold text-gray-800">{currentFilteredRows?.length || 0}</span>
+                        {" "}of{" "}
+                        <span className="font-semibold text-gray-800">
+                          {(() => {
+                            const t = pagination?.totalItems || 0;
+                            const r = Math.floor(t / 100) * 100;
+                            if (r === 0) return t;
+                            if (t === r) return t;
+                            return `${r}+`;
+                          })()}
+                        </span>
+                        {" "}{(pagination?.totalItems || 0) === 1 ? "request" : "requests"}
+                      </span>
+                    </div>
+                  )}
                   <TableView
                     data={currentFilteredRows}
                     columns={tableColumns}
                     loading={isLoading}
                     actions={tableActions}
                     emptyState="No Interview Requests found."
+                    onScrollEnd={handleScrollEnd}
+                    isLoadingMore={isFetchingNextPage}
+                    hasMore={hasNextPage}
                   />
                 </div>
               ) : (
@@ -930,10 +929,10 @@ const InternalRequest = () => {
                     data={(selectedType === "all"
                       ? currentFilteredRows
                       : currentFilteredRows.filter(
-                          (interview) =>
-                            interview.interviewerType?.toLowerCase() ===
-                            selectedType
-                        )
+                        (interview) =>
+                          interview.interviewerType?.toLowerCase() ===
+                          selectedType
+                      )
                     ).map((interview) => ({
                       ...interview,
                       id: interview._id,
@@ -957,7 +956,10 @@ const InternalRequest = () => {
                     }}
                     emptyState="No Interview Requests Found."
                     kanbanTitle="Interviewer Request"
-                    customHeight = "calc(100vh - 250px)"
+                    customHeight="calc(100vh - 250px)"
+                    onScrollEnd={handleScrollEnd}
+                    isLoadingMore={isFetchingNextPage}
+                    hasMore={hasNextPage}
                   />
                 </div>
               )}

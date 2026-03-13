@@ -1,34 +1,38 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../../config";
 import { usePermissions } from "../../Context/PermissionsContext";
 import { notify } from "../../services/toastService";
 
-// Ensure cookies are sent with requests
 axios.defaults.withCredentials = true;
 
-// Hook to get all contact us messages (superadmin)
+// Hook to get all contact us messages with infinite scroll
 export const useContactUs = (options = {}) => {
   const { superAdminPermissions, isInitialized } = usePermissions();
   const hasViewPermission = superAdminPermissions?.ContactUs?.View !== false;
 
-  const { page, limit, search, startDate, endDate } = options || {};
+  const { search, startDate, endDate } = options || {};
 
-  const query = useQuery({
+  const {
+    data: infiniteData,
+    isLoading,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: [
       "contactUs",
       {
-        page: page || 1,
-        limit: limit || 10,
+        limit: 20,
         search: search || "",
         startDate: startDate || "",
         endDate: endDate || "",
       },
     ],
-    queryFn: async () => {
-      const params = {};
-      if (page) params.page = page;
-      if (limit) params.limit = limit;
+    queryFn: async ({ pageParam = 1 }) => {
+      const params = { page: pageParam, limit: 20 };
       if (typeof search === "string" && search.trim()) params.search = search.trim();
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
@@ -39,26 +43,32 @@ export const useContactUs = (options = {}) => {
       );
       return response.data;
     },
+    getNextPageParam: (lastPage, allPages) => {
+      const total = lastPage?.total || 0;
+      const currentItems = allPages.reduce((acc, p) => acc + (p?.contacts?.length || 0), 0);
+      if (currentItems < total) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
     enabled: isInitialized && hasViewPermission,
     staleTime: 5 * 60 * 1000,
     cacheTime: 10 * 60 * 1000,
-    keepPreviousData: true,
   });
 
-  const data = query.data || {};
-
-  const total = data?.total ?? 0;
-  const currentPage = data?.page ?? (page || 1);
-  const itemsPerPage = data?.itemsPerPage ?? (limit || (Array.isArray(data?.contacts) ? data.contacts.length : 10));
+  const contactMessages = infiniteData?.pages?.flatMap((p) => p?.contacts || []) || [];
+  const total = infiniteData?.pages?.[0]?.total || 0;
 
   return {
-    contactMessages: data?.contacts || [],
+    contactMessages,
     total,
-    currentPage,
-    itemsPerPage,
-    isLoading: query.isLoading,
-    error: query.error,
-    refetch: query.refetch,
+    isLoading,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage: !!hasNextPage,
+    isFetchingNextPage,
   };
 };
 

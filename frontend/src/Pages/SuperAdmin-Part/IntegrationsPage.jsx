@@ -141,7 +141,6 @@ function IntegrationsPage() {
   // const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
@@ -160,8 +159,7 @@ function IntegrationsPage() {
   const [selectedLogId, setSelectedLogId] = useState(null);
   // const [integrations, setIntegrations] = useState([]);
 
-  const { integrations, pagination, stats, isLoading } = useIntegrationLogs({
-    page: currentPage,
+  const { integrations, totalItems, stats, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useIntegrationLogs({
     limit: itemsPerPage,
     search: debouncedSearch,
     status: selectedFilters.status,
@@ -202,7 +200,6 @@ function IntegrationsPage() {
     setSelectedStatus([]);
     setCurrentStatus("");
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -213,7 +210,6 @@ function IntegrationsPage() {
       currentStatus: selectedCurrentStatus,
     };
     setSelectedFilters(filters);
-    setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 || filters.currentStatus.length > 0
     );
@@ -286,22 +282,14 @@ function IntegrationsPage() {
     }
   };
 
-  const nextPage = () => {
-    // Guard using metadata
-    if (pagination?.hasNext) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (pagination?.hasPrev) {
-      setCurrentPage((prevPage) => prevPage - 1);
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0); // Reset to first page on search
   };
 
   // Debounce search
@@ -800,7 +788,7 @@ function IntegrationsPage() {
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
             <div className="text-xs text-gray-500">Total Logs</div>
             <div className="text-xl font-semibold">
-              {pagination?.totalItems ?? 0}
+              {totalItems ?? 0}
             </div>
           </div>
           {/* v1.0.0 <------------------------------------------------------------------------------------------ */}
@@ -832,24 +820,52 @@ function IntegrationsPage() {
             setView={setView}
             searchQuery={searchQuery}
             onSearch={handleSearch}
-            currentPage={pagination?.currentPage ?? 0}
-            totalPages={pagination?.totalPages ?? 1}
-            onPrevPage={prevPage}
-            onNextPage={nextPage}
             onFilterClick={handleFilterIconClick}
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
-            dataLength={pagination?.totalItems ?? 0}
             searchPlaceholder="Search integrations..."
             filterIconRef={filterIconRef}
+            dataLength={totalItems || integrations.length}
+            hidePagination={true}
           />
         </div>
+
+        {/* Render FilterPopup */}
+        <FilterPopup
+          isOpen={isFilterPopupOpen}
+          onClose={() => setFilterPopupOpen(false)}
+          onApply={handleApplyFilters}
+          onClearAll={handleClearAll}
+          filterIconRef={filterIconRef}
+        >
+          {renderFilterContent()}
+        </FilterPopup>
 
         {/* New table content */}
         <main>
           <div className="sm:px-0">
-            <motion.div className="bg-white">
+            <motion.div className="bg-white rounded-lg shadow-sm">
               <div className="relative w-full">
+                {/* Count text */}
+                {totalItems > 0 && (
+                  <div className="flex items-center justify-start px-6 py-2 bg-white">
+                    <span className="text-sm text-gray-500">
+                      Showing{" "}
+                      <span className="font-semibold text-gray-800">{Array.isArray(dataToUse) ? dataToUse.length : 0}</span>
+                      {" "}of{" "}
+                      <span className="font-semibold text-gray-800">
+                        {(() => {
+                          const t = totalItems || 0;
+                          const r = Math.floor(t / 100) * 100;
+                          if (r === 0) return t;
+                          if (t === r) return t;
+                          return `${r}+`;
+                        })()}
+                      </span>
+                      {" "}{totalItems === 1 ? "log" : "logs"}
+                    </span>
+                  </div>
+                )}
                 {view === "table" ? (
                   <div className="w-full">
                     <TableView
@@ -859,6 +875,9 @@ function IntegrationsPage() {
                       actions={tableActions}
                       emptyState="No logs found."
                       customHeight="h-[calc(100vh-16.5rem)]"
+                      onScrollEnd={handleScrollEnd}
+                      hasMore={hasNextPage}
+                      isLoadingMore={isFetchingNextPage}
                     />
                   </div>
                 ) : (
@@ -889,20 +908,12 @@ function IntegrationsPage() {
                       }}
                       kanbanTitle="Integration Log"
                       customHeight="calc(100vh - 320px)"
+                      onScrollEnd={handleScrollEnd}
+                      hasMore={hasNextPage}
+                      isLoadingMore={isFetchingNextPage}
                     />
                   </div>
                 )}
-
-                {/* Render FilterPopup */}
-                <FilterPopup
-                  isOpen={isFilterPopupOpen}
-                  onClose={() => setFilterPopupOpen(false)}
-                  onApply={handleApplyFilters}
-                  onClearAll={handleClearAll}
-                  filterIconRef={filterIconRef}
-                >
-                  {renderFilterContent()}
-                </FilterPopup>
               </div>
             </motion.div>
           </div>

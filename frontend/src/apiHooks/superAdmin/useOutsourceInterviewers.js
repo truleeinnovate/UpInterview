@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../../config";
 import toast from "react-hot-toast";
@@ -26,24 +26,37 @@ export const useOutsourceInterviewers = (options) => {
     status = "",
   } = options || {};
 
-  const params = new URLSearchParams();
-  if (isPaginated) {
-    params.append("page", page.toString());
-    params.append("limit", limit.toString());
-    if (search) params.append("search", search);
-    if (status) params.append("status", status);
-  }
-
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: isPaginated
-      ? ["outsourceInterviewers", page, limit, search, status]
-      : ["outsourceInterviewers"],
-    queryFn: async () => {
+  const {
+    data: infiniteData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["outsourceInterviewers", limit, search, status],
+    queryFn: async ({ pageParam = 0 }) => {
       const base = `${config.REACT_APP_API_URL}/outsourceInterviewers`;
-      const url = isPaginated && params.toString() ? `${base}?${params.toString()}` : base;
+      const params = new URLSearchParams();
+      params.append("page", pageParam.toString());
+      params.append("limit", limit.toString());
+      if (search) params.append("search", search);
+      if (status) params.append("status", status);
+      
+      const url = params.toString() ? `${base}?${params.toString()}` : base;
       const response = await axios.get(url);
       return response.data;
     },
+    getNextPageParam: (lastPage) => {
+      const pagination = lastPage?.pagination;
+      if (pagination?.hasNext || (pagination?.currentPage !== undefined && pagination?.currentPage < (pagination?.totalPages - 1))) {
+        return (pagination?.currentPage ?? 0) + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 0,
     enabled: isInitialized && !!hasViewPermission,
     staleTime: 1000 * 60 * 10, // 10 minutes
     cacheTime: 1000 * 60 * 30, // 30 minutes
@@ -54,22 +67,30 @@ export const useOutsourceInterviewers = (options) => {
     keepPreviousData: true,
   });
 
+  // Flatten all pages
+  const outsourceInterviewers = infiniteData?.pages?.flatMap((p) => (Array.isArray(p) ? p : p?.data || [])) || [];
+  // Use first page's pagination for stats
+  const firstPagination = infiniteData?.pages?.[0]?.pagination || {};
+
   const defaultPagination = {
-    currentPage: page,
-    totalPages: 0,
-    totalItems: Array.isArray(data) ? (data?.length || 0) : 0,
-    hasNext: false,
+    currentPage: 0,
+    totalPages: firstPagination.totalPages || 0,
+    totalItems: firstPagination.totalItems || (Array.isArray(infiniteData?.pages?.[0]) ? infiniteData.pages[0].length : 0),
+    hasNext: !!hasNextPage,
     hasPrev: false,
     itemsPerPage: limit,
   };
 
   return {
-    outsourceInterviewers: Array.isArray(data) ? (isPaginated ? data : [...data].reverse()) : data?.data || [],
-    pagination: Array.isArray(data) ? defaultPagination : data?.pagination || defaultPagination,
+    outsourceInterviewers,
+    pagination: { ...defaultPagination, ...firstPagination, hasNext: !!hasNextPage, currentPage: 0 },
     isLoading,
     isError,
     error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };
 

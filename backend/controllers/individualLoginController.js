@@ -10,6 +10,17 @@ const {
   validateIndividualSignup,
 } = require("../validations/IndivindualLoginValidation.js");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
+const SubscriptionPlan = require("../models/Subscriptionmodels.js");
+const CustomerSubscription = require("../models/CustomerSubscriptionmodels.js");
+const Wallet = require("../models/WalletTopup.js");
+const Usage = require("../models/Usage.js");
+const {
+  createInvoice,
+  createSubscriptionRecord,
+} = require("./CustomerSubscriptionInvoiceContollers.js");
+const {
+  CreateOrGetVideoCallingSettings,
+} = require("./VideoCallingSettingControllers/VideoCallingSettingController.js");
 
 exports.individualLogin = async (req, res) => {
   try {
@@ -176,6 +187,132 @@ exports.individualLogin = async (req, res) => {
       } else {
         // 🔹 Skip creation if already exists
         newInterviewer = existingInterviewer;
+      }
+    }
+
+    // ---------------- AUTO FREE PLAN FOR FREELANCERS ----------------
+    if (currentStep === 3 && userData.isFreelancer && !isProfileCompleteStateOrg) {
+      try {
+        // Find the Free individual subscription plan
+        const freePlan = await SubscriptionPlan.findOne({
+          name: "Free",
+          subscriptionType: "individual",
+          active: true,
+        });
+
+        if (freePlan) {
+          // Check if subscription already exists for this user
+          const existingSubscription = await CustomerSubscription.findOne({ ownerId });
+
+          if (!existingSubscription) {
+            // 1. Create Wallet if not exists
+            let wallet = await Wallet.findOne({ ownerId });
+            if (!wallet) {
+              const walletCode = await generateUniqueId("WLT", Wallet, "walletCode");
+              wallet = new Wallet({
+                tenantId: savedUser.tenantId,
+                ownerId,
+                walletCode,
+                balance: 0,
+                holdAmount: 0,
+                transactions: [],
+              });
+              await wallet.save();
+            }
+
+            // 2. Create Invoice (paid, amount 0)
+            const invoice = await createInvoice(
+              savedUser.tenantId,
+              ownerId,
+              freePlan.name,
+              freePlan._id,
+              0, // totalAmount
+              { tenantId: savedUser.tenantId, ownerId, userType: "individual", membershipType: "monthly" },
+              "paid",
+              0 // discount
+            );
+
+            // 3. Create Subscription Record (active)
+            const subscription = await createSubscriptionRecord(
+              { tenantId: savedUser.tenantId, ownerId, userType: "individual", membershipType: "monthly" },
+              { subscriptionPlanId: freePlan._id, monthlyPrice: 0, annualPrice: 0 },
+              0, // pricing
+              0, // discount
+              0, // totalAmount
+              invoice._id,
+              "active"
+            );
+
+            // 4. Activate Tenant and set limits from plan features
+            const features = freePlan.features || [];
+            const tenant = await Tenant.findById(savedUser.tenantId);
+            if (tenant) {
+              tenant.status = "active";
+
+              const bandwidthFeature = features.find((f) => f?.name === "Bandwidth");
+              let bandwidthLimit = bandwidthFeature?.limit ?? tenant.usersBandWidth ?? 0;
+              if (bandwidthLimit === "unlimited" || bandwidthLimit === "Unlimited") {
+                bandwidthLimit = 0;
+              }
+              tenant.usersBandWidth = Number(bandwidthLimit) || 0;
+
+              const usersFeature = features.find((f) => f?.name === "Users");
+              let usersLimit = usersFeature?.limit ?? tenant.totalUsers ?? 0;
+              if (usersLimit === "unlimited" || usersLimit === "Unlimited") {
+                usersLimit = 0;
+              }
+              tenant.totalUsers = Number(usersLimit) || 0;
+
+              await tenant.save();
+            }
+
+            // 5. Activate User
+            savedUser.status = "active";
+            await savedUser.save();
+
+            // 6. Create default Video Calling Settings
+            await CreateOrGetVideoCallingSettings(savedUser.tenantId, ownerId);
+
+            // 7. Create Usage record
+            const usageAttributes = features
+              .filter((f) =>
+                ["Assessments", "Internal_Interviews", "Question_Bank_Access", "Bandwidth"].includes(f?.name)
+              )
+              .map((f) => ({
+                entitled: Number(f?.limit) || 0,
+                type:
+                  f?.name === "Internal_Interviews" ? "Internal Interviews" :
+                  f?.name === "Question_Bank_Access" ? "Question Bank Access" :
+                  f?.name === "Bandwidth" ? "User Bandwidth" : f?.name,
+                utilized: 0,
+                remaining: Number(f?.limit) || 0,
+              }));
+
+            const endDate = new Date();
+            endDate.setMonth(endDate.getMonth() + 1);
+
+            await Usage.findOneAndUpdate(
+              { tenantId: savedUser.tenantId, ownerId },
+              {
+                $setOnInsert: {
+                  tenantId: savedUser.tenantId,
+                  ownerId,
+                  usageAttributes,
+                  fromDate: new Date(),
+                  toDate: endDate,
+                },
+              },
+              { new: true, upsert: true, setDefaultsOnInsert: true }
+            );
+
+            console.log(`[individualLogin] Auto-activated Free plan for freelancer: ${ownerId}`);
+          }
+        } else {
+          console.warn("[individualLogin] No Free plan found for individual subscription type");
+        }
+      } catch (freePlanErr) {
+        console.error("[individualLogin] Error auto-activating Free plan:", freePlanErr);
+        // Don't block the user flow if free plan activation fails
       }
     }
 

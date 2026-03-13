@@ -225,7 +225,7 @@ function InterviewsPage() {
           columns={columns}
           data={interviews}
           searchable={true}
-          pagination={true}
+          pagination="infinite"
         />
       </div>
     </div>

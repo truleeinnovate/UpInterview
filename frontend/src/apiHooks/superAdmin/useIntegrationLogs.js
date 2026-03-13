@@ -1,6 +1,6 @@
 // v1.0.0 - Ashok - Added console statements to check data fetching
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../../config";
 import { usePermissions } from "../../Context/PermissionsContext";
@@ -11,16 +11,18 @@ export const useIntegrationLogs = (options = {}) => {
   const hasViewPermission = superAdminPermissions?.IntegrationLogs?.View;
 
   const {
-    data: responseData = null,
+    data: infiniteData,
     isLoading,
     isError,
     error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     refetch,
-  } = useQuery({
+  } = useInfiniteQuery({
     queryKey: ["integrationLogs", options],
-    queryFn: async () => {
-      const page = Number.isFinite(options.page) ? options.page : undefined;
-      const limit = Number.isFinite(options.limit) ? options.limit : undefined;
+    queryFn: async ({ pageParam = 0 }) => {
+      const limit = Number.isFinite(options.limit) ? options.limit : 10;
       const search =
         typeof options.search === "string" ? options.search : undefined;
       const statusParam = Array.isArray(options.status)
@@ -34,24 +36,15 @@ export const useIntegrationLogs = (options = {}) => {
         ? options.severity
         : undefined;
 
-      const hasParams =
-        page !== undefined ||
-        limit !== undefined ||
-        (search && search.length > 0) ||
-        (statusParam && statusParam.length > 0) ||
-        (severityParam && severityParam.length > 0);
-
-      const axiosConfig = hasParams
-        ? {
-            params: {
-              page,
-              limit,
-              search,
-              status: statusParam,
-              severity: severityParam,
-            },
-          }
-        : undefined;
+      const axiosConfig = {
+        params: {
+          page: pageParam,
+          limit,
+          search,
+          status: statusParam,
+          severity: severityParam,
+        },
+      };
 
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/integration-logs`,
@@ -59,6 +52,14 @@ export const useIntegrationLogs = (options = {}) => {
       );
       return response.data ?? null;
     },
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage || !lastPage.pagination) return undefined;
+      if (lastPage.pagination.hasNext) {
+        return lastPage.pagination.currentPage + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 0,
     enabled: isInitialized && !!hasViewPermission,
     staleTime: 1000 * 60 * 10,
     cacheTime: 1000 * 60 * 30,
@@ -68,37 +69,21 @@ export const useIntegrationLogs = (options = {}) => {
     refetchOnReconnect: false,
   });
 
-  const payload = responseData;
-  const integrations = Array.isArray(payload) ? payload : payload?.data || [];
-
-  const fallbackTotal = Array.isArray(integrations) ? integrations.length : 0;
-  const pagination = Array.isArray(payload)
-    ? {
-        currentPage: 0,
-        totalPages: 1,
-        totalItems: fallbackTotal,
-        hasNext: false,
-        hasPrev: false,
-        itemsPerPage: 0,
-      }
-    : payload?.pagination || {
-        currentPage: 0,
-        totalPages: 1,
-        totalItems: fallbackTotal,
-        hasNext: false,
-        hasPrev: false,
-        itemsPerPage: 0,
-      };
-
-  const stats = Array.isArray(payload) ? null : payload?.stats || null;
+  const integrations = infiniteData?.pages?.flatMap((p) => p?.data || []) || [];
+  const firstPage = infiniteData?.pages?.[0];
+  const stats = firstPage?.stats || null;
+  const totalItems = firstPage?.pagination?.totalItems || integrations.length;
 
   return {
     integrations,
-    pagination,
     stats,
+    totalItems,
     isLoading,
     isError,
     error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     refetch,
   };
 };

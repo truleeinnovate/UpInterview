@@ -33,7 +33,6 @@ const EnterpriseContactSale = () => {
 
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     dateRange: { start: "", end: "" },
     status: "",
@@ -53,20 +52,21 @@ const EnterpriseContactSale = () => {
 
   const filterIconRef = useRef(null);
 
-  // Query parameters for the API
+  // Query parameters for the API (no page - handled by hook)
   const queryParams = {
-    page: currentPage + 1,
-    limit: 10,
     search: debouncedSearch,
     ...filters,
   };
 
-  // Use the REAL hook for fetching data
+  // Use the hook for fetching data with infinite scroll
   const {
     enterpriseContacts = [],
     totalCount = 0,
     isLoading,
+    isLoadingMore,
     error,
+    hasMore,
+    fetchNextPage,
     refetch,
   } = useEnterpriseContacts(queryParams);
 
@@ -161,12 +161,10 @@ const EnterpriseContactSale = () => {
     setSelectedFilters(filters);
     setIsFilterActive((dateRange.start && dateRange.end) || pendingStatus);
     setFilterPopupOpen(false);
-    setCurrentPage(0);
   };
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0); // Reset to first page on new search
   };
 
   useEffect(() => {
@@ -281,33 +279,17 @@ const EnterpriseContactSale = () => {
     // Actions column has been removed as per requirements,
   ];
 
-  // Calculate total pages using server totalCount
-  const totalPages = Math.max(1, Math.ceil((totalCount || 0) / 10));
-
-  const nextPage = () => {
-    if (currentPage + 1 < totalPages) {
-      setCurrentPage((p) => p + 1);
+  const handleScrollEnd = () => {
+    if (hasMore && !isLoadingMore) {
+      fetchNextPage();
     }
   };
-
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((p) => p - 1);
-    }
-  };
-
-  useEffect(() => {
-    if (totalPages > 0 && (isNaN(currentPage) || currentPage >= totalPages)) {
-      setCurrentPage(0);
-    }
-  }, [currentPage, totalPages]);
 
   const handleDateRangeChange = (range) => {
     setFilters((prev) => ({
       ...prev,
       dateRange: range,
     }));
-    setCurrentPage(0);
   };
 
   const handleClearAll = () => {
@@ -320,7 +302,6 @@ const EnterpriseContactSale = () => {
       dateRange: { start: "", end: "" },
     });
     setSearchQuery("");
-    setCurrentPage(0);
     setIsFilterActive(false);
   };
 
@@ -334,37 +315,43 @@ const EnterpriseContactSale = () => {
           setView={setView}
           searchQuery={searchQuery}
           onSearch={handleSearch}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrevPage={prevPage}
-          onNextPage={nextPage}
           onFilterClick={() => setFilterPopupOpen(!isFilterPopupOpen)}
           filterIconRef={filterIconRef}
-          dataLength={Math.max(1, totalCount)}
+          dataLength={totalCount || enterpriseContacts?.length || 0}
           isFilterPopupOpen={isFilterPopupOpen}
           searchPlaceholder="Search By Company, Contact, Email or Phone..."
           showAddButton={false}
+          hidePagination={true}
         />
       </div>
+
+      {/* Count text */}
+      {(totalCount || enterpriseContacts?.length) > 0 && (
+        <div className="flex items-center justify-start px-6 py-2">
+          <span className="text-sm text-gray-500">
+            Showing{" "}
+            <span className="font-semibold text-gray-800">{enterpriseContacts?.length || 0}</span>
+            {" "}of{" "}
+            <span className="font-semibold text-gray-800">{totalCount || enterpriseContacts?.length || 0}</span>
+            {" "}{(totalCount || enterpriseContacts?.length || 0) === 1 ? "contact" : "contacts"}
+          </span>
+        </div>
+      )}
 
       {view === "table" ? (
         <TableView
           data={enterpriseContacts}
           columns={columns}
           loading={isLoading}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          setCurrentPage={setCurrentPage}
-          itemsPerPage={10}
-          totalItems={totalCount}
+          onScrollEnd={handleScrollEnd}
+          isLoadingMore={isLoadingMore}
+          hasMore={hasMore}
         />
       ) : (
         <EnterpriseContactKanban
           contacts={enterpriseContacts}
-          currentPage={currentPage}
           itemsPerPage={0}
           totalItems={totalCount}
-          onPageChange={setCurrentPage}
           onView={handleView}
           onContact={handleContact}
           onQualify={handleQualify}
@@ -382,13 +369,11 @@ const EnterpriseContactSale = () => {
           setFilters((prev) => ({ ...prev, status: pendingStatus }));
           setIsFilterActive(!!pendingStatus);
           setFilterPopupOpen(false);
-          setCurrentPage(0);
         }}
         onClearAll={() => {
           setPendingStatus("");
           setFilters((prev) => ({ ...prev, status: "" }));
           setIsFilterActive(false);
-          setCurrentPage(0);
         }}
         filterIconRef={filterIconRef}
       >

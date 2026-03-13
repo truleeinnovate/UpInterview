@@ -14,6 +14,7 @@ function DataTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(itemsPerPageOptions[0]);
+  const [displayedCount, setDisplayedCount] = useState(20);
 
   // Handle column sort
   const handleSort = (field) => {
@@ -53,12 +54,25 @@ function DataTable({
   // Paginate data
   const totalPages = Math.ceil(sortedData.length / itemsPerPage);
 
-  const paginatedData = pagination
-    ? sortedData.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-      )
-    : sortedData;
+  const paginatedData =
+    pagination === true
+      ? sortedData.slice(
+          (currentPage - 1) * itemsPerPage,
+          currentPage * itemsPerPage
+        )
+      : pagination === "infinite"
+      ? sortedData.slice(0, displayedCount)
+      : sortedData;
+
+  const handleScroll = (e) => {
+    if (pagination === "infinite") {
+      const bottom =
+        e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
+      if (bottom && displayedCount < sortedData.length) {
+        setDisplayedCount((prev) => Math.min(prev + 20, sortedData.length));
+      }
+    }
+  };
 
   return (
     <div className="w-full">
@@ -81,7 +95,7 @@ function DataTable({
             />
           </div>
 
-          {pagination && (
+          {pagination === true && (
             <div className="flex items-center">
               <span className="text-sm text-gray-700 mr-2">Show:</span>
               <select
@@ -105,10 +119,19 @@ function DataTable({
         </div>
       )}
 
+      {pagination === "infinite" && (
+        <div className="mb-2 text-sm text-gray-600">
+          Showing {paginatedData.length} of {sortedData.length}{sortedData.length > paginatedData.length ? "+" : ""} results
+        </div>
+      )}
+
       {/* Table */}
       <div className="overflow-x-auto">
         <div className="inline-block min-w-full align-middle">
-          <div className="overflow-hidden border border-gray-200 rounded-lg">
+          <div 
+            className={`overflow-x-auto overflow-y-auto border border-gray-200 rounded-lg ${pagination === "infinite" ? "max-h-[calc(100vh-21rem)]" : ""}`}
+            onScroll={handleScroll}
+          >
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -173,7 +196,7 @@ function DataTable({
       </div>
 
       {/* Pagination */}
-      {pagination && totalPages > 1 && (
+      {pagination === true && totalPages > 1 && (
         <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="text-sm text-gray-700">
             Showing{" "}
