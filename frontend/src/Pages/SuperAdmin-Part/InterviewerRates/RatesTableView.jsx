@@ -465,7 +465,7 @@ function RatesTableView({ filterCategory, onEdit, onView }) {
           columns={columns}
           data={filteredRateCards}
           searchable={true}
-          pagination={true}
+          pagination="infinite"
         />
       </div>
       {/* v1.0.1 <------------------------------------------------------------------------ */}

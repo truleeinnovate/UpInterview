@@ -24,7 +24,14 @@ const statusColumns = [
   { id: "approved", title: "Approved", color: "bg-green-100 text-green-800" },
 ];
 
-const KanbanView = ({ data = [], onViewDetails, selectedOrganizationId }) => {
+const KanbanView = ({ 
+  data = [], 
+  onViewDetails, 
+  selectedOrganizationId,
+  onScrollEnd,
+  isLoadingMore,
+  hasMore,
+}) => {
   const [expandedCards, setExpandedCards] = useState({});
 
   const toggleCardExpand = (id) => {
@@ -52,8 +59,20 @@ const KanbanView = ({ data = [], onViewDetails, selectedOrganizationId }) => {
     );
   };
 
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollHeight - scrollTop <= clientHeight + 50) {
+      if (hasMore && !isLoadingMore && onScrollEnd) {
+        onScrollEnd();
+      }
+    }
+  };
+
   return (
-    <div className="grid grid-cols-3 overflow-y-auto p-4 bg-gray-100 max-h-[calc(100vh-12rem)]">
+    <div 
+      className="grid grid-cols-3 overflow-y-auto p-4 bg-gray-100 max-h-[calc(100vh-12rem)]"
+      onScroll={handleScroll}
+    >
       {statusColumns.map((column) => {
         const items = groupedData[column.id] || [];
         return (
@@ -177,6 +196,11 @@ const KanbanView = ({ data = [], onViewDetails, selectedOrganizationId }) => {
               {items.length === 0 && (
                 <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg text-xs text-gray-400">
                   No items
+                </div>
+              )}
+              {isLoadingMore && hasMore && (
+                <div className="py-4 flex justify-center items-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-custom-blue"></div>
                 </div>
               )}
             </div>

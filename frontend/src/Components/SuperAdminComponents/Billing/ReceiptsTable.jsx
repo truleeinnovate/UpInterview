@@ -44,7 +44,6 @@ function ReceiptsTable({ organizationId, viewMode }) {
   // const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     currentStatus: "",
@@ -61,8 +60,7 @@ function ReceiptsTable({ organizationId, viewMode }) {
 
   const rowsPerPage = 10;
   const toApiReceiptStatus = (arr) => arr.join(",");
-  const { receipts, pagination, stats, isLoading } = useReceipts({
-    page: currentPage,
+  const { receipts, stats, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useReceipts({
     limit: rowsPerPage,
     search: searchQuery,
     status: toApiReceiptStatus(selectedStatus),
@@ -100,7 +98,6 @@ function ReceiptsTable({ organizationId, viewMode }) {
     setSelectedStatus([]);
     setCurrentStatus("");
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -111,7 +108,6 @@ function ReceiptsTable({ organizationId, viewMode }) {
       currentStatus: selectedCurrentStatus,
     };
     setSelectedFilters(filters);
-    setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 || filters.currentStatus.length > 0
     );
@@ -198,21 +194,14 @@ function ReceiptsTable({ organizationId, viewMode }) {
     }
   };
 
-  const totalPages = pagination?.totalPages || 0;
-  const nextPage = () => {
-    if (pagination?.hasNext) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
-  const prevPage = () => {
-    if (pagination?.hasPrev && currentPage > 0) {
-      setCurrentPage((prevPage) => prevPage - 1);
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0); // Reset to first page on search
   };
 
   const formatCurrency = (amount) => {
@@ -619,24 +608,52 @@ function ReceiptsTable({ organizationId, viewMode }) {
             setView={setView}
             searchQuery={searchQuery}
             onSearch={handleSearch}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrevPage={prevPage}
-            onNextPage={nextPage}
             onFilterClick={handleFilterIconClick}
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
-            dataLength={dataToUse?.length}
             searchPlaceholder="Search receipts..."
             filterIconRef={filterIconRef}
+            dataLength={stats?.totalReceipts || receipts.length}
+            hidePagination={true}
           />
         </div>
+
+        {/* Render FilterPopup */}
+        <FilterPopup
+          isOpen={isFilterPopupOpen}
+          onClose={() => setFilterPopupOpen(false)}
+          onApply={handleApplyFilters}
+          onClearAll={handleClearAll}
+          filterIconRef={filterIconRef}
+        >
+          {renderFilterContent()}
+        </FilterPopup>
 
         {/* New table content */}
         <main>
           <div className="sm:px-0">
-            <motion.div className="bg-white">
+            <motion.div className="bg-white rounded-lg shadow-sm">
               <div className="relative w-full">
+                {/* Count text */}
+                {(stats?.totalReceipts || receipts.length) > 0 && (
+                  <div className="flex items-center justify-start px-6 py-2 bg-white">
+                    <span className="text-sm text-gray-500">
+                      Showing{" "}
+                      <span className="font-semibold text-gray-800">{receipts.length}</span>
+                      {" "}of{" "}
+                      <span className="font-semibold text-gray-800">
+                        {(() => {
+                          const t = stats?.totalReceipts || receipts.length || 0;
+                          const r = Math.floor(t / 100) * 100;
+                          if (r === 0) return t;
+                          if (t === r) return t;
+                          return `${r}+`;
+                        })()}
+                      </span>
+                      {" "}{(stats?.totalReceipts || receipts.length) === 1 ? "receipt" : "receipts"}
+                    </span>
+                  </div>
+                )}
                 {view === "table" ? (
                   <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                     <TableView
@@ -646,6 +663,9 @@ function ReceiptsTable({ organizationId, viewMode }) {
                       actions={tableActions}
                       emptyState="No receipts found."
                       customHeight="h-[calc(100vh-21.2rem)]"
+                      onScrollEnd={handleScrollEnd}
+                      hasMore={hasNextPage}
+                      isLoadingMore={isFetchingNextPage}
                     />
                   </div>
                 ) : (
@@ -667,20 +687,12 @@ function ReceiptsTable({ organizationId, viewMode }) {
                         setSelectedReceiptId(item?._id);
                         setIsPopupOpen(true);
                       }}
+                      onScrollEnd={handleScrollEnd}
+                      hasMore={hasNextPage}
+                      isLoadingMore={isFetchingNextPage}
                     />
                   </div>
                 )}
-
-                {/* Render FilterPopup */}
-                <FilterPopup
-                  isOpen={isFilterPopupOpen}
-                  onClose={() => setFilterPopupOpen(false)}
-                  onApply={handleApplyFilters}
-                  onClearAll={handleClearAll}
-                  filterIconRef={filterIconRef}
-                >
-                  {renderFilterContent()}
-                </FilterPopup>
               </div>
             </motion.div>
           </div>

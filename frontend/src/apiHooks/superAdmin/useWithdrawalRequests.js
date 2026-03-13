@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../../config";
 import { usePermissions } from "../../Context/PermissionsContext";
@@ -8,58 +8,64 @@ import { notify } from "../../services/toastService";
 axios.defaults.withCredentials = true;
 
 // Hook to get all withdrawal requests (superadmin) - SIMPLE VERSION
-export const useWithdrawalRequests = (options) => {
+export const useWithdrawalRequests = ({
+  limit = 10,
+  search = '',
+  status = '',
+  mode = '',
+  minAmount = '',
+  maxAmount = '',
+  startDate = '',
+  endDate = '',
+} = {}) => {
   const { superAdminPermissions, isInitialized } = usePermissions();
   const hasViewPermission = superAdminPermissions?.WithdrawalRequest?.View !== false;
 
-  // Support optional server-side pagination/search/filters
-  const isPaginated = options && typeof options === 'object';
   const {
-    page = 0,
-    limit = 10,
-    search = '',
-    status = '',
-    mode = '',
-    minAmount = '',
-    maxAmount = '',
-    startDate = '',
-    endDate = '',
-  } = options || {};
-
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: isPaginated
-      ? [
-          "withdrawalRequests",
-          page,
-          limit,
-          search,
-          status,
-          mode,
-          minAmount,
-          maxAmount,
-          startDate,
-          endDate,
-        ]
-      : ["withdrawalRequests"],
-    queryFn: async () => {
+    data: infiniteData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: [
+      "withdrawalRequests",
+      limit,
+      search,
+      status,
+      mode,
+      minAmount,
+      maxAmount,
+      startDate,
+      endDate,
+    ],
+    queryFn: async ({ pageParam = 0 }) => {
       const base = `${config.REACT_APP_API_URL}/wallet/get-all-withdrawals-requests`;
-      if (isPaginated) {
-        const params = new URLSearchParams();
-        params.append('page', String(page));
-        params.append('limit', String(limit));
-        if (search) params.append('search', search);
-        if (status) params.append('status', status);
-        if (mode) params.append('mode', mode);
-        if (minAmount !== '' && minAmount !== undefined) params.append('minAmount', String(minAmount));
-        if (maxAmount !== '' && maxAmount !== undefined) params.append('maxAmount', String(maxAmount));
-        if (startDate) params.append('startDate', startDate);
-        if (endDate) params.append('endDate', endDate);
-        const response = await axios.get(`${base}?${params.toString()}`);
-        return response.data;
-      }
-      const response = await axios.get(base);
+      const params = new URLSearchParams();
+      params.append('page', String(pageParam));
+      params.append('limit', String(limit));
+      if (search) params.append('search', search);
+      if (status) params.append('status', status);
+      if (mode) params.append('mode', mode);
+      if (minAmount !== '' && minAmount !== undefined) params.append('minAmount', String(minAmount));
+      if (maxAmount !== '' && maxAmount !== undefined) params.append('maxAmount', String(maxAmount));
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      
+      const response = await axios.get(`${base}?${params.toString()}`);
       return response.data || { withdrawalRequests: [], total: 0 };
     },
+    getNextPageParam: (lastPage) => {
+      const pagination = lastPage?.pagination;
+      if (pagination?.hasNext || (pagination?.currentPage !== undefined && pagination?.currentPage < (pagination?.totalPages - 1))) {
+        return (pagination?.currentPage ?? 0) + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 0,
     enabled: isInitialized && !!hasViewPermission,
     staleTime: 1000 * 60 * 5, // 5 minutes
     cacheTime: 1000 * 60 * 10,
@@ -70,30 +76,34 @@ export const useWithdrawalRequests = (options) => {
     keepPreviousData: true,
   });
 
-  // Normalize data across modes
-  const dataArray = Array.isArray(data)
-    ? data
-    : (data?.data || data?.withdrawalRequests || []);
+  // Flatten all pages
+  const withdrawalRequests = infiniteData?.pages?.flatMap((p) => p?.withdrawalRequests || p?.data || []) || [];
+  
+  // Use first page's pagination for stats
+  const firstPagination = infiniteData?.pages?.[0]?.pagination || {};
 
   const defaultPagination = {
-    currentPage: page,
-    totalPages: 0,
-    totalItems: Array.isArray(data) ? data.length : (data?.total || dataArray.length || 0),
-    hasNext: false,
+    currentPage: 0,
+    totalPages: firstPagination.totalPages || 0,
+    totalItems: firstPagination.totalItems || infiniteData?.pages?.[0]?.total || withdrawalRequests.length,
+    hasNext: !!hasNextPage,
     hasPrev: false,
     itemsPerPage: limit,
   };
 
   return {
-    withdrawalRequests: dataArray,
-    pagination: Array.isArray(data) ? defaultPagination : (data?.pagination || defaultPagination),
-    total: data?.total ?? (Array.isArray(data) ? data.length : dataArray.length),
-    hasMore: data?.hasMore || false,
-    stats: data?.stats || null,
+    withdrawalRequests,
+    pagination: { ...defaultPagination, ...firstPagination, hasNext: !!hasNextPage, currentPage: 0 },
+    total: infiniteData?.pages?.[0]?.total ?? withdrawalRequests.length,
+    hasMore: !!hasNextPage,
+    stats: infiniteData?.pages?.[0]?.stats || null,
     isLoading,
     isError,
     error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };
 

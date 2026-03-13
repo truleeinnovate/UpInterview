@@ -1,25 +1,35 @@
-// useEnterpriseContacts.js
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { config } from "../../config";
 
 export const useEnterpriseContacts = (queryParams = {}) => {
   const [enterpriseContacts, setEnterpriseContacts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentApiPage, setCurrentApiPage] = useState(0);
 
-  const fetchEnterpriseContacts = async () => {
+  // Store stable reference to queryParams (excluding page/limit which we control)
+  const { page, limit, ...filterParams } = queryParams;
+  const filterParamsRef = useRef(JSON.stringify(filterParams));
+
+  const fetchContacts = useCallback(async (pageNum = 0, append = false) => {
     try {
-      setIsLoading(true);
+      if (pageNum === 0) setIsLoading(true);
+      else setIsLoadingMore(true);
       setError(null);
 
-      // Build query parameters
       const params = new URLSearchParams();
-      Object.entries(queryParams).forEach(([key, value]) => {
+      params.append("page", (pageNum + 1).toString());
+      params.append("limit", "20");
+
+      // Add filter params
+      const currentFilters = JSON.parse(filterParamsRef.current);
+      Object.entries(currentFilters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
           if (typeof value === "object" && !Array.isArray(value)) {
-            // Handle nested objects like dateRange
             Object.entries(value).forEach(([subKey, subValue]) => {
               if (subValue) {
                 params.append(`${key}.${subKey}`, subValue);
@@ -32,15 +42,12 @@ export const useEnterpriseContacts = (queryParams = {}) => {
       });
 
       const response = await axios.get(
-        `${
-          config.REACT_APP_API_URL
-        }/upinterviewEnterpriseContact?${params.toString()}`
+        `${config.REACT_APP_API_URL}/upinterviewEnterpriseContact?${params.toString()}`
       );
 
       const { contacts, total } = response.data;
 
       if (Array.isArray(contacts)) {
-        // Transform the data for the frontend
         const formattedData = contacts.map((contact) => ({
           id: contact._id,
           _id: contact._id,
@@ -67,29 +74,62 @@ export const useEnterpriseContacts = (queryParams = {}) => {
           message: contact.additionalDetails || "",
         }));
 
-        setEnterpriseContacts(formattedData);
+        if (append) {
+          setEnterpriseContacts((prev) => [...prev, ...formattedData]);
+        } else {
+          setEnterpriseContacts(formattedData);
+        }
         setTotalCount(total || 0);
+        setHasMore(formattedData.length >= 20);
+      } else {
+        if (!append) {
+          setEnterpriseContacts([]);
+          setTotalCount(0);
+        }
+        setHasMore(false);
       }
     } catch (err) {
       console.error("Error fetching enterprise contacts:", err);
       setError(err.message || "Failed to fetch enterprise contacts");
-      setEnterpriseContacts([]);
-      setTotalCount(0);
+      if (!append) {
+        setEnterpriseContacts([]);
+        setTotalCount(0);
+      }
+      setHasMore(false);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
-  };
+  }, []);
 
+  // Reset and fetch when filter params change
   useEffect(() => {
-    fetchEnterpriseContacts();
-  }, [JSON.stringify(queryParams)]); // Re-fetch when queryParams change
+    const newFilterStr = JSON.stringify(filterParams);
+    filterParamsRef.current = newFilterStr;
+    setCurrentApiPage(0);
+    fetchContacts(0, false);
+  }, [JSON.stringify(filterParams)]);
+
+  const fetchNextPage = useCallback(() => {
+    if (hasMore && !isLoadingMore) {
+      const nextPage = currentApiPage + 1;
+      setCurrentApiPage(nextPage);
+      fetchContacts(nextPage, true);
+    }
+  }, [hasMore, isLoadingMore, currentApiPage, fetchContacts]);
 
   return {
     enterpriseContacts,
     totalCount,
     isLoading,
+    isLoadingMore,
     error,
-    refetch: fetchEnterpriseContacts,
+    hasMore,
+    fetchNextPage,
+    refetch: () => {
+      setCurrentApiPage(0);
+      fetchContacts(0, false);
+    },
   };
 };
 

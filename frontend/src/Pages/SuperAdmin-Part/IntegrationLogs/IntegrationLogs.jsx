@@ -14,49 +14,59 @@ export default function IntegrationLogs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalLogs, setTotalLogs] = useState(0);
-  const limit = 10;
+  const [hasMore, setHasMore] = useState(true);
+  const limit = 20;
 
   useEffect(() => {
-    fetchLogs();
+    setPage(1);
+    fetchLogs(1, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, searchQuery]);
+  }, [searchQuery]);
 
-  const fetchLogs = async () => {
+  const fetchLogs = async (pageNum, reset = false) => {
     try {
-      setLoading(true);
+      if (reset) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+      
       const response = await integrationLogService.getLogs(
         searchQuery,
-        page,
+        pageNum,
         limit
       );
-      setLogs(response.data);
-      setTotalPages(Math.ceil(response.total / limit));
+      
+      if (reset) {
+        setLogs(response.data);
+      } else {
+        setLogs(prev => [...prev, ...response.data]);
+      }
+      
       setTotalLogs(response.total);
+      setHasMore(response.data.length === limit);
     } catch (err) {
       setError(err.message || "Error fetching logs");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setPage(1); // Reset to first page when searching
   };
 
-  const handleNextPage = () => {
-    if (page < totalPages) {
-      setPage(page + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (page > 1) {
-      setPage(page - 1);
+  const handleScroll = (e) => {
+    const bottom = e.target.scrollHeight - e.target.scrollTop - e.target.clientHeight < 50;
+    if (bottom && hasMore && !loadingMore && !loading) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchLogs(nextPage, false);
     }
   };
 
@@ -88,25 +98,8 @@ export default function IntegrationLogs() {
             <span className="text-gray-600 text-sm">
               {loading
                 ? "Loading..."
-                : `${(page - 1) * limit + 1}-${Math.min(
-                    page * limit,
-                    totalLogs
-                  )}/${totalLogs}`}
+                : `Showing ${logs.length} of ${totalLogs} logs`}
             </span>
-            <button
-              className="p-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
-              onClick={handlePrevPage}
-              disabled={page === 1 || loading}
-            >
-              <ChevronLeft className="text-gray-600 h-4 w-4" />
-            </button>
-            <button
-              className="p-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
-              onClick={handleNextPage}
-              disabled={page === totalPages || loading}
-            >
-              <ChevronRight className="text-gray-600 h-4 w-4" />
-            </button>
             <button className="p-2 border border-gray-300 rounded hover:bg-gray-50">
               <Filter className="text-teal-600 h-4 w-4" />
             </button>
@@ -118,7 +111,7 @@ export default function IntegrationLogs() {
         <div className="p-4 mb-4 text-red-700 bg-red-100 rounded">{error}</div>
       )}
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto max-h-[1000px] overflow-y-auto w-full" onScroll={handleScroll}>
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -205,6 +198,13 @@ export default function IntegrationLogs() {
                   </td>
                 </tr>
               ))
+            )}
+            {loadingMore && (
+              <tr>
+                <td colSpan="8" className="text-center py-4">
+                  Loading more...
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

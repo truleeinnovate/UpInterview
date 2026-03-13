@@ -151,7 +151,6 @@ function TenantsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     subscriptionStatus: [],
@@ -160,7 +159,6 @@ function TenantsPage() {
   const navigate = useNavigate();
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 1024 });
   const filterIconRef = useRef(null);
-  const ITEMS_PER_PAGE = 10;
   const [selectedType, setSelectedType] = useState("all");
   const [selectedValueFilter, setSelectedValueFilter] = useState("");
 
@@ -168,7 +166,6 @@ function TenantsPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setCurrentPage(0); // Reset to first page on search
     }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -177,10 +174,9 @@ function TenantsPage() {
   const { currentRoles, loadCurrentRoles, isCurrentRolesFetching } =
     useMasterData({}, pageType);
 
-  // Get tenants with pagination and filters
-  const { tenants, pagination, isLoading, refetch } = useTenants({
-    page: currentPage,
-    limit: ITEMS_PER_PAGE,
+  // Get tenants with infinite scroll
+  const { tenants, pagination, isLoading, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useTenants({
+    limit: 20,
     search: debouncedSearch,
     status: selectedFilters.status.join(","),
     subscriptionStatus: selectedFilters.subscriptionStatus.join(","),
@@ -260,7 +256,6 @@ function TenantsPage() {
     setSelectedSubscriptionStatus([]);
     setSelectedPlan([]);
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -272,7 +267,6 @@ function TenantsPage() {
       plan: selectedPlan,
     };
     setSelectedFilters(filters);
-    setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 ||
       filters.subscriptionStatus.length > 0 ||
@@ -353,21 +347,15 @@ function TenantsPage() {
     : currentFilteredRows;
   const totalPages = pagination?.totalPages || 0;
 
-  const nextPage = () => {
-    if (pagination?.hasNext) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (pagination?.hasPrev) {
-      setCurrentPage((prevPage) => prevPage - 1);
+  // Infinite scroll handler
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
   const handleSearch = (value) => {
     setSearchQuery(value);
-    // Pagination reset is handled in debounce effect
   };
 
   // Simple loading state - only show loading if we have no data and are loading
@@ -738,7 +726,6 @@ function TenantsPage() {
                   }`}
                 onClick={() => {
                   setSelectedType("all");
-                  setCurrentPage(0);
                 }}
               >
                 All
@@ -750,7 +737,6 @@ function TenantsPage() {
                   }`}
                 onClick={() => {
                   setSelectedType("organization");
-                  setCurrentPage(0);
                 }}
               >
                 Organizations
@@ -762,7 +748,6 @@ function TenantsPage() {
                   }`}
                 onClick={() => {
                   setSelectedType("individual");
-                  setCurrentPage(0);
                 }}
               >
                 Individuals
@@ -838,16 +823,13 @@ function TenantsPage() {
               setView={setView}
               searchQuery={searchQuery}
               onSearch={(e) => handleSearch(e.target.value)}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPrevPage={prevPage}
-              onNextPage={nextPage}
               onFilterClick={handleFilterIconClick}
               isFilterPopupOpen={isFilterPopupOpen}
               isFilterActive={isFilterActive}
-              dataLength={tenants?.length || 0}
+              dataLength={pagination?.totalItems || tenants?.length || 0}
               searchPlaceholder="Search tenants..."
-              filterIconRef={filterIconRef} // Pass ref to Toolbar
+              filterIconRef={filterIconRef}
+              hidePagination={true}
               startContent={
                 <div className="min-w-[240px]">
                   <DropdownSelect
@@ -860,7 +842,6 @@ function TenantsPage() {
                       setSelectedValueFilter(
                         selectedOption ? selectedOption.value : ""
                       );
-                      setCurrentPage(0);
                     }}
                     options={filterValueOptions}
                     placeholder="Filter by Role/Technology"
@@ -876,6 +857,26 @@ function TenantsPage() {
         <main className="fixed top-[400px] xl:top-80 2xl:top-80 left-0 right-0 bg-background">
           <div className="sm:px-0">
             <motion.div className="bg-white">
+              {/* Tenant count */}
+              {(pagination?.totalItems || tenants?.length) > 0 && (
+                <div className="flex items-center justify-start px-6 py-2">
+                  <span className="text-sm text-gray-500">
+                    Showing{" "}
+                    <span className="font-semibold text-gray-800">{filteredRows?.length || 0}</span>
+                    {" "}of{" "}
+                    <span className="font-semibold text-gray-800">
+                      {(() => {
+                        const t = pagination?.totalItems || tenants?.length || 0;
+                        const r = Math.floor(t / 100) * 100;
+                        if (r === 0) return t;
+                        if (t === r) return t;
+                        return `${r}+`;
+                      })()}
+                    </span>
+                    {" "}{(pagination?.totalItems || tenants?.length || 0) === 1 ? "tenant" : "tenants"}
+                  </span>
+                </div>
+              )}
               {view === "table" ? (
                 <div className="w-full mb-8">
                   <TableView
@@ -885,6 +886,9 @@ function TenantsPage() {
                     actions={tableActions}
                     emptyState="No Tenants Found."
                     customHeight="h-[calc(100vh-20rem)]"
+                    onScrollEnd={handleScrollEnd}
+                    isLoadingMore={isFetchingNextPage}
+                    hasMore={hasNextPage}
                   />
                 </div>
               ) : (
@@ -901,7 +905,6 @@ function TenantsPage() {
                     tenants={tenants}
                     columns={kanbanColumns}
                     loading={isLoading}
-                    // renderActions={renderKanbanActions}
                     renderActions={(item) => (
                       <KanbanActionsMenu
                         item={item}
@@ -911,6 +914,9 @@ function TenantsPage() {
                     emptyState="No Tenants Found."
                     kanbanTitle="Tenant"
                     customHeight="calc(100vh - 380px)"
+                    onScrollEnd={handleScrollEnd}
+                    isLoadingMore={isFetchingNextPage}
+                    hasMore={hasNextPage}
                   />
                 </div>
               )}

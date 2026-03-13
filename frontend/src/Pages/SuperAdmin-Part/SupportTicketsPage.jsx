@@ -30,7 +30,7 @@ function SupportTicketsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [displayedCount, setDisplayedCount] = useState(20);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     currentStatus: "",
@@ -230,7 +230,7 @@ function SupportTicketsPage() {
 
   const handleFilterChange = (filters) => {
     setSelectedFilters(filters);
-    setCurrentPage(0);
+    setDisplayedCount(20);
     setIsFilterActive(
       filters.status.length > 0 ||
         filters.tech.length > 0 ||
@@ -278,7 +278,7 @@ function SupportTicketsPage() {
     setSelectedStatus([]);
     setCurrentStatus("");
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
+    setDisplayedCount(20);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -289,7 +289,7 @@ function SupportTicketsPage() {
       currentStatus: selectedCurrentStatus,
     };
     setSelectedFilters(filters);
-    setCurrentPage(0);
+    setDisplayedCount(20);
     setIsFilterActive(
       filters.status.length > 0 || filters.currentStatus.length > 0
     );
@@ -327,28 +327,20 @@ function SupportTicketsPage() {
     });
   };
 
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(FilteredData()?.length / rowsPerPage);
-  const nextPage = () => {
-    if ((currentPage + 1) * rowsPerPage < FilteredData()?.length) {
-      setCurrentPage((prevPage) => prevPage + 1);
+  const allFilteredData = FilteredData();
+  const currentFilteredRows = allFilteredData.slice(0, displayedCount);
+  const hasMore = displayedCount < allFilteredData.length;
+  const isLoadingMore = false;
+
+  const handleScrollEnd = () => {
+    if (hasMore) {
+      setDisplayedCount((prev) => Math.min(prev + 20, allFilteredData.length));
     }
   };
-
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage((prevPage) => prevPage - 1);
-    }
-  };
-
-  const startIndex = currentPage * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, FilteredData()?.length);
-
-  const currentFilteredRows = FilteredData().slice(startIndex, endIndex);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0); // Reset to first page on search
+    setDisplayedCount(20);
   };
 
   const formatDate = (dateString) => {
@@ -570,16 +562,13 @@ function SupportTicketsPage() {
                   setView={setView}
                   searchQuery={searchQuery}
                   onSearch={handleSearch}
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPrevPage={prevPage}
-                  onNextPage={nextPage}
                   onFilterClick={handleFilterIconClick}
                   isFilterPopupOpen={isFilterPopupOpen}
                   isFilterActive={isFilterActive}
-                  dataLength={dataToUse?.length}
+                  dataLength={allFilteredData?.length || 0}
                   searchPlaceholder="Search Tenants..."
                   filterIconRef={filterIconRef}
+                  hidePagination={true}
                 />
               </div>
             </main>
@@ -594,6 +583,18 @@ function SupportTicketsPage() {
             ) : (
               <motion.div className="bg-white">
                 <div className="relative w-full">
+                  {/* Count text */}
+                  {allFilteredData?.length > 0 && (
+                    <div className="flex items-center justify-start px-6 py-2">
+                      <span className="text-sm text-gray-500">
+                        Showing{" "}
+                        <span className="font-semibold text-gray-800">{currentFilteredRows?.length || 0}</span>
+                        {" "}of{" "}
+                        <span className="font-semibold text-gray-800">{allFilteredData?.length || 0}</span>
+                        {" "}{allFilteredData?.length === 1 ? "ticket" : "tickets"}
+                      </span>
+                    </div>
+                  )}
                   {view === "table" ? (
                     <div className="w-full">
                       <TableView
@@ -602,6 +603,9 @@ function SupportTicketsPage() {
                         loading={isLoading}
                         actions={tableActions}
                         emptyState="No tickets found."
+                        onScrollEnd={handleScrollEnd}
+                        isLoadingMore={isLoadingMore}
+                        hasMore={hasMore}
                       />
                     </div>
                   ) : (

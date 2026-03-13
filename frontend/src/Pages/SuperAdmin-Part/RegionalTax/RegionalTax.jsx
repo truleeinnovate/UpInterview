@@ -125,14 +125,12 @@ const RegionalTax = () => {
   const navigate = useNavigate();
   const [view, setView] = useState("table");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(0);
+  const [displayedCount, setDisplayedCount] = useState(20);
   const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const filterIconRef = useRef(null);
 
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [regionalTaxToDelete, setRegionalTaxToDelete] = useState(null);
-
-  const ITEMS_PER_PAGE = 10;
 
   const { data: taxConfigData } = useRegionalTaxConfigs();
 
@@ -156,7 +154,6 @@ const RegionalTax = () => {
   const processedData = React.useMemo(() => {
     let result = [...(taxConfigData || [])];
 
-    // Search
     if (debouncedSearch) {
       result = result.filter(
         (t) =>
@@ -165,12 +162,10 @@ const RegionalTax = () => {
       );
     }
 
-    // Status
     if (selectedFilters.status.length > 0) {
       result = result.filter((t) => selectedFilters.status.includes(t.status));
     }
 
-    // GST
     if (selectedFilters.gstEnabled.length > 0) {
       result = result.filter((t) =>
         selectedFilters.gstEnabled.includes(
@@ -179,7 +174,6 @@ const RegionalTax = () => {
       );
     }
 
-    // Service Charge
     if (selectedFilters.serviceChargeEnabled.length > 0) {
       result = result.filter((t) =>
         selectedFilters.serviceChargeEnabled.includes(
@@ -192,15 +186,17 @@ const RegionalTax = () => {
   }, [taxConfigData, debouncedSearch, selectedFilters]);
 
   useEffect(() => {
-    setCurrentPage(0);
+    setDisplayedCount(20);
   }, [debouncedSearch, selectedFilters]);
 
-  const totalPages = Math.ceil(processedData.length / ITEMS_PER_PAGE);
+  const paginatedData = processedData.slice(0, displayedCount);
+  const hasMore = displayedCount < processedData.length;
 
-  const paginatedData = processedData.slice(
-    currentPage * ITEMS_PER_PAGE,
-    (currentPage + 1) * ITEMS_PER_PAGE
-  );
+  const handleScrollEnd = () => {
+    if (hasMore) {
+      setDisplayedCount((prev) => Math.min(prev + 20, processedData.length));
+    }
+  };
 
   const columns = [
     {
@@ -306,12 +302,6 @@ const RegionalTax = () => {
         setView={setView}
         searchQuery={searchQuery}
         onSearch={(e) => setSearchQuery(e.target.value)}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPrevPage={() => setCurrentPage((p) => Math.max(0, p - 1))}
-        onNextPage={() =>
-          setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
-        }
         onFilterClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
         isFilterActive={
           JSON.stringify(selectedFilters) !== JSON.stringify(defaultFilters)
@@ -319,9 +309,22 @@ const RegionalTax = () => {
         isFilterPopupOpen={isFilterPopupOpen}
         dataLength={processedData.length}
         filterIconRef={filterIconRef}
+        hidePagination={true}
       />
 
       <div className="fixed sm:top-64 top-52 2xl:top-48 xl:top-48 lg:top-48 left-0 right-0 bg-background">
+        {/* Count text */}
+        {processedData?.length > 0 && (
+          <div className="flex items-center justify-start px-6 py-2">
+            <span className="text-sm text-gray-500">
+              Showing{" "}
+              <span className="font-semibold text-gray-800">{paginatedData?.length || 0}</span>
+              {" "}of{" "}
+              <span className="font-semibold text-gray-800">{processedData?.length || 0}</span>
+              {" "}{processedData?.length === 1 ? "region" : "regions"}
+            </span>
+          </div>
+        )}
         {view === "table" ? (
           <TableView
             data={paginatedData}
@@ -329,6 +332,9 @@ const RegionalTax = () => {
             actions={actions}
             emptyState="No Regional Tax data found."
             autoHeight={false}
+            onScrollEnd={handleScrollEnd}
+            isLoadingMore={false}
+            hasMore={hasMore}
           />
         ) : (
           <KanbanView
@@ -348,6 +354,9 @@ const RegionalTax = () => {
             )}
             emptyState="No Regions Found"
             kanbanTitle="Regional Tax"
+            onScrollEnd={handleScrollEnd}
+            isLoadingMore={false}
+            hasMore={hasMore}
           />
         )}
 

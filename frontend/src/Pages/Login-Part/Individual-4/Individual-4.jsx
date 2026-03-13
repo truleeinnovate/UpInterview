@@ -1195,8 +1195,12 @@ const MultiStepForm = () => {
               // if( currentStep === 3 ){
               notify.success("Account activated successfully.");
               // }
+            } else if (Freelancer) {
+              // Freelancers get auto-activated Free plan from backend, go directly to home
+              navigate("/home");
+              notify.success("Individual Signup Successfully");
             } else {
-              // Check if user has an active subscription before navigating
+              // Non-freelancer individuals: check subscription before navigating
               try {
                 const authToken = Cookies.get("authToken");
                 const tokenPayload = decodeJwt(authToken);

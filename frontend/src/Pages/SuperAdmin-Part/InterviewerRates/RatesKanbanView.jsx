@@ -260,6 +260,21 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
     fetchRateCards();
   }, []); // Add dependency array to avoid infinite calls
 
+  const [displayedCounts, setDisplayedCounts] = useState({});
+
+  const handleScrollEnd = (e, category, maxCards) => {
+    const bottom = e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
+    if (bottom) {
+      setDisplayedCounts(prev => {
+        const current = prev[category] || 20;
+        if (current < maxCards) {
+          return { ...prev, [category]: current + 20 };
+        }
+        return prev;
+      });
+    }
+  };
+
   // v1.0.0 ------------------------------------------------------>
 
   // v1.0.1 <-----------------------------------------------------------------------
@@ -512,9 +527,12 @@ function RatesKanbanView({ filterCategory, onEdit, onView }) {
                 </button>
               </div>
 
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div 
+                className="space-y-3 max-h-96 overflow-y-auto"
+                onScroll={(e) => handleScrollEnd(e, category, categoryCards?.length || 0)}
+              >
                 {categoryCards?.length > 0 ? (
-                  categoryCards?.map((rateCard) => (
+                  categoryCards.slice(0, displayedCounts[category] || 20).map((rateCard) => (
                     <RateCard key={rateCard?._id} rateCard={rateCard} />
                   ))
                 ) : (

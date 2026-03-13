@@ -26,7 +26,6 @@ const OrganizationRequest = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
   });
@@ -37,7 +36,7 @@ const OrganizationRequest = () => {
   const [selectedOrganization, setSelectedOrganization] = useState(null);
   // console.log("selectedOrganization", selectedOrganization);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 20;
 
   const {
     organizationRequests = [],
@@ -45,8 +44,10 @@ const OrganizationRequest = () => {
     isLoading,
     updateOrganizationStatus,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useOrganizationRequests({
-    page: currentPage,
     limit: ITEMS_PER_PAGE,
     search: debouncedSearch,
     status: selectedFilters.status.join(","),
@@ -60,7 +61,6 @@ const OrganizationRequest = () => {
         ? prev.status.filter((s) => s !== status)
         : [...prev.status, status],
     }));
-    setCurrentPage(0);
   };
 
   const handleStatusUpdate = async (updateData) => {
@@ -246,20 +246,15 @@ const OrganizationRequest = () => {
   useEffect(() => {
     const t = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setCurrentPage(0);
     }, 500);
     return () => clearTimeout(t);
   }, [searchQuery]);
 
   const totalPages = pagination?.totalPages || 0;
-  const nextPage = () => {
-    if (pagination?.hasNext) {
-      setCurrentPage((p) => p + 1);
-    }
-  };
-  const prevPage = () => {
-    if (pagination?.hasPrev) {
-      setCurrentPage((p) => Math.max(0, p - 1));
+
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
@@ -391,17 +386,17 @@ const OrganizationRequest = () => {
   const tableActions = [
     ...(superAdminPermissions?.OutsourceInterviewerRequest?.View
       ? [
-          {
-            key: "view",
-            label: "View Details",
-            icon: <Eye className="w-4 h-4 text-blue-600" />,
-            onClick: (row) => {
-              // setSelectedInterviewerId(row._id);
-              setIsPopupOpen(true);
-              setSelectedOrganization(row);
-            },
+        {
+          key: "view",
+          label: "View Details",
+          icon: <Eye className="w-4 h-4 text-blue-600" />,
+          onClick: (row) => {
+            // setSelectedInterviewerId(row._id);
+            setIsPopupOpen(true);
+            setSelectedOrganization(row);
           },
-        ]
+        },
+      ]
       : []),
     // {
     //   key: "360-view",
@@ -439,18 +434,14 @@ const OrganizationRequest = () => {
           searchQuery={searchQuery}
           onSearch={(e) => {
             setSearchQuery(e.target.value);
-            setCurrentPage(0);
           }}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrevPage={prevPage}
-          onNextPage={nextPage}
           onFilterClick={() => setFilterPopupOpen(!isFilterPopupOpen)}
           isFilterActive={isFilterActive}
           isFilterPopupOpen={isFilterPopupOpen}
           dataLength={pagination?.totalItems || dataToUse.length || 0}
           searchPlaceholder="Search organizations..."
           filterIconRef={filterIconRef}
+          hidePagination={true}
         />
       </div>
 
@@ -459,12 +450,34 @@ const OrganizationRequest = () => {
           <motion.div className="bg-white">
             {view === "table" ? (
               <div className="w-full mb-8 bg-red">
+                {(pagination?.totalItems || 0) > 0 && (
+                  <div className="flex items-center justify-start px-6 py-2">
+                    <span className="text-sm text-gray-500">
+                      Showing{" "}
+                      <span className="font-semibold text-gray-800">{dataToUse?.length || 0}</span>
+                      {" "}of{" "}
+                      <span className="font-semibold text-gray-800">
+                        {(() => {
+                          const t = pagination?.totalItems || 0;
+                          const r = Math.floor(t / 100) * 100;
+                          if (r === 0) return t;
+                          if (t === r) return t;
+                          return `${r}+`;
+                        })()}
+                      </span>
+                      {" "}{(pagination?.totalItems || 0) === 1 ? "request" : "requests"}
+                    </span>
+                  </div>
+                )}
                 <TableView
                   data={dataToUse || []}
                   columns={tableColumns}
                   loading={isLoading}
                   actions={tableActions}
                   emptyState="No organization requests found."
+                  onScrollEnd={handleScrollEnd}
+                  isLoadingMore={isFetchingNextPage}
+                  hasMore={hasNextPage}
                 />
               </div>
             ) : (
@@ -472,6 +485,9 @@ const OrganizationRequest = () => {
                 <KanbanView
                   data={dataToUse || []}
                   onViewDetails={handleViewDetails}
+                  onScrollEnd={handleScrollEnd}
+                  isLoadingMore={isFetchingNextPage}
+                  hasMore={hasNextPage}
                 />
               </div>
             )}
@@ -483,12 +499,10 @@ const OrganizationRequest = () => {
                 onClearAll={() => {
                   setSelectedFilters({ status: [] });
                   setIsFilterActive(false);
-                  setCurrentPage(0);
                 }}
                 onApply={() => {
                   setIsFilterActive(selectedFilters.status.length > 0);
                   setFilterPopupOpen(false);
-                  setCurrentPage(0);
                 }}
                 filterIconRef={filterIconRef}
               >

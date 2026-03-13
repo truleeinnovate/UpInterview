@@ -1,13 +1,11 @@
-// v1.0.0 - Ashok - Fixing fetching internal logs data
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { config } from "../../config";
 import { usePermissions } from "../../Context/PermissionsContext";
 
-// Hook to fetch all internal logs with pagination and filters
+// Hook to fetch all internal logs with infinite scroll
 export const useInternalLogs = ({
-  page = 0,
-  limit = 10,
+  limit = 20,
   search = "",
   status = "",
   severity = "",
@@ -19,25 +17,20 @@ export const useInternalLogs = ({
   const hasViewPermission = superAdminPermissions?.InternalLogs?.View;
   const hasAnyPermissions =
     superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
-
-  // Simple enabled logic - enable if we have permissions or if initialized
   const isEnabled = Boolean(hasAnyPermissions || isInitialized);
 
-  // Build query params
-  const queryParams = new URLSearchParams();
-  queryParams.append("page", page.toString());
-  queryParams.append("limit", limit.toString());
-  if (search) queryParams.append("search", search);
-  if (status) queryParams.append("status", status);
-  if (severity) queryParams.append("severity", severity);
-  if (processName) queryParams.append("processName", processName);
-  if (startDate) queryParams.append("startDate", startDate);
-  if (endDate) queryParams.append("endDate", endDate);
-
-  const { data, isLoading, isError, error, refetch } = useQuery({
+  const {
+    data: infiniteData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: [
       "internalLogs",
-      page,
       limit,
       search,
       status,
@@ -46,42 +39,63 @@ export const useInternalLogs = ({
       startDate,
       endDate,
     ],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 0 }) => {
+      const queryParams = new URLSearchParams();
+      queryParams.append("page", pageParam.toString());
+      queryParams.append("limit", limit.toString());
+      if (search) queryParams.append("search", search);
+      if (status) queryParams.append("status", status);
+      if (severity) queryParams.append("severity", severity);
+      if (processName) queryParams.append("processName", processName);
+      if (startDate) queryParams.append("startDate", startDate);
+      if (endDate) queryParams.append("endDate", endDate);
+
       const response = await axios.get(
         `${config.REACT_APP_API_URL}/internal-logs?${queryParams.toString()}`
       );
       return response.data;
     },
+    getNextPageParam: (lastPage) => {
+      const pagination = lastPage?.pagination;
+      if (pagination?.hasNext) {
+        return (pagination?.currentPage ?? 0) + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 0,
     enabled: isEnabled,
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 10,
     cacheTime: 1000 * 60 * 30,
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    keepPreviousData: true, // Keep previous data while fetching new page
   });
 
+  const logs = infiniteData?.pages?.flatMap((p) => p?.data || []) || [];
+  const firstPagination = infiniteData?.pages?.[0]?.pagination || {};
+  const firstStats = infiniteData?.pages?.[0]?.stats || {};
+
   return {
-    logs: data?.data || [],
-    pagination: data?.pagination || {
-      currentPage: 0,
-      totalPages: 0,
-      totalItems: 0,
-      hasNext: false,
-      hasPrev: false,
-      itemsPerPage: limit,
+    logs,
+    pagination: {
+      ...firstPagination,
+      totalItems: firstPagination.totalItems || 0,
+      hasNext: !!hasNextPage,
     },
-    stats: data?.stats || {
-      totalLogs: 0,
-      errorLogs: 0,
-      warningLogs: 0,
-      successLogs: 0,
+    stats: {
+      totalLogs: firstStats.totalLogs || 0,
+      errorLogs: firstStats.errorLogs || 0,
+      warningLogs: firstStats.warningLogs || 0,
+      successLogs: firstStats.successLogs || 0,
     },
     isLoading,
     isError,
     error,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };
 

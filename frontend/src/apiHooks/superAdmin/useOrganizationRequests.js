@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { config } from "../../config";
 import axios from "axios";
 import { usePermissions } from "../../Context/PermissionsContext";
@@ -56,37 +56,49 @@ const fetchOrganizationRequests = async () => {
   }
 };
 
-export const useOrganizationRequests = (options) => {
-  // Switch endpoint mode based on options, but call hooks unconditionally
-  const isPaginated = options && typeof options === "object";
-  const { page = 0, limit = 10, search = "", status = "" } = options || {};
-
+export const useOrganizationRequests = ({
+  limit = 10,
+  search = "",
+  status = "",
+} = {}) => {
   // Permissions gating similar to other super admin hooks
   const { superAdminPermissions, isInitialized } = usePermissions();
   const hasAnyPermissions =
     superAdminPermissions && Object.keys(superAdminPermissions).length > 0;
   const isEnabled = Boolean(hasAnyPermissions || isInitialized);
 
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: isPaginated
-      ? ["organizationRequests", page, limit, search, status]
-      : ["organizationRequests"],
-    queryFn: async () => {
+  const {
+    data: infiniteData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["organizationRequests", limit, search, status],
+    queryFn: async ({ pageParam = 0 }) => {
       const base = `${config.REACT_APP_API_URL}/organization-requests`;
-      if (isPaginated) {
-        const params = new URLSearchParams();
-        params.append("page", String(page));
-        params.append("limit", String(limit));
-        if (search) params.append("search", search);
-        if (status) params.append("status", status);
-        const response = await axios.get(`${base}?${params.toString()}`, {
-          withCredentials: true,
-        });
-        return response.data;
-      }
-      // Legacy mode: fetch full list
-      return await fetchOrganizationRequests();
+      const params = new URLSearchParams();
+      params.append("page", String(pageParam));
+      params.append("limit", String(limit));
+      if (search) params.append("search", search);
+      if (status) params.append("status", status);
+      
+      const response = await axios.get(`${base}?${params.toString()}`, {
+        withCredentials: true,
+      });
+      return response.data;
     },
+    getNextPageParam: (lastPage) => {
+      const pagination = lastPage?.pagination;
+      if (pagination?.hasNext || (pagination?.currentPage !== undefined && pagination?.currentPage < (pagination?.totalPages - 1))) {
+        return (pagination?.currentPage ?? 0) + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 0,
     enabled: isEnabled,
     refetchOnWindowFocus: false,
     keepPreviousData: true,
@@ -98,25 +110,6 @@ export const useOrganizationRequests = (options) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     status: [],
-  });
-
-  // Apply search and filters (legacy mode only); when server-side is used, this is a passthrough
-  const dataNormalized = Array.isArray(data) ? data : data?.data || [];
-  const filteredData = dataNormalized.filter((request) => {
-    // Search filter
-    const matchesSearch =
-      !searchQuery ||
-      Object.values(request || {}).some(
-        (value) =>
-          value &&
-          value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-    // Status filter
-    const matchesStatus =
-      filters.status.length === 0 || filters.status.includes(request?.status);
-
-    return matchesSearch && matchesStatus;
   });
 
   // Update search query
@@ -131,21 +124,6 @@ export const useOrganizationRequests = (options) => {
       ...newFilters,
     }));
   };
-
-  // Update status of a request
-  // const updateRequestStatus = async (requestId, newStatus) => {
-  //   try {
-  //     await axios.patch(`${config.REACT_APP_API_URL}/organization-requests/${requestId}/status`, {
-  //       status: newStatus,
-  //     });
-  //     // Refetch data to update the UI
-  //     await refetch();
-  //     return true;
-  //   } catch (error) {
-  //     console.error('Error updating request status:', error);
-  //     throw error;
-  //   }
-  // };
 
   const updateOrganizationStatus = async (id, updateData) => {
     try {
@@ -165,20 +143,23 @@ export const useOrganizationRequests = (options) => {
     }
   };
 
+  // Flatten all pages
+  const organizationRequests = infiniteData?.pages?.flatMap((p) => (Array.isArray(p) ? p : p?.data || [])) || [];
+  // Use first page's pagination for stats
+  const firstPagination = infiniteData?.pages?.[0]?.pagination || {};
+
   const defaultPagination = {
-    currentPage: page,
-    totalPages: 0,
-    totalItems: Array.isArray(data) ? data.length : 0,
-    hasNext: false,
+    currentPage: 0,
+    totalPages: firstPagination.totalPages || 0,
+    totalItems: firstPagination.totalItems || (Array.isArray(infiniteData?.pages?.[0]) ? infiniteData.pages[0].length : 0),
+    hasNext: !!hasNextPage,
     hasPrev: false,
     itemsPerPage: limit,
   };
 
   return {
-    organizationRequests: isPaginated ? dataNormalized : filteredData,
-    pagination: Array.isArray(data)
-      ? defaultPagination
-      : data?.pagination || defaultPagination,
+    organizationRequests,
+    pagination: { ...defaultPagination, ...firstPagination, hasNext: !!hasNextPage, currentPage: 0 },
     isLoading,
     isError,
     error,
@@ -188,6 +169,9 @@ export const useOrganizationRequests = (options) => {
     updateFilters,
     updateOrganizationStatus,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 };
 

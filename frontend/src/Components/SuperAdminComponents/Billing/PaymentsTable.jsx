@@ -46,7 +46,6 @@ function PaymentsTable({ organizationId, viewMode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isFilterPopupOpen, setFilterPopupOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilters, setSelectedFilters] = useState({
     status: [],
     currentStatus: "",
@@ -65,8 +64,7 @@ function PaymentsTable({ organizationId, viewMode }) {
   const rowsPerPage = 10;
   const toApiPaymentStatus = (arr) =>
     arr.map((s) => (s === "success" ? "captured" : s)).join(",");
-  const { payments, pagination, stats, isLoading } = usePayments({
-    page: currentPage,
+  const { payments, stats, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = usePayments({
     limit: rowsPerPage,
     search: searchQuery,
     status: toApiPaymentStatus(selectedStatus),
@@ -104,7 +102,6 @@ function PaymentsTable({ organizationId, viewMode }) {
     setSelectedStatus([]);
     setCurrentStatus("");
     setSelectedFilters(clearedFilters);
-    setCurrentPage(0);
     setIsFilterActive(false);
     setFilterPopupOpen(false);
   };
@@ -115,7 +112,6 @@ function PaymentsTable({ organizationId, viewMode }) {
       currentStatus: selectedCurrentStatus,
     };
     setSelectedFilters(filters);
-    setCurrentPage(0);
     setIsFilterActive(
       filters.status.length > 0 || filters.currentStatus.length > 0
     );
@@ -203,21 +199,14 @@ function PaymentsTable({ organizationId, viewMode }) {
     }
   };
 
-  const totalPages = pagination?.totalPages || 0;
-  const nextPage = () => {
-    if (pagination?.hasNext) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    }
-  };
-  const prevPage = () => {
-    if (pagination?.hasPrev && currentPage > 0) {
-      setCurrentPage((prevPage) => prevPage - 1);
+  const handleScrollEnd = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(0); // Reset to first page on search
   };
 
   const formatCurrency = (amount, currency = "INR") => {
@@ -718,24 +707,52 @@ function PaymentsTable({ organizationId, viewMode }) {
             setView={setView}
             searchQuery={searchQuery}
             onSearch={handleSearch}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrevPage={prevPage}
-            onNextPage={nextPage}
             onFilterClick={handleFilterIconClick}
             isFilterPopupOpen={isFilterPopupOpen}
             isFilterActive={isFilterActive}
-            dataLength={dataToUse?.length}
             searchPlaceholder="Search payments..."
             filterIconRef={filterIconRef}
+            dataLength={stats?.totalPayments || payments.length}
+            hidePagination={true}
           />
         </div>
+
+        {/* Render FilterPopup */}
+        <FilterPopup
+          isOpen={isFilterPopupOpen}
+          onClose={() => setFilterPopupOpen(false)}
+          onApply={handleApplyFilters}
+          onClearAll={handleClearAll}
+          filterIconRef={filterIconRef}
+        >
+          {renderFilterContent()}
+        </FilterPopup>
 
         {/* New table content */}
         <main>
           <div className="sm:px-0">
-            <motion.div className="bg-white">
+            <motion.div className="bg-white rounded-lg shadow-sm">
               <div className="relative w-full">
+                {/* Count text */}
+                {(stats?.totalPayments || payments.length) > 0 && (
+                  <div className="flex items-center justify-start px-6 py-2 bg-white">
+                    <span className="text-sm text-gray-500">
+                      Showing{" "}
+                      <span className="font-semibold text-gray-800">{payments.length}</span>
+                      {" "}of{" "}
+                      <span className="font-semibold text-gray-800">
+                        {(() => {
+                          const t = stats?.totalPayments || payments.length || 0;
+                          const r = Math.floor(t / 100) * 100;
+                          if (r === 0) return t;
+                          if (t === r) return t;
+                          return `${r}+`;
+                        })()}
+                      </span>
+                      {" "}{(stats?.totalPayments || payments.length) === 1 ? "payment" : "payments"}
+                    </span>
+                  </div>
+                )}
                 {view === "table" ? (
                   <div className="w-full overflow-x-auto sm:max-h-[calc(100vh-240px)] md:max-h-[calc(100vh-208px)] lg:max-h-[calc(100vh-192px)]">
                     <TableView
@@ -745,6 +762,9 @@ function PaymentsTable({ organizationId, viewMode }) {
                       actions={tableActions}
                       emptyState="No payments found."
                       customHeight="h-[calc(100vh-21.2rem)]"
+                      onScrollEnd={handleScrollEnd}
+                      hasMore={hasNextPage}
+                      isLoadingMore={isFetchingNextPage}
                     />
                   </div>
                 ) : (
@@ -766,20 +786,12 @@ function PaymentsTable({ organizationId, viewMode }) {
                         setSelectedPaymentId(item?._id);
                         setIsPopupOpen(true);
                       }}
+                      onScrollEnd={handleScrollEnd}
+                      hasMore={hasNextPage}
+                      isLoadingMore={isFetchingNextPage}
                     />
                   </div>
                 )}
-
-                {/* Render FilterPopup */}
-                <FilterPopup
-                  isOpen={isFilterPopupOpen}
-                  onClose={() => setFilterPopupOpen(false)}
-                  onApply={handleApplyFilters}
-                  onClearAll={handleClearAll}
-                  filterIconRef={filterIconRef}
-                >
-                  {renderFilterContent()}
-                </FilterPopup>
               </div>
             </motion.div>
           </div>
