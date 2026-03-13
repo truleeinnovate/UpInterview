@@ -14,6 +14,7 @@ const {
 
 const { hasPermission } = require("../middleware/permissionMiddleware");
 const { InterviewRounds } = require("../models/Interview/InterviewRounds");
+const { handleApiError } = require("../utils/errorHandler");
 
 exports.createTicket = async (req, res) => {
   res.locals.loggedByController = true;
@@ -130,10 +131,11 @@ exports.createTicket = async (req, res) => {
       status: "error",
     };
 
-    return res.status(500).json({
-      message: "Failed to create ticket",
-      errors: { general: error.message },
-    });
+    // return res.status(500).json({
+    //   message: "Failed to create ticket",
+    //   errors: { general: error.message },
+    // });
+    return handleApiError(res, error, "Create Support Ticket");
   }
 };
 
@@ -310,11 +312,12 @@ exports.getTicket = async (req, res) => {
     });
   } catch (err) {
     console.error("Error retrieving tickets:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to retrieve tickets",
-      error: err.message,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Failed to retrieve tickets",
+    //   error: err.message,
+    // });
+    return handleApiError(res, error, "Fetch Support Tickets");
   }
 };
 
@@ -459,10 +462,11 @@ exports.getTicketBasedonId = async (req, res) => {
     });
   } catch (error) {
     // console.log(error);
-    return res.status(500).json({
-      message: "Failed to get ticket based on id",
-      errors: { general: error.message },
-    });
+    // return res.status(500).json({
+    //   message: "Failed to get ticket based on id",
+    //   errors: { general: error.message },
+    // });
+    return handleApiError(res, error, "Fetch Support Ticket");
   }
 };
 
@@ -787,10 +791,11 @@ exports.updateTicketById = async (req, res) => {
       status: "error",
     };
 
-    return res.status(500).json({
-      message: "Failed to update ticket",
-      errors: { general: error.message },
-    });
+    // return res.status(500).json({
+    //   message: "Failed to update ticket",
+    //   errors: { general: error.message },
+    // });
+    return handleApiError(res, error, "Update Support Ticket");
   }
 };
 
@@ -880,10 +885,11 @@ exports.updateSupportTicket = async (req, res) => {
       message: error.message,
     };
 
-    return res.status(500).json({
-      message: "Failed to update ticket",
-      errors: { general: error.message },
-    });
+    // return res.status(500).json({
+    //   message: "Failed to update ticket",
+    //   errors: { general: error.message },
+    // });
+    return handleApiError(res, error, "Update Support Ticket");
   }
 };
 
@@ -946,10 +952,11 @@ exports.getAllTickets = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in get all tickets metric:", error.message);
-    return res.status(500).json({
-      message: "Internal server error",
-      errors: { general: error.message },
-    });
+    // return res.status(500).json({
+    //   message: "Internal server error",
+    //   errors: { general: error.message },
+    // });
+    return handleApiError(res, error, "Fetch All Support Tickets");
   }
 };
 
@@ -981,10 +988,11 @@ exports.getTicketSummary = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching ticket summary:", error);
-    res.status(500).json({
-      message: "Server error while fetching ticket summary",
-      errors: { general: error.message },
-    });
+    // res.status(500).json({
+    //   message: "Server error while fetching ticket summary",
+    //   errors: { general: error.message },
+    // });
+    return handleApiError(res, error, "Get Support Tickets Summary");
   }
 };
 // ------------------------------------------------------------>

@@ -13,6 +13,7 @@ const {
   createAssessmentScheduledNotification,
 } = require("./PushNotificationControllers/pushNotificationAssessmentController");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
+const { handleApiError } = require("../utils/errorHandler");
 
 exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
   try {
@@ -33,11 +34,12 @@ exports.getScheduledAssessmentsListBasedOnId = async (req, res) => {
       scheduledAssessment,
     });
   } catch (error) {
-    res.status(500).send({
-      message: "Failed to get scheduled assessment",
-      success: false,
-      error: error.message,
-    });
+    // res.status(500).send({
+    //   message: "Failed to get scheduled assessment",
+    //   success: false,
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Assessment Lists");
   }
 };
 // exports.getScheduledAssessmentsWithCandidates = async (req, res) => {

@@ -96,7 +96,7 @@ const QuestionBank = ({
     <div
       className={`${isEmbedded ? "question-bank-embedded" : "bg-white rounded-lg overflow-hidden"
         } flex flex-col`}
-      style={isEmbedded ? containerStyle : { height: 'calc(100vh - 68px)', ...containerStyle }}
+      style={isEmbedded ? containerStyle : { height: 'calc(100vh - 56px)', ...containerStyle }}
     >
       {/* Tab Navigation - Fixed at top for modal context */}
       <div className="flex sm:gap-6 justify-between bg-white sm:px-0 sm:pl-4 text-center px-4 py-3 flex-shrink-0">

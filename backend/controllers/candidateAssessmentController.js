@@ -37,7 +37,7 @@ exports.getCandidateAssessmentBasedOnId = async (req, res) => {
       candidateAssessment: document,
     });
   } catch (error) {
-    return handleApiError(res, error, "Get Candidate Assessment");
+    return handleApiError(res, error, "Get Assessment");
   }
 };
 
@@ -104,7 +104,7 @@ exports.getPublicCandidateDetailsByAssessmentId = async (req, res) => {
       "[CandidateAssessment] Error fetching public candidate details:",
       error,
     );
-    return handleApiError(res, error, "Fetch Public Candidate Details");
+    return handleApiError(res, error, "Fetch Public Assessment Candidate Details");
   }
 };
 
@@ -568,11 +568,12 @@ exports.submitCandidateAssessment = async (req, res) => {
       statusCode = 409;
     }
 
-    return res.status(statusCode).json({
-      success: false,
-      message: errorMessage,
-      error: error.message,
-    });
+    // return res.status(statusCode).json({
+    //   success: false,
+    //   message: errorMessage,
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Submit Assessment");
   }
 };
 // ------------------------------------ Overall and Each Section two cases ----------------------------------------------
@@ -749,7 +750,7 @@ exports.extendCandidateAssessment = async (req, res) => {
       message: error.message,
     };
 
-    return handleApiError(res, error, "Extend Assessments");
+    return handleApiError(res, error, "Extend Assessment");
   }
 };
 
@@ -905,7 +906,7 @@ exports.cancelCandidateAssessments = async (req, res) => {
       message: error.message,
     };
 
-    return handleApiError(res, error, "Cancel Assessments");
+    return handleApiError(res, error, "Cancel Assessment");
   }
 };
 
@@ -994,7 +995,8 @@ exports.updateScheduleAssessmentStatus = async (scheduleAssessmentId) => {
       `Error updating schedule assessment status for ${scheduleAssessmentId}:`,
       error,
     );
-    throw error;
+    // throw error;
+    return handleApiError(res, error, "Update Assessment Status");
   }
 };
 
@@ -1050,7 +1052,7 @@ exports.updateScheduleStatus = async (req, res) => {
       message: error.message,
     };
 
-    return handleApiError(res, error, "Update Schedule Assessment Status");
+    return handleApiError(res, error, "Update Assessment Status");
   }
 };
 
@@ -1286,7 +1288,7 @@ exports.checkAndUpdateExpiredAssessments = async (req, res) => {
     return results; // Return for cron if needed
   } catch (error) {
     if (typeof res.status === "function") {
-      return handleApiError(res, error, "Check Expiry");
+      return handleApiError(res, error, "Check Assessment Expiry");
     }
     // If it's a cron job, we should log the error since there's no HTTP response
     console.error("Cron Expiry Check Error:", error.message);
@@ -1350,7 +1352,7 @@ exports.updateAllScheduleStatuses = async (req, res) => {
       message: error.message,
     };
 
-    return handleApiError(res, error, "Update Schedule Assessment Statuses");
+    return handleApiError(res, error, "Update Assessment Statuses");
   }
 };
 

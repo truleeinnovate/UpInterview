@@ -1,4 +1,5 @@
 const Team = require("../models/MyTeams");
+const { handleApiError } = require("../utils/errorHandler");
 
 // Get all teams for a tenant (legacy, returns full list)
 const getAllTeams = async (req, res) => {
@@ -45,7 +46,8 @@ const getAllTeams = async (req, res) => {
 
     res.status(200).json(formattedTeams);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // res.status(500).json({ error: error.message });
+    return handleApiError(res, error, "Fetch All Teams");
   }
 };
 
@@ -157,7 +159,8 @@ const getPaginatedTeams = async (req, res) => {
       pagination,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // res.status(500).json({ error: error.message });
+    return handleApiError(res, error, "Fetch Paginated Teams");
   }
 };
 
@@ -233,7 +236,8 @@ const createTeam = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({ error: error.message });
+    // res.status(500).json({ error: error.message });
+    return handleApiError(res, error, "Create Team");
   }
 };
 
@@ -319,7 +323,8 @@ const updateTeam = async (req, res) => {
       message: error.message,
     };
 
-    res.status(500).json({ error: error.message });
+    // res.status(500).json({ error: error.message });
+    return handleApiError(res, error, "Update Team");
   }
 };
 
@@ -382,6 +387,7 @@ const getTeamById = async (req, res) => {
       success: false,
       error: error.message,
     });
+    return handleApiError(res, error, "Fetch Team");
   }
 };
 

@@ -1618,7 +1618,7 @@ const MyQuestionsList = ({
   // Skeleton Loader Component
   // v2.0.0 <--------------------------------------------------------------------------
   const SkeletonLoader = () => (
-    <div className="flex-1 overflow-y-auto py-4">
+    <div className="flex-1 overflow-y-auto py-4 px-4">
       <ul className="flex flex-col gap-4 pr-2">
         {Array(4)
           .fill(0)
@@ -1905,7 +1905,7 @@ const MyQuestionsList = ({
 
         {/* v1.0.8 <-------------------------------------------------------------------------- */}
         <div
-          className={`flex-1 min-h-0 flex flex-col overflow-hidden ${type === "interviewerSection" ||
+          className={`h-[calc(100vh-0rem)] flex flex-col overflow-hidden ${type === "interviewerSection" ||
             type === "assessment" ||
             activeTab === "MyQuestionsList"
             ? ""
@@ -2501,7 +2501,7 @@ const MyQuestionsList = ({
             isInterviewType={dropdownValue === "Interview Questions"} //<----v1.0.3------
           />
         )}
-      </div >
+      </div>
     </>
   );
 };

@@ -279,9 +279,10 @@ const getInterviewerById = async (req, res) => {
     res.status(200).json(interviewer);
   } catch (error) {
     console.error("Error fetching interviewer:", error);
-    res
-      .status(500)
-      .json({ message: "Error fetching interviewer", error: error.message });
+    // res
+    //   .status(500)
+    //   .json({ message: "Error fetching interviewer", error: error.message });
+    return handleApiError(res, error, "Fetch Interviewer");
   }
 };
 
@@ -364,9 +365,10 @@ const createInterviewer = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating interviewer:", error);
-    res
-      .status(500)
-      .json({ message: "Error creating interviewer", error: error.message });
+    // res
+    //   .status(500)
+    //   .json({ message: "Error creating interviewer", error: error.message });
+    return handleApiError(res, error, "Create Interviewer");
   }
 };
 
@@ -433,9 +435,10 @@ const updateInterviewer = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating interviewer:", error);
-    res
-      .status(500)
-      .json({ message: "Error updating interviewer", error: error.message });
+    // res
+    //   .status(500)
+    //   .json({ message: "Error updating interviewer", error: error.message });
+    return handleApiError(res, error, "Update Interviewer");
   }
 };
 
@@ -460,9 +463,10 @@ const deleteInterviewer = async (req, res) => {
     res.status(200).json({ message: "Interviewer deleted successfully" });
   } catch (error) {
     console.error("Error deleting interviewer:", error);
-    res
-      .status(500)
-      .json({ message: "Error deleting interviewer", error: error.message });
+    // res
+    //   .status(500)
+    //   .json({ message: "Error deleting interviewer", error: error.message });
+    return handleApiError(res, error, "Delete Interviewer");
   }
 };
 

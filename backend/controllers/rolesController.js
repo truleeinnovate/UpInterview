@@ -64,6 +64,7 @@ const Role = require("../models/RolesData");
 //   };
 const mongoose = require("mongoose");
 const rolesPermissionObject = require("../models/rolesPermissionObject");
+const { handleApiError } = require("../utils/errorHandler");
 // const getRolesByOrganization = async (req, res) => {
 //     const { tenantId } = req.query;
 //     if (!tenantId) {
@@ -110,7 +111,8 @@ const getAllRoles = async (req, res) => {
     res.status(200).json(data);
   } catch (error) {
     console.error("Error fetching role permissions:", error);
-    res.status(500).json({ message: "Internal server error" });
+    // res.status(500).json({ message: "Internal server error" });
+    return handleApiError(res, error, "Fetch All Roles");
   }
 };
 
