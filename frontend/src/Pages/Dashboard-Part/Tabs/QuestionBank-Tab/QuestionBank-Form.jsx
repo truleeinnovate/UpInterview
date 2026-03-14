@@ -102,6 +102,7 @@ const QuestionBankForm = ({
     difficultyLevel: useRef(null),
     skill: useRef(null),
     category: useRef(null),
+    area: useRef(null),
     question: useRef(null),
   };
   // v1.0.4 -------------------------------------------------------------------->
@@ -225,7 +226,14 @@ const QuestionBankForm = ({
     { value: "Behavioral", label: "Behavioral" },
   ];
 
-  const areaOptions = ["Administration", "Development", "Architecture", "Integration"];
+  const areaOptions = [
+    "Administration",
+    "Development",
+    "Security",
+    "Integration",
+    "Problem Solving",
+    "Communication",
+  ];
   const areaOptionsRS = areaOptions.map((a) => ({ value: a, label: a }));
 
   const [questionNumber, setQuestionNumber] = useState(1);
@@ -1691,8 +1699,11 @@ const QuestionBankForm = ({
                     value={selectedArea}
                     options={areaOptionsRS}
                     onChange={(e) => handleAreaSelect(e.target.value)}
+                    error={errors.area}
+                    containerRef={fieldRefs.area}
                     label="Area"
                     name="area"
+                    required
                   />
                 </div>
 

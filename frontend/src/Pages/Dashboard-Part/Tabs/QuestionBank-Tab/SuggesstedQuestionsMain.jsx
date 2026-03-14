@@ -34,8 +34,19 @@ import { useNavigate } from "react-router-dom";
 import { Lock, Unlock } from "lucide-react";
 import { useScrollLock } from "../../../../apiHooks/scrollHook/useScrollLock.js";
 import { notify } from "../../../../services/toastService.js";
+import { useMasterData } from "../../../../apiHooks/useMasterData.js";
 // v1.0.5 <-------------------------------------------------------
 // v1.0.5 ------------------------------------------------------->
+
+const STATIC_CATEGORY_OPTIONS = ["Technical", "Communication", "Behavioral"];
+const STATIC_AREA_OPTIONS = [
+  "Administration",
+  "Development",
+  "Security",
+  "Integration",
+  "Problem Solving",
+  "Communication",
+];
 
 // v1.0.5 <------------------------------------------------------------------
 const FilterDropdown = ({
@@ -154,7 +165,7 @@ function HeaderBar({
       {/* Left: Interview Type Dropdown */}
       <div className="flex items-center gap-x-3 whitespace-nowrap">
         {type !== "assessment" && type !== "interviewerSection" && (
-          <div className="w-48 flex-shrink-0">
+          <div className="w-56 flex-shrink-0">
             <DropdownSelect
               isSearchable={false}
               value={
@@ -188,7 +199,7 @@ function HeaderBar({
           <input
             type="search"
             placeholder="Search questions, tags..."
-            className="w-54 px-2 py-2 pl-0 rounded-md focus:outline-none text-sm text-gray-700 bg-transparent"
+            className="w-80 px-2 py-2 pl-0 rounded-md focus:outline-none text-sm text-gray-700 bg-transparent"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => {
@@ -327,6 +338,8 @@ const SuggestedQuestionsComponent = ({
     type === "assessment" ? "Assessment Questions" : "Interview Questions",
   );
 
+  const { technologies } = useMasterData({}, "adminPortal");
+
   // Map dropdown selection to backend-supported questionType filter
   const selectedQuestionType = useMemo(
     () =>
@@ -368,6 +381,10 @@ const SuggestedQuestionsComponent = ({
   const [searchInput, setSearchInput] = useState("");
   const [tempSearchInput, setTempSearchInput] = useState("");
   const [debouncedSearchInput, setDebouncedSearchInput] = useState("");
+
+  const [showFilterCard, setShowFilterCard] = useState(true);
+  const lastScrollY = useRef(0);
+  const scrollContainerRef = useRef(null);
 
   // Debounce search input
   useEffect(() => {
@@ -470,23 +487,17 @@ const SuggestedQuestionsComponent = ({
   }, [suggestedQuestions]);
 
   const uniqueTechnologies = useMemo(() => {
-    if (!suggestedQuestions || suggestedQuestions.length === 0) return [];
-    const set = new Set();
-    //console.log("suggestedQuestions", suggestedQuestions);
-    suggestedQuestions.forEach((q) => {
-      const techArr = Array.isArray(q?.technology) ? q.technology : [];
-      techArr.forEach((t) => {
-        if (t != null) {
-          const techValue = String(t).trim();
-          // Only add non-empty technology values
-          if (techValue) {
-            set.add(techValue);
-          }
-        }
-      });
-    });
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [suggestedQuestions]);
+    if (!technologies || technologies.length === 0) return [];
+
+    // The hook returns objects with TechnologyMasterName based on sortByAlphabet
+    const allExpectedTechs = technologies
+      .map((t) => typeof t === "object" ? t.TechnologyMasterName || t.name : t)
+      .filter((t) => t && String(t).trim() !== "")
+      .map(t => String(t).trim());
+
+    // Deduplicate and sort
+    return Array.from(new Set(allExpectedTechs)).sort((a, b) => a.localeCompare(b));
+  }, [technologies]);
 
   const uniqueAreas = useMemo(() => {
     if (!suggestedQuestions || suggestedQuestions.length === 0) return [];
@@ -500,17 +511,6 @@ const SuggestedQuestionsComponent = ({
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [suggestedQuestions]);
 
-  const uniqueTopics = useMemo(() => {
-    if (!suggestedQuestions || suggestedQuestions.length === 0) return [];
-    const set = new Set();
-    suggestedQuestions.forEach((q) => {
-      if (q?.topic) {
-        const val = String(q.topic).trim();
-        if (val) set.add(val);
-      }
-    });
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [suggestedQuestions]);
 
   // Build default filter section metadata
   const buildDefaultFiltrationData = useCallback(() => {
@@ -533,7 +533,7 @@ const SuggestedQuestionsComponent = ({
     }
     const combinedCategories = Array.from(
       new Set([
-        ...uniqueCategories,
+        ...STATIC_CATEGORY_OPTIONS,
         ...categoryFilterItems,
         ...tempCategoryFilterItems,
       ]),
@@ -546,7 +546,11 @@ const SuggestedQuestionsComponent = ({
     });
 
     const combinedAreas = Array.from(
-      new Set([...uniqueAreas, ...areaFilterItems, ...tempAreaFilterItems]),
+      new Set([
+        ...STATIC_AREA_OPTIONS,
+        ...areaFilterItems,
+        ...tempAreaFilterItems,
+      ]),
     );
     sections.push({
       id: 3,
@@ -1126,17 +1130,10 @@ const SuggestedQuestionsComponent = ({
         onAddSearchTag={handleAddSearchTag}
       />
 
-      {/* Active Filters - Shown outside when filter card is CLOSED */}
-      {!isPopupOpen &&
-        ([
-          ...categoryFilterItems,
-          ...areaFilterItems,
-          ...technologyFilterItems,
-          ...(showQuestionTypeFilter ? questionTypeFilterItems : []),
-          ...difficultyLevelFilterItems,
-          ...selectedSkills,
-        ].length > 0 ||
-          searchInput) && (
+      {/* Active Filters - Shown outside when filter card is CLOSED or HIDDEN BY SCROLL */}
+      {(!isPopupOpen || !showFilterCard) && (
+        [...categoryFilterItems, ...areaFilterItems, ...technologyFilterItems, ...(showQuestionTypeFilter ? questionTypeFilterItems : []), ...difficultyLevelFilterItems, ...selectedSkills].length > 0 || searchInput
+      ) && (
           <div className="flex flex-wrap items-center gap-2 px-6 py-2 flex-shrink-0">
             {categoryFilterItems.map((c) => (
               <div
@@ -1257,35 +1254,12 @@ const SuggestedQuestionsComponent = ({
           </div>
         )}
 
+
       {/* Inline Filters Section */}
-      {isPopupOpen && (
+      {(isPopupOpen && showFilterCard) && (
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm transition-shadow px-7 py-4 mx-4 mt-1 mb-4 z-10 relative">
-          {/* Arrow pointing to filter icon */}
-          <div
-            className="absolute -top-2 right-[14px]"
-            style={{
-              width: 0,
-              height: 0,
-              borderLeft: "8px solid transparent",
-              borderRight: "8px solid transparent",
-              borderBottom: "8px solid #e5e7eb",
-            }}
-          />
-          <div
-            className="absolute right-[14px]"
-            style={{
-              top: "-6px",
-              width: 0,
-              height: 0,
-              borderLeft: "7px solid transparent",
-              borderRight: "7px solid transparent",
-              borderBottom: "7px solid white",
-            }}
-          />
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-[16px] font-semibold text-gray-800">Filters</h2>
-
-            {/* Action Buttons at the Top */}
             <div className="flex gap-3 items-center">
               <button
                 className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium mr-2"
@@ -1333,9 +1307,7 @@ const SuggestedQuestionsComponent = ({
           </div>
 
           <div className="flex flex-col gap-5">
-            {/* Row 1: Filter Dropdowns (no search bar) */}
             <div className="flex flex-wrap items-center gap-4">
-              {/* Render FilterDropdowns */}
               {tempFiltrationData.map((section) => {
                 if (section.id === 1 && !showQuestionTypeFilter) return null;
                 if (!section.options) return null;
@@ -1385,7 +1357,6 @@ const SuggestedQuestionsComponent = ({
               })}
             </div>
 
-            {/* Row 2: Active Filters */}
             <div className="flex flex-col gap-3">
               <h3 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wider">
                 Applied Filters:
@@ -1533,28 +1504,40 @@ const SuggestedQuestionsComponent = ({
       )}
 
       {/* v1.0.5 -----------------------------------------------------------------> */}
-      {isLoading ? (
-        <SkeletonLoader />
-      ) : (
-        <>
-          {/* Content */}
-          {/* v1.0.5 <----------------------------------------------------------------- */}
-          {/* v1.0.7 <----------------------------------------------------------------------------------------- */}
-          <div className="flex-1 min-h-0 flex flex-col sm:px-2 mt-4">
-            {/* Filters applied section moved to popup */}
-            {/* v1.0.7 <----------------------------------------------------------------------- */}
-            <ul
-              // className="flex flex-col gap-4 pr-2 h-[calc(100vh-362px)] overflow-y-auto"
-              className="flex flex-col gap-4 px-4 h-[calc(100vh-0rem)] overflow-y-auto"
-              // className="flex flex-col flex-1 h-[calc(100vh-362p)] overflow-y-auto pb-8 px-4"
-              // style={customHeight ? { height: customHeight } : {}}
-              onScroll={() => {
-                if (isPopupOpen) setIsPopupOpen(false);
-              }}
-            >
-              {/* Render only unlocked cards first */}
-              {unlockedPaginatedData.length > 0
-                ? unlockedPaginatedData.map((item, index) => {
+      {
+        isLoading ? (
+          <SkeletonLoader />
+        ) : (
+          <>
+            {/* Content */}
+            {/* v1.0.5 <----------------------------------------------------------------- */}
+            {/* v1.0.7 <----------------------------------------------------------------------------------------- */}
+            <div className="flex-1 min-h-0 flex flex-col sm:px-2 py-4">
+              {/* Filters applied section moved to popup */}
+              {/* v1.0.7 <----------------------------------------------------------------------- */}
+              <ul
+                ref={scrollContainerRef}
+                onScroll={(e) => {
+                  const currentScrollY = e.target.scrollTop;
+                  if (currentScrollY === 0) {
+                    setShowFilterCard(true); // Always show at the top
+                    lastScrollY.current = currentScrollY;
+                  } else if (Math.abs(currentScrollY - lastScrollY.current) > 10) {
+                    if (currentScrollY > lastScrollY.current) {
+                      setShowFilterCard(false); // Scrolling down the page (moving content up) - hide
+                    } else if (currentScrollY < lastScrollY.current) {
+                      setShowFilterCard(true); // Scrolling up the page (moving content down) - show
+                    }
+                    lastScrollY.current = currentScrollY;
+                  }
+                }}
+                // className="flex flex-col gap-4 pr-2 h-[calc(100vh-362px)] overflow-y-auto"
+                className="flex flex-col flex-1 min-h-0 overflow-y-auto pb-8 px-4"
+                style={customHeight ? { height: customHeight } : {}}
+              >
+                {/* Render only unlocked cards first */}
+                {unlockedPaginatedData.length > 0
+                  ? unlockedPaginatedData.map((item, index) => {
                     // Regular unlocked card
                     return (
                       <div

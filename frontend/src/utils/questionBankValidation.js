@@ -12,6 +12,7 @@ export const validateQuestionBankData = (
     questionText: "Question is required",
     tenantListId: "Question List is required",
     category: "Category is required",
+    area: "Area is required", // Added Area validation per requested
     ...(skipQuestionType ? {} : { questionType: "Question Type is required" }), //-----v1.0.0----->
     skill: "Skill is required",
     difficultyLevel: "Difficulty Level is required",
