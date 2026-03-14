@@ -3937,21 +3937,28 @@ const settleInterviewPayment = async (req, res) => {
     let activeHoldTransaction;
     if (frontendTxId) {
       activeHoldTransaction = orgWallet.transactions.find(
-        t => t._id.toString() === frontendTxId && t.type === "hold" && t.status !== "completed"
+        t => t._id.toString() === frontendTxId && t.type === "hold"
       );
     } else {
       // Fallback: get the latest unsettled hold transaction for this round
       activeHoldTransaction = orgWallet.transactions
         .filter(t =>
           t.metadata && t.metadata.roundId === roundId &&
-          t.type === "hold" &&
-          t.status !== "completed"
+          t.type === "hold"
         )
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
     }
 
     if (!activeHoldTransaction) {
       await session.abortTransaction();
+
+      // DEBUG: Log all transactions for this round to see why none are active holds
+      // const allRoundTxs = orgWallet.transactions
+      //   .filter(t => t.metadata && t.metadata.roundId === roundId)
+      //   .map(t => ({ id: t._id, type: t.type, status: t.status, amount: t.amount }));
+
+      // console.log("[settleInterviewPayment] No active hold found. All txs for this round:", JSON.stringify(allRoundTxs, null, 2));
+
       return res.status(404).json({
         success: false,
         message: "Active hold transaction not found for this round",
@@ -3995,7 +4002,7 @@ const settleInterviewPayment = async (req, res) => {
       const lastTerminalEntry = [...roundDoc.history]
         .reverse()
         .find(h => h && settlableStatuses.includes(h.action));
-        
+
       if (lastTerminalEntry) {
         resolvedRoundStatus = lastTerminalEntry.action;
         if (lastTerminalEntry.reason === 'interviewer_no_show' || lastTerminalEntry.currentAction === 'Interviewer_NoShow') {
@@ -4328,12 +4335,13 @@ const settleInterviewPayment = async (req, res) => {
 
     // Find interviewer wallet if we are actually paying them
     let interviewerWallet = null;
+    let walletOwnerId = null;
 
     if (interviewerContactId && settlementAmount > 0) {
       // The frontend sends the Contact _id from round history.
       // But wallet ownerId = Contact.ownerId (the user ID), NOT Contact._id.
       // So we must resolve Contact._id → Contact.ownerId first.
-      let walletOwnerId = interviewerContactId;
+      walletOwnerId = interviewerContactId;
 
       try {
         const contactDoc = await Contact.findById(interviewerContactId).select('ownerId').lean();
@@ -4593,8 +4601,8 @@ const settleInterviewPayment = async (req, res) => {
       settlementScenario,
       settlementPolicyName: appliedPolicyName || settlementScenario,
       baseAmount,
-      roundStatus,
-      currentAction,
+      roundStatus: resolvedRoundStatus,
+      currentAction: resolvedCurrentAction,
       isMockInterview,
       mockDiscountPercentage: Number(activeHoldTransaction.metadata?.mockDiscountPercentage || 0),
       mockDiscountAmount: Number(activeHoldTransaction.metadata?.mockDiscountAmount || 0),
