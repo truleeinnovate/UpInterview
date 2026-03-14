@@ -101,10 +101,10 @@ async function processNoShow(isMock, Model, roundId) {
       $set: {
         status: "NoShow",
         noShowJobId: null,
-        meetingId : "",
-        meetPlatform : "",
-        interviewers : [],
-        interviewerType:""
+        meetingId: "",
+        meetPlatform: "",
+        interviewers: [],
+        interviewerType: ""
       },
       $push: {
         history: {
@@ -135,14 +135,16 @@ async function processNoShow(isMock, Model, roundId) {
 
   // Auto-settlement for scheduler-triggered NoShow
   try {
-    console.log("[NoShow-Job] 📤 Calling processAutoSettlement...");
-    const result = await processAutoSettlement({
-      roundId: roundId,
-      action: "NoShow",
-      reasonCode: reasonCode,
-      isMockInterview: isMock || false,
-    });
-    console.log("[NoShow-Job] ✅ Auto-settlement completed:", JSON.stringify(result));
+    if (!interviewerJoined) {
+      console.log("[NoShow-Job] 📤 Calling processAutoSettlement...");
+      const result = await processAutoSettlement({
+        roundId: roundId,
+        action: "NoShow",
+        reasonCode: reasonCode,
+        isMockInterview: isMock || false,
+      });
+      console.log("[NoShow-Job] ✅ Auto-settlement completed:", JSON.stringify(result));
+    }
   } catch (settlementError) {
     console.error("[NoShow-Job] ❌ Auto-settlement error:", settlementError.message);
     // Round is already marked NoShow — settlement failure is logged but doesn't revert

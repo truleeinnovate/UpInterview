@@ -46,12 +46,22 @@ import {
 import { FilterPopup } from "../../../../Components/Shared/FilterPopup/FilterPopup";
 import DropdownSelect from "../../../../Components/Dropdowns/DropdownSelect.jsx";
 import { decodeJwt } from "../../../../utils/AuthCookieManager/jwtDecode.js";
-
+import { useMasterData } from "../../../../apiHooks/useMasterData.js";
 import {
   getQuestionColumns,
   getQuestionActions,
 } from "../../../../utils/tableColumnAndActionData.jsx";
 import { notify } from "../../../../services/toastService.js";
+
+const STATIC_CATEGORY_OPTIONS = ["Technical", "Communication", "Behavioral"];
+const STATIC_AREA_OPTIONS = [
+  "Administration",
+  "Development",
+  "Security",
+  "Integration",
+  "Problem Solving",
+  "Communication",
+];
 
 // v1.0.5 <------------------------------------------------------------------
 const FilterDropdown = ({ label, options, selectedItems, onChange, isRadio }) => {
@@ -162,7 +172,7 @@ function QuestionHeaderBar({
       <div className="flex items-center gap-2">
         {/* Interview Type Dropdown (using DropdownSelect) */}
         {type !== "assessment" && type !== "interviewerSection" && (
-          <div className="w-48">
+          <div className="w-56">
             <DropdownSelect
               isSearchable={false}
               value={
@@ -285,7 +295,7 @@ function QuestionHeaderBar({
           <input
             type="search"
             placeholder="Search questions, tags..."
-            className="w-54 px-2 py-2 pl-0 rounded-md focus:outline-none text-sm text-gray-700 bg-transparent"
+            className="w-80 px-2 py-2 pl-0 rounded-md focus:outline-none text-sm text-gray-700 bg-transparent"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => {
@@ -476,12 +486,26 @@ const MyQuestionsList = ({
   }, [appliedSearchTags, appliedFilters]);
 
   const { myQuestionsList, createdLists, isLoading } = useQuestions(myQuestionsFilters); //<----v1.0.4---
+  const { technologies } = useMasterData({}, "adminPortal");
   const { mutateAsync: deleteQuestions } = useQuestionDeletion();
+
+  // Stable string representations for useEffect dependencies to avoid infinite loops
+  const myQuestionsListKeysStr = useMemo(
+    () => (myQuestionsList && typeof myQuestionsList === "object" ? JSON.stringify(Object.keys(myQuestionsList).sort()) : ""),
+    [myQuestionsList]
+  );
+  const technologiesStr = useMemo(
+    () => JSON.stringify((technologies || []).map(t => typeof t === "object" ? t.TechnologyMasterName || t.name : t).filter(Boolean).sort()),
+    [technologies]
+  );
 
   const myQuestionsListRef = useRef(null);
   const sidebarRef = useRef(null);
   const filterIconRef = useRef(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [showFilterCard, setShowFilterCard] = useState(true); // Controls filter card visibility based on scroll direction
+  const lastScrollY = useRef(0); // Track last scroll position for direction detection
+  const scrollContainerRef = useRef(null);
   const [selectedLabel, setSelectedLabel] = useState("");
   const [actionViewMoreSection, setActionViewMoreSection] = useState({});
   const [dropdownOpen, setDropdownOpen] = useState(null);
@@ -819,10 +843,13 @@ const MyQuestionsList = ({
 
   // Ranjith added these feilds //  v1.0.5
 
-  // Sync tempFiltrationData when filtrationData changes
+  // Sync tempFiltrationData when filtrationData changes,
+  // BUT only if the filter popup is NOT open (to avoid overwriting user's active selections)
   useEffect(() => {
-    setTempFiltrationData(filtrationData);
-  }, [filtrationData]);
+    if (!isPopupOpen) {
+      setTempFiltrationData(filtrationData);
+    }
+  }, [filtrationData, isPopupOpen]);
 
   //v2.0.2- Close filter popup when sidebar opens
   useEffect(() => {
@@ -858,20 +885,13 @@ const MyQuestionsList = ({
       ),
     );
 
-    const uniqueTechnologies = Array.from(
-      new Set(
-        allQuestions
-          .flatMap((q) =>
-            Array.isArray(q?.technology)
-              ? q.technology
-              : typeof q?.technology === "string"
-                ? [q.technology]
-                : [],
-          )
-          .filter(Boolean)
-          .map((t) => String(t).trim()),
-      ),
-    );
+    // Map the technologies from the master data hook instead of from questions
+    const allExpectedTechs = (technologies || [])
+      .map((t) => typeof t === "object" ? t.TechnologyMasterName || t.name : t)
+      .filter((t) => t && String(t).trim() !== "")
+      .map(t => String(t).trim());
+
+    const uniqueTechnologies = Array.from(new Set(allExpectedTechs)).sort((a, b) => a.localeCompare(b));
 
     const uniqueQTypes = Array.from(
       new Set(
@@ -931,13 +951,23 @@ const MyQuestionsList = ({
         isChecked: findChecked(qTypeSection, t),
       }));
 
-      const combinedCategories = Array.from(new Set([...uniqueCategories, ...getPrevChecked(categorySection)]));
+      const combinedCategories = Array.from(
+        new Set([
+          ...STATIC_CATEGORY_OPTIONS,
+          ...getPrevChecked(categorySection),
+        ]),
+      );
       const categoryOptions = combinedCategories.map((c) => ({
         value: c,
         isChecked: findChecked(categorySection, c),
       }));
 
-      const combinedAreas = Array.from(new Set([...uniqueAreas, ...getPrevChecked(areaSection)]));
+      const combinedAreas = Array.from(
+        new Set([
+          ...STATIC_AREA_OPTIONS,
+          ...getPrevChecked(areaSection),
+        ]),
+      );
       const areaOptions = combinedAreas.map((a) => ({
         value: a,
         isChecked: findChecked(areaSection, a),
@@ -957,7 +987,8 @@ const MyQuestionsList = ({
 
       return updated;
     });
-  }, [myQuestionsList, dropdownValue]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myQuestionsListKeysStr, dropdownValue, technologiesStr]);
 
   // Filtering is now done server-side. Use myQuestionsList directly.
   const filteredMyQuestionsList = myQuestionsList;
@@ -996,7 +1027,8 @@ const MyQuestionsList = ({
     });
 
     setLoading(false);
-  }, [myQuestionsList]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myQuestionsListKeysStr]);
 
   // Handle label selection from cookies
   useEffect(() => {
@@ -1024,7 +1056,8 @@ const MyQuestionsList = ({
         //------------------v1.0.2------>
       }
     }
-  }, [myQuestionsList]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myQuestionsListKeysStr]);
 
   const openListPopup = () => {
     if (myQuestionsListRef.current) {
@@ -1683,8 +1716,8 @@ const MyQuestionsList = ({
         </div>
         {/* v1.0.6 ----------------------------------------------------------------> */}
 
-        {/* Active Filters - Shown outside when filter card is CLOSED */}
-        {!isPopupOpen && (
+        {/* Active Filters - Shown outside when filter card is CLOSED or HIDDEN BY SCROLL */}
+        {(!isPopupOpen || !showFilterCard) && (
           [...appliedSearchTags,
           ...selectedQuestionTypeFilterItems,
           ...selectedDifficultyLevelFilterItems,
@@ -1745,35 +1778,12 @@ const MyQuestionsList = ({
             </div>
           )}
 
+
         {/* Inline Filters Section */}
-        {isPopupOpen && (
+        {(isPopupOpen && showFilterCard) && (
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm transition-shadow px-7 py-4 mx-4 mt-1 mb-4 z-10 relative flex-shrink-0">
-            {/* Arrow pointing to filter icon */}
-            <div
-              className="absolute -top-2 right-[14px]"
-              style={{
-                width: 0,
-                height: 0,
-                borderLeft: '8px solid transparent',
-                borderRight: '8px solid transparent',
-                borderBottom: '8px solid #e5e7eb',
-              }}
-            />
-            <div
-              className="absolute right-[14px]"
-              style={{
-                top: '-6px',
-                width: 0,
-                height: 0,
-                borderLeft: '7px solid transparent',
-                borderRight: '7px solid transparent',
-                borderBottom: '7px solid white',
-              }}
-            />
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-[16px] font-semibold text-gray-800">Filters</h2>
-
-              {/* Action Buttons at the Top */}
               <div className="flex gap-3 items-center">
                 <button
                   className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium mr-2"
@@ -1791,18 +1801,13 @@ const MyQuestionsList = ({
             </div>
 
             <div className="flex flex-col gap-5">
-              {/* Row 1: Filter Dropdowns (no search bar) */}
               <div className="flex flex-wrap items-center gap-4">
-                {/* Render FilterDropdowns */}
                 {tempFiltrationData.map((section) => {
                   if (!section.options) return null;
-
                   let activeItems = section.options
                     .filter(o => o.isChecked)
                     .map(o => String(o.type || o.value || o.level || "").toLowerCase());
-
-                  let isRadio = section.id === 2 || section.id === 3 || section.id === 6; // Category, Area, Difficulty = single-select
-
+                  let isRadio = section.id === 2 || section.id === 3 || section.id === 6;
                   const handleDropdownChange = (newItems) => {
                     setTempFiltrationData(prev => prev.map(filter => {
                       if (filter.id === section.id) {
@@ -1817,7 +1822,6 @@ const MyQuestionsList = ({
                       return filter;
                     }));
                   };
-
                   return (
                     <FilterDropdown
                       key={section.id}
@@ -1831,7 +1835,6 @@ const MyQuestionsList = ({
                 })}
               </div>
 
-              {/* Row 2: Active Filters */}
               {([
                 ...appliedSearchTags,
                 ...selectedQuestionTypeFilterItems,
@@ -1840,51 +1843,33 @@ const MyQuestionsList = ({
                 ...selectedQTypeFilterItems,
                 ...selectedCategoryFilterItems,
               ].length > 0 || tempFiltrationData.some(section => section.options.some(o => o.isChecked))) && (
-                  <div className="flex flex-col gap-3 mt-2">
-                    <h3 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wider">Applied Filters:</h3>
-
-                    <div className="flex flex-wrap items-center gap-2 min-h-[28px]">
-                      {/* Search tag chips */}
-                      {appliedSearchTags.map((tag, index) => (
-                        <div
-                          key={`search-${index}`}
-                          className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700"
-                        >
-                          <span className="font-medium">Search:</span> {tag}
-                          <X
-                            className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
-                            onClick={() => onClickRemoveSearchChip(tag)}
-                          />
+                <div className="flex flex-col gap-3 mt-2">
+                  <h3 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wider">Applied Filters:</h3>
+                  <div className="flex flex-wrap items-center gap-2 min-h-[28px]">
+                    {appliedSearchTags.map((tag, index) => (
+                      <div key={`search-${index}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                        <span className="font-medium">Search:</span> {tag}
+                        <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => onClickRemoveSearchChip(tag)} />
+                      </div>
+                    ))}
+                    {tempFiltrationData.flatMap(section =>
+                      section.options.filter(o => o.isChecked).map((o, idx) => (
+                        <div key={`${section.id}-${idx}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+                          <span className="font-medium">{section.filterType}:</span> {capitalizeFirstLetter(String(o.type || o.value || o.level || ""))}
+                          <X className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500" onClick={() => {
+                            setTempFiltrationData(prev => prev.map(filter => {
+                              if (filter.id === section.id) {
+                                return { ...filter, options: filter.options.map(opt => opt === o ? { ...opt, isChecked: false } : opt) };
+                              }
+                              return filter;
+                            }));
+                          }} />
                         </div>
-                      ))}
-
-                      {/* Filter chips from temp state (before applying) */}
-                      {tempFiltrationData.flatMap(section =>
-                        section.options.filter(o => o.isChecked).map((o, idx) => (
-                          <div key={`${section.id}-${idx}`} className="flex items-center gap-1 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-                            <span className="font-medium">{section.filterType}:</span> {capitalizeFirstLetter(String(o.type || o.value || o.level || ""))}
-                            <X
-                              className="w-3 h-3 ml-1 cursor-pointer hover:text-red-500"
-                              onClick={() => {
-                                setTempFiltrationData(prev => prev.map(filter => {
-                                  if (filter.id === section.id) {
-                                    return {
-                                      ...filter,
-                                      options: filter.options.map(opt =>
-                                        opt === o ? { ...opt, isChecked: false } : opt
-                                      )
-                                    };
-                                  }
-                                  return filter;
-                                }));
-                              }}
-                            />
-                          </div>
-                        ))
-                      )}
-                    </div>
+                      ))
+                    )}
                   </div>
-                )}
+                </div>
+              )}
 
               {([
                 ...appliedSearchTags,
@@ -1894,11 +1879,11 @@ const MyQuestionsList = ({
                 ...selectedQTypeFilterItems,
                 ...selectedCategoryFilterItems,
               ].length === 0 && !tempFiltrationData.some(section => section.options.some(o => o.isChecked))) && (
-                  <div className="flex flex-col gap-3 mt-2">
-                    <h3 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wider">Active Filters:</h3>
-                    <span className="text-sm text-gray-500 italic py-1">No filters currently applied.</span>
-                  </div>
-                )}
+                <div className="flex flex-col gap-3 mt-2">
+                  <h3 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wider">Active Filters:</h3>
+                  <span className="text-sm text-gray-500 italic py-1">No filters currently applied.</span>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1976,7 +1961,25 @@ const MyQuestionsList = ({
                   {Object.entries(groupedQuestions).map(
                     ([listName, items]) =>
                       selectedLabel === listName && (
-                        <div key={listName} className="mt-2 flex-1 min-h-0 overflow-y-auto" onScroll={() => { if (isPopupOpen) setIsPopupOpen(false); }}>
+                        <div
+                          key={listName}
+                          className="mt-2 flex-1 min-h-0 overflow-y-auto"
+                          ref={scrollContainerRef}
+                          onScroll={(e) => {
+                            const currentScrollY = e.target.scrollTop;
+                            if (currentScrollY === 0) {
+                              setShowFilterCard(true); // Always show at the top
+                              lastScrollY.current = currentScrollY;
+                            } else if (Math.abs(currentScrollY - lastScrollY.current) > 10) {
+                              if (currentScrollY > lastScrollY.current) {
+                                setShowFilterCard(false); // Scrolling down the page (moving content up) - hide
+                              } else if (currentScrollY < lastScrollY.current) {
+                                setShowFilterCard(true); // Scrolling up the page (moving content down) - show
+                              }
+                              lastScrollY.current = currentScrollY;
+                            }
+                          }}
+                        >
                           {isOpen[listName] && items.length > 0 && (
                             <div
                               className="flex flex-col pb-8 px-4"
