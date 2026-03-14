@@ -221,34 +221,73 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
     onClose();
   };
 
+  // Build the settlement request payload
+  // Tries: current interviewers → round history participants (Scheduled/Accepted entries)
   const buildSettlementRequestBody = (txId) => {
-    // Get interviewer's ownerId for wallet operations (wallet is tied to ownerId, not _id)
-    const interviewerContactId =
-      interviewData.interviewers && interviewData.interviewers[0]?.ownerId;
+    // 1. Try current interviewers array first
+    let interviewerContactId =
+      interviewData.interviewers && interviewData.interviewers.length > 0
+        ? interviewData.interviewers[0]?.ownerId
+        : null;
+    let interviewerTenantId =
+      interviewData.interviewers && interviewData.interviewers.length > 0
+        ? interviewData.interviewers[0]?.tenantId
+        : null;
 
-    if (!interviewerContactId) {
-      return { error: 'Interviewer information not found' };
+    // 2. Fallback: Check round history for the terminal/scheduled entry
+    //    Round history stores interviewer IDs in h.interviewers array
+    if (!interviewerContactId && Array.isArray(interviewData.history) && interviewData.history.length > 0) {
+      // Find the most recent history entry that has interviewers
+      // Prioritize the actual terminal statuses first as requested (NoShow, etc.)
+      const historyWithInterviewer = [...interviewData.history]
+        .reverse()
+        .find(h =>
+          h && Array.isArray(h.interviewers) && h.interviewers.length > 0 &&
+          ['NoShow', 'Incomplete', 'InCompleted', 'Scheduled', 'Accepted', 'RequestSent'].includes(h.action)
+        );
+
+      if (historyWithInterviewer) {
+        // h.interviewers contains the IDs. Sometimes it's a string ID, sometimes populated object
+        const firstInterviewer = historyWithInterviewer.interviewers[0];
+        interviewerContactId = typeof firstInterviewer === 'object' 
+          ? (firstInterviewer.contact?._id || firstInterviewer._id || firstInterviewer.ownerId) 
+          : firstInterviewer;
+      }
+    }
+
+    // 3. Also try to get from transactionData metadata (if interviewer ID was stored there)
+    if (!interviewerContactId && transactionData?.transactions?.length > 0) {
+      const holdTx = transactionData.transactions.find(t => t.type === 'hold' && t.status !== 'completed');
+      if (holdTx?.metadata?.interviewerContactId) {
+        interviewerContactId = holdTx.metadata.interviewerContactId;
+      } else if (holdTx?.metadata?.interviewerId) {
+        interviewerContactId = holdTx.metadata.interviewerId;
+      }
     }
 
     return {
       roundId: interviewData._id,
-      transactionId: txId,
-      interviewerContactId,
+      transactionId: txId || null, // Pass specific transactionId to backend
+      interviewerContactId: interviewerContactId || null,
       companyName: interviewData.position?.company || 'Company',
       roundTitle: interviewData.roundTitle || `Round ${interviewData._id}`,
       positionTitle: interviewData.position?.title || 'Position',
-      interviewerTenantId: interviewData.interviewers[0]?.tenantId,
+      interviewerTenantId: interviewerTenantId || null,
     };
+  };
+
+  // Compute settlement amounts from payPercent in browser (for live preview)
+  const computeSettlementCalc = (baseAmount, payPercent, serviceChargePercent = 10) => {
+    const gross = Math.round(baseAmount * payPercent) / 100;
+    const sc = Math.round(gross * serviceChargePercent) / 100;
+    const net = Math.max(0, gross - sc);
+    const refundBase = baseAmount - gross;
+    return { gross, serviceCharge: sc, net, refundBase };
   };
 
   // Preview settlement calculations without applying them
   const handleSettlementPreview = async (txId) => {
     const payload = buildSettlementRequestBody(txId);
-    if (!payload || payload.error) {
-      setSettlementError(payload?.error || 'Unable to prepare settlement request');
-      setShowSettlementModal(true);
-      return;
-    }
 
     setSelectedTransactionId(txId);
     setShowSettlementModal(true);
@@ -259,13 +298,14 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
     setSettlementOverrides({});
 
     try {
+      const authToken = Cookies.get('authToken');
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/wallet/settle-interview`,
+        `${config.REACT_APP_API_URL}/wallet/settle-interview`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify({
             ...payload,
@@ -278,16 +318,8 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
       if (response.ok && data.success) {
         const result = data.data || {};
         setSettlementPreview(result);
-        // Initialize overrides with preview values
-        setSettlementOverrides({
-          grossSettlementAmount: result.grossSettlementAmount,
-          serviceCharge: result.serviceCharge,
-          serviceChargeGst: result.serviceChargeGst,
-          settlementAmount: result.settlementAmount,
-          refundAmount: result.refundAmount,
-          payPercent: result.payPercent,
-          settlementScenario: result.settlementScenario,
-        });
+        // Initialize override payPercent from server result
+        setSettlementOverrides({ payPercent: result.payPercent ?? 0 });
         setSettlementError(null);
       } else {
         setSettlementError(
@@ -302,34 +334,34 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
     }
   };
 
-  // Handle settlement button click with possible overrides
+  // Handle final settlement with overridePayPercent
   const handleSettlement = async () => {
     const payload = buildSettlementRequestBody(selectedTransactionId);
-    if (!payload || payload.error) {
-      setSettlementError(payload?.error || 'Unable to prepare settlement request');
-      return;
-    }
 
     setSettlementLoading(true);
     setSettlementError(null);
 
     try {
+      const authToken = Cookies.get('authToken') || localStorage.getItem('token');
       const response = await fetch(`${config.REACT_APP_API_URL}/wallet/settle-interview`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({
           ...payload,
-          overrides: settlementOverrides, // Send overrides if backend supports
-        })
+          // Send override payPercent if admin changed it
+          overridePayPercent:
+            settlementOverrides.payPercent !== undefined
+              ? Number(settlementOverrides.payPercent)
+              : undefined,
+        }),
       });
 
       const data = await response.json();
       if (response.ok && data.success) {
-        const result = data.data || {};
-        setSettlementResult(result);
+        setSettlementResult(data.data || {});
         setSettlementError(null);
       } else {
         setSettlementError(data.message || 'Settlement failed. Please try again.');
@@ -342,12 +374,10 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
     }
   };
 
-  // Handle override changes
-  const handleOverrideChange = (field, value) => {
-    setSettlementOverrides(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+  // Handle payPercent override change
+  const handlePayPercentChange = (val) => {
+    const pct = Math.min(100, Math.max(0, parseFloat(val) || 0));
+    setSettlementOverrides({ payPercent: pct });
   };
 
   // Section component with consistent styling
@@ -1187,6 +1217,20 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                                 Metadata
                               </h5>
                               <div className="grid grid-cols-2 gap-4">
+                                {tx.metadata.roundStatus && (
+                                  <DetailItem
+                                    label="Round Status"
+                                    value={tx.metadata.roundStatus}
+                                    icon={<AlertCircle className="w-4 h-4" />}
+                                  />
+                                )}
+                                {(tx.metadata.reasonCode || tx.metadata.reason) && (
+                                  <DetailItem
+                                    label="Reason"
+                                    value={tx.metadata.reasonCode || tx.metadata.reason}
+                                    icon={<FileText className="w-4 h-4" />}
+                                  />
+                                )}
                                 {tx.metadata.hourlyRate && (
                                   <DetailItem
                                     label="Hourly Rate"
@@ -1201,7 +1245,6 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                                     icon={<Clock className="w-4 h-4" />}
                                   />
                                 )}
-                                {/* Add more metadata fields as needed */}
                               </div>
                             </div>
                           )}
@@ -1302,18 +1345,60 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                             </div>
                           )}
 
-                          {/* Settlement Button if applicable */}
-                          {['InCompleted', 'Incomplete', 'Completed', 'Cancelled', 'NoShow', 'Rejected'].includes(interviewData.status) && tx.type === 'hold' && (tx.status !== 'completed') && (
-                            <div className="mt-4 flex justify-end">
-                              <button
-                                onClick={() => handleSettlementPreview(tx._id)}
-                                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                                Settle This Transaction
-                              </button>
-                            </div>
-                          )}
+                          {/* Settlement Button — show for pending HOLD transaction ONLY if it preceded a terminal state. */}
+                          {tx.type === 'hold' && tx.status !== 'completed' && (() => {
+                            // Only allow Settle for NoShow or Incomplete/InCompleted rounds as per rules
+                            const settlableStatuses = ['InCompleted', 'Incomplete', 'NoShow'];
+
+                            // 1. If the current status is terminal, the newest hold (and any other un-settled hold) can technically be settled
+                            const isCurrentTerminal = settlableStatuses.includes(interviewData.status);
+
+                            // 2. Find any terminal status in history that occurred AFTER this hold transaction was created
+                            let matchingTerminalHistory = null;
+                            const txDate = tx.createdAt ? new Date(tx.createdAt).getTime() : 0;
+
+                            if (Array.isArray(interviewData.history)) {
+                              matchingTerminalHistory = [...interviewData.history].reverse().find(h => {
+                                if (!settlableStatuses.includes(h.action)) return false;
+
+                                // History items have updatedAt or date
+                                const hDateField = h.updatedAt || h.createdAt || h.date;
+                                const hDate = hDateField ? new Date(hDateField).getTime() : 0;
+
+                                // Return true if history event happened at the same time or after the hold was created
+                                // (Allowing a tiny margin in case of sync issues, but generally hDate >= txDate)
+                                return hDate >= txDate;
+                              });
+                            }
+
+                            // The hold is settlable if the current state is terminal, OR we found a terminal state that happened after this hold
+                            const isHoldSettlable = isCurrentTerminal || matchingTerminalHistory;
+
+                            if (!isHoldSettlable) return null;
+
+                            // Determine the most relevant status to show from history
+                            const lastHistoryStatus = matchingTerminalHistory ? matchingTerminalHistory.action : interviewData.status;
+                            const showNoInterviewerWarning = !interviewData.interviewers || interviewData.interviewers.length === 0;
+                            return (
+                              <div className="mt-4">
+                                {showNoInterviewerWarning && (
+                                  <p className="text-xs text-amber-600 bg-amber-50 rounded px-3 py-1.5 border border-amber-200 mb-2">
+                                    ⚠ Settlement payout will be based on the round history status
+                                    {lastHistoryStatus ? ` (Last: ${lastHistoryStatus})` : ''}
+                                  </p>
+                                )}
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={() => handleSettlementPreview(tx._id)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                                  >
+                                    <CheckCircle className="w-4 h-4" />
+                                    Settle This Transaction
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       ))}
                     </div>
@@ -1577,131 +1662,141 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                   </div>
                 </div>
 
-                {/* Settlement Policy & Context Info */}
-                {!settlementLoading && !settlementResult && settlementPreview && (
-                  <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
-                    <h4 className="text-sm font-semibold text-indigo-900 mb-4 flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      Settlement Policy & Context
-                    </h4>
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
-                      <div>
-                        <span className="text-indigo-700 font-medium">Round Status:</span>
-                        <p className="text-indigo-900 mt-0.5">{settlementPreview.roundStatus || interviewData.status}</p>
-                      </div>
-                      <div>
-                        <span className="text-indigo-700 font-medium">Current Action:</span>
-                        <p className="text-indigo-900 mt-0.5">{settlementPreview.currentAction || interviewData.currentAction || 'None'}</p>
-                      </div>
-                      <div>
-                        <span className="text-indigo-700 font-medium">Policy Applied:</span>
-                        <p className="text-indigo-900 mt-0.5 font-semibold">{settlementPreview.settlementPolicyName || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <span className="text-indigo-700 font-medium">Payout Percentage:</span>
-                        <p className="text-indigo-900 mt-0.5 font-semibold">{settlementPreview.payPercent}%</p>
-                      </div>
-                      <div>
-                        <span className="text-indigo-700 font-medium">Interview Type:</span>
-                        <p className="text-indigo-900 mt-0.5">{settlementPreview.isMockInterview ? '🎭 Mock Interview' : '💼 Normal Interview'}</p>
-                      </div>
-                      <div>
-                        <span className="text-indigo-700 font-medium">Base Hold Amount:</span>
-                        <p className="text-indigo-900 mt-0.5">₹{formatAmount(settlementPreview.baseAmount || 0)}</p>
-                      </div>
-                      {settlementPreview.gstFromHold > 0 && (
-                        <div>
-                          <span className="text-indigo-700 font-medium">GST Collected:</span>
-                          <p className="text-indigo-900 mt-0.5">₹{formatAmount(settlementPreview.gstFromHold)}</p>
-                        </div>
-                      )}
-                      {settlementPreview.totalHoldAmount > 0 && (
-                        <div>
-                          <span className="text-indigo-700 font-medium">Total Hold (Base + GST):</span>
-                          <p className="text-indigo-900 mt-0.5">₹{formatAmount(settlementPreview.totalHoldAmount)}</p>
-                        </div>
-                      )}
-                      {/* Mock Discount Info - only visible for mock interviews */}
-                      {settlementPreview.isMockInterview && settlementPreview.mockDiscountPercentage > 0 && (
-                        <>
-                          <div>
-                            <span className="text-indigo-700 font-medium">Mock Discount:</span>
-                            <p className="text-indigo-900 mt-0.5">{settlementPreview.mockDiscountPercentage}%</p>
-                          </div>
-                          <div>
-                            <span className="text-indigo-700 font-medium">Original Amount (Before Discount):</span>
-                            <p className="text-indigo-900 mt-0.5">₹{formatAmount(settlementPreview.originalAmountBeforeDiscount || 0)}</p>
-                          </div>
-                          <div>
-                            <span className="text-indigo-700 font-medium">Discount Amount:</span>
-                            <p className="text-indigo-900 mt-0.5 text-green-700">-₹{formatAmount(settlementPreview.mockDiscountAmount || 0)}</p>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
+                {/* Settlement Calculation — Editable payPercent with live recalc */}
+                {!settlementLoading && !settlementResult && settlementPreview && (() => {
+                  const base = settlementPreview.baseAmount || 0;
+                  const gstFromHold = settlementPreview.gstFromHold || 0;
+                  const totalHold = settlementPreview.totalHoldAmount || (base + gstFromHold);
+                  const pct = settlementOverrides.payPercent ?? settlementPreview.payPercent ?? 0;
+                  const serviceChargePercent = settlementPreview.serviceChargePercent || 10;
 
-                {/* Settlement Calculation - Editable */}
-                {!settlementLoading && !settlementResult && settlementPreview && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-5">
-                    <p className="text-sm text-amber-800 font-medium mb-4">
-                      Settlement Calculation (Editable)
-                    </p>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Gross Payout</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={settlementOverrides.grossSettlementAmount ?? settlementPreview.grossSettlementAmount}
-                          onChange={(e) => handleOverrideChange('grossSettlementAmount', parseFloat(e.target.value) || 0)}
-                          className="w-32 px-3 py-2 border border-gray-300 rounded-md text-right"
-                        />
+                  // Gross payout = base * pct%
+                  const gross = Math.round(base * pct) / 100;
+                  // Service charge deducted from interviewer (no GST on service charge for interviewer)
+                  const sc = Math.round(gross * serviceChargePercent) / 100;
+                  const net = Math.max(0, gross - sc);
+
+                  // Org refund
+                  const refundBase = base - gross;
+                  const gstRefund = gstFromHold > 0 && base > 0
+                    ? Math.round(((refundBase / base) * gstFromHold) * 100) / 100
+                    : 0;
+                  const totalRefund = refundBase + gstRefund;
+
+                  return (
+                    <>
+                      {/* Context Info */}
+                      <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                        <h4 className="text-xs font-semibold text-indigo-900 mb-3 flex items-center gap-2 uppercase tracking-wider">
+                          <FileText className="w-4 h-4" />
+                          Round & Policy Context
+                        </h4>
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                          <div>
+                            <span className="text-indigo-700 font-medium">Round Status:</span>
+                            <p className="text-indigo-900 font-semibold mt-0.5">{settlementPreview.roundStatus || interviewData.status}</p>
+                          </div>
+                          <div>
+                            <span className="text-indigo-700 font-medium">Current Action:</span>
+                            <p className="text-indigo-900 mt-0.5">{settlementPreview.currentAction || interviewData.currentAction || 'None'}</p>
+                          </div>
+                          <div>
+                            <span className="text-indigo-700 font-medium">Policy Applied:</span>
+                            <p className="text-indigo-900 font-semibold mt-0.5">{settlementPreview.settlementPolicyName || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <span className="text-indigo-700 font-medium">Interview Type:</span>
+                            <p className="text-indigo-900 mt-0.5">{settlementPreview.isMockInterview ? '🎭 Mock' : '💼 Normal'}</p>
+                          </div>
+                          <div>
+                            <span className="text-indigo-700 font-medium">Hold Amount (Base):</span>
+                            <p className="text-indigo-900 mt-0.5">₹{formatAmount(base)}</p>
+                          </div>
+                          <div>
+                            <span className="text-indigo-700 font-medium">GST on Hold:</span>
+                            <p className="text-indigo-900 mt-0.5">₹{formatAmount(gstFromHold)}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-indigo-700 font-medium">Total Hold (Base + GST):</span>
+                            <p className="text-indigo-900 font-bold mt-0.5">₹{formatAmount(totalHold)}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Service Charge (10%)</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={settlementOverrides.serviceCharge ?? settlementPreview.serviceCharge}
-                          onChange={(e) => handleOverrideChange('serviceCharge', parseFloat(e.target.value) || 0)}
-                          className="w-32 px-3 py-2 border border-gray-300 rounded-md text-right"
-                        />
+
+                      {/* Editable Payout % + Live Breakdown */}
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-5">
+                        <p className="text-sm text-amber-800 font-semibold mb-4">Settlement Calculation</p>
+
+                        {/* Payout % — only editable field */}
+                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-200">
+                          <div>
+                            <span className="text-gray-800 font-semibold">Payout % to Interviewer</span>
+                            <p className="text-xs text-gray-500 mt-0.5">Remaining % is refunded to Organization</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="1"
+                              value={pct}
+                              onChange={(e) => handlePayPercentChange(e.target.value)}
+                              className="w-20 px-3 py-2 border-2 border-amber-400 rounded-md text-right font-bold text-lg bg-white focus:border-amber-600 focus:outline-none"
+                            />
+                            <span className="text-gray-700 font-semibold text-lg">%</span>
+                          </div>
+                        </div>
+
+                        {/* Interviewer column */}
+                        <div className="space-y-2 text-sm mb-4">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Interviewer Payout</p>
+                          <div className="flex justify-between">
+                            <span className="text-gray-700">Gross Payout ({pct}% of ₹{formatAmount(base)})</span>
+                            <span className="font-medium">₹{formatAmount(gross)}</span>
+                          </div>
+                          <div className="flex justify-between text-red-600">
+                            <span>Service Charge ({serviceChargePercent}%)</span>
+                            <span>- ₹{formatAmount(sc)}</span>
+                          </div>
+                          <div className="flex justify-between font-bold text-green-700 pt-2 border-t border-amber-200 mt-1">
+                            <span>Net to Interviewer</span>
+                            <span>₹{formatAmount(net)}</span>
+                          </div>
+                        </div>
+
+                        {/* Org refund column */}
+                        <div className="space-y-2 text-sm pt-3 border-t border-amber-200">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Refund to Organization / Scheduler</p>
+                          <div className="flex justify-between">
+                            <span className="text-gray-700">Base Refund ({100 - pct}% of ₹{formatAmount(base)})</span>
+                            <span className="font-medium">₹{formatAmount(refundBase)}</span>
+                          </div>
+                          {gstFromHold > 0 && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-700">GST Refund (proportional)</span>
+                              <span className="font-medium">₹{formatAmount(gstRefund)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between font-bold text-blue-700 pt-2 border-t border-amber-200 mt-1">
+                            <span>Total Refund to Org</span>
+                            <span>₹{formatAmount(totalRefund)}</span>
+                          </div>
+                        </div>
+
+                        {/* Platform service charge info */}
+                        {sc > 0 && (
+                          <div className="mt-4 pt-3 border-t border-amber-200">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Platform Revenue</p>
+                            <div className="flex justify-between text-sm text-gray-600">
+                              <span>Service Charge (retained by platform)</span>
+                              <span className="font-medium">₹{formatAmount(sc)}</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">GST (18%)</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={settlementOverrides.serviceChargeGst ?? settlementPreview.serviceChargeGst}
-                          onChange={(e) => handleOverrideChange('serviceChargeGst', parseFloat(e.target.value) || 0)}
-                          className="w-32 px-3 py-2 border border-gray-300 rounded-md text-right"
-                        />
-                      </div>
-                      <div className="flex justify-between items-center pt-3 border-t">
-                        <span className="text-gray-800 font-semibold">Net to Interviewer</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={settlementOverrides.settlementAmount ?? settlementPreview.settlementAmount}
-                          onChange={(e) => handleOverrideChange('settlementAmount', parseFloat(e.target.value) || 0)}
-                          className="w-32 px-3 py-2 border-2 border-green-500 rounded-md text-right font-bold bg-green-50"
-                        />
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Refund</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={settlementOverrides.refundAmount ?? settlementPreview.refundAmount}
-                          onChange={(e) => handleOverrideChange('refundAmount', parseFloat(e.target.value) || 0)}
-                          className="w-32 px-3 py-2 border border-gray-300 rounded-md text-right"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
+                    </>
+                  );
+                })()}
 
                 {/* Loading / Success / Error States */}
                 {settlementLoading && (
@@ -1722,37 +1817,36 @@ const InterviewDetailsSidebar = ({ isOpen, onClose, interviewData }) => {
                     <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
                     <h4 className="text-lg font-semibold text-green-900 mb-3 text-center">Settlement Successful!</h4>
                     <div className="space-y-2 text-sm">
-                      {/* Policy Info */}
                       <div className="flex justify-between bg-white rounded px-3 py-2">
                         <span className="text-gray-600">Policy Applied:</span>
                         <span className="font-medium">{settlementResult.settlementPolicyName || settlementResult.settlementScenario || 'N/A'}</span>
                       </div>
                       <div className="flex justify-between bg-white rounded px-3 py-2">
-                        <span className="text-gray-600">Payout %:</span>
+                        <span className="text-gray-600">Payout % Applied:</span>
                         <span className="font-medium">{settlementResult.payPercent}%</span>
                       </div>
-                      {/* Amount Breakdown */}
                       <div className="flex justify-between bg-white rounded px-3 py-2">
-                        <span className="text-gray-600">Gross Settlement:</span>
+                        <span className="text-gray-600">Gross to Interviewer:</span>
                         <span className="font-medium">₹{formatAmount(settlementResult.grossSettlementAmount)}</span>
                       </div>
                       <div className="flex justify-between bg-white rounded px-3 py-2">
-                        <span className="text-gray-600">Service Charge:</span>
-                        <span className="font-medium text-red-600">-₹{formatAmount(settlementResult.serviceCharge)}</span>
-                      </div>
-                      <div className="flex justify-between bg-white rounded px-3 py-2">
-                        <span className="text-gray-600">GST on Service Charge:</span>
-                        <span className="font-medium text-red-600">-₹{formatAmount(settlementResult.serviceChargeGst)}</span>
+                        <span className="text-gray-600">Service Charge deducted:</span>
+                        <span className="font-medium text-red-600">- ₹{formatAmount(settlementResult.serviceCharge)}</span>
                       </div>
                       <div className="flex justify-between bg-green-100 rounded px-3 py-2 border border-green-300">
-                        <span className="text-green-800 font-semibold">Net to Interviewer:</span>
+                        <span className="text-green-800 font-semibold">Net Paid to Interviewer:</span>
                         <span className="font-bold text-green-800">₹{formatAmount(settlementResult.settlementAmount)}</span>
                       </div>
                       <div className="flex justify-between bg-blue-50 rounded px-3 py-2 border border-blue-200">
                         <span className="text-blue-800 font-medium">Refunded to Org:</span>
                         <span className="font-bold text-blue-800">₹{formatAmount(settlementResult.refundAmount)}</span>
                       </div>
-                      {/* Mock Discount Info - only for mock interviews */}
+                      {settlementResult.serviceCharge > 0 && (
+                        <div className="flex justify-between bg-gray-50 rounded px-3 py-2">
+                          <span className="text-gray-600">Platform Revenue (Service Charge):</span>
+                          <span className="font-medium text-gray-700">₹{formatAmount(settlementResult.serviceCharge)}</span>
+                        </div>
+                      )}
                       {settlementResult.isMockInterview && settlementResult.mockDiscountPercentage > 0 && (
                         <div className="flex justify-between bg-purple-50 rounded px-3 py-2 border border-purple-200">
                           <span className="text-purple-800 font-medium">Mock Discount:</span>

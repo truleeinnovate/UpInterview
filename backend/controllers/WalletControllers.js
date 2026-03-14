@@ -3,6 +3,7 @@
 
 const mongoose = require("mongoose");
 const WalletTopup = require("../models/WalletTopup");
+const { Contacts: Contact } = require("../models/Contacts");
 const Razorpay = require("razorpay");
 const Payment = require("../models/Payments");
 const Invoice = require("../models/Invoicemodels");
@@ -3891,12 +3892,14 @@ const settleInterviewPayment = async (req, res) => {
   try {
     const {
       roundId,
+      transactionId: frontendTxId, // Pass specific hold transaction to settle
       interviewerContactId,
       companyName,
       roundTitle,
       positionTitle,
       interviewerTenantId,
       previewOnly,
+      overridePayPercent, // SuperAdmin override for payout percentage
     } = req.body;
 
     let companyNamePopulate = null;
@@ -3908,10 +3911,11 @@ const settleInterviewPayment = async (req, res) => {
 
     const isPreview = Boolean(previewOnly);
 
-    if (!roundId || !interviewerContactId) {
+    // roundId is always required
+    if (!roundId) {
       return res.status(400).json({
         success: false,
-        message: "roundId and interviewerContactId are required",
+        message: "roundId is required",
       });
     }
 
@@ -3928,14 +3932,23 @@ const settleInterviewPayment = async (req, res) => {
       });
     }
 
-    // 2. Find the active hold transaction (latest hold not settled)
-    const activeHoldTransaction = orgWallet.transactions
-      .filter(t =>
-        t.metadata && t.metadata.roundId === roundId &&
-        t.type === "hold" &&
-        t.status !== "completed"
-      )
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+    // 2. Find the active hold transaction
+    // If the frontend explicitly sent a transactionId, use it (allows settling specific holds when multiple exist, like after a reschedule)
+    let activeHoldTransaction;
+    if (frontendTxId) {
+      activeHoldTransaction = orgWallet.transactions.find(
+        t => t._id.toString() === frontendTxId && t.type === "hold" && t.status !== "completed"
+      );
+    } else {
+      // Fallback: get the latest unsettled hold transaction for this round
+      activeHoldTransaction = orgWallet.transactions
+        .filter(t =>
+          t.metadata && t.metadata.roundId === roundId &&
+          t.type === "hold" &&
+          t.status !== "completed"
+        )
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+    }
 
     if (!activeHoldTransaction) {
       await session.abortTransaction();
@@ -3970,14 +3983,32 @@ const settleInterviewPayment = async (req, res) => {
       isMockRound
     );
 
-    const roundStatus = roundDoc.status;
-    const currentAction = roundDoc.currentAction;
-
-    // Determine action time (e.g., when cancelled)
+    // Resolve round status and action from history if current status is not terminal
+    let resolvedRoundStatus = roundDoc.status;
+    let resolvedCurrentAction = roundDoc.currentAction;
     let actionTime = roundDoc.updatedAt ? new Date(roundDoc.updatedAt) : new Date();
 
+    const settlableStatuses = ['InCompleted', 'Incomplete', 'Completed', 'Cancelled', 'NoShow', 'Rejected'];
+
+    // If current status is not a terminal state (e.g. rescheduled), find the most recent terminal state from history
+    if (!settlableStatuses.includes(resolvedRoundStatus) && Array.isArray(roundDoc.history)) {
+      const lastTerminalEntry = [...roundDoc.history]
+        .reverse()
+        .find(h => h && settlableStatuses.includes(h.action));
+        
+      if (lastTerminalEntry) {
+        resolvedRoundStatus = lastTerminalEntry.action;
+        if (lastTerminalEntry.reason === 'interviewer_no_show' || lastTerminalEntry.currentAction === 'Interviewer_NoShow') {
+          resolvedCurrentAction = 'Interviewer_NoShow';
+        }
+        if (lastTerminalEntry.updatedAt) {
+          actionTime = new Date(lastTerminalEntry.updatedAt);
+        }
+      }
+    }
+
     if (
-      roundStatus === "Cancelled" &&
+      resolvedRoundStatus === "Cancelled" &&
       Array.isArray(roundDoc.history) &&
       roundDoc.history.length > 0
     ) {
@@ -4011,7 +4042,7 @@ const settleInterviewPayment = async (req, res) => {
       }
     }
 
-    const isInterviewerNoShow = currentAction === "Interviewer_NoShow";
+    const isInterviewerNoShow = resolvedCurrentAction === "Interviewer_NoShow";
 
     // Legacy settlement logic (before InterviewPolicy DB, using getPayPercent helper):
     // let payPercentLegacy;
@@ -4043,12 +4074,12 @@ const settleInterviewPayment = async (req, res) => {
       payPercent = 0;
       settlementScenario = "interviewer_no_show";
       appliedPolicyName = "interviewer_no_show";
-    } else if (roundStatus === "NoShow" || roundStatus === "InCompleted") {
+    } else if (resolvedRoundStatus === "NoShow" || resolvedRoundStatus === "InCompleted") {
       // NoShow / InCompleted: interviewer gets 0%, org gets 100% refund
       payPercent = 0;
-      settlementScenario = roundStatus === "NoShow" ? "no_show" : "incompleted";
+      settlementScenario = resolvedRoundStatus === "NoShow" ? "no_show" : "incompleted";
       appliedPolicyName = settlementScenario;
-    } else if (roundStatus === "Completed") {
+    } else if (resolvedRoundStatus === "Completed") {
       // Completed interview: always pay 100%
       payPercent = 100;
       settlementScenario = "completed";
@@ -4057,7 +4088,7 @@ const settleInterviewPayment = async (req, res) => {
       try {
         const policy = await findPolicyForSettlement(
           isMockInterview,
-          roundStatus,
+          resolvedRoundStatus,
           hoursBefore
         );
 
@@ -4119,14 +4150,34 @@ const settleInterviewPayment = async (req, res) => {
       gstRate,
     } = await getTaxConfigForTenant({ tenantId: orgTenantId });
 
-    // Compute amounts using util
-    const {
-      grossSettlementAmount,
-      refundAmount: baseRefundAmount,
-      serviceCharge,
-      serviceChargeGst,
-      settlementAmount,
-    } = computeSettlementAmounts(baseAmount, payPercent, serviceChargePercent, gstRate);
+    // If SuperAdmin has set an overridePayPercent, use that instead of the policy-derived value
+    if (
+      overridePayPercent !== undefined &&
+      overridePayPercent !== null &&
+      !isNaN(Number(overridePayPercent))
+    ) {
+      payPercent = Math.min(100, Math.max(0, Number(overridePayPercent)));
+      settlementScenario = settlementScenario + "_admin_override";
+    }
+
+    // Compute gross and refund amounts
+    const grossSettlementAmount = Math.round(baseAmount * payPercent) / 100;
+    // Service charge is deducted from interviewer's payout
+    const serviceCharge = Math.round(grossSettlementAmount * serviceChargePercent) / 100;
+    // GST on service charge is platform revenue (NOT deducted from interviewer net)
+    const serviceChargeGst = Math.round(serviceCharge * gstRate) / 100;
+    // Net to interviewer = gross - service charge only (NO serviceChargeGst deducted from interviewer)
+    const settlementAmount = Math.max(0, grossSettlementAmount - serviceCharge);
+    const baseRefundAmount = baseAmount - grossSettlementAmount;
+
+    // Validate that when payPercent > 0 we have an interviewer to credit
+    if (!isPreview && settlementAmount > 0 && !interviewerContactId) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "interviewerContactId is required when interviewer payout amount is greater than zero",
+      });
+    }
 
     // Include proportional GST refund (matching processAutoSettlement logic)
     const gstFromHold = Number(activeHoldTransaction.gstAmount || 0);
@@ -4143,6 +4194,7 @@ const settleInterviewPayment = async (req, res) => {
         payPercent,
         serviceCharge,
         serviceChargeGst,
+        serviceChargePercent, // so UI can label it correctly (e.g. "Service Charge (10%)")
         grossSettlementAmount,
         settlementScenario,
         settlementPolicyId: appliedPolicyId,
@@ -4150,8 +4202,8 @@ const settleInterviewPayment = async (req, res) => {
         settlementPolicyName: appliedPolicyName || settlementScenario,
         // Additional context for SuperAdmin UI
         baseAmount,
-        roundStatus,
-        currentAction,
+        roundStatus: resolvedRoundStatus,
+        currentAction: resolvedCurrentAction,
         isMockInterview,
         hoursBefore,
         // Mock discount info from hold metadata
@@ -4191,12 +4243,18 @@ const settleInterviewPayment = async (req, res) => {
       });
     }
 
+    // Calculate the GST portion for the settled amount (proportional to what's being used)
+    const gstForSettlement = gstFromHold - gstRefundProportion;
+    const totalSettlementAmount = grossSettlementAmount + gstForSettlement;
+
     // Update org wallet: settle the hold to debit
     const orgWalletUpdate = {
       $set: {
         "transactions.$.type": "debited",
         "transactions.$.status": "completed",
         "transactions.$.amount": grossSettlementAmount,
+        "transactions.$.gstAmount": gstForSettlement,
+        "transactions.$.totalAmount": totalSettlementAmount,
         "transactions.$.description": `Settled payment to interviewer for ${companyNamePopulate?.name || "Company"} - ${roundTitle || "Interview Round"}`,
         "transactions.$.metadata.settledAt": new Date(),
         "transactions.$.metadata.settlementStatus": "completed",
@@ -4268,23 +4326,38 @@ const settleInterviewPayment = async (req, res) => {
       );
     }
 
-    // Find or create interviewer wallet
-    let interviewerWallet = await WalletTopup.findOne({
-      ownerId: interviewerContactId,
-    }).session(session);
+    // Find interviewer wallet if we are actually paying them
+    let interviewerWallet = null;
 
-    if (!interviewerWallet) {
-      // Create basic interviewer wallet if it does not exist yet
-      interviewerWallet = new WalletTopup({
-        ownerId: interviewerContactId,
-        currency: "INR",
-        tenantId: interviewerTenantId || req?.body?.tenantId || "",
-        balance: 0,
-        holdAmount: 0,
-        transactions: [],
-      });
+    if (interviewerContactId && settlementAmount > 0) {
+      // The frontend sends the Contact _id from round history.
+      // But wallet ownerId = Contact.ownerId (the user ID), NOT Contact._id.
+      // So we must resolve Contact._id → Contact.ownerId first.
+      let walletOwnerId = interviewerContactId;
 
-      await interviewerWallet.save({ session });
+      try {
+        const contactDoc = await Contact.findById(interviewerContactId).select('ownerId').lean();
+        if (contactDoc && contactDoc.ownerId) {
+          walletOwnerId = String(contactDoc.ownerId);
+          console.log("[settleInterviewPayment] Resolved contact", interviewerContactId, "→ ownerId:", walletOwnerId);
+        } else {
+          console.log("[settleInterviewPayment] Contact not found or no ownerId, using interviewerContactId as-is:", interviewerContactId);
+        }
+      } catch (contactErr) {
+        console.log("[settleInterviewPayment] Error looking up contact, using interviewerContactId as-is:", contactErr.message);
+      }
+
+      interviewerWallet = await WalletTopup.findOne({
+        ownerId: walletOwnerId,
+      }).session(session);
+
+      if (!interviewerWallet) {
+        await session.abortTransaction();
+        return res.status(404).json({
+          success: false,
+          message: "Interviewer wallet not found. Settlement cannot proceed.",
+        });
+      }
     }
 
     let creditTransaction = null;
@@ -4340,6 +4413,61 @@ const settleInterviewPayment = async (req, res) => {
       if (!updatedInterviewerWallet) {
         await session.abortTransaction();
         return handleApiError(res, new Error("Failed to update interviewer wallet"), "Settle Interview Payment");
+      }
+
+      // Create payout invoice for the interviewer
+      try {
+        const invoiceCode = await generateUniqueId("INVC", Invoice, "invoiceCode");
+        const contactDoc = await Contact.findById(interviewerContactId).select('firstName lastName tenantId').lean();
+
+        await Invoice.create([{
+          tenantId: interviewerTenantId || contactDoc?.tenantId || "",
+          ownerId: walletOwnerId,
+          type: "payout",
+          planName: `Interview Payment - ${roundTitle || "Interview Round"}`,
+          price: grossSettlementAmount,
+          discount: 0,
+          totalAmount: settlementAmount,
+          amountPaid: settlementAmount,
+          status: "credited",
+          invoiceCode: invoiceCode,
+          relatedObjectId: mongoose.Types.ObjectId.isValid(roundId)
+            ? new mongoose.Types.ObjectId(roundId)
+            : undefined,
+          metadata: {
+            roundId: roundId,
+            companyName: companyNamePopulate?.name || "Company",
+            roundTitle: roundTitle || "Interview Round",
+            positionTitle: positionTitle || "Position",
+            interviewerName: contactDoc ? `${contactDoc.firstName || ""} ${contactDoc.lastName || ""}`.trim() : "",
+            settlementScenario: settlementScenario,
+            serviceCharge: serviceCharge,
+            serviceChargePercent: serviceChargePercent,
+            grossSettlementAmount: grossSettlementAmount,
+            policyName: appliedPolicyName,
+            payPercent: payPercent,
+          },
+          lineItems: [
+            {
+              description: `Interview conducted for ${companyNamePopulate?.name || "Company"} - ${positionTitle || "Position"} (${roundTitle || "Interview Round"})`,
+              amount: grossSettlementAmount,
+              quantity: 1,
+              tax: 0,
+            },
+            ...(serviceCharge > 0 ? [{
+              description: `Platform Service Charge (${serviceChargePercent}%)`,
+              amount: -serviceCharge,
+              quantity: 1,
+              tax: 0,
+            }] : []),
+          ],
+          createdAt: new Date(),
+        }], { session });
+
+        console.log("[settleInterviewPayment] Created interviewer invoice:", invoiceCode);
+      } catch (invoiceErr) {
+        console.warn("[settleInterviewPayment] Failed to create interviewer invoice:", invoiceErr.message);
+        // Don't fail settlement if invoice creation fails
       }
     }
 
@@ -4511,7 +4639,9 @@ const settleInterviewPayment = async (req, res) => {
       data: responseData,
     });
   } catch (error) {
-    await session.abortTransaction();
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     console.error("[settleInterviewPayment] Error:", error);
     res.locals.logData = {
       tenantId: req?.body?.tenantId || "",
