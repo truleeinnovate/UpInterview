@@ -8,6 +8,7 @@ const {
 } = require("../validations/taskvalidation"); //<------v1.0.0---
 const { hasPermission } = require("../middleware/permissionMiddleware");
 const { generateUniqueId } = require("../services/uniqueIdGeneratorService");
+const { handleApiError } = require("../utils/errorHandler");
 
 // Get tasks with server-side search, filters, and pagination
 const getTasks = async (req, res) => {
@@ -150,7 +151,8 @@ const getTasks = async (req, res) => {
     });
   } catch (err) {
     console.error("Error fetching tasks:", err);
-    res.status(500).json({ success: false, message: err.message });
+    // res.status(500).json({ success: false, message: err.message });
+    return handleApiError(res, error, "Fetch Tasks");
   }
 };
 
@@ -260,7 +262,8 @@ const createTask = async (req, res) => {
       status: "error",
     };
 
-    res.status(400).json({ message: err.message });
+    // res.status(400).json({ message: err.message });
+    return handleApiError(res, error, "Create Task");
   }
 };
 
@@ -288,7 +291,8 @@ const getTaskById = async (req, res) => {
     }
     res.json(task);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    // res.status(500).json({ message: err.message });
+    return handleApiError(res, error, "Fetch Task");
   }
 };
 
@@ -578,10 +582,11 @@ const updateTask = async (req, res) => {
       status: "error",
     };
 
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
+    // res.status(500).json({
+    //   status: "error",
+    //   message: "Internal server error",
+    // });
+    return handleApiError(res, error, "Update Task");
   }
 };
 
@@ -637,14 +642,15 @@ const deleteTask = async (req, res) => {
     });
   } catch (error) {
     console.error("Delete task error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error:
-        process.env.NODE_ENV === "development"
-          ? error.message
-          : "Something went wrong",
-    });
+    // res.status(500).json({
+    //   success: false,
+    //   message: "Internal server error",
+    //   error:
+    //     process.env.NODE_ENV === "development"
+    //       ? error.message
+    //       : "Something went wrong",
+    // });
+    return handleApiError(res, error, "Delete Task");
   }
 };
 

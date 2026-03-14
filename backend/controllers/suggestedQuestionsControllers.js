@@ -9,6 +9,7 @@ const {
 const {
   checkQuestionBankUsageLimit,
 } = require("../services/questionBankUsageService");
+const { handleApiError } = require("../utils/errorHandler");
 
 const createQuestion = async (req, res) => {
   try {
@@ -76,11 +77,12 @@ const createQuestion = async (req, res) => {
     });
   } catch (error) {
     // console.log(error);
-    return res.status(500).send({
-      success: false,
-      message: "Failed to add question",
-      error: error.message,
-    });
+    // return res.status(500).send({
+    //   success: false,
+    //   message: "Failed to add question",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Create Question");
   }
 };
 
@@ -653,11 +655,12 @@ const getQuestions = async (req, res) => {
     });
   } catch (error) {
     // console.log('Error in getting questions', error);
-    return res.status(500).send({
-      success: false,
-      message: "Failed to get questions",
-      error: error.message,
-    });
+    // return res.status(500).send({
+    //   success: false,
+    //   message: "Failed to get questions",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Fetch Questions");
   }
 };
 
@@ -689,11 +692,12 @@ const checkQuestionBankUsage = async (req, res) => {
     });
   } catch (error) {
     console.error("Error checking question bank usage:", error);
-    return res.status(500).send({
-      success: false,
-      message: "Failed to check usage",
-      error: error.message,
-    });
+    // return res.status(500).send({
+    //   success: false,
+    //   message: "Failed to check usage",
+    //   error: error.message,
+    // });
+    return handleApiError(res, error, "Checking Question Bank Usage");
   }
 };
 

@@ -278,7 +278,7 @@ const UserInvoiceDetails = () => {
                 )}
 
                 {/* Net Payout */}
-                <div className="flex items-center justify-between pt-3 mt-1 border-t-2 border-gray-200">
+                <div className="flex items-center justify-between pt-3 mt-1">
                   <span className="text-sm font-bold text-gray-800">Net Amount Received</span>
                   <span className="text-lg font-bold text-green-700">
                     ₹{Number(invoiceData?.totalAmount || invoiceData?.amountPaid || invoiceData?.amount?.paid || 0).toFixed(2)}

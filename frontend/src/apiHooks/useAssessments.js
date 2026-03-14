@@ -10,7 +10,7 @@ import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tansta
 import axios from "axios";
 // <---------------------- v1.0.3
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback,useMemo } from "react";
 // ------------------------------ v1.0.3 >
 import { fetchFilterData } from "../api";
 import { config } from "../config";
@@ -76,7 +76,12 @@ export const useAssessments = (filters = {}) => {
   });
 
   const isLoading = isQueryLoading;
-  const assessmentData = responseData?.pages?.flatMap((p) => p?.data || []) || [];
+
+  const assessmentData = useMemo(() => 
+    responseData?.pages?.flatMap((p) => p?.data || []) || [],
+    [responseData?.pages]
+  );
+
   const totalCount = responseData?.pages?.[0]?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / (filters.limit || 20));
   const customCount = responseData?.pages?.[0]?.customCount || 0;
@@ -125,13 +130,13 @@ export const useAssessments = (filters = {}) => {
       refetchOnWindowFocus: false,
     });
 
-    return {
+    return useMemo(() => ({
       assessmentById,
       isLoading: isAssessmentLoading,
       isError: isAssessmentError,
       error: assessmentError,
       refetch: refetchAssessment,
-    };
+    }), [assessmentById, isAssessmentLoading, isAssessmentError, assessmentError, refetchAssessment]);
   };
 
   const addOrUpdateAssessment = useMutation({

@@ -195,7 +195,7 @@ exports.deleteAssessment = async (req, res) => {
     //   message: error.message,
     // };
 
-    return handleApiError(res, error, "Delete Assessment");
+    return handleApiError(res, error, "Delete Assessment Template");
   }
 };
 
@@ -249,7 +249,7 @@ exports.getAssessmentById = async (req, res) => {
       });
     }
 
-    return handleApiError(res, error, "Get Assessment By Id");
+    return handleApiError(res, error, "Get Assessment Template By Id");
   }
 };
 
@@ -272,7 +272,7 @@ exports.validateAssessmentStep = async (req, res) => {
       message: "Validation passed for " + tab,
     });
   } catch (error) {
-    return handleApiError(res, error, "Validate Assessment Step");
+    return handleApiError(res, error, "Validate Assessment Template Step");
   }
 };
 
@@ -439,7 +439,7 @@ exports.newAssessment = async (req, res) => {
       message: error.message,
     };
 
-    return handleApiError(res, error, "Create Assessment");
+    return handleApiError(res, error, "Create Assessment Template");
   }
 };
 //update is using
@@ -636,7 +636,7 @@ exports.updateAssessment = async (req, res) => {
       message: error.message,
     };
 
-    return handleApiError(res, error, "Update Assessment");
+    return handleApiError(res, error, "Update Assessment Template");
   }
 };
 
@@ -787,7 +787,7 @@ exports.getAssessmentResults = async (req, res) => {
 
     res.status(200).json({ success: true, data: results });
   } catch (error) {
-    return handleApiError(res, error, "Search Assessments");
+    return handleApiError(res, error, "Search Assessment Templates");
   }
 };
 
@@ -899,7 +899,7 @@ exports.getAllAssessments = async (req, res) => {
       },
     });
   } catch (error) {
-    return handleApiError(res, error, "Create Assessment List");
+    return handleApiError(res, error, "Fetch All Assessment Templates");
   }
 };
 
@@ -981,7 +981,7 @@ exports.createList = async (req, res) => {
       message: error.message,
     };
 
-    return handleApiError(res, error, "Update Assessment List");
+    return handleApiError(res, error, "Update Assessment Template List");
   }
 };
 

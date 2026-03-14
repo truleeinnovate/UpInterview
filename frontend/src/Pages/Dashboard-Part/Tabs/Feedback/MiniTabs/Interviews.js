@@ -65,6 +65,7 @@ const InterviewsMiniTabComponent = ({
   interviewType,
   roundId,
   decodedData,
+  bothParticipantsJoined,
 }) => {
   const location = useLocation();
   const locationFeedback = location.state?.feedback;
@@ -179,7 +180,7 @@ const InterviewsMiniTabComponent = ({
 
   const getDefaultTab = () => {
     // If mock interview → default to Interviewer Questions (id: 2)
-    if (isMockInterview || urlData?.interviewType || interviewType === "mockinterview" || feedbackData?.isMockInterview === true) {
+    if (isMockInterview || urlData?.interviewType === "mockinterview" || interviewType === "mockinterview" || feedbackData?.isMockInterview === true) {
       return 2;
     }
 
@@ -195,7 +196,12 @@ const InterviewsMiniTabComponent = ({
 
   const [interviewMiniTab, setInterviewMiniTab] = useState(getDefaultTab);
 
-
+  // When the join status changes, if tab 2 is hidden, force switch to tab 1
+  useEffect(() => {
+    if (bothParticipantsJoined === false && interviewMiniTab === 2) {
+      setInterviewMiniTab(1);
+    }
+  }, [bothParticipantsJoined, interviewMiniTab]);
   // const feedbackData = React.useMemo(() => locationFeedback || {}, [locationFeedback]);
   const feedbackId =
     feedbackData?._id ||
@@ -648,7 +654,7 @@ const InterviewsMiniTabComponent = ({
             isEditMode={isEditMode}
             isAddMode={isAddMode}
             interviewdata={feedbackData}
-            isViewMode={isViewMode}
+            isViewMode={isViewMode || bothParticipantsJoined === false}
             roundId={roundId}
             interviewType={interviewType}
             preselectedQuestionsResponses={preselectedQuestionsResponses}
@@ -743,11 +749,14 @@ const InterviewsMiniTabComponent = ({
       >
         {interviewMiniTabsList
           .filter((each) => {
-            const isMock = isMockInterview
+            const isMock = isMockInterview;
             // urlData?.interviewType === "mockinterview" || interviewType === "mockinterview" || locationFeedback?.isMockInterview;
 
             if (urlData?.isSchedule && each.id === 2) return false;
             if (isMock && each.id === 1) return false;
+            
+            // Hide the Interviewer added questions tab if both participants haven't joined yet
+            if (bothParticipantsJoined === false && each.id === 2) return false;
 
             return true;
           })

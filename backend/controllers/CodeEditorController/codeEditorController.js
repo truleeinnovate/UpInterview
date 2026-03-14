@@ -1,3 +1,5 @@
+const { handleApiError } = require("../../utils/errorHandler.js");
+
 const executeCode = async (req, res) => {
   try {
     const { code, language, versionIndex } = req.body;
@@ -28,9 +30,10 @@ const executeCode = async (req, res) => {
   } catch (error) {
     console.error("JDoodle execution error:", error);
 
-    return res.status(500).json({
-      error: error.message || "Internal Server Error",
-    });
+    // return res.status(500).json({
+    //   error: error.message || "Internal Server Error",
+    // });
+    return handleApiError(res, error, "Executing Code");
   }
 };
 

@@ -562,7 +562,7 @@ const InterviewRequests = () => {
           </div>
 
           {/* Fixed bottom buttons */}
-          {(selectedRequest.status !== "accepted") && <div className="fixed bottom-4 right-2 w-full xl:w-1/2 2xl:w-1/2 bg-white px-4 py-3 flex justify-end gap-3 z-10">
+          {(selectedRequest.status !== "accepted") && <div className="fixed bottom-4 right-2 bg-white px-4 py-3 flex justify-end gap-3 z-10">
             <Button
               onClick={closePopup}
               type="button"

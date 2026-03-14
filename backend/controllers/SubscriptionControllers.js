@@ -1,4 +1,5 @@
 const SubscriptionPlan = require('../models/Subscriptionmodels.js');
+const { handleApiError } = require('../utils/errorHandler.js');
 const { validateSubscriptionPlan } = require('../utils/subscriptionPlanValidation.js');
 
 // Create a new subscription plan
@@ -63,7 +64,8 @@ const createSubscriptionPlan = async (req, res) => {
       message: err.message,
     };
 
-    res.status(500).json({ message: 'Internal Server Error', error: err.message });
+    // res.status(500).json({ message: 'Internal Server Error', error: err.message });
+    return handleApiError(res, error, "Create Subscription Plan");
   }
 };
 
@@ -158,7 +160,8 @@ const getSubscriptionPlan = async (req, res) => {
       itemsPerPage: perPage,
     });
   } catch (err) {
-    res.status(500).send({ message: 'Internal Server Error', error: err.message });
+    // res.status(500).send({ message: 'Internal Server Error', error: err.message });
+    return handleApiError(res, error, "Fetch Subscription Plans");
   }
 };
 
@@ -172,7 +175,8 @@ const getSubscriptionPlanById = async (req, res) => {
     }
     res.status(200).send(plan);
   } catch (err) {
-    res.status(500).send({ message: 'Internal Server Error', error: err.message });
+    // res.status(500).send({ message: 'Internal Server Error', error: err.message });
+    return handleApiError(res, error, "Fetch Subscription Plan");
   }
 };
 
@@ -245,7 +249,8 @@ const updateSubscriptionPlan = async (req, res) => {
       message: err.message,
     };
 
-    res.status(500).send({ message: 'Internal Server Error', error: err.message });
+    // res.status(500).send({ message: 'Internal Server Error', error: err.message });
+    return handleApiError(res, error, "Update Subscription Plan");
   }
 };
 
@@ -259,7 +264,8 @@ const deleteSubscriptionPlan = async (req, res) => {
     }
     res.status(200).send({ message: 'Deleted Plan Successfully.' });
   } catch (err) {
-    res.status(500).send({ message: 'Internal Server Error', error: err.message });
+    // res.status(500).send({ message: 'Internal Server Error', error: err.message });
+    return handleApiError(res, error, "Delete Subscription Plan");
   }
 };
 

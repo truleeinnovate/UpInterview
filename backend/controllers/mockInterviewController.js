@@ -37,6 +37,8 @@ const InterviewRequest = require("../models/InterviewRequest.js");
 const { scheduleOrRescheduleNoShow } = require("../services/interviews/roundNoShowScheduler.js");
 const { updateSchedulingStatus } = require("../services/interviewerSchedulingService");
 const { RoleMaster } = require("../models/MasterSchemas/RoleMaster.js");
+const { handleApiError } = require("../utils/errorHandler");
+
 // Get single mock interview with rounds by id
 // GET /mockinterview/:id
 // exports.getMockInterviewDetails = async (req, res) => {
@@ -496,11 +498,12 @@ exports.createMockInterview = async (req, res) => {
       status: "error",
     };
 
-    return res.status(500).json({
-      status: "error",
-      message: "Failed to create mock interview. Please try again later.",
-      data: { error: error.message },
-    });
+    // return res.status(500).json({
+    //   status: "error",
+    //   message: "Failed to create mock interview. Please try again later.",
+    //   data: { error: error.message },
+    // });
+    return handleApiError(res, error, "Create Mock Interview");
   }
 };
 
@@ -742,11 +745,12 @@ exports.updateMockInterview = async (req, res) => {
       responseError: error.stack || error.message,
     };
 
-    return res.status(500).json({
-      status: "error",
-      message: "Failed to update mock interview. Please try again later.",
-      data: { error: error.message },
-    });
+    // return res.status(500).json({
+    //   status: "error",
+    //   message: "Failed to update mock interview. Please try again later.",
+    //   data: { error: error.message },
+    // });
+    return handleApiError(res, error, "Update Mock Interview");
   }
 };
 
@@ -936,9 +940,10 @@ exports.createMockInterviewRound = async (req, res) => {
       status: "error",
       message: error.message,
     };
-    return res
-      .status(500)
-      .json({ message: "Failed to create round", error: error.message });
+    // return res
+    //   .status(500)
+    //   .json({ message: "Failed to create round", error: error.message });
+    return handleApiError(res, error, "Create Mock Interview Round");
   }
 };
 
@@ -1332,9 +1337,10 @@ exports.updateMockInterviewRound = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating mock round:", error);
-    return res
-      .status(500)
-      .json({ message: "Failed to update round", error: error.message });
+    // return res
+    //   .status(500)
+    //   .json({ message: "Failed to update round", error: error.message });
+    return handleApiError(res, error, "Update Mock Interview Round");
   }
 };
 
@@ -1370,10 +1376,11 @@ exports.deleteMockInterview = async (req, res) => {
     });
   } catch (error) {
     console.error("Cancel round error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error while cancelling round",
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Server error while cancelling round",
+    // });
+    return handleApiError(res, error, "Delete Mock Interview");
   }
 };
 
@@ -1400,11 +1407,12 @@ exports.validateMockInterview = async (req, res) => {
     });
   } catch (error) {
     console.error("Error validating mock interview:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Validation error",
-      errors: { general: error.message },
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Validation error",
+    //   errors: { general: error.message },
+    // });
+    return handleApiError(res, error, "Validate Mock Interview");
   }
 };
 
@@ -1881,10 +1889,11 @@ exports.updateInterviewRoundStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("updateInterviewRoundStatus error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   message: "Internal server error",
+    // });
+    return handleApiError(res, error, "Update Mock Interview Round Status");
   }
 };
 
