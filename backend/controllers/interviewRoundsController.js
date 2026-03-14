@@ -1069,6 +1069,7 @@ const hasAccepted = await InterviewRequest.exists({
       updatePayload.$set.meetPlatform = ""; // Clear assigned meetPlatform
       // clearing the  participants
       updatePayload.$set.participants = [];
+      updatePayload.$set.interviewerType = "";
 
       await InterviewRequest.updateMany(
         { roundId: existingRound._id, status: "accepted" },
@@ -1901,7 +1902,7 @@ const updateInterviewRoundStatus = async (req, res) => {
       extraUpdate.$set.interviewers = []; // Clear interviewers
       // extraUpdate.$set.meetingId = "";
       // extraUpdate.$set.meetPlatform = "";
-      extraUpdate.$set.interviewerType = ""; 
+      // extraUpdate.$set.interviewerType = ""; 
     }
 
     // Manual NoShow / InCompleted — NO auto-settlement

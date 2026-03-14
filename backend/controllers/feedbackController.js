@@ -1856,7 +1856,7 @@ const updateInterviewRoundFeedbackStatus = async ({
       : "FeedbackPending";
 
         //  if feedback already submitted means no need to update
-    if (round.status === newStatus) {
+    if (round.status === newStatus || round.status === "InProgress" || round.status === "FeedbackPending") {
       return { message: "Status already correct - skipping update" };
     }
 

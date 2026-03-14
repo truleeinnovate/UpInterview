@@ -1267,7 +1267,7 @@ const RoundFormInterviews = () => {
 
     // case 4
 
-    if (status === "Draft" && isScheduleOrRescheduleInHistory) {
+    if ((status === "Draft" || status === "NoShow" || status === "Incomplete") && isScheduleOrRescheduleInHistory) {
       if (
         fieldName === "interviewType" ||
         fieldName === "scheduledDate" ||
@@ -3964,22 +3964,29 @@ const RoundFormInterviews = () => {
                                 // - Editing/rescheduling and original type was External
                                 // - Or currently External is selected (in create mode)
 
-                                roundEditData?.interviewerType === "External"
+                               ( roundEditData?.status !== "NoShow" && roundEditData?.status !== "Incomplete") &&  roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
-                                  : isExternalSelected
+                                  : ( roundEditData?.status !== "NoShow" && roundEditData?.status !== "Incomplete") &&  isExternalSelected 
                                     ? "opacity-50 cursor-not-allowed"
                                     : ""
                               }
+                              // disabled={
+                              //  ( roundEditData?.status !== "NoShow" || roundEditData?.status !== "Incomplete") &&   roundEditData?.interviewerType === "External" ||
+                              //   ( roundEditData?.status !== "NoShow" || roundEditData?.status !== "Incomplete") &&  isExternalSelected ||
+                              //   // status === "RequestSent" ||
+                              //   shouldDisable("internalInterviewersBtn")
+                              // }
                               disabled={
-                                roundEditData?.interviewerType === "External" ||
-                                isExternalSelected ||
-                                // status === "RequestSent" ||
-                                shouldDisable("internalInterviewersBtn")
-                              }
+ (roundEditData?.status !== "NoShow" && roundEditData?.status !== "Incomplete") &&
+ roundEditData?.interviewerType === "External" ||
+ (roundEditData?.status !== "NoShow" && roundEditData?.status !== "Incomplete") &&
+ isExternalSelected ||
+ shouldDisable("internalInterviewersBtn")
+}
                               title={
-                                roundEditData?.interviewerType === "External"
+                              ( roundEditData?.status !== "NoShow" && roundEditData?.status !== "Incomplete") &&   roundEditData?.interviewerType === "External"
                                   ? "Cannot change from Outsourced to Internal interviewers in edit/reschedule"
-                                  : isExternalSelected
+                                  : ( roundEditData?.status !== "NoShow" && roundEditData?.status !== "Incomplete") &&  isExternalSelected
                                     ? "Clear outsourced interviewers first"
                                     : ""
                               }
@@ -3998,22 +4005,29 @@ const RoundFormInterviews = () => {
                               size="sm"
                               className={
                                 shouldDisable("externalInterviewersBtn") &&
-                                  roundEditData?.interviewerType === "External"
+                                ( roundEditData?.status !== "NoShow" && roundEditData?.status !== "Incomplete") &&    roundEditData?.interviewerType === "External"
                                   ? "opacity-50 cursor-not-allowed"
                                   : isExternalSelected
                                     ? "opacity-50 cursor-not-allowed"
                                     : ""
                               }
+                              // disabled={
+                              // ( roundEditData?.status !== "NoShow" || roundEditData?.status !== "Incomplete") &&    roundEditData?.interviewerType === "External" ||
+                              //   //  ||
+                              //   // isInternalSelected ||
+                              //   // interviewMode === "Face to Face" ||
+                              //   // status === "RequestSent" ||
+                              //   // status === "Scheduled" ||
+                              //   // status === "Rescheduled"
+                              //   shouldDisable("internalInterviewersBtn")
+                              // }
                               disabled={
-                                roundEditData?.interviewerType === "External" ||
-                                //  ||
-                                // isInternalSelected ||
-                                // interviewMode === "Face to Face" ||
-                                // status === "RequestSent" ||
-                                // status === "Scheduled" ||
-                                // status === "Rescheduled"
-                                shouldDisable("internalInterviewersBtn")
-                              }
+ (roundEditData?.status !== "NoShow" && roundEditData?.status !== "Incomplete") &&
+ roundEditData?.interviewerType === "External" ||
+ (roundEditData?.status !== "NoShow" && roundEditData?.status !== "Incomplete") &&
+ isExternalSelected ||
+ shouldDisable("internalInterviewersBtn")
+}
                               title={
                                 shouldDisable("internalInterviewersBtn") &&
                                   roundEditData?.interviewerType === "External"
@@ -4039,19 +4053,26 @@ const RoundFormInterviews = () => {
                             size="sm"
                             className={
                               shouldDisable("externalInterviewersBtn") &&
-                                roundEditData?.interviewerType === "Internal"
+                               ( roundEditData?.status !== "NoShow" && roundEditData?.status !== "Incomplete") && roundEditData?.interviewerType === "Internal"
                                 ? "opacity-50 cursor-not-allowed"
                                 : isInternalSelected ||
                                   interviewMode === "Face to Face"
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
                             }
+                            // disabled={
+                            //  ( roundEditData?.status !== "NoShow" || roundEditData?.status !== "Incomplete") &&   roundEditData?.interviewerType === "Internal" ||
+                            //   isInternalSelected ||
+                            //   interviewMode === "Face to Face" ||
+                            //   shouldDisable("externalInterviewersBtn")
+                            // }
                             disabled={
-                              roundEditData?.interviewerType === "Internal" ||
-                              isInternalSelected ||
-                              interviewMode === "Face to Face" ||
-                              shouldDisable("externalInterviewersBtn")
-                            }
+ (roundEditData?.status !== "NoShow" && roundEditData?.status !== "Incomplete") &&
+ roundEditData?.interviewerType === "Internal" ||
+ (roundEditData?.status !== "NoShow" && roundEditData?.status !== "Incomplete") &&
+ isInternalSelected ||
+ shouldDisable("externalInterviewersBtn")
+}
                             title={
                               shouldDisable("externalInterviewersBtn") &&
                                 roundEditData?.interviewerType === "Internal"
